@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ur" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>حساب — اندراج رجسٹر</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top-nav no-print">
+    <div class="top-nav-start">
+      <div class="brand-mini">
+        <span class="logo-mini">ح</span>
+        <strong class="brand-title">حساب</strong>
+      </div>
+      <div class="top-date-field" title="رپورٹ کی تاریخ">
+        <span class="top-icon">📅</span>
+        <input id="date" type="date" aria-label="رپورٹ کی تاریخ">
+      </div>
+      <label class="all-dates-toggle" title="تمام تاریخوں کی انٹریاں دکھائیں">
+        <input id="all-dates" type="checkbox"> تمام تاریخیں
+      </label>
+      <button id="toggle-range" type="button" class="btn-range" title="تاریخ کا دورانیہ فلٹر">
+        <span>📅 دورانیہ فلٹر ▾</span>
+      </button>
+    </div>
+
+    <div class="top-nav-center">
+      <div class="top-search-wrap">
+        <span class="search-icon">🔍</span>
+        <input id="search" type="search" placeholder="تلاش کریں (نام، موبائل، مقام)..." autocomplete="off">
+      </div>
+    </div>
+
+    <div class="top-nav-end">
+      <div class="top-serial-field" title="شروع سیریل نمبر">
+        <label for="start-serial">سیریل:</label>
+        <input id="start-serial" type="text" inputmode="numeric" placeholder="1" value="1" maxlength="6" autocomplete="off">
+      </div>
+
+      <select id="branch-filter" class="sr-only" aria-label="پارٹی فلٹر"></select>
+
+      <button id="add" class="btn-add-primary" type="button" title="نئی قطار شامل کریں">
+        <span>＋ نئی قطار</span>
+      </button>
+
+      <button id="print" class="btn-nav" type="button" title="پرنٹ کریں (Ctrl+P)">
+        <span>🖨 پرنٹ</span>
+      </button>
+
+      <button id="export-open" class="btn-nav" type="button" title="Excel میں محفوظ کریں">
+        <span>📊 Excel</span>
+      </button>
+
+      <button id="summary-open" class="btn-nav" type="button" title="روزانہ خلاصہ">
+        <span>📋 خلاصہ</span>
+      </button>
+
+      <details class="more-menu">
+        <summary class="btn-nav" title="مزید آپشنز">مزید ▾</summary>
+        <div class="menu">
+          <div class="menu-item font-menu-wrap">
+            <span style="font-size:12px;">فونٹ سائز:</span>
+            <div class="font-tools" aria-label="فونٹ سائز">
+              <button id="font-smaller" aria-label="فونٹ چھوٹا کریں">−</button>
+              <output id="font-size">13</output>
+              <button id="font-larger" aria-label="فونٹ بڑا کریں">＋</button>
+            </div>
+          </div>
+          <button id="manage-branches" type="button">🏢 پارٹیاں سنبھالیں</button>
+          <button id="reset-filters" type="button">🔄 فلٹر صاف کریں</button>
+          <hr class="menu-divider">
+          <button id="backup" type="button">💾 بیک اَپ ڈاؤن لوڈ</button>
+          <button id="restore" type="button">📂 بیک اَپ کھولیں</button>
+          <button id="auto-backup" type="button" hidden>خودکار بیک اَپ فائل</button>
+          <span id="auto-backup-status"></span>
+        </div>
+      </details>
+
+      <span id="save-state" class="save-badge" role="status">محفوظ ہے</span>
+    </div>
+  </header>
+
+  <div class="range-drawer no-print" id="range-drawer" hidden>
+    <div class="range-drawer-inner">
+      <span class="range-drawer-title">📅 تاریخ کا دورانیہ:</span>
+      <label for="date-from">تاریخ سے:</label>
+      <input id="date-from" type="date">
+      <label for="date-to">تاریخ تک:</label>
+      <input id="date-to" type="date">
+      <button id="clear-range-btn" type="button" class="btn-sm">دورانیہ صاف کریں</button>
+      <p id="filter-message" class="range-msg" role="status">پرنٹ اور مجموعہ صرف فلٹر سے ملنے والی انٹریوں کا ہے۔</p>
+    </div>
+  </div>
+
+  <main>
+    <div class="backup-banner" id="backup-banner"><span id="backup-status" role="status"></span><button id="backup-now">بیک اَپ لیں</button></div>
+    <div class="undo-bar" id="undo-bar" hidden><span id="undo-message" role="status"></span><button id="undo">واپس لائیں (Undo)</button></div>
+    <div class="party-tabs-bar no-print" id="party-tabs-bar" role="navigation" aria-label="پارٹی کھاتے">
+      <div class="party-tabs-scroll" id="party-tabs" role="tablist"></div>
+      <div class="party-tabs-actions">
+        <button id="add-party-tab" class="tab-add-btn" type="button" title="نئی پارٹی بنائیں">＋ نئی پارٹی</button>
+        <button id="manage-parties-tab" class="tab-manage-btn" type="button" title="پارٹیاں سنبھالیں">⚙</button>
+      </div>
+    </div>
+    <section class="paper" aria-label="اندراج رجسٹر">
+      <div class="paper-head"><div class="head-party"><span class="party-label">پارٹی:</span><strong id="branch-heading"><bdi>تمام پارٹیاں</bdi></strong><span class="view-note" id="view-note"></span></div><div class="head-center"><input id="title" aria-label="رجسٹر کا عنوان" maxlength="100" value="اندراج رجسٹر"></div><div class="date-block"><span class="date-screen-badge" id="date-screen-badge"></span><div class="date-print-line"><span class="date-print-label">تاریخ:</span><span class="date-print-val" id="date-print-val"></span></div></div></div>
+      <div class="table-wrap"><table><colgroup><col class="serial"><col class="person col-sender"><col class="mobile"><col class="person col-receiver"><col class="place"><col class="branch col-branch no-print"><col class="money col-balance"><col class="money col-aed"><col class="money col-pkr"><col class="remove no-print"></colgroup><thead><tr><th>سریل نمبر</th><th>ارسال کنندہ</th><th>موبائیل نمبر</th><th>وصول کنندہ</th><th class="col-place">مقام</th><th class="col-branch no-print">پارٹی</th><th>بقایا</th><th>درہم</th><th id="th-currency">روپیہ</th><th class="no-print"><span class="sr-only">حذف</span></th></tr></thead><tbody id="rows"></tbody><tfoot><tr><th colspan="5" scope="row">کل مجموعہ حساب</th><td class="col-branch no-print"></td><td id="total-balance">0</td><td id="total-aed">0</td><td id="total-pkr">0</td><td class="no-print"></td></tr></tfoot></table></div>
+      <div class="paper-foot"><span id="count">0 اندراجات</span><span>حساب · اندراج رجسٹر</span></div>
+    </section>
+    <footer class="help"><span>نئی انٹری اوپر والی "رپورٹ کی تاریخ" پر محفوظ ہوتی ہے • Tab سے اگلا خانہ • Ctrl+P پرنٹ • Ctrl+Z حذف شدہ واپس</span><span>ڈیٹا اسی براؤزر میں محفوظ ہوتا ہے؛ "مزید" میں خودکار بیک اَپ فائل فعال کریں۔</span></footer>
+  </main>
+  <dialog id="branch-dialog" aria-labelledby="branch-dialog-title">
+    <div class="dialog-head"><h2 id="branch-dialog-title">پارٹیوں کا انتظام اور کرنسی</h2><button id="close-branches" aria-label="بند کریں">×</button></div>
+    <p>پارٹی بنائیں اور اس کی کرنسی (پاکستانی روپیہ یا افغانی) منتخب کریں۔</p>
+    <form id="branch-form"><label for="branch-name">نئی پارٹی کا نام اور کرنسی</label><div class="inline-form"><input id="branch-name" maxlength="100" required autocomplete="off" placeholder="پارٹی کا نام"><select id="branch-currency" aria-label="پارٹی کی کرنسی"><option value="pkr">درہم + روپیہ (PKR)</option><option value="afn">درہم + افغانی (AFN)</option></select><button class="primary" type="submit">شامل کریں</button></div></form>
+    <p id="branch-error" role="status"></p><div id="branch-list"></div>
+  </dialog>
+  <dialog id="export-dialog" aria-labelledby="export-title"><div class="dialog-head"><h2 id="export-title">Excel ایکسپورٹ</h2><button id="close-export" aria-label="بند کریں">×</button></div><p>نام، موبائیل نمبر، تاریخ، پارٹی اور رقم Excel میں محفوظ کریں۔</p><div class="export-actions"><button id="export-filtered" class="primary">فلٹر والی انٹریاں</button><button id="export-all">تمام انٹریاں</button></div></dialog>
+  <dialog id="summary-dialog" aria-labelledby="summary-title"><div class="dialog-head"><h2 id="summary-title">روزانہ خلاصہ</h2><button id="close-summary" aria-label="بند کریں">×</button></div><p id="summary-scope"></p><div class="summary-wrap"><table id="summary-table"><thead><tr><th>تاریخ</th><th>اندراجات</th><th>بقایا</th><th>درہم</th><th>روپیہ</th></tr></thead><tbody id="summary-rows"></tbody><tfoot><tr><th>کل</th><td id="summary-count">0</td><td id="summary-balance">0</td><td id="summary-aed">0</td><td id="summary-pkr">0</td></tr></tfoot></table></div><p>کسی تاریخ پر کلک کریں تو اسی دن کا رجسٹر کھل جائے گا۔</p></dialog>
+  <input id="file" type="file" accept="application/json,.json" hidden>
+  <script src="excel-export.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

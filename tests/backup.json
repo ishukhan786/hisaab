@@ -1,0 +1,39 @@
+{
+  "version": 4,
+  "title": "Test register",
+  "date": "2026-10-12",
+  "startSerial": 1,
+  "fontSize": 13,
+  "branches": [
+    "Alpha",
+    "Gamma"
+  ],
+  "rows": [
+    {
+      "entryDate": "2026-10-15",
+      "sender": "Old customer",
+      "mobile": "03001234567",
+      "receiver": "Receiver",
+      "place": "Dubai",
+      "branch": "Alpha",
+      "balance": "10",
+      "aed": "125",
+      "pkr": "1,000",
+      "id": "9d3535a7-7e2e-4e89-be16-a72c78c16941"
+    },
+    {
+      "entryDate": "2026-10-12",
+      "sender": "New sender",
+      "mobile": "+971 50 1234567",
+      "receiver": "",
+      "place": "",
+      "branch": "Gamma",
+      "balance": "",
+      "aed": "24",
+      "pkr": "",
+      "id": "25a6a5e6-280e-4eb4-8190-a61a067808df"
+    }
+  ],
+  "trash": [],
+  "lastBackupAt": "2026-10-15T21:36:17.103Z"
+}

@@ -1,0 +1,14 @@
+# Scratch & temporary files
+scratch/
+*.log
+
+# Operating System files
+Thumbs.db
+.DS_Store
+
+# Editor directories
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
