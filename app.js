@@ -401,6 +401,16 @@
       if(!inInput&&state.trash.length){e.preventDefault();$('undo').click();}
     }
   });
+  if(window.electronAPI?.onMenuAction){
+    window.electronAPI.onMenuAction(action=>{
+      if(action==='add-row')add();
+      else if(action==='print')$('print').click();
+      else if(action==='export')$('export-open').click();
+      else if(action==='summary')openSummary();
+      else if(action==='branches')openBranches();
+      else if(action==='reset-filters')resetFilters();
+    });
+  }
   function download(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   function backup(){const time=new Date().toISOString();const snapshot={...state,rows:state.rows.filter(populated),lastBackupAt:time};download(new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}),`hisaab-backup-${today()}.json`);state.lastBackupAt=time;save();updateBackup();}
   $('backup').onclick=backup;$('backup-now').onclick=backup;setInterval(updateBackup,60000);
