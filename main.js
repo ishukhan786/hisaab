@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, dialog, shell, ipcMain, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
 const { randomUUID } = require('crypto');
@@ -29,25 +29,17 @@ async function getBackupsDir() {
 
 let pdfBusy = false;
 let receiptPNGBusy = false;
-ipcMain.handle('save-receipt-png', async (event, values, suggestedName) => {
-  if (!mainWindow || event.sender !== mainWindow.webContents || event.senderFrame !== mainWindow.webContents.mainFrame) throw new Error('Unauthorized PNG request');
-  const fields = ['title','serial','date','branch','sender','mobile','receiver','place','balance','aed','pkr','currency'];
-  if (!values || typeof values !== 'object' || fields.some(key => typeof values[key] !== 'string' || values[key].length > 2000) || typeof suggestedName !== 'string') throw new Error('Invalid receipt');
-  if (receiptPNGBusy) return {status:'busy'};
-  receiptPNGBusy = true;
-  let renderer, temporary;
+const receiptFields = ['title','serial','date','branch','sender','mobile','receiver','place','balance','aed','pkr','currency'];
+
+async function renderReceiptImage(values) {
+  let renderer;
   try {
-    let name = suggestedName.replace(/\.png$/i,'').replace(/[<>:"/\\|?*\x00-\x1f]/g,'-').replace(/[. ]+$/g,'').trim().slice(0,160) || 'Hisaab-Receipt';
-    if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name)) name = 'Hisaab-' + name;
-    const result = await dialog.showSaveDialog(mainWindow,{title:'رسید کی تصویر محفوظ کریں',defaultPath:path.join(app.getPath('documents'),name+'.png'),filters:[{name:'PNG Image',extensions:['png']}],properties:['showOverwriteConfirmation','createDirectory']});
-    if (result.canceled || !result.filePath) return {status:'cancelled'};
-    const target = /\.png$/i.test(result.filePath) ? result.filePath : result.filePath+'.png';
     renderer = new BrowserWindow({width:1600,height:1600,useContentSize:true,show:false,webPreferences:{offscreen:true,contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
     // Windows clamps the initial window to the display; explicitly size the render surface.
     renderer.setContentSize(1600,1600);
     renderer.webContents.setWindowOpenHandler(()=>({action:'deny'}));
     await renderer.loadFile(path.join(__dirname,'receipt-image.html'));
-    const data = Object.fromEntries(fields.map(key=>[key,values[key]]));
+    const data = Object.fromEntries(receiptFields.map(key=>[key,values[key]]));
     await renderer.webContents.executeJavaScript(`(async()=>{
       const values=${JSON.stringify(data)};
       document.querySelectorAll('[data-receipt]').forEach(el=>{el.textContent=values[el.dataset.receipt];});
@@ -69,17 +61,48 @@ ipcMain.handle('save-receipt-png', async (event, values, suggestedName) => {
       renderer.webContents.invalidate();
     });
     if (captured.isEmpty()) throw new Error('Empty receipt image');
-    const png = captured.resize({width:1600,height:1600,quality:'best'}).toPNG();
+    return captured.resize({width:1600,height:1600,quality:'best'});
+  } finally {
+    if (renderer && !renderer.isDestroyed()) renderer.destroy();
+  }
+}
+
+ipcMain.handle('save-receipt-png', async (event, values, suggestedName) => {
+  if (!mainWindow || event.sender !== mainWindow.webContents || event.senderFrame !== mainWindow.webContents.mainFrame) throw new Error('Unauthorized PNG request');
+  if (!values || typeof values !== 'object' || receiptFields.some(key => typeof values[key] !== 'string' || values[key].length > 2000) || typeof suggestedName !== 'string') throw new Error('Invalid receipt');
+  if (receiptPNGBusy) return {status:'busy'};
+  receiptPNGBusy = true;
+  let temporary;
+  try {
+    let name = suggestedName.replace(/\.png$/i,'').replace(/[<>:"/\\|?*\x00-\x1f]/g,'-').replace(/[. ]+$/g,'').trim().slice(0,160) || 'Hisaab-Receipt';
+    if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name)) name = 'Hisaab-' + name;
+    const result = await dialog.showSaveDialog(mainWindow,{title:'رسید کی تصویر محفوظ کریں',defaultPath:path.join(app.getPath('documents'),name+'.png'),filters:[{name:'PNG Image',extensions:['png']}],properties:['showOverwriteConfirmation','createDirectory']});
+    if (result.canceled || !result.filePath) return {status:'cancelled'};
+    const target = /\.png$/i.test(result.filePath) ? result.filePath : result.filePath+'.png';
+    const image = await renderReceiptImage(values);
+    const png = image.toPNG();
     temporary = path.join(path.dirname(target),'.hisaab-png-'+randomUUID()+'.tmp');
     await fs.writeFile(temporary,png,{flag:'wx'});
     await fs.rename(temporary,target);temporary=null;
     return {status:'saved',filePath:target};
   } catch { return {status:'error'}; }
   finally {
-    if (renderer && !renderer.isDestroyed()) renderer.destroy();
     if (temporary) await fs.unlink(temporary).catch(()=>{});
     receiptPNGBusy=false;
   }
+});
+
+ipcMain.handle('copy-receipt-png', async (event, values) => {
+  if (!mainWindow || event.sender !== mainWindow.webContents || event.senderFrame !== mainWindow.webContents.mainFrame) throw new Error('Unauthorized PNG request');
+  if (!values || typeof values !== 'object' || receiptFields.some(key => typeof values[key] !== 'string' || values[key].length > 2000)) throw new Error('Invalid receipt');
+  if (receiptPNGBusy) return {status:'busy'};
+  receiptPNGBusy = true;
+  try {
+    const image = await renderReceiptImage(values);
+    clipboard.writeImage(image);
+    return {status:'copied'};
+  } catch { return {status:'error'}; }
+  finally { receiptPNGBusy=false; }
 });
 ipcMain.handle('preview-pdf', async event => {
   if (!mainWindow || event.sender !== mainWindow.webContents || event.senderFrame !== mainWindow.webContents.mainFrame) throw new Error('Unauthorized PDF request');

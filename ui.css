@@ -77,6 +77,9 @@ body.app-shell{background:#eef3f1;color:#203d35}
 .app-shell .inline-form{display:grid;grid-template-columns:minmax(140px,1fr) auto auto;gap:8px;align-items:center}
 .app-shell .party-item{padding:14px 0;gap:8px}.app-shell .party-item button{padding:5px 11px;min-height:40px;font-size:11px}
 .app-shell .export-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}.app-shell .export-actions button{min-height:55px}
+.app-shell .summary-tabs{display:flex;gap:8px;margin-bottom:8px;padding:4px;background:#eef4f0;border:1px solid #d5e2d8;border-radius:11px}
+.app-shell .summary-tab{flex:1;min-height:38px;padding:4px 12px;border:1px solid transparent;border-radius:8px;background:transparent;color:#456355;font-size:12px}
+.app-shell .summary-tab.active{background:#fff;border-color:#c6d9cc;color:#12563f;font-weight:700;box-shadow:0 2px 5px #244f3c0d}
 .app-shell .summary-wrap{border:1px solid #d9e5dc;border-radius:11px;max-height:52vh;overflow:auto}
 .app-shell :is(#summary-table,#history-table,#backup-list-table){margin:0;table-layout:auto}
 .app-shell :is(#summary-table,#history-table,#backup-list-table) th{position:sticky;top:0;background:#edf4ef;line-height:2.5;padding:10px;font-size:12px}

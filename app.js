@@ -178,6 +178,13 @@
     btn.classList.toggle('is-locked',locked);
     btn.title=locked?'یہ تاریخ لاک ہے، ترمیم کے لیے کلک کر کے ان لاک کریں':'اس تاریخ کا رجسٹر لاک کریں تاکہ غلطی سے ترمیم نہ ہو';
   }
+  if($('lock-day'))$('lock-day').onclick=()=>{
+    const d=state.date||today();
+    if(!Array.isArray(state.lockedDates))state.lockedDates=[];
+    if(state.lockedDates.includes(d))state.lockedDates=state.lockedDates.filter(x=>x!==d);
+    else state.lockedDates.push(d);
+    save();applyFilter(true);
+  };
   function recordHistory(row,field,from,to){
     if(from===to)return;
     if(!row.history)row.history=[];
@@ -298,7 +305,19 @@
       if(field==='place'){input.className='place-input';}
       if(rLocked)input.disabled=true;
       input.addEventListener('focus',()=>{input._prevVal=input.value;});
-      input.addEventListener('blur',()=>{if(input._prevVal!==undefined&&input._prevVal!==input.value){recordHistory(row,field,input._prevVal,input.value);input._prevVal=input.value;}});
+      input.addEventListener('blur',()=>{
+        if(input._prevVal!==undefined&&input._prevVal!==input.value){recordHistory(row,field,input._prevVal,input.value);input._prevVal=input.value;}
+        if(field==='sender'&&row.sender.trim()&&!row.mobile.trim()){
+          const sKey=nameKey(row.sender);
+          const prev=[...state.rows].reverse().find(r=>r.id!==row.id&&populated(r)&&nameKey(r.sender)===sKey&&r.mobile.trim());
+          if(prev){
+            row.mobile=prev.mobile;
+            const mobEl=tr.querySelector('[data-field="mobile"]');
+            if(mobEl)mobEl.value=prev.mobile;
+            save();
+          }
+        }
+      });
       function accept(event){
         if(event?.isComposing)return;
         if(field==='branch'&&input.value==='__new_party__'){input.value=row.branch;openBranches(row);return;}
@@ -358,9 +377,16 @@
   }
   $('add').onclick=add;
   $('undo').onclick=()=>{const item=state.trash.pop();if(!item)return;if(item.row.branch&&!state.branches.includes(item.row.branch))state.branches.push(item.row.branch);state.rows.splice(Math.min(item.index,state.rows.length),0,item.row);render();save();if(rowNodes.get(item.row.id).hidden)$('filter-message').textContent='انٹری واپس آ گئی ہے۔ اسے دیکھنے کے لیے فلٹر صاف کریں۔';};
-  let autoBackupTimer=null;
+  let autoBackupTimer=null,autoBackupHandle=null;
   async function executeAutoBackup(isSafety=false){
     const clean={...state,rows:state.rows.filter(populated)};
+    if(autoBackupHandle&&!isSafety){
+      try{
+        const writable=await autoBackupHandle.createWritable();
+        await writable.write(JSON.stringify(clean,null,2));
+        await writable.close();
+      }catch(_){}
+    }
     if(window.electronAPI?.saveAutoBackup){
       try{
         const res=await window.electronAPI.saveAutoBackup(clean,isSafety);
@@ -391,7 +417,84 @@
       localStorage.setItem('hisaab-safety-pre-restore',JSON.stringify({...state,rows:state.rows.filter(populated)}));
     }catch(_){}
   }
-  let autoBackupHandle=null;
+  async function restoreBackupData(rawObj){
+    const data=migrate(rawObj);
+    if(!confirm('موجودہ رجسٹر اور روزنامچہ بیک اَپ سے بدل جائیں گے۔ جاری رکھیں؟'))return false;
+    await makeSafetyBackup();
+    state=data;storageBlocked=false;selectedBranch='';
+    for(const id of ['search','date-from','date-to'])$(id).value='';
+    save();render();
+    return true;
+  }
+  async function renderBackupList(){
+    const tbody=$('backup-list-rows');
+    if(!tbody)return;
+    tbody.replaceChildren();
+    let items=[];
+    if(window.electronAPI?.getAutoBackups){
+      try{
+        const res=await window.electronAPI.getAutoBackups();
+        if(res?.status==='ok'&&Array.isArray(res.backups)){
+          items=res.backups.map(b=>({
+            label:new Date(b.mtime).toLocaleString('en-GB')+' ('+b.name+')',
+            isSafety:!!b.isSafety,
+            sizeKB:Math.max(1,Math.round((b.size||0)/1024))+' KB',
+            load:async()=>{const r=await window.electronAPI.readAutoBackup(b.name);return JSON.parse(r.content);}
+          }));
+        }
+      }catch(_){}
+    }else{
+      try{
+        const list=JSON.parse(localStorage.getItem('hisaab-auto-backups-v1')||'[]');
+        items=list.map(b=>{
+          const raw=JSON.stringify(b.data||{});
+          return {
+            label:new Date(b.time).toLocaleString('en-GB'),
+            isSafety:!!b.isSafety,
+            sizeKB:Math.max(1,Math.round(raw.length/1024))+' KB',
+            load:async()=>b.data
+          };
+        });
+      }catch(_){}
+    }
+    if(!items.length){
+      const tr=document.createElement('tr');
+      const td=document.createElement('td');
+      td.colSpan=4;td.style.textAlign='center';td.textContent='ابھی کوئی خودکار بیک اَپ موجود نہیں ہے۔';
+      tr.append(td);tbody.append(tr);
+      return;
+    }
+    for(const item of items){
+      const tr=document.createElement('tr');
+      const tdTime=document.createElement('td');tdTime.textContent=item.label;
+      const tdType=document.createElement('td');
+      const badge=document.createElement('span');
+      badge.className=item.isSafety?'badge-safety':'badge-auto';
+      badge.textContent=item.isSafety?'سیفٹی بیک اَپ':'خودکار بیک اَپ';
+      tdType.append(badge);
+      const tdSize=document.createElement('td');tdSize.style.direction='ltr';tdSize.textContent=item.sizeKB;
+      const tdAct=document.createElement('td');
+      const btn=document.createElement('button');btn.type='button';btn.className='btn-sm';btn.textContent='بحال کریں';
+      btn.onclick=async()=>{
+        try{
+          const rawObj=await item.load();
+          if(await restoreBackupData(rawObj))$('backup-dialog').close();
+        }catch{alert('یہ بیک اَپ فائل نہیں کھل سکی۔');}
+      };
+      tdAct.append(btn);
+      tr.append(tdTime,tdType,tdSize,tdAct);
+      tbody.append(tr);
+    }
+  }
+  async function openBackupManager(){
+    if($('open-backup-folder-btn'))$('open-backup-folder-btn').hidden=!window.electronAPI?.openBackupsFolder;
+    await renderBackupList();
+    $('backup-dialog')?.showModal();
+  }
+  if($('manage-backups'))$('manage-backups').onclick=()=>openBackupManager();
+  if($('close-backups'))$('close-backups').onclick=()=>$('backup-dialog').close();
+  if($('open-backup-folder-btn'))$('open-backup-folder-btn').onclick=()=>window.electronAPI?.openBackupsFolder?.();
+  if($('create-backup-now-btn'))$('create-backup-now-btn').onclick=async()=>{await executeAutoBackup(false);await renderBackupList();};
   async function setupAutoBackup(){
     if(!window.showSaveFilePicker)return;
     try{
@@ -435,63 +538,116 @@
     save();
     applyFilter();
   });
-  function openSummary(){
+  let summaryMode='date';
+  function renderSummary(mode='date'){
+    summaryMode=mode;
+    const isParty=mode==='party';
+    if($('summary-tab-date')){$('summary-tab-date').classList.toggle('active',!isParty);$('summary-tab-date').setAttribute('aria-selected',String(!isParty));}
+    if($('summary-tab-party')){$('summary-tab-party').classList.toggle('active',isParty);$('summary-tab-party').setAttribute('aria-selected',String(isParty));}
+    if($('summary-first-heading'))$('summary-first-heading').textContent=isParty?'پارٹی':'تاریخ';
+    if($('summary-hint'))$('summary-hint').textContent=isParty?'کسی پارٹی پر کلک کریں تو اس پارٹی کا مکمل کھاتہ کھل جائے گا۔':'کسی تاریخ پر کلک کریں تو اسی دن کا رجسٹر کھل جائے گا۔';
     const rows=state.rows.filter(populated);
-    const groups=new Map();
-    for(const r of rows){
-      const d=r.entryDate||state.date||today();
-      if(!groups.has(d))groups.set(d,{count:0,balance:0n,aed:0n,pkr:0n});
-      const g=groups.get(d);
-      g.count++;
-      for(const f of moneyFields){
-        const v=integerAmount(r[f]);
-        if(v!==null)g[f]+=v;
-      }
-    }
-    const dates=[...groups.keys()].sort((a,b)=>b.localeCompare(a));
     const tbody=$('summary-rows');
     tbody.replaceChildren();
-    if(!dates.length){
-      const tr=document.createElement('tr');
-      const td=document.createElement('td');
-      td.colSpan=5;td.style.textAlign='center';td.textContent='ابھی کوئی انٹری موجود نہیں ہے۔';
-      tr.append(td);tbody.append(tr);
-    }
-    let totCount=0,totBal=0n,totAed=0n,totPkr=0n;
     $('summary-currency-heading').textContent=rows.some(r=>partyCurrency(r.branch)==='afn')?'روپیہ / افغانی':'روپیہ';
-    for(const d of dates){
-      const g=groups.get(d);
-      totCount+=g.count;totBal+=g.balance;totAed+=g.aed;totPkr+=g.pkr;
-      const tr=document.createElement('tr');
-      tr.title=`${fmtDate(d)} کا رجسٹر کھولیں`;
-      tr.onclick=()=>{
-        state.date=d;
-        $('date').value=d;
-        $('all-dates').checked=false;
-        $('date-from').value='';
-        $('date-to').value='';
-        if($('range-drawer'))$('range-drawer').hidden=true;
-        if($('toggle-range'))$('toggle-range').classList.remove('active');
-        save();
-        applyFilter();
-        $('summary-dialog').close();
-      };
-      const tdDate=document.createElement('td');tdDate.textContent=fmtDate(d);
-      const tdCount=document.createElement('td');tdCount.textContent=g.count;
-      const tdBal=document.createElement('td');tdBal.textContent=formatted(g.balance);
-      const tdAed=document.createElement('td');tdAed.textContent=formatted(g.aed);
-      const tdPkr=document.createElement('td');tdPkr.textContent=currencyText(rows.filter(r=>(r.entryDate||state.date||today())===d));
-      tr.append(tdDate,tdCount,tdBal,tdAed,tdPkr);
-      tbody.append(tr);
+    let totCount=0,totBal=0n,totAed=0n;
+    if(!isParty){
+      const groups=new Map();
+      for(const r of rows){
+        const d=r.entryDate||state.date||today();
+        if(!groups.has(d))groups.set(d,{count:0,balance:0n,aed:0n,pkr:0n});
+        const g=groups.get(d);
+        g.count++;
+        for(const f of moneyFields){
+          const v=integerAmount(r[f]);
+          if(v!==null)g[f]+=v;
+        }
+      }
+      const dates=[...groups.keys()].sort((a,b)=>b.localeCompare(a));
+      if(!dates.length){
+        const tr=document.createElement('tr');
+        const td=document.createElement('td');
+        td.colSpan=5;td.style.textAlign='center';td.textContent='ابھی کوئی انٹری موجود نہیں ہے۔';
+        tr.append(td);tbody.append(tr);
+      }
+      for(const d of dates){
+        const g=groups.get(d);
+        totCount+=g.count;totBal+=g.balance;totAed+=g.aed;
+        const tr=document.createElement('tr');
+        tr.title=`${fmtDate(d)} کا رجسٹر کھولیں`;
+        tr.onclick=()=>{
+          state.date=d;
+          $('date').value=d;
+          $('all-dates').checked=false;
+          $('date-from').value='';
+          $('date-to').value='';
+          if($('range-drawer'))$('range-drawer').hidden=true;
+          if($('toggle-range'))$('toggle-range').classList.remove('active');
+          save();
+          applyFilter();
+          $('summary-dialog').close();
+        };
+        const tdDate=document.createElement('td');tdDate.textContent=fmtDate(d);
+        const tdCount=document.createElement('td');tdCount.textContent=g.count;
+        const tdBal=document.createElement('td');tdBal.textContent=formatted(g.balance);
+        const tdAed=document.createElement('td');tdAed.textContent=formatted(g.aed);
+        const tdPkr=document.createElement('td');tdPkr.textContent=currencyText(rows.filter(r=>(r.entryDate||state.date||today())===d));
+        tr.append(tdDate,tdCount,tdBal,tdAed,tdPkr);
+        tbody.append(tr);
+      }
+      $('summary-scope').textContent=`کل ${dates.length} دن، ${totCount} اندراجات۔`;
+    }else{
+      const partyKeys=[...state.branches.slice().sort((a,b)=>a.localeCompare(b,'ur'))];
+      if(rows.some(r=>!r.branch))partyKeys.push('');
+      if(!partyKeys.length){
+        const tr=document.createElement('tr');
+        const td=document.createElement('td');
+        td.colSpan=5;td.style.textAlign='center';td.textContent='ابھی کوئی پارٹی یا انٹری موجود نہیں ہے۔';
+        tr.append(td);tbody.append(tr);
+      }
+      for(const pName of partyKeys){
+        const pRows=rows.filter(r=>(r.branch||'')===pName);
+        let bal=0n,aed=0n;
+        for(const r of pRows){
+          const b=integerAmount(r.balance),a=integerAmount(r.aed);
+          if(b!==null)bal+=b;
+          if(a!==null)aed+=a;
+        }
+        totCount+=pRows.length;totBal+=bal;totAed+=aed;
+        const tr=document.createElement('tr');
+        const label=pName?('🏢 '+pName):'بغیر پارٹی';
+        tr.title=`${pName||'بغیر پارٹی'} کا کھاتہ کھولیں`;
+        tr.onclick=()=>{
+          $('all-dates').checked=true;
+          $('date-from').value='';
+          $('date-to').value='';
+          if($('range-drawer'))$('range-drawer').hidden=true;
+          if($('toggle-range'))$('toggle-range').classList.remove('active');
+          selectPartyTab(pName?('b:'+pName):'__unassigned');
+          $('summary-dialog').close();
+        };
+        const tdParty=document.createElement('td');tdParty.dir='rtl';tdParty.textContent=label;
+        const tdCount=document.createElement('td');tdCount.textContent=String(pRows.length);
+        const tdBal=document.createElement('td');tdBal.textContent=formatted(bal);
+        const tdAed=document.createElement('td');tdAed.textContent=formatted(aed);
+        const tdPkr=document.createElement('td');tdPkr.textContent=pRows.length?currencyText(pRows):(partyCurrency(pName)==='afn'?'0 (AFN)':'0');
+        tr.append(tdParty,tdCount,tdBal,tdAed,tdPkr);
+        tbody.append(tr);
+      }
+      $('summary-scope').textContent=`کل ${partyKeys.length} پارٹیاں، ${totCount} اندراجات۔`;
     }
-    $('summary-scope').textContent=`کل ${dates.length} دن، ${totCount} اندراجات۔`;
     $('summary-count').textContent=String(totCount);
     $('summary-balance').textContent=formatted(totBal);
     $('summary-aed').textContent=formatted(totAed);
     $('summary-pkr').textContent=currencyText(rows);
+  }
+  function openSummary(){
+    renderSummary('date');
     $('summary-dialog').showModal();
   }
-  $('summary-open').onclick=openSummary;
+  if($('summary-tab-date'))$('summary-tab-date').onclick=()=>renderSummary('date');
+  if($('summary-tab-party'))$('summary-tab-party').onclick=()=>renderSummary('party');
+  $('summary-open').onclick=()=>openSummary();
   $('close-summary').onclick=()=>$('summary-dialog').close();
   function openBranches(row=null){pendingBranchRow=row;$('branch-error').textContent='';$('branch-name').value='';renderBranchList();$('branch-dialog').showModal();$('branch-name').focus();}
   $('manage-branches').onclick=()=>openBranches();$('close-branches').onclick=()=>$('branch-dialog').close();
@@ -509,13 +665,22 @@
     }
   }
   $('branch-form').onsubmit=e=>{e.preventDefault();const name=cleanName($('branch-name').value);if(!name)return;const existing=state.branches.find(n=>nameKey(n)===nameKey(name));if(existing){$('branch-error').textContent='یہ پارٹی پہلے سے موجود ہے؛ فہرست سے منتخب کریں۔';return;}const curr=$('branch-currency')?.value||'pkr';state.branches.push(name);if(!state.partyCurrencies)state.partyCurrencies={};state.partyCurrencies[name]=curr;if(pendingBranchRow)pendingBranchRow.branch=name;else selectedBranch='b:'+name;save();updateBranches();applyFilter(true);renderBranchList();$('branch-name').value='';$('branch-error').textContent='پارٹی شامل ہو گئی ('+(curr==='afn'?'افغانی':'روپیہ')+')۔';if(pendingBranchRow){const target=pendingBranchRow;$('branch-dialog').close();focusRow(target);}else{$('branch-dialog').close();}};
-  let receiptSelection=null;
+  let receiptSelection=null,lastSavedPdfPath='';
+  function recordSavedPdf(filePath){
+    if(!filePath||!window.electronAPI?.openFile)return;
+    lastSavedPdfPath=filePath;
+    if($('open-pdf'))$('open-pdf').hidden=false;
+    if($('open-pdf-folder'))$('open-pdf-folder').hidden=false;
+  }
+  if($('open-pdf'))$('open-pdf').onclick=()=>{if(lastSavedPdfPath)window.electronAPI?.openFile?.(lastSavedPdfPath);};
+  if($('open-pdf-folder'))$('open-pdf-folder').onclick=()=>{if(lastSavedPdfPath)window.electronAPI?.showInFolder?.(lastSavedPdfPath);};
   function openReceipt(row,serial){
     if(!canOutput([row],false))return;
     receiptSelection={serial:String(serial),date:row.entryDate||state.date||today(),branch:row.branch||'بغیر پارٹی'};
     const values={title:state.title||'اندراج رجسٹر',serial:String(serial),date:fmtDate(receiptSelection.date),branch:receiptSelection.branch,sender:row.sender||'—',mobile:row.mobile||'—',receiver:row.receiver||'—',place:row.place||'—',balance:formatted(integerAmount(row.balance)),aed:formatted(integerAmount(row.aed)),pkr:formatted(integerAmount(row.pkr)),currency:partyCurrency(row.branch)==='afn'?'افغانی (AFN)':'روپیہ (PKR)'};
     for(const [field,value] of Object.entries(values))$('receipt-paper').querySelector('[data-receipt="'+field+'"]').textContent=value;
     $('receipt-status').textContent='';$('receipt-save').hidden=!window.electronAPI?.savePDF;$('receipt-png').hidden=!window.electronAPI?.saveReceiptPNG;
+    if($('receipt-copy'))$('receipt-copy').hidden=!window.electronAPI?.copyReceiptPNG;
     $('receipt-dialog').showModal();
   }
   $('receipt-png').onclick=async()=>{
@@ -527,6 +692,17 @@
       const result=await window.electronAPI.saveReceiptPNG(values,selection.branch+'_'+selection.date+'_رسید-'+selection.serial+'.png');
       $('receipt-status').textContent=result.status==='saved'?'✓ PNG رسید محفوظ ہو گئی':result.status==='cancelled'?'':result.status==='busy'?'پہلی تصویر مکمل ہونے دیں۔':'تصویر محفوظ نہیں ہو سکی؛ دوبارہ کوشش کریں۔';
     }catch{$('receipt-status').textContent='تصویر محفوظ نہیں ہو سکی؛ دوبارہ کوشش کریں۔';}
+    finally{document.body.inert=false;}
+  };
+  if($('receipt-copy'))$('receipt-copy').onclick=async()=>{
+    if(!receiptSelection||document.body.inert)return;
+    const values={};
+    $('receipt-paper').querySelectorAll('[data-receipt]').forEach(el=>{values[el.dataset.receipt]=el.textContent;});
+    document.body.inert=true;$('receipt-status').textContent='تصویر کاپی ہو رہی ہے…';
+    try{
+      const result=await window.electronAPI.copyReceiptPNG(values);
+      $('receipt-status').textContent=result.status==='copied'?'✓ رسید کی تصویر کاپی ہو گئی (WhatsApp میں Ctrl+V کریں)':result.status==='busy'?'پہلی تصویر مکمل ہونے دیں۔':'تصویر کاپی نہیں ہو سکی؛ دوبارہ کوشش کریں۔';
+    }catch{$('receipt-status').textContent='تصویر کاپی نہیں ہو سکی؛ دوبارہ کوشش کریں۔';}
     finally{document.body.inert=false;}
   };
   function prepareReceiptOutput(){
@@ -545,6 +721,7 @@
     document.body.inert=true;
     try{
       const result=savePDF?await window.electronAPI.savePDF(selection.branch+'_'+selection.date+'_رسید-'+selection.serial+'.pdf'):await window.electronAPI.previewPDF();
+      if(result?.status==='saved'&&result.filePath)recordSavedPdf(result.filePath);
       $('receipt-status').textContent=result.status==='saved'?'✓ رسید محفوظ ہو گئی':result.status==='busy'?'پہلی PDF مکمل ہونے دیں۔':result.status==='error'?'رسید نہیں بن سکی؛ دوبارہ کوشش کریں۔':'';
     }catch{$('receipt-status').textContent='رسید نہیں بن سکی؛ دوبارہ کوشش کریں۔';}
     finally{document.body.inert=false;clearReceiptOutput();}
@@ -556,7 +733,7 @@
   if(window.electronAPI?.savePDF){
     const button=$('save-pdf');button.hidden=false;
     button.onclick=async()=>{
-      if(journalController?.isActive()){await journalController.output(true);return;}
+      if(journalController?.isActive()){const res=await journalController.output(true);if(res?.status==='saved'&&res.filePath)recordSavedPdf(res.filePath);return;}
       const rows=selectedRows();if(!canOutput(rows))return;
       const party=selectedBranch.startsWith('b:')?selectedBranch.slice(2):selectedBranch==='__unassigned'?'بغیر پارٹی':'تمام پارٹیاں';
       const dates=rows.map(r=>r.entryDate||state.date).filter(Boolean).sort();
@@ -565,7 +742,7 @@
       try{
         await document.fonts.ready;preparePrint();
         const result=await window.electronAPI.savePDF(party+'_'+date+'.pdf');
-        if(result.status==='saved')button.textContent='✓ PDF محفوظ ہو گئی';
+        if(result.status==='saved'){button.textContent='✓ PDF محفوظ ہو گئی';if(result.filePath)recordSavedPdf(result.filePath);}
         else if(result.status==='error')alert('PDF محفوظ نہیں ہو سکی۔ دوسری جگہ منتخب کریں یا کھلی ہوئی فائل بند کریں۔');
       }catch{alert('PDF محفوظ نہیں ہو سکی۔ دوبارہ کوشش کریں۔');}
       finally{document.body.inert=false;button.disabled=false;applyFilter();setTimeout(()=>{button.replaceChildren(...label);},2500);}
@@ -603,7 +780,7 @@
   function backup(){const time=new Date().toISOString();const snapshot={...state,rows:state.rows.filter(populated),lastBackupAt:time};download(new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}),`hisaab-backup-${today()}.json`);state.lastBackupAt=time;save();updateBackup();}
   $('backup').onclick=backup;$('backup-now').onclick=backup;setInterval(updateBackup,60000);
   $('restore').onclick=()=>$('file').click();
-  $('file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>15000000)throw Error('Large file');const data=migrate(JSON.parse(await file.text()));if(!confirm('موجودہ رجسٹر اور روزنامچہ بیک اَپ سے بدل جائیں گے۔ جاری رکھیں؟'))return;state=data;storageBlocked=false;selectedBranch='';for(const id of ['search','date-from','date-to'])$(id).value='';save();render();}catch{alert('یہ درست حساب بیک اَپ نہیں ہے۔ موجودہ ڈیٹا تبدیل نہیں ہوا۔');}finally{e.target.value='';}};
+  $('file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>15000000)throw Error('Large file');await restoreBackupData(JSON.parse(await file.text()));}catch{alert('یہ درست حساب بیک اَپ نہیں ہے۔ موجودہ ڈیٹا تبدیل نہیں ہوا۔');}finally{e.target.value='';}};
   $('export-open').onclick=()=>{if(journalController?.isActive())journalController.exportExcel();else $('export-dialog').showModal();};$('close-export').onclick=()=>$('export-dialog').close();
   function exportExcel(all){
     const rows=all?state.rows.filter(populated):selectedRows();if(!canOutput(rows,!all))return;
