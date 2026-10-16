@@ -1,7 +1,7 @@
 {
   "name": "hisaab",
   "productName": "حساب",
-  "version": "1.0.0",
+  "version": "1.1.2",
   "description": "حساب — آف لائن روزانہ کھاتہ، اندراج رجسٹر اور پرنٹ سسٹم",
   "main": "main.js",
   "scripts": {
@@ -52,7 +52,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "حساب"
+      "shortcutName": "حساب",
+      "artifactName": "Hisaab-Setup-${version}.exe"
     },
     "portable": {
       "artifactName": "Hisaab-Portable-${version}.exe"
@@ -64,7 +65,13 @@
       "style.css",
       "app.js",
       "excel-export.js",
-      "assets/**/*"
+      "assets/**/*",
+      "guide.html",
+      "receipt-image.html",
+      "ui.css",
+      "ui.js",
+      "journal.js",
+      "journal.css"
     ]
   }
 }

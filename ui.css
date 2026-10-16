@@ -1,0 +1,108 @@
+/* App controls only: exported receipts and printed pages keep their own layout. */
+@media screen {
+body.app-shell{background:#eef3f1;color:#203d35}
+.app-shell button,.app-shell summary.btn-nav{min-height:44px;border-radius:10px;font-size:12px;font-weight:600;line-height:2.3;transition:background .15s,border-color .15s,box-shadow .15s,transform .12s}
+.app-shell button:hover,.app-shell summary.btn-nav:hover{border-color:#86b4a2;box-shadow:0 3px 9px #163f3010}
+.app-shell button:active,.app-shell summary.btn-nav:active{transform:translateY(1px)}
+.app-shell :is(button,summary,input,select,textarea):focus-visible{outline:3px solid #e6ad4d;outline-offset:3px}
+.app-shell button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.ui-icon{width:18px;height:18px;flex:0 0 18px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.button-content{display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.app-shell .top-nav{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,340px);gap:12px 24px;padding:15px 24px 12px;position:sticky;background:#fffffffa;box-shadow:0 3px 16px #244f3c09;border-bottom:1px solid #dce6e0}
+.app-shell .top-nav-start{min-width:0;gap:12px;flex-wrap:wrap}
+.app-shell .top-nav-center{margin:0;max-width:none;min-width:0;width:auto;order:initial}
+.app-shell .top-nav-end{grid-column:1/-1;flex-wrap:wrap;gap:8px;border-top:1px solid #edf1ee;padding-top:12px;min-width:0}
+.app-shell .brand-mini{padding-inline-end:15px;margin-inline-end:0;border-inline-end:1px solid #dfe8e1;gap:10px}
+.app-shell .logo-mini{width:40px;height:40px;border-radius:12px;font-size:24px;line-height:1.6;box-shadow:none;background:#17644e}
+.app-shell .brand-title{font-size:23px}
+.app-shell .top-date-field,.app-shell .top-search-wrap,.app-shell .top-serial-field{height:44px;border-radius:10px;background:#f6f9f7;border-color:#d4e1d9}
+.app-shell .top-search-wrap{padding:0 13px;gap:10px}
+.app-shell .top-search-wrap input{height:100%;min-width:0;font-size:12px;line-height:2.6}
+.app-shell .top-date-field{padding-inline:12px;gap:10px}
+.app-shell .top-serial-field{order:8;margin-inline-start:auto;padding-inline:12px;gap:7px}
+.app-shell .top-serial-field input{width:45px}
+.app-shell .btn-nav,.app-shell .btn-add-primary,.app-shell .btn-range{height:auto;min-height:44px;padding:5px 15px;display:inline-flex;align-items:center;justify-content:center}
+.app-shell .btn-add-primary,.app-shell .primary{background:#17644e;border-color:#17644e;color:white;box-shadow:0 3px 8px #17644e16}
+.app-shell .btn-add-primary:hover,.app-shell .primary:hover{background:#10523f;border-color:#10523f}
+.app-shell #print{background:#eaf4ef;color:#125c45;border-color:#c2dccc}
+.app-shell #save-state{order:9;margin:0;padding:3px 11px;line-height:2.2;background:#edf6ef;border:1px solid #d5e8db;font-size:10px;max-width:190px;white-space:normal}
+.app-shell .all-dates-toggle{height:auto;min-height:44px;font-size:11px;margin:0;gap:8px}
+.app-shell .range-drawer{padding:14px 24px;background:#f8fbf8;box-shadow:none}
+.app-shell .range-drawer-inner{gap:10px 14px}.app-shell .range-drawer input{min-height:40px}
+.app-shell main{max-width:1680px;padding:0 24px;margin:18px auto}
+.app-shell .backup-banner{padding:9px 14px;margin-bottom:14px;border-radius:12px;font-size:11px;line-height:2.4;background:#f7faf6;border-color:#dbe7d9}
+.app-shell .backup-banner.backup-due{background:#fff9ed;border-color:#ebd9b2;color:#765923}
+.app-shell .backup-banner button{flex-shrink:0;min-height:36px;padding:3px 13px;font-size:11px}
+.app-shell .party-tabs-bar{padding:8px;background:#e3ece6;border:1px solid #d5e2d8;border-radius:14px;margin:0 0 14px;gap:12px}
+.app-shell .party-tabs-scroll{align-items:center;padding:0;gap:6px}
+.app-shell .party-tab,.app-shell .party-tab.active{min-height:43px;border-radius:9px;border:1px solid transparent;box-shadow:none;padding:6px 13px;font-size:12px;line-height:2.2;background:transparent}
+.app-shell .party-tab:hover{background:#f2f7f3}
+.app-shell .party-tab.active{background:#fff;border-color:#cadcd0;color:#12563f;box-shadow:0 2px 5px #244f3c0a}
+.app-shell .party-tabs-actions{padding:0;gap:6px}.app-shell .tab-add-btn{background:white;border-color:#bdcfc3;color:#175b44;padding:4px 12px}.app-shell .tab-manage-btn{width:44px;padding:5px}
+.app-shell .paper{border-radius:16px;border-color:#d3e1d7;box-shadow:0 5px 22px #234b3408}
+.app-shell .paper-head{padding:16px 22px;gap:16px;background:#fff;border-bottom:1px solid #dce7df}
+.app-shell .head-party{gap:8px}.app-shell .head-party #branch-heading{font-size:14px}.app-shell .party-label{color:#73867a;font-size:12px}
+.app-shell .paper-head #title{font-size:22px;min-width:160px;max-width:360px}
+.app-shell .date-block{padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px}
+.app-shell .btn-lock{min-height:34px;margin:0;padding:2px 11px;font-size:10px;border-radius:8px}
+.app-shell .date-screen-badge{font-size:11px;color:#728477}
+.app-shell .paper .table-wrap{scrollbar-width:thin}
+.app-shell .paper table{min-width:1140px}
+.app-shell .paper col.serial{width:95px}.app-shell .paper col.remove{width:48px}
+.app-shell .paper thead th{background:#f0f5f1;color:#486555;line-height:2.5;padding:8px 10px;font-size:13px;height:57px;border-bottom:1px solid #cddfd2}
+.app-shell #rows>tr>td{border-color:#e1eae3;height:72px;min-height:72px}
+.app-shell #rows td textarea{padding:11px 10px;line-height:2.6}
+.app-shell #rows td input{padding:11px 10px}
+.app-shell #rows tr:focus-within{background:#f0f8f3;box-shadow:inset -3px 0 #409370}
+.app-shell #rows td.number{background:#f8faf7}
+.app-shell .serial-cell{gap:5px;padding:6px;align-content:center}
+.app-shell .serial-num{font:bold 12px Arial,sans-serif;min-width:15px;color:#5f7767}
+.app-shell .receipt-btn{min-height:30px;padding:2px 9px;font-size:10px;border-radius:7px;background:#eaf4ee;color:#146144;border-color:#c4dccb}
+.app-shell .history-btn{min-height:28px;min-width:28px;padding:2px 4px;font-size:11px;border-radius:7px}
+.app-shell .delete{min-height:32px;width:32px;min-width:32px;padding:0;font:22px Arial,sans-serif;color:#ac7873;border:1px solid transparent}
+.app-shell .delete:hover{color:#a0342e;border-color:#efcac5;background:#fff0ed}
+.app-shell .paper-foot{padding:10px 20px;border-top:1px solid #edf1e9;font-size:10px}.app-shell .help{padding:12px 4px;gap:16px;color:#718478;line-height:2.2}
+.app-shell .more-menu .menu{min-width:280px;padding:12px;gap:5px;border-radius:14px;border-color:#d2e0d6;box-shadow:0 14px 40px #123b3020;max-height:70vh;overflow:auto}
+.app-shell .more-menu .menu button{padding:5px 12px;min-height:42px;background:#f8faf7;border-color:transparent;text-align:start}
+.app-shell .more-menu .menu .button-content{justify-content:flex-start}
+.app-shell .font-tools button{width:34px;min-height:34px;height:34px;padding:0;line-height:1}
+.app-shell dialog{border-radius:18px;border:1px solid #d4e2d9;padding:0 22px 22px;max-height:88vh;width:760px;max-width:calc(100vw - 32px);background:#fff;box-shadow:0 24px 85px #12382a38;scrollbar-width:thin}
+.app-shell dialog::backdrop{background:#17392e75;backdrop-filter:blur(4px)}
+.app-shell .dialog-head{position:sticky;top:0;z-index:5;background:#fff;padding:18px 0 12px;border-bottom:1px solid #e0e9e2;margin-bottom:15px;gap:18px}
+.app-shell .dialog-head h2{font-size:19px;line-height:2.4}
+.app-shell .dialog-head button{min-width:38px;width:38px;height:38px;min-height:38px;padding:0;flex-shrink:0;background:#f4f7f4;border-color:#dbe5dd;border-radius:10px;font:22px Arial,sans-serif}
+.app-shell .dialog-head button:hover{background:#fff0ed;border-color:#ecc8c3;color:#9e3630}
+.app-shell dialog p{color:#678071;line-height:2.5}
+.app-shell dialog input,.app-shell dialog select{min-height:45px;border-radius:9px;background:#f9fbf8;border-color:#d1dfd5;padding:6px 12px}
+.app-shell .inline-form{display:grid;grid-template-columns:minmax(140px,1fr) auto auto;gap:8px;align-items:center}
+.app-shell .party-item{padding:14px 0;gap:8px}.app-shell .party-item button{padding:5px 11px;min-height:40px;font-size:11px}
+.app-shell .export-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}.app-shell .export-actions button{min-height:55px}
+.app-shell .summary-wrap{border:1px solid #d9e5dc;border-radius:11px;max-height:52vh;overflow:auto}
+.app-shell :is(#summary-table,#history-table,#backup-list-table){margin:0;table-layout:auto}
+.app-shell :is(#summary-table,#history-table,#backup-list-table) th{position:sticky;top:0;background:#edf4ef;line-height:2.5;padding:10px;font-size:12px}
+.app-shell :is(#summary-table,#history-table,#backup-list-table) td{padding:10px;line-height:2.5;overflow-wrap:anywhere}
+.app-shell #receipt-dialog{background:#f4f7f2;width:760px}.app-shell #receipt-dialog .dialog-head{background:#f4f7f2}
+.app-shell .receipt-actions{position:sticky;top:91px;z-index:4;background:#f4f7f2;padding:8px 0 12px;gap:8px;margin:0 0 12px;border-bottom:1px solid #dde7dc}
+.app-shell .receipt-actions button{flex:1;padding:6px 10px;font-size:11px}.app-shell #receipt-status{width:100%;line-height:2}.app-shell #receipt-status:empty{display:none}
+@media(max-width:1000px){.app-shell .top-nav{grid-template-columns:1fr;gap:10px;padding:12px 18px}.app-shell .top-nav-center{grid-row:2;width:100%}.app-shell .top-nav-end{grid-row:3}.app-shell .top-nav-start{width:100%}.app-shell .paper-head{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.app-shell .head-center{grid-column:1/-1;grid-row:1}.app-shell .date-block{justify-self:end}}
+@media(max-width:600px){.app-shell .top-nav{position:static;padding:12px;gap:10px}.app-shell .top-nav-start{gap:8px}.app-shell .brand-mini{padding-inline-end:10px}.app-shell .brand-title{font-size:20px}.app-shell .top-date-field{flex:1}.app-shell .all-dates-toggle{flex:1}.app-shell .btn-range{flex:1}.app-shell .top-nav-end{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;gap:7px}.app-shell .top-nav-end>button{padding:5px 6px;font-size:10px;white-space:normal}.app-shell .top-nav-end .button-content{gap:5px;white-space:normal}.app-shell .top-serial-field{margin:0;order:initial}.app-shell .more-menu>summary{width:100%;padding:5px;font-size:11px}.app-shell #save-state{grid-column:1/-1;justify-self:end;max-width:none}.app-shell .more-menu .menu{position:fixed;top:auto;bottom:12px;inset-inline:12px;min-width:0;max-height:70vh;z-index:100}.app-shell main{margin:12px auto;padding:0 12px}.app-shell .backup-banner{align-items:flex-start;gap:10px;font-size:10px}.app-shell .party-tabs-bar{flex-wrap:wrap;padding:7px;gap:7px}.app-shell .party-tabs-scroll{flex-basis:100%}.app-shell .party-tabs-actions{width:100%;justify-content:flex-end}.app-shell .paper-head{padding:14px;gap:10px}.app-shell .paper-head #title{width:100%;min-width:0;max-width:none;font-size:20px}.app-shell .head-party #branch-heading{font-size:12px}.app-shell .help{display:block}.app-shell .help>span{display:block;margin-bottom:6px}.app-shell dialog{padding:0 14px 16px;max-width:calc(100vw - 20px);max-height:92vh}.app-shell .dialog-head{padding-top:14px;gap:10px}.app-shell .dialog-head h2{font-size:16px}.app-shell .inline-form{grid-template-columns:1fr}.app-shell .party-item input{flex-basis:100%}.app-shell .receipt-actions{top:80px;flex-wrap:wrap}.app-shell .receipt-actions button{flex-basis:43%;font-size:10px}.app-shell .range-drawer{padding:12px}.app-shell .export-actions{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.app-shell *{transition:none!important;scroll-behavior:auto!important}}
+}
+
+@media screen{
+  /* A4 landscape printable width plus the two app-only columns. */
+  .app-shell .paper table{width:32.9cm;min-width:32.9cm;max-width:32.9cm}
+  .app-shell .paper.party-page table{width:29.9cm;min-width:29.9cm;max-width:29.9cm}
+  .app-shell .paper col.serial{width:2cm}
+  .app-shell .paper col.col-sender{width:4.3cm}
+  .app-shell .paper col.mobile{width:3cm}
+  .app-shell .paper col.col-receiver{width:9.4cm}
+  .app-shell .paper col.place{width:2cm}
+  .app-shell .paper col.col-branch{width:3cm}
+  .app-shell .paper col.col-balance{width:2.5cm}
+  .app-shell .paper col.col-aed{width:2.5cm}
+  .app-shell .paper col.col-pkr{width:3cm}
+  .app-shell .paper col.remove{width:1.2cm}
+  .app-shell .paper thead tr,.app-shell .paper thead th{height:1.6cm}
+  .app-shell .paper thead th{font-size:var(--entry-font);line-height:2.6;padding:10px 4px;vertical-align:middle}
+}

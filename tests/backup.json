@@ -1,4 +1,16 @@
 {
+  "journal": {
+    "date": "2026-10-15",
+    "rows": [
+      {
+        "id": "56a0745a-7e05-4547-9c5c-e8cc589179ed",
+        "date": "2026-10-15",
+        "detail": "",
+        "debit": "",
+        "credit": ""
+      }
+    ]
+  },
   "version": 4,
   "title": "Test register",
   "date": "2026-10-12",
@@ -8,6 +20,9 @@
     "Alpha",
     "Gamma"
   ],
+  "partyCurrencies": {
+    "Gamma": "pkr"
+  },
   "rows": [
     {
       "entryDate": "2026-10-15",
@@ -19,7 +34,8 @@
       "balance": "10",
       "aed": "125",
       "pkr": "1,000",
-      "id": "9d3535a7-7e2e-4e89-be16-a72c78c16941"
+      "history": [],
+      "id": "09dff5de-c523-41c0-ba11-3be47d8e7b38"
     },
     {
       "entryDate": "2026-10-12",
@@ -31,9 +47,30 @@
       "balance": "",
       "aed": "24",
       "pkr": "",
-      "id": "25a6a5e6-280e-4eb4-8190-a61a067808df"
+      "history": [
+        {
+          "at": "2026-10-16T18:54:28.378Z",
+          "field": "sender",
+          "from": "",
+          "to": "New sender"
+        },
+        {
+          "at": "2026-10-16T18:54:28.427Z",
+          "field": "mobile",
+          "from": "",
+          "to": "+971 50 1234567"
+        },
+        {
+          "at": "2026-10-16T18:54:28.457Z",
+          "field": "aed",
+          "from": "",
+          "to": "24"
+        }
+      ],
+      "id": "1e457ddb-11e0-4c3e-9d95-914ad21f3f8c"
     }
   ],
   "trash": [],
-  "lastBackupAt": "2026-10-15T21:36:17.103Z"
+  "lastBackupAt": "2026-10-16T18:54:30.897Z",
+  "lockedDates": []
 }
