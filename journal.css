@@ -10,7 +10,7 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 .journal-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.journal-tools label{font-size:12px}.journal-tools input{font:14px Arial,sans-serif;direction:ltr;padding:10px;border:1px solid #cbdacf;border-radius:9px;height:44px}
 #journal-date-print{display:none}
 .journal-opening-line{padding:10px 24px;background:#f5f9f3;display:flex;justify-content:space-between;align-items:center;font-size:13px;border-bottom:1px solid #dce6df}
-#journal-opening{font:700 17px Arial,sans-serif;direction:ltr}
+#journal-opening{font:700 17px Arial,sans-serif;direction:rtl}
 .journal-table-wrap{overflow:auto}.journal-table{min-width:650px;width:100%;table-layout:fixed;border-collapse:collapse}
 .journal-table col.journal-serial-col{width:7.5%}
 .journal-table col.journal-detail-col{width:41.5%}
@@ -27,12 +27,19 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 .journal-table td input{font-family:Arial,sans-serif;direction:ltr;text-align:center}
 .journal-table input[aria-invalid="true"]{background:#fff0eb;outline:2px solid #d98c7d;outline-offset:-3px}
 .journal-table .journal-balance,.journal-table tfoot td{font:700 14px Arial,sans-serif;direction:ltr;text-align:center;overflow-wrap:anywhere;padding:6px 10px}
+.journal-table .journal-balance,#journal-closing{direction:rtl}
+.bal-num{font-family:Arial,sans-serif;direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums;display:inline-block}
+.bal-tag{font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif;font-size:11px;font-weight:700;line-height:1.9;padding:0 7px;border-radius:6px;display:inline-block;vertical-align:middle;margin-inline-start:4px}
+.is-jama,.journal-table td.is-jama,.journal-table tfoot td.is-jama{color:#146c43!important}
+.is-jama .bal-tag{background:#e3f5ea;color:#13653f;border:1px solid #b4dfc4}
+.is-banam,.journal-table td.is-banam,.journal-table tfoot td.is-banam{color:#c92a2a!important}
+.is-banam .bal-tag{background:#fdeaea;color:#c92a2a;border:1px solid #f3bcbc}
 .journal-table tfoot th{height:50.4px;line-height:2}
 .journal-description{position:relative}.journal-delete{position:absolute;left:7px;top:50%;transform:translateY(-50%);font:20px Arial,sans-serif!important;width:30px;min-height:30px!important;padding:0!important;background:transparent;border-color:transparent;color:#b77a72}
 .journal-draft{background:#f7faf4}.journal-draft .journal-delete{visibility:hidden}
 .journal-foot{display:flex;justify-content:space-between;padding:10px 22px;font-size:10px;color:#6d8372}.journal-help{font-size:11px;color:#627d69;line-height:2.5}.journal-print-value{display:none}
 @media screen and (max-width:700px){.workspace-nav{padding:8px 12px}.workspace-nav button{flex:1;min-width:0}.journal-heading{padding:14px;gap:10px}.journal-tools{gap:8px}.journal-heading h1{font-size:23px}body.journal-view .top-nav{grid-template-columns:1fr}body.journal-view .top-nav-end{grid-row:2;grid-column:1;display:flex}.journal-opening-line{padding:10px 14px}}
-@page journal{size:A4 portrait;margin:1cm .5cm 8mm}
+@page journal{size:A4 portrait;margin:.5cm}
 @media print{body.journal-view #register-page{display:none!important}body.journal-view #journal-page{display:block!important;page:journal}.workspace-nav,.journal-help{display:none!important}.journal-card{border:0;border-radius:0;box-shadow:none;overflow:visible}.journal-heading{padding:0 0 12px;display:flex;flex-wrap:nowrap}.journal-heading p{display:none}#journal-date-print{display:block;font:14px Arial,sans-serif;direction:ltr}.journal-opening-line{padding:8px;border:1px solid #99aa9a;margin-bottom:8px}.journal-table-wrap{overflow:visible}.journal-table{min-width:0;width:100%}.journal-table thead{display:table-header-group}.journal-table th,.journal-table td{border-color:#99aa9a}.journal-table input,.journal-table textarea,.journal-draft{display:none!important}.journal-print-value{display:block;white-space:pre-wrap;overflow-wrap:anywhere;padding:2px 6px;line-height:1.6;font-size:12px}.journal-money{font-family:Arial,sans-serif;direction:ltr;text-align:center}.journal-table tr{break-inside:avoid}.journal-table tfoot{display:table-row-group}}
 /* Compact printed rows */
 @media print{.journal-table th{height:46px;line-height:2.4;padding:9px 6px 3px}.journal-table td{height:46px;vertical-align:middle}.journal-print-value{padding:9px 6px 3px;line-height:2.4;font-size:12px}.journal-table td.journal-serial,.journal-table .journal-balance,.journal-table tfoot td{padding-top:0;padding-bottom:0}.journal-print-value.journal-money{padding:3px 6px;line-height:1.8}.journal-table .journal-balance,.journal-table tfoot td{padding:2px 6px}.journal-table th.journal-serial-th{background:#edf4ed;color:inherit;font-size:var(--entry-font);font-family:inherit;font-weight:inherit}.journal-table td.journal-serial{background:#fff!important;color:#000;font-size:14px;font-family:Arial,sans-serif;font-weight:700;text-align:center;padding:2px 4px}}

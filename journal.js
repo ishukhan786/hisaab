@@ -25,10 +25,22 @@
     const selected=()=>data().rows.filter(r=>r.date===data().date&&hasData(r));
     const dateLabel=s=>s.split('-').reverse().join('/');
     function ensureDraft(){let draft=data().rows.find(r=>r.date===data().date&&!hasData(r));if(!draft){draft={id:crypto.randomUUID(),date:data().date,detail:'',debit:'',credit:''};data().rows.push(draft);}return draft;}
+    function renderBalance(el,val,valid,invalidText='—'){
+      el.classList.remove('is-jama','is-banam');el.replaceChildren();
+      if(!valid){el.textContent=invalidText;return;}
+      const abs=val<0n?-val:val,numSpan=document.createElement('span');
+      numSpan.className='bal-num';numSpan.textContent=format(abs);el.append(numSpan);
+      if(val!==0n){
+        const isJama=val>0n;el.classList.add(isJama?'is-jama':'is-banam');
+        const tag=document.createElement('span');tag.className='bal-tag';tag.textContent=isJama?'جمع':'بنام';
+        el.append(' ',tag);
+      }
+    }
+    const fmtBalText=b=>b>0n?`${format(b)} جمع`:b<0n?`${format(-b)} بنام`:'0';
     function recalculate(){
       let opening=0n,valid=true,debit=0n,credit=0n,dayValid=true,serial=1;
       for(const r of data().rows.filter(r=>hasData(r)&&r.date<data().date)){const d=amount(r.debit),c=amount(r.credit);if(d===null||c===null)valid=false;else opening+=c-d;}
-      $('journal-opening').textContent=valid?format(opening):'رقم درست کریں';let balance=opening;
+      renderBalance($('journal-opening'),opening,valid,'رقم درست کریں');let balance=opening;
       for(const r of data().rows.filter(r=>r.date===data().date)){
         const d=amount(r.debit),c=amount(r.credit),tr=nodes.get(r.id);if(!tr)continue;
         const populated=hasData(r);
@@ -37,9 +49,12 @@
         if(sCell)sCell.textContent=populated?String(serial++):'＋';
         for(const k of ['debit','credit']){const input=tr.querySelector('[data-journal="'+k+'"]');input.setCustomValidity(amount(r[k])===null?'صرف مثبت مکمل رقم لکھیں':'');input.setAttribute('aria-invalid',String(amount(r[k])===null));}
         if(d===null||c===null){valid=false;dayValid=false;}else{balance+=c-d;debit+=d;credit+=c;}
-        tr.querySelector('.journal-balance').textContent=populated?(valid?format(balance):'—'):'';
+        const balCell=tr.querySelector('.journal-balance');
+        if(!populated){balCell.classList.remove('is-jama','is-banam');balCell.replaceChildren();}
+        else renderBalance(balCell,balance,valid,'—');
       }
-      $('journal-total-debit').textContent=dayValid?format(debit):'—';$('journal-total-credit').textContent=dayValid?format(credit):'—';$('journal-closing').textContent=valid?format(balance):'—';
+      $('journal-total-debit').textContent=dayValid?format(debit):'—';$('journal-total-credit').textContent=dayValid?format(credit):'—';
+      renderBalance($('journal-closing'),balance,valid,'—');
       $('journal-message').textContent=valid?'بقایا = پچھلا بقایا + جمع − بنام':'رقم درست کریں؛ غلط رقم کی وجہ سے بقایا کا حساب مکمل نہیں ہے۔';$('journal-message').classList.toggle('error',!valid);
       $('journal-count').textContent=selected().length+' اندراجات';$('journal-date-print').textContent=dateLabel(data().date);
       $('journal-undo').hidden=!undo;
@@ -72,8 +87,11 @@
     async function output(pdf=false){if(!selected().length){alert('اس تاریخ پر کوئی انٹری موجود نہیں ہے۔');return;}if(!recalculate()){alert('پرنٹ سے پہلے روزنامچے کی رقم درست کریں۔');return;}await document.fonts.ready;preparePrint();if(!window.electronAPI?.previewPDF){window.print();return;}if(document.body.inert)return;document.body.inert=true;try{const result=pdf?await window.electronAPI.savePDF('روزنامچہ_'+data().date+'.pdf'):await window.electronAPI.previewPDF();if(result.status==='error')alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');return result;}catch{alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');}finally{document.body.inert=false;}}
     function exportExcel(){
       if(!selected().length||!recalculate()){alert('ایکسپورٹ کے لیے درست انٹریاں منتخب کریں۔');return;}
-      const num=text=>({number:text.replace(/,/g,'')});
-      const rows=[['نمبر شمار','تفصیل','بنام','جمع','بقایا'],['','پچھلا بقایا','','',num($('journal-opening').textContent)],...selected().map((r,i)=>[i+1,r.detail,{number:String(amount(r.debit))},{number:String(amount(r.credit))},num(nodes.get(r.id).querySelector('.journal-balance').textContent)]),['','کل حساب / آخری بقایا',num($('journal-total-debit').textContent),num($('journal-total-credit').textContent),num($('journal-closing').textContent)]];
+      let bal=0n,totD=0n,totC=0n;
+      for(const r of data().rows.filter(r=>hasData(r)&&r.date<data().date))bal+=amount(r.credit)-amount(r.debit);
+      const openText=fmtBalText(bal);
+      const entryRows=selected().map((r,i)=>{const d=amount(r.debit),c=amount(r.credit);bal+=c-d;totD+=d;totC+=c;return [i+1,r.detail,{number:String(d)},{number:String(c)},fmtBalText(bal)];});
+      const rows=[['نمبر شمار','تفصیل','بنام','جمع','بقایا'],['','پچھلا بقایا','','',openText],...entryRows,['','کل حساب / آخری بقایا',{number:String(totD)},{number:String(totC)},fmtBalText(bal)]];
       exportSheet(rows,'روزنامچہ_'+data().date+'.xlsx');
     }
     refresh();try{if(localStorage.getItem('hisaab-workspace')==='journal')setPage(true);}catch{}

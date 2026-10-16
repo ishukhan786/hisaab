@@ -113,7 +113,7 @@
     </div>
     <section class="paper" aria-label="اندراج رجسٹر">
       <div class="paper-head"><div class="head-party"><span class="party-label">پارٹی:</span><strong id="branch-heading"><bdi>تمام پارٹیاں</bdi></strong><span class="view-note" id="view-note"></span></div><div class="head-center"><input id="title" aria-label="رجسٹر کا عنوان" maxlength="100" value="اندراج رجسٹر"></div><div class="date-block"><button id="lock-day" class="btn-lock no-print" type="button" title="اس تاریخ کا رجسٹر لاک یا ان لاک کریں">🔓 دن کھلا ہے</button><span class="date-screen-badge" id="date-screen-badge"></span><div class="date-print-line"><span class="date-print-label">تاریخ:</span><span class="date-print-val" id="date-print-val"></span></div></div></div>
-      <div class="table-wrap"><table><colgroup><col class="serial"><col class="person col-sender"><col class="mobile"><col class="person col-receiver"><col class="place"><col class="branch col-branch no-print"><col class="money col-balance"><col class="money col-aed"><col class="money col-pkr"><col class="col-receipt no-print"><col class="remove no-print"></colgroup><thead><tr><th>نمبر شمار</th><th>ارسال کنندہ</th><th>موبائیل نمبر</th><th>وصول کنندہ</th><th class="col-place">مقام</th><th class="col-branch no-print">پارٹی</th><th>بقایا</th><th>درہم</th><th id="th-currency">روپیہ</th><th class="col-receipt no-print">رسید</th><th class="no-print"><span class="sr-only">حذف</span></th></tr></thead><tbody id="rows"></tbody><tfoot class="register-totals"><tr class="totals-gap" aria-hidden="true"><td colspan="5"></td><td class="no-print"></td><td colspan="3"></td><td class="col-receipt no-print"></td><td class="no-print"></td></tr><tr class="totals-row"><th colspan="5" scope="row">کل مجموعہ حساب</th><td class="col-branch no-print"></td><td id="total-balance">0</td><td id="total-aed">0</td><td id="total-pkr">0</td><td class="col-receipt no-print"></td><td class="no-print"></td></tr></tfoot></table></div>
+      <div class="table-wrap"><table><thead><tr><th class="serial">نمبر شمار</th><th class="person col-sender">ارسال کنندہ</th><th class="mobile">موبائیل نمبر</th><th class="person col-receiver">وصول کنندہ</th><th class="place col-place">مقام</th><th class="branch col-branch no-print">پارٹی</th><th class="money col-balance">بقایا</th><th class="money col-aed">درہم</th><th id="th-currency" class="money col-pkr">روپیہ</th><th class="col-receipt no-print">رسید</th><th class="remove no-print"><span class="sr-only">حذف</span></th></tr></thead><tbody id="rows"></tbody><tfoot class="register-totals"><tr class="totals-gap" aria-hidden="true"><td colspan="5"></td><td class="col-branch no-print"></td><td colspan="3"></td><td class="col-receipt no-print"></td><td class="no-print"></td></tr><tr class="totals-row"><th colspan="5" scope="row">کل مجموعہ حساب</th><td class="col-branch no-print"></td><td id="total-balance">0</td><td id="total-aed">0</td><td id="total-pkr">0</td><td class="col-receipt no-print"></td><td class="no-print"></td></tr></tfoot></table></div>
       <div class="paper-foot"><span id="count">0 اندراجات</span><span>حساب · اندراج رجسٹر</span></div>
     </section>
     <footer class="help"><span>نئی انٹری اوپر والی "رپورٹ کی تاریخ" پر محفوظ ہوتی ہے • Tab سے اگلا خانہ • Ctrl+P پرنٹ • Ctrl+Z حذف شدہ واپس</span><span>ڈیٹا اسی براؤزر میں محفوظ ہوتا ہے؛ "مزید" میں خودکار بیک اَپ فائل فعال کریں۔</span></footer>
@@ -126,16 +126,16 @@
       <footer class="journal-foot"><span id="journal-count"></span><span>حساب · روزنامچہ</span></footer>
     </section><p class="journal-help no-print">بنام میں ادائیگی اور جمع میں وصولی لکھیں۔ پہلی انٹری سے حساب صفر پر شروع ہوتا ہے۔ نئی قطار خود بنے گی؛ Tab سے اگلے خانے میں جائیں۔</p>
   </main>
-  <dialog id="branch-dialog" aria-labelledby="branch-dialog-title">
+  <dialog closedby='any' id="branch-dialog" aria-labelledby="branch-dialog-title">
     <div class="dialog-head"><h2 id="branch-dialog-title">پارٹیوں کا انتظام اور کرنسی</h2><button id="close-branches" aria-label="بند کریں">×</button></div>
     <p>پارٹی بنائیں اور اس کی کرنسی (پاکستانی روپیہ یا افغانی) منتخب کریں۔</p>
     <form id="branch-form"><label for="branch-name">نئی پارٹی کا نام اور کرنسی</label><div class="inline-form"><input id="branch-name" maxlength="100" required autocomplete="off" placeholder="پارٹی کا نام"><select id="branch-currency" aria-label="پارٹی کی کرنسی"><option value="pkr">درہم + روپیہ (PKR)</option><option value="afn">درہم + افغانی (AFN)</option></select><button class="primary" type="submit">شامل کریں</button></div></form>
     <p id="branch-error" role="status"></p><div id="branch-list"></div>
   </dialog>
-  <dialog id="export-dialog" aria-labelledby="export-title"><div class="dialog-head"><h2 id="export-title">Excel ایکسپورٹ</h2><button id="close-export" aria-label="بند کریں">×</button></div><p>نام، موبائیل نمبر، تاریخ، پارٹی اور رقم Excel میں محفوظ کریں۔</p><div class="export-actions"><button id="export-filtered" class="primary">فلٹر والی انٹریاں</button><button id="export-all">تمام انٹریاں</button></div></dialog>
-  <dialog id="summary-dialog" aria-labelledby="summary-title"><div class="dialog-head"><h2 id="summary-title">روزانہ خلاصہ</h2><button id="close-summary" aria-label="بند کریں">×</button></div><div class="summary-tabs" role="tablist" aria-label="خلاصہ کی قسم"><button id="summary-tab-date" type="button" role="tab" class="summary-tab active" aria-selected="true">📅 تاریخ وار خلاصہ</button><button id="summary-tab-party" type="button" role="tab" class="summary-tab" aria-selected="false">🏢 پارٹی وار خلاصہ</button></div><p id="summary-scope"></p><div class="summary-wrap"><table id="summary-table"><thead><tr><th id="summary-first-heading">تاریخ</th><th>اندراجات</th><th>بقایا</th><th>درہم</th><th id="summary-currency-heading">روپیہ</th></tr></thead><tbody id="summary-rows"></tbody><tfoot><tr><th>کل</th><td id="summary-count">0</td><td id="summary-balance">0</td><td id="summary-aed">0</td><td id="summary-pkr">0</td></tr></tfoot></table></div><p id="summary-hint">کسی تاریخ پر کلک کریں تو اسی دن کا رجسٹر کھل جائے گا۔</p></dialog>
+  <dialog closedby='any' id="export-dialog" aria-labelledby="export-title"><div class="dialog-head"><h2 id="export-title">Excel ایکسپورٹ</h2><button id="close-export" aria-label="بند کریں">×</button></div><p>نام، موبائیل نمبر، تاریخ، پارٹی اور رقم Excel میں محفوظ کریں۔</p><div class="export-actions"><button id="export-filtered" class="primary">فلٹر والی انٹریاں</button><button id="export-all">تمام انٹریاں</button></div></dialog>
+  <dialog closedby='any' id="summary-dialog" aria-labelledby="summary-title"><div class="dialog-head"><h2 id="summary-title">روزانہ خلاصہ</h2><button id="close-summary" aria-label="بند کریں">×</button></div><div class="summary-tabs" role="tablist" aria-label="خلاصہ کی قسم"><button id="summary-tab-date" type="button" role="tab" class="summary-tab active" aria-selected="true">📅 تاریخ وار خلاصہ</button><button id="summary-tab-party" type="button" role="tab" class="summary-tab" aria-selected="false">🏢 پارٹی وار خلاصہ</button></div><p id="summary-scope"></p><div class="summary-wrap"><table id="summary-table"><thead><tr><th id="summary-first-heading">تاریخ</th><th>اندراجات</th><th>بقایا</th><th>درہم</th><th id="summary-currency-heading">روپیہ</th></tr></thead><tbody id="summary-rows"></tbody><tfoot><tr><th>کل</th><td id="summary-count">0</td><td id="summary-balance">0</td><td id="summary-aed">0</td><td id="summary-pkr">0</td></tr></tfoot></table></div><p id="summary-hint">کسی تاریخ پر کلک کریں تو اسی دن کا رجسٹر کھل جائے گا۔</p></dialog>
 
-  <dialog id="backup-dialog" aria-labelledby="backup-dialog-title">
+  <dialog closedby='any' id="backup-dialog" aria-labelledby="backup-dialog-title">
     <div class="dialog-head"><h2 id="backup-dialog-title">خودکار بیک اَپ اور بحالی (Backup Manager)</h2><button id="close-backups" aria-label="بند کریں">×</button></div>
     <p>ایپ ہر تبدیلی پر خودکار بیک اَپ محفوظ رکھتی ہے اور پچھلے 7 سے 30 بیک اَپس محفوظ رہتے ہیں۔ ری سٹور کرنے سے پہلے موجودہ ڈیٹا کا سیفٹی بیک اَپ بھی خود بن جاتا ہے۔</p>
     <div class="backup-actions-bar" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
@@ -150,7 +150,7 @@
     </div>
   </dialog>
 
-  <dialog id="history-dialog" aria-labelledby="history-dialog-title">
+  <dialog closedby='any' id="history-dialog" aria-labelledby="history-dialog-title">
     <div class="dialog-head"><h2 id="history-dialog-title">انٹری کی تبدیلیوں کی تفصیل (تاریخچہ)</h2><button id="close-history" aria-label="بند کریں">×</button></div>
     <p id="history-subtitle" style="font-weight:600;margin:4px 0 10px;color:var(--green);"></p>
     <div class="summary-wrap" style="max-height:50vh;">
@@ -161,7 +161,7 @@
     </div>
   </dialog>
 
-  <dialog id="receipt-dialog" aria-labelledby="receipt-heading">
+  <dialog closedby='any' id="receipt-dialog" aria-labelledby="receipt-heading">
     <div class="dialog-head no-print"><h2 id="receipt-heading">انٹری کی رسید</h2><button id="close-receipt" type="button" aria-label="بند کریں">×</button></div>
     <div class="receipt-actions no-print"><button id="receipt-preview" type="button" class="primary">رسید پرنٹ کریں</button><button id="receipt-save" type="button" hidden>PDF محفوظ کریں</button><button id="receipt-png" type="button" hidden>PNG محفوظ کریں (1:1)</button><button id="receipt-copy" type="button" hidden>تصویر کاپی کریں</button><span id="receipt-status" role="status"></span></div>
     <article id="receipt-paper" class="receipt-sheet" dir="rtl">

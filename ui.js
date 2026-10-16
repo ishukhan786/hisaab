@@ -10,5 +10,15 @@
   document.addEventListener('click',e=>{if(!more.contains(e.target))more.open=false;});
   more.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('.font-tools'))more.open=false;});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&more.open){more.open=false;more.querySelector('summary').focus();}});
+  if(!('closedBy' in HTMLDialogElement.prototype)){
+    document.querySelectorAll('dialog').forEach(d=>{
+      d.addEventListener('click',e=>{
+        if(e.target!==d)return;
+        const rect=d.getBoundingClientRect();
+        if(rect.top<=e.clientY&&e.clientY<=rect.top+rect.height&&rect.left<=e.clientX&&e.clientX<=rect.left+rect.width)return;
+        d.close();
+      });
+    });
+  }
   document.querySelectorAll('.dialog-head button').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
 })();
