@@ -1,6 +1,7 @@
 (() => {
   'use strict';
   const digits=v=>String(v).replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)).replace(/٬/g,',');
+  const formatAllah=v=>String(v).replace(/(^|[\s\u060C\u06D4()\-]|\u0639\u0628\u062F|\u0621)\u0627\u0644\u0644[\u0651\u0670]*[\u06C1\u0647](?=$|[\s\u060C\u06D4()\-])/g,'$1\uFDF2');
   const amount=v=>{const s=digits(v).replace(/[,\s]/g,'');return !s?0n:/^\d{1,12}$/.test(s)?BigInt(s):null;};
   const format=n=>n.toLocaleString('en-IN');
   const hasData=r=>[r.detail,r.debit,r.credit].some(v=>v.trim());
@@ -12,7 +13,7 @@
     return {date:raw.date,rows:raw.rows.map(r=>{
       if(!r||!validDate(r.date)||typeof r.detail!=='string'||r.detail.length>2000||['debit','credit'].some(k=>typeof r[k]!=='string'||r[k].length>40))throw Error('Invalid journal entry');
       const id=typeof r.id==='string'&&r.id.length<100&&!ids.has(r.id)?r.id:crypto.randomUUID();ids.add(id);
-      const result={id,date:r.date,detail:r.detail};
+      const result={id,date:r.date,detail:formatAllah(r.detail)};
       for(const k of ['debit','credit']){const v=digits(r[k]),n=amount(v);result[k]=v.trim()&&n!==null?format(n):v;}
       return result;
     }).filter(hasData)};
@@ -50,7 +51,7 @@
       for(const key of ['detail','debit','credit']){
         const td=document.createElement('td');const input=document.createElement(key==='detail'?'textarea':'input');input.dataset.journal=key;input.value=r[key];input.setAttribute('aria-label',key==='detail'?'تفصیل':key==='debit'?'بنام':'جمع');input.autocomplete='off';
         if(key==='detail'){input.rows=1;input.maxLength=2000;input.placeholder='تفصیل لکھیں…';}else{input.inputMode='numeric';input.className='journal-money';input.maxLength=30;input.placeholder='0';}
-        input.addEventListener('input',e=>{if(e.isComposing)return;if(key!=='detail')input.value=digits(input.value);r[key]=input.value;const draft=ensureDraft();if(!nodes.has(draft.id))addNode(draft);recalculate();save();});
+        input.addEventListener('input',e=>{if(e.isComposing)return;if(key!=='detail')input.value=digits(input.value);else{const v=formatAllah(input.value);if(v!==input.value){const pos=input.selectionStart,diff=v.length-input.value.length;input.value=v;if(pos!==null){const np=Math.max(0,pos+diff);input.setSelectionRange(np,np);}}}r[key]=input.value;const draft=ensureDraft();if(!nodes.has(draft.id))addNode(draft);recalculate();save();});
         input.addEventListener('compositionend',()=>input.dispatchEvent(new Event('input')));
         input.addEventListener('blur',()=>{if(key!=='detail'&&input.value.trim()&&amount(input.value)!==null){input.value=format(amount(input.value));r[key]=input.value;save();}});
         input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();input.blur();}if(e.key==='Tab'&&!e.shiftKey&&key==='credit'){e.preventDefault();input.blur();const rows=data().rows.filter(x=>x.date===data().date),next=rows[rows.indexOf(r)+1]||ensureDraft();if(!nodes.has(next.id))addNode(next);nodes.get(next.id).querySelector('textarea').focus();}});
@@ -72,7 +73,7 @@
     function exportExcel(){
       if(!selected().length||!recalculate()){alert('ایکسپورٹ کے لیے درست انٹریاں منتخب کریں۔');return;}
       const num=text=>({number:text.replace(/,/g,'')});
-      const rows=[['سریل نمبر','تفصیل','بنام','جمع','بقایا'],['','پچھلا بقایا','','',num($('journal-opening').textContent)],...selected().map((r,i)=>[i+1,r.detail,{number:String(amount(r.debit))},{number:String(amount(r.credit))},num(nodes.get(r.id).querySelector('.journal-balance').textContent)]),['','کل حساب / آخری بقایا',num($('journal-total-debit').textContent),num($('journal-total-credit').textContent),num($('journal-closing').textContent)]];
+      const rows=[['نمبر شمار','تفصیل','بنام','جمع','بقایا'],['','پچھلا بقایا','','',num($('journal-opening').textContent)],...selected().map((r,i)=>[i+1,r.detail,{number:String(amount(r.debit))},{number:String(amount(r.credit))},num(nodes.get(r.id).querySelector('.journal-balance').textContent)]),['','کل حساب / آخری بقایا',num($('journal-total-debit').textContent),num($('journal-total-credit').textContent),num($('journal-closing').textContent)]];
       exportSheet(rows,'روزنامچہ_'+data().date+'.xlsx');
     }
     refresh();try{if(localStorage.getItem('hisaab-workspace')==='journal')setPage(true);}catch{}

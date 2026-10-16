@@ -29,7 +29,7 @@ body.app-shell{background:#eef3f1;color:#203d35}
 .app-shell .all-dates-toggle{height:auto;min-height:44px;font-size:11px;margin:0;gap:8px}
 .app-shell .range-drawer{padding:14px 24px;background:#f8fbf8;box-shadow:none}
 .app-shell .range-drawer-inner{gap:10px 14px}.app-shell .range-drawer input{min-height:40px}
-.app-shell main{max-width:1680px;padding:0 24px;margin:18px auto}
+.app-shell main{max-width:100%;padding:0 18px;margin:18px auto}
 .app-shell .backup-banner{padding:9px 14px;margin-bottom:14px;border-radius:12px;font-size:11px;line-height:2.4;background:#f7faf6;border-color:#dbe7d9}
 .app-shell .backup-banner.backup-due{background:#fff9ed;border-color:#ebd9b2;color:#765923}
 .app-shell .backup-banner button{flex-shrink:0;min-height:36px;padding:3px 13px;font-size:11px}
@@ -47,8 +47,8 @@ body.app-shell{background:#eef3f1;color:#203d35}
 .app-shell .btn-lock{min-height:34px;margin:0;padding:2px 11px;font-size:10px;border-radius:8px}
 .app-shell .date-screen-badge{font-size:11px;color:#728477}
 .app-shell .paper .table-wrap{scrollbar-width:thin}
-.app-shell .paper table{min-width:1140px}
-.app-shell .paper col.serial{width:95px}.app-shell .paper col.remove{width:48px}
+.app-shell .paper table{width:100%;min-width:1100px;max-width:none}
+.app-shell .paper col.serial{width:5.5%}.app-shell .paper col.remove{width:3.5%}
 .app-shell .paper thead th{background:#f0f5f1;color:#486555;line-height:2.5;padding:8px 10px;font-size:13px;height:57px;border-bottom:1px solid #cddfd2}
 .app-shell #rows>tr>td{border-color:#e1eae3;height:72px;min-height:72px}
 .app-shell #rows td textarea{padding:11px 10px;line-height:2.6}
@@ -57,7 +57,8 @@ body.app-shell{background:#eef3f1;color:#203d35}
 .app-shell #rows td.number{background:#f8faf7}
 .app-shell .serial-cell{gap:5px;padding:6px;align-content:center}
 .app-shell .serial-num{font:bold 12px Arial,sans-serif;min-width:15px;color:#5f7767}
-.app-shell .receipt-btn{min-height:30px;padding:2px 9px;font-size:10px;border-radius:7px;background:#eaf4ee;color:#146144;border-color:#c4dccb}
+.app-shell #rows td.col-receipt{background:#fafcf9;padding:4px 6px}
+.app-shell .receipt-btn{min-height:34px;padding:3px 11px;font-size:11px;border-radius:8px;background:#eaf4ee;color:#146144;border-color:#c4dccb;white-space:nowrap}
 .app-shell .history-btn{min-height:28px;min-width:28px;padding:2px 4px;font-size:11px;border-radius:7px}
 .app-shell .delete{min-height:32px;width:32px;min-width:32px;padding:0;font:22px Arial,sans-serif;color:#ac7873;border:1px solid transparent}
 .app-shell .delete:hover{color:#a0342e;border-color:#efcac5;background:#fff0ed}
@@ -93,19 +94,19 @@ body.app-shell{background:#eef3f1;color:#203d35}
 }
 
 @media screen{
-  /* A4 landscape printable width plus the two app-only columns. */
-  .app-shell .paper table{width:32.9cm;min-width:32.9cm;max-width:32.9cm}
-  .app-shell .paper.party-page table{width:29.9cm;min-width:29.9cm;max-width:29.9cm}
-  .app-shell .paper col.serial{width:2cm}
-  .app-shell .paper col.col-sender{width:4.3cm}
-  .app-shell .paper col.mobile{width:3cm}
-  .app-shell .paper col.col-receiver{width:9.4cm}
-  .app-shell .paper col.place{width:2cm}
-  .app-shell .paper col.col-branch{width:3cm}
-  .app-shell .paper col.col-balance{width:2.5cm}
-  .app-shell .paper col.col-aed{width:2.5cm}
-  .app-shell .paper col.col-pkr{width:3cm}
-  .app-shell .paper col.remove{width:1.2cm}
+  /* Full-width responsive table across both All Parties and Party-specific pages. */
+  .app-shell .paper table,.app-shell .paper.party-page table{width:100%;min-width:1100px;max-width:none}
+  .app-shell .paper col.serial{width:5.5%}
+  .app-shell .paper col.col-sender{width:14%}
+  .app-shell .paper col.mobile{width:10.5%}
+  .app-shell .paper col.col-receiver{width:auto}
+  .app-shell .paper col.place{width:8%}
+  .app-shell .paper col.col-branch{width:9.5%}
+  .app-shell .paper col.col-balance{width:8.5%}
+  .app-shell .paper col.col-aed{width:8.5%}
+  .app-shell .paper col.col-pkr{width:9.5%}
+  .app-shell .paper col.col-receipt{width:5.5%}
+  .app-shell .paper col.remove{width:3.5%}
   .app-shell .paper thead tr,.app-shell .paper thead th{height:1.6cm}
   .app-shell .paper thead th{font-size:var(--entry-font);line-height:2.6;padding:10px 4px;vertical-align:middle}
 }

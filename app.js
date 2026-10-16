@@ -7,7 +7,8 @@
   const labels = ['ارسال کنندہ','موبائیل نمبر','وصول کنندہ','مقام','پارٹی','بقایا','درہم','روپیہ'];
   const moneyFields = ['balance','aed','pkr'];
   const populated = r => ['sender','mobile','receiver','place',...moneyFields].some(f => r[f].trim());
-  const cleanName = value => value.trim().replace(/\s+/g,' ');
+  const formatAllah = value => String(value).replace(/(^|[\s\u060C\u06D4()\-]|\u0639\u0628\u062F|\u0621)\u0627\u0644\u0644[\u0651\u0670]*[\u06C1\u0647](?=$|[\s\u060C\u06D4()\-])/g, '$1\uFDF2');
+  const cleanName = value => formatAllah(value).trim().replace(/\s+/g,' ');
   const nameKey = value => cleanName(value).toLocaleLowerCase();
   const uid = () => crypto.randomUUID();
   function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
@@ -37,7 +38,7 @@
     function convert(row){
       if(!row||typeof row!=='object')throw Error('Invalid row');
       const result={};
-      rowFields.forEach(f=>{const v=row[f]===undefined&&['entryDate','branch'].includes(f)?'':row[f];if(typeof v!=='string'||v.length>300)throw Error('Invalid field');result[f]=v;});
+      rowFields.forEach(f=>{const v=row[f]===undefined&&['entryDate','branch'].includes(f)?'':row[f];if(typeof v!=='string'||v.length>300)throw Error('Invalid field');result[f]=['sender','receiver','place'].includes(f)?formatAllah(v):v;});
       if(result.entryDate&&!dateValid(result.entryDate))throw Error('Invalid date');
       if(!result.entryDate)result.entryDate=source.date||today();
       result.branch=register(result.branch);
@@ -52,7 +53,7 @@
     const startSerial=Number.isInteger(source.startSerial)&&source.startSerial>0?source.startSerial:1;
     const partyCurrencies=Object.create(null);for(const name of registry){const raw=source.partyCurrencies;if(raw&&Object.hasOwn(raw,name)){if(!['pkr','afn'].includes(raw[name]))throw Error('Invalid currency');partyCurrencies[name]=raw[name];}}
     const lockedDates=Array.isArray(source.lockedDates)?source.lockedDates.filter(d=>typeof d==='string'&&dateValid(d)):[];
-    return {journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:source.title,date:source.date||today(),startSerial,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates};
+    return {journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:formatAllah(source.title),date:source.date||today(),startSerial,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates};
   }
   try{const raw=localStorage.getItem(KEY);if(raw)state=migrate(JSON.parse(raw));}catch{storageBlocked=true;alert('محفوظ ڈیٹا نہیں کھل سکا۔ اصل ڈیٹا محفوظ رکھا گیا ہے؛ درست بیک اَپ کھولیں۔');}
   function persist(){if(storageBlocked){$('save-state').textContent='محفوظ نہیں ہو رہا — بیک اَپ بحال کریں';return false;}try{const clean={...state,rows:state.rows.filter(populated)};localStorage.setItem(KEY,JSON.stringify(clean));$('save-state').textContent='✓ محفوظ ہے';return true;}catch{$('save-state').textContent='محفوظ نہیں ہو سکا — بیک اَپ لیں';return false;}}
@@ -67,9 +68,9 @@
     return $('all-dates').checked||r.entryDate===state.date;
   }
   function queryMatch(r){
-    const query=englishDigits($('search').value).trim().toLocaleLowerCase();
+    const query=formatAllah(englishDigits($('search').value)).trim().toLocaleLowerCase();
     if(!query)return true;
-    const text=[r.sender,r.receiver,r.mobile,r.place,r.branch].join(' ').toLocaleLowerCase();
+    const text=formatAllah([r.sender,r.receiver,r.mobile,r.place,r.branch].join(' ')).toLocaleLowerCase();
     const phoneQuery=query.replace(/[\s()+-]/g,'');
     return text.includes(query)||(/^\d+$/.test(phoneQuery)&&r.mobile.replace(/[\s()+-]/g,'').includes(phoneQuery));
   }
@@ -241,13 +242,19 @@
         hBtn.onclick=e=>{e.stopPropagation();openHistory(r);};
         wrap.append(hBtn);
       }
-      if(matched && populated(r)){
-        const receipt=document.createElement('button');receipt.type='button';receipt.className='receipt-btn no-print';receipt.textContent='رسید';receipt.title='اس انٹری کی رسید پرنٹ کریں';receipt.setAttribute('aria-label','انٹری '+val+' کی رسید');
-        receipt.onclick=e=>{e.stopPropagation();openReceipt(r,val);};wrap.append(receipt);
-      }
       cell.append(wrap);
-      cell.title=matched?`سیریل: ${val} (تبدیل کرنے کے لیے کلک کریں)`:(r.entryDate?fmtDate(r.entryDate):'');
-      if(matched&&!day){const small=document.createElement('small');small.className='row-date';small.textContent=fmtDate(r.entryDate);cell.append(small);}});
+      cell.title=matched?`نمبر شمار: ${val} (تبدیل کرنے کے لیے کلک کریں)`:(r.entryDate?fmtDate(r.entryDate):'');
+      if(matched&&!day){const small=document.createElement('small');small.className='row-date';small.textContent=fmtDate(r.entryDate);cell.append(small);}
+      const rCell=tr.querySelector('.col-receipt');
+      if(rCell){
+        rCell.replaceChildren();
+        if(matched && populated(r)){
+          const receipt=document.createElement('button');receipt.type='button';receipt.className='receipt-btn no-print';receipt.textContent='🖨 رسید';receipt.title='اس انٹری کی رسید پرنٹ کریں';receipt.setAttribute('aria-label','انٹری '+val+' کی رسید');
+          receipt.onclick=e=>{e.stopPropagation();openReceipt(r,val);};
+          rCell.append(receipt);
+        }
+      }
+    });
     const isParty=selectedBranch.startsWith('b:');
     const paper=document.querySelector('.paper');
     if(paper)paper.classList.toggle('party-page',isParty);
@@ -277,7 +284,7 @@
     num.onclick=()=>{
       if(!populated(row))return;
       const current=parseInt(englishDigits(num.querySelector('.serial-num')?.textContent||num.textContent),10)||(state.startSerial||1);
-      const next=prompt('اس قطار کا نیا سیریل نمبر لکھیں (یہیں سے آگے خودکار نمبر بنیں گے):',current);
+      const next=prompt('اس قطار کا نیا نمبر شمار لکھیں (یہیں سے آگے خودکار نمبر بنیں گے):',current);
       if(next===null)return;
       const val=parseInt(englishDigits(next.trim()),10);
       if(!isNaN(val)&&val>0){
@@ -322,6 +329,7 @@
         if(event?.isComposing)return;
         if(field==='branch'&&input.value==='__new_party__'){input.value=row.branch;openBranches(row);return;}
         if(moneyFields.includes(field)||field==='mobile'){const value=englishDigits(input.value);if(value!==input.value){const start=input.selectionStart,end=input.selectionEnd;input.value=value;if(start!==null)input.setSelectionRange(start,end);}}
+        if(isText){const value=formatAllah(input.value);if(value!==input.value){const pos=input.selectionStart,diff=value.length-input.value.length;input.value=value;if(pos!==null){const nextPos=Math.max(0,pos+diff);input.setSelectionRange(nextPos,nextPos);}}}
         row[field]=input.value;
         if(isText)adjustHeight(input);
         if(!row.entryDate)row.entryDate=state.date||today();
@@ -346,6 +354,7 @@
       td.append(input);tr.append(td);
     });
     tr.addEventListener('focusout',()=>setTimeout(()=>{if(!tr.contains(document.activeElement))applyFilter(true);},0));
+    const tdReceipt=document.createElement('td');tdReceipt.className='col-receipt no-print';tr.append(tdReceipt);
     const td=document.createElement('td');td.className='no-print';const del=document.createElement('button');del.className='delete';del.textContent='×';del.title='حذف کریں — Undo سے واپس لائیں';del.setAttribute('aria-label','انٹری حذف کریں');
     if(rLocked)del.disabled=true;
     del.onclick=()=>{const index=state.rows.findIndex(r=>r.id===row.id);if(index<0)return;if(populated(row)){state.trash.push({row:structuredClone(row),index});state.trash=state.trash.slice(-20);}state.rows.splice(index,1);render();save();};td.append(del);tr.append(td);
@@ -786,7 +795,7 @@
     const rows=all?state.rows.filter(populated):selectedRows();if(!canOutput(rows,!all))return;
     const start=Number(state.startSerial)||1;const mixed=new Set(rows.map(r=>partyCurrency(r.branch))).size>1;
     const onlyAfn=rows.every(r=>partyCurrency(r.branch)==='afn');
-    const headers=['سریل نمبر','تاریخ','ارسال کنندہ','موبائیل نمبر','وصول کنندہ','مقام','پارٹی','بقایا','درہم',mixed?'روپیہ (PKR)':onlyAfn?'افغانی (AFN)':'روپیہ (PKR)'];if(mixed)headers.push('افغانی (AFN)');
+    const headers=['نمبر شمار','تاریخ','ارسال کنندہ','موبائیل نمبر','وصول کنندہ','مقام','پارٹی','بقایا','درہم',mixed?'روپیہ (PKR)':onlyAfn?'افغانی (AFN)':'روپیہ (PKR)'];if(mixed)headers.push('افغانی (AFN)');
     const num=v=>({number:String(v)});
     const data=rows.map((r,i)=>{const values=[start+i,r.entryDate||state.date,...fields.map(f=>moneyFields.includes(f)?num(f==='pkr'&&mixed&&partyCurrency(r.branch)==='afn'?0n:integerAmount(r[f])):r[f])];if(mixed)values.push(num(partyCurrency(r.branch)==='afn'?integerAmount(r.pkr):0n));return values;});
     const {sums}=currencyTotals(rows);const tail=['کل مجموعہ حساب','','','','','','',...['balance','aed'].map(f=>num(rows.reduce((n,r)=>n+integerAmount(r[f]),0n))),num(mixed?sums.pkr:onlyAfn?sums.afn:sums.pkr)];if(mixed)tail.push(num(sums.afn));
