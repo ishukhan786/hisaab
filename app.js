@@ -905,7 +905,7 @@
         tr.append(tdDate,tdCount,tdBal,tdAed,tdPkr);
         tbody.append(tr);
       }
-      $('summary-scope').textContent=`کل ${dates.length} دن، ${totCount} اندراجات۔`;
+      $('summary-scope').textContent=`کل ${dates.length} دن، ${totCount} آرڈرز تعداد۔`;
     }else{
       const partyKeys=[...state.branches.slice().sort((a,b)=>a.localeCompare(b,'ur'))];
       if(rows.some(r=>!r.branch))partyKeys.push('');
@@ -944,12 +944,160 @@
         tr.append(tdParty,tdCount,tdBal,tdAed,tdPkr);
         tbody.append(tr);
       }
-      $('summary-scope').textContent=`کل ${partyKeys.length} پارٹیاں، ${totCount} اندراجات۔`;
+      $('summary-scope').textContent=`کل ${partyKeys.length} پارٹیاں، ${totCount} آرڈرز تعداد۔`;
     }
     $('summary-count').textContent=String(totCount);
     $('summary-balance').textContent=formatted(totBal);
     $('summary-aed').textContent=formatted(totAed);
     $('summary-pkr').textContent=currencyText(rows);
+    if($('summary-status'))$('summary-status').textContent='';
+  }
+  function prepareSummaryOutput(){
+    const sheet=document.createElement('article');
+    sheet.className='summary-print-sheet';
+    sheet.dir='rtl';
+    const head=document.createElement('header');
+    head.className='summary-print-head';
+    const titleEl=document.createElement('h3');
+    titleEl.textContent=(state.title||'اندراج رجسٹر')+' — '+(summaryMode==='party'?'پارٹی وار خلاصہ':'تاریخ وار خلاصہ');
+    const metaEl=document.createElement('span');
+    metaEl.className='summary-print-meta';
+    metaEl.textContent=($('summary-scope')?.textContent||'')+'  |  تاریخ: '+fmtDate(today());
+    head.append(titleEl,metaEl);
+    const tbl=$('summary-table').cloneNode(true);
+    tbl.removeAttribute('id');
+    tbl.className='summary-print-table';
+    tbl.querySelectorAll('td').forEach(td=>{if(td.textContent)td.textContent=td.textContent.replace(/^🏢\s*/,'');});
+    sheet.append(head,tbl);
+    $('receipt-print').replaceChildren(sheet);
+    document.body.classList.add('summary-output');
+  }
+  async function outputSummaryPDF(){
+    if(document.body.inert)return;
+    if($('summary-status'))$('summary-status').textContent='';
+    await document.fonts.ready;
+    prepareSummaryOutput();
+    if(!window.electronAPI?.savePDF){
+      window.print();
+      return;
+    }
+    document.body.inert=true;
+    const modeLabel=summaryMode==='party'?'پارٹی_وار':'تاریخ_وار';
+    try{
+      const result=await window.electronAPI.savePDF('خلاصہ_'+modeLabel+'_'+today()+'.pdf');
+      if(result?.status==='saved'&&result.filePath)recordSavedPdf(result.filePath);
+      if($('summary-status'))$('summary-status').textContent=result?.status==='saved'?'✓ خلاصہ PDF رپورٹ محفوظ ہو گئی':result?.status==='busy'?'پہلی PDF مکمل ہونے دیں۔':result?.status==='error'?'PDF محفوظ نہیں ہو سکی؛ دوبارہ کوشش کریں۔':'';
+    }catch{
+      if($('summary-status'))$('summary-status').textContent='PDF محفوظ نہیں ہو سکی؛ دوبارہ کوشش کریں۔';
+    }finally{
+      document.body.inert=false;
+      clearReceiptOutput();
+    }
+  }
+  async function exportSummaryPNG(){
+    if(document.body.inert)return;
+    if($('summary-status'))$('summary-status').textContent='تصویر تیار ہو رہی ہے…';
+    await document.fonts.ready;
+    try{
+      const headers=Array.from($('summary-table').querySelectorAll('thead th')).map(th=>th.textContent.trim());
+      const bodyRows=Array.from($('summary-rows').querySelectorAll('tr')).map(tr=>Array.from(tr.children).map(td=>td.textContent.replace(/^🏢\s*/,'').trim()));
+      const footCells=Array.from($('summary-table').querySelectorAll('tfoot tr > *')).map(el=>el.textContent.trim());
+      const scale=2,W=960,pad=34,headH=70,thH=48,rowH=44,footH=48;
+      const tableW=W-pad*2;
+      const totalH=pad+headH+thH+Math.max(1,bodyRows.length)*rowH+footH+pad;
+      const canvas=document.createElement('canvas');
+      canvas.width=W*scale;canvas.height=totalH*scale;
+      const ctx=canvas.getContext('2d');
+      ctx.scale(scale,scale);
+      ctx.fillStyle='#ffffff';
+      ctx.fillRect(0,0,W,totalH);
+      // Header
+      const reportTitle=(state.title||'اندراج رجسٹر')+' — '+(summaryMode==='party'?'پارٹی وار خلاصہ':'تاریخ وار خلاصہ');
+      const scopeText=($('summary-scope')?.textContent||'')+'  •  تاریخ: '+fmtDate(today());
+      ctx.direction='rtl';
+      ctx.fillStyle='#144d39';
+      ctx.font="700 21px 'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',Arial,sans-serif";
+      ctx.textAlign='right';
+      ctx.textBaseline='middle';
+      ctx.fillText(reportTitle,W-pad,pad+26);
+      ctx.fillStyle='#4b6859';
+      ctx.font="600 13px 'Noto Nastaliq Urdu',Arial,sans-serif";
+      ctx.textAlign='left';
+      ctx.fillText(scopeText,pad,pad+28);
+      ctx.strokeStyle='#17634c';
+      ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(pad,pad+headH-12);ctx.lineTo(W-pad,pad+headH-12);ctx.stroke();
+      // Columns (RTL right-to-left)
+      const colRatios=[0.24,0.14,0.20,0.20,0.22];
+      const colBounds=[];
+      let curRight=W-pad;
+      for(const r of colRatios){
+        const cw=Math.round(tableW*r);
+        colBounds.push({left:curRight-cw,right:curRight,center:curRight-cw/2,width:cw});
+        curRight-=cw;
+      }
+      colBounds[colBounds.length-1].left=pad;
+      colBounds[colBounds.length-1].width=colBounds[colBounds.length-1].right-pad;
+      colBounds[colBounds.length-1].center=pad+colBounds[colBounds.length-1].width/2;
+      let y=pad+headH;
+      // Table Header
+      ctx.fillStyle='#eaf2ed';
+      ctx.fillRect(pad,y,tableW,thH);
+      ctx.strokeStyle='#99aa9a';ctx.lineWidth=1;
+      for(let c=0;c<colBounds.length;c++){
+        const b=colBounds[c];
+        ctx.strokeRect(b.left,y,b.width,thH);
+        ctx.fillStyle='#1c4334';
+        ctx.font="700 14px 'Noto Nastaliq Urdu',Arial,sans-serif";
+        ctx.textAlign='center';
+        ctx.fillText(headers[c]||'',b.center,y+thH/2+2);
+      }
+      y+=thH;
+      // Body Rows
+      for(let r=0;r<bodyRows.length;r++){
+        const cells=bodyRows[r];
+        ctx.fillStyle=r%2===1?'#f8fbf9':'#ffffff';
+        ctx.fillRect(pad,y,tableW,rowH);
+        if(cells.length===1){
+          ctx.strokeStyle='#c5d6cb';
+          ctx.strokeRect(pad,y,tableW,rowH);
+          ctx.fillStyle='#557062';
+          ctx.font="600 13px 'Noto Nastaliq Urdu',Arial,sans-serif";
+          ctx.textAlign='center';
+          ctx.fillText(cells[0],W/2,y+rowH/2+2);
+        }else{
+          for(let c=0;c<colBounds.length;c++){
+            const b=colBounds[c];
+            ctx.strokeStyle='#c5d6cb';
+            ctx.strokeRect(b.left,y,b.width,rowH);
+            ctx.fillStyle='#183329';
+            ctx.font=c===0&&summaryMode==='party'?"700 13.5px 'Noto Nastaliq Urdu',Arial,sans-serif":"700 14px Arial,'Noto Nastaliq Urdu',sans-serif";
+            ctx.textAlign='center';
+            ctx.fillText(cells[c]||'',b.center,y+rowH/2+1);
+          }
+        }
+        y+=rowH;
+      }
+      // Footer Row
+      ctx.fillStyle='#e2efe6';
+      ctx.fillRect(pad,y,tableW,footH);
+      for(let c=0;c<colBounds.length;c++){
+        const b=colBounds[c];
+        ctx.strokeStyle='#99aa9a';
+        ctx.strokeRect(b.left,y,b.width,footH);
+        ctx.fillStyle='#114935';
+        ctx.font=c===0?"700 14.5px 'Noto Nastaliq Urdu',Arial,sans-serif":"700 14.5px Arial,'Noto Nastaliq Urdu',sans-serif";
+        ctx.textAlign='center';
+        ctx.fillText(footCells[c]||'',b.center,y+footH/2+1);
+      }
+      const modeLabel=summaryMode==='party'?'پارٹی_وار':'تاریخ_وار';
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+      if(!blob)throw Error('PNG failed');
+      download(blob,'خلاصہ_'+modeLabel+'_'+today()+'.png');
+      if($('summary-status'))$('summary-status').textContent='✓ خلاصہ PNG تصویر محفوظ ہو گئی';
+    }catch{
+      if($('summary-status'))$('summary-status').textContent='تصویر محفوظ نہیں ہو سکی؛ دوبارہ کوشش کریں۔';
+    }
   }
   function openSummary(){
     renderSummary('date');
@@ -957,8 +1105,11 @@
   }
   if($('summary-tab-date'))$('summary-tab-date').onclick=()=>renderSummary('date');
   if($('summary-tab-party'))$('summary-tab-party').onclick=()=>renderSummary('party');
+  if($('summary-pdf'))$('summary-pdf').onclick=()=>outputSummaryPDF();
+  if($('summary-png'))$('summary-png').onclick=()=>exportSummaryPNG();
   $('summary-open').onclick=()=>openSummary();
   $('close-summary').onclick=()=>$('summary-dialog').close();
+  $('summary-dialog')?.addEventListener('close',()=>clearReceiptOutput());
   function openBranches(row=null){pendingBranchRow=row;$('branch-error').textContent='';$('branch-name').value='';renderBranchList();$('branch-dialog').showModal();$('branch-name').focus();}
   $('manage-branches').onclick=()=>openBranches();$('close-branches').onclick=()=>$('branch-dialog').close();
   if($('add-party-tab'))$('add-party-tab').onclick=()=>openBranches();
@@ -1018,7 +1169,7 @@
   function prepareReceiptOutput(){
     const sheet=$('receipt-paper').cloneNode(true);sheet.removeAttribute('id');$('receipt-print').replaceChildren(sheet);document.body.classList.add('receipt-output');
   }
-  function clearReceiptOutput(){document.body.classList.remove('receipt-output');$('receipt-print').replaceChildren();}
+  function clearReceiptOutput(){document.body.classList.remove('receipt-output','summary-output');$('receipt-print').replaceChildren();}
   $('close-receipt').onclick=()=>$('receipt-dialog').close();
   $('receipt-dialog').addEventListener('close',()=>{receiptSelection=null;clearReceiptOutput();});
   async function outputReceipt(savePDF=false){
@@ -1037,8 +1188,8 @@
     finally{document.body.inert=false;clearReceiptOutput();}
   }
   $('receipt-preview').onclick=()=>outputReceipt();$('receipt-save').onclick=()=>outputReceipt(true);
-  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{const span=document.createElement('span');span.className='print-value';span.textContent=input.classList.contains('amount')?wholeText(input.value):input.value;if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
-  window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else preparePrint();});window.addEventListener('afterprint',()=>{registerPrintActive=false;clearReceiptOutput();applyFilter();});
+  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output')||document.body.classList.contains('summary-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{const span=document.createElement('span');span.className='print-value';span.textContent=input.classList.contains('amount')?wholeText(input.value):input.value;if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
+  window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else if($('summary-dialog').open)prepareSummaryOutput();else preparePrint();});window.addEventListener('afterprint',()=>{registerPrintActive=false;clearReceiptOutput();applyFilter();});
   function canOutput(rows,filtered=true){if(filtered&&!rangeValid()){alert('تاریخ کا دورانیہ درست کریں۔');return false;}if(!rows.length){alert('کوئی انٹری منتخب نہیں ہے۔');return false;}if(rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null))){alert('رقم کے خانے درست کریں۔ صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم خود تبدیل نہیں کی گئی۔');return false;}return true;}
   if(window.electronAPI?.savePDF){
     const button=$('save-pdf');button.hidden=false;

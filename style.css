@@ -187,15 +187,25 @@ tfoot.register-totals .totals-row>th{font-size:calc(var(--entry-font) + 2px);fon
 .receipt-signatures{display:flex;justify-content:space-between;gap:45px;padding-top:35px;font-size:11px;color:#607969}.receipt-signatures span{width:42%;border-top:1px solid #a9bfae;text-align:center;padding-top:5px}
 @media(max-width:520px){#receipt-dialog{padding:14px}.receipt-sheet{padding:14px}.receipt-header h3{font-size:19px}.receipt-badge{font-size:13px;padding:3px 8px}.receipt-details>div{grid-template-columns:80px minmax(0,1fr);gap:10px}.receipt-meta>div{gap:8px}.receipt-amounts strong{font-size:15px}}
 @page receipt{size:A5 portrait;margin:10mm}
+@page summary{size:A4 portrait;margin:10mm}
 @media print{
-  body.receipt-output{margin:0;background:#fff}
-  body.receipt-output>*{display:none!important}
+  body.receipt-output,body.summary-output{margin:0;background:#fff}
+  body.receipt-output>*,body.summary-output>*{display:none!important}
   body.receipt-output>#receipt-print{display:block!important;page:receipt}
+  body.summary-output>#receipt-print{display:block!important;page:summary}
   #receipt-print .receipt-sheet{font-size:12px;padding:6mm;box-shadow:none}
   #receipt-print .receipt-header h3{font-size:20px}
   #receipt-print .receipt-details dd{font-size:13px}
   #receipt-print .receipt-details>div{padding:6px 0;break-inside:avoid}
   #receipt-print .receipt-amounts,#receipt-print .receipt-signatures{break-inside:avoid}
+  #receipt-print .summary-print-sheet{background:#fff;padding:4mm;color:#000;direction:rtl}
+  #receipt-print .summary-print-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #17634c;padding-bottom:8px;margin-bottom:12px}
+  #receipt-print .summary-print-head h3{margin:0;font-size:20px;color:#17634c}
+  #receipt-print .summary-print-meta{font-size:12px;font-weight:700;color:#213e35}
+  #receipt-print .summary-print-table{width:100%;border-collapse:collapse;table-layout:auto}
+  #receipt-print .summary-print-table th,#receipt-print .summary-print-table td{border:1px solid #99aa9a;padding:6px 10px;text-align:center;font-size:13px;line-height:2.0}
+  #receipt-print .summary-print-table thead th{background:#edf1eb;font-weight:700}
+  #receipt-print .summary-print-table tfoot th,#receipt-print .summary-print-table tfoot td{background:#e4eee2;font-weight:700}
 }
 
 @media print{

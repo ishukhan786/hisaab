@@ -27,13 +27,13 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 .journal-table td input{font-family:Arial,sans-serif;direction:ltr;text-align:center}
 .journal-table input[aria-invalid="true"]{background:#fff0eb;outline:2px solid #d98c7d;outline-offset:-3px}
 .journal-table .journal-balance,.journal-table tfoot td{font:700 14px Arial,sans-serif;direction:ltr;text-align:center;overflow-wrap:anywhere;padding:6px 10px}
-.journal-table .journal-balance,#journal-closing{direction:rtl}
+.journal-table .journal-balance,#journal-closing{direction:rtl;position:relative}
 .bal-num{font-family:Arial,sans-serif;direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums;display:inline-block}
-.bal-tag{font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif;font-size:11px;font-weight:700;line-height:1.9;padding:0 7px;border-radius:6px;display:inline-block;vertical-align:middle;margin-inline-start:4px}
+.bal-tag{font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif;font-size:inherit;font-weight:700;line-height:1.9;padding:0;border:0;border-radius:0;background:transparent;color:#000!important;display:inline-block;vertical-align:middle;margin-inline-start:6px}
+.journal-table .journal-balance .bal-tag,#journal-closing .bal-tag{position:absolute;left:10px;top:50%;transform:translateY(-50%);margin:0}
 .is-jama,.journal-table td.is-jama,.journal-table tfoot td.is-jama{color:#146c43!important}
-.is-jama .bal-tag{background:#e3f5ea;color:#13653f;border:1px solid #b4dfc4}
+.is-jama .bal-tag,.is-banam .bal-tag{background:transparent;color:#000!important;border:0}
 .is-banam,.journal-table td.is-banam,.journal-table tfoot td.is-banam{color:#c92a2a!important}
-.is-banam .bal-tag{background:#fdeaea;color:#c92a2a;border:1px solid #f3bcbc}
 .journal-table tfoot th{height:50.4px;line-height:2}
 .journal-description{position:relative}.journal-delete{position:absolute;left:7px;top:50%;transform:translateY(-50%);font:20px Arial,sans-serif!important;width:30px;min-height:30px!important;padding:0!important;background:transparent;border-color:transparent;color:#b77a72}
 .journal-draft{background:#f7faf4}.journal-draft .journal-delete{visibility:hidden}
