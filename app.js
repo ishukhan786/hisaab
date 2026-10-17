@@ -87,27 +87,38 @@
   const selectedRows=()=>state.rows.filter(matches);
   function makeOption(value,label){const option=document.createElement('option');option.value=value;option.textContent=label;return option;}
   function branchOptions(select,value,filter=false){select.replaceChildren(...(filter?[makeOption('','تمام پارٹیاں'),makeOption('__unassigned','بغیر پارٹی')]:[makeOption('','بغیر پارٹی')]),...state.branches.slice().sort((a,b)=>a.localeCompare(b,'ur')).map(n=>makeOption(filter?'b:'+n:n,n)));if(!filter)select.append(makeOption('__new_party__','＋ نئی پارٹی'));select.value=value;}
+  function partyDateCounts(){
+    const byBranch=new Map();
+    let allCount=0,unassignedCount=0;
+    if(rangeValid()){
+      for(const r of state.rows){
+        if(!populated(r)||!dateMatch(r))continue;
+        allCount++;
+        if(!r.branch)unassignedCount++;
+        else byBranch.set(r.branch,(byBranch.get(r.branch)||0)+1);
+      }
+    }
+    return {allCount,unassignedCount,byBranch};
+  }
   function renderPartyTabs(){
     const container=$('party-tabs');
     if(!container)return;
     container.replaceChildren();
+    const {allCount,unassignedCount,byBranch}=partyDateCounts();
     const allTab=document.createElement('button');allTab.type='button';allTab.className='party-tab'+(selectedBranch===''?' active':'');allTab.role='tab';allTab.setAttribute('aria-selected',selectedBranch===''?'true':'false');
-    const allCount=state.rows.filter(populated).length;
     allTab.innerHTML=`<span>📁 تمام پارٹیاں</span><span class="tab-badge">${allCount}</span>`;
     allTab.onclick=()=>selectPartyTab('');
     container.append(allTab);
     const sorted=state.branches.slice().sort((a,b)=>a.localeCompare(b,'ur'));
     for(const name of sorted){
       const tab=document.createElement('button');tab.type='button';const isSel=selectedBranch==='b:'+name;tab.className='party-tab'+(isSel?' active':'');tab.role='tab';tab.setAttribute('aria-selected',isSel?'true':'false');
-      const count=state.rows.filter(r=>r.branch===name&&populated(r)).length;
+      const count=byBranch.get(name)||0;
       const isAfn=partyCurrency(name)==='afn';
-      const currTag=isAfn?'<span class="tab-curr-tag">افغانی</span>':'';
       const title=document.createElement('span');title.textContent='🏢 '+name;tab.append(title);if(isAfn){const tag=document.createElement('span');tag.className='tab-curr-tag';tag.textContent='افغانی';tab.append(tag);}const badge=document.createElement('span');badge.className='tab-badge';badge.textContent=count;tab.append(badge);
       tab.onclick=()=>selectPartyTab('b:'+name);
       container.append(tab);
     }
-    const unassignedCount=state.rows.filter(r=>!r.branch&&populated(r)).length;
-    if(unassignedCount>0){
+    if(unassignedCount>0||selectedBranch==='__unassigned'){
       const unassignedTab=document.createElement('button');unassignedTab.type='button';const isSel=selectedBranch==='__unassigned';unassignedTab.className='party-tab'+(isSel?' active':'');unassignedTab.role='tab';unassignedTab.setAttribute('aria-selected',isSel?'true':'false');
       unassignedTab.innerHTML=`<span>بغیر پارٹی</span><span class="tab-badge">${unassignedCount}</span>`;
       unassignedTab.onclick=()=>selectPartyTab('__unassigned');
@@ -128,11 +139,16 @@
     const container=$('party-tabs');
     if(!container)return;
     const sorted=state.branches.slice().sort((a,b)=>a.localeCompare(b,'ur'));
+    const {allCount,unassignedCount,byBranch}=partyDateCounts();
+    const expectedCount=1+sorted.length+(unassignedCount>0||selectedBranch==='__unassigned'?1:0);
+    if(container.children.length!==expectedCount){renderPartyTabs();return;}
     Array.from(container.children).forEach((tab,i)=>{
       let tabVal=i===0?'':i-1<sorted.length?'b:'+sorted[i-1]:'__unassigned';
       const isSel=selectedBranch===tabVal;
       tab.classList.toggle('active',isSel);
       tab.setAttribute('aria-selected',isSel?'true':'false');
+      const badge=tab.querySelector('.tab-badge');
+      if(badge)badge.textContent=i===0?allCount:i-1<sorted.length?(byBranch.get(sorted[i-1])||0):unassignedCount;
     });
   }
   function updateBranches(){branchOptions($('branch-filter'),selectedBranch,true);state.rows.forEach(row=>{const select=rowNodes.get(row.id)?.querySelector('[data-field="branch"]');if(select)branchOptions(select,row.branch);});renderPartyTabs();}

@@ -200,7 +200,7 @@ tfoot.register-totals .totals-row>th{font-size:calc(var(--entry-font) + 2px);fon
 
 @media print{
   .paper thead tr,.paper thead th{height:1.5cm}
-  .paper thead th{line-height:2.2;padding:6px 4px;vertical-align:middle;font-size:14px;font-weight:700}
+  .paper thead th{line-height:2.2;padding:6px 4px;vertical-align:middle;font-size:var(--entry-font);font-weight:700}
   .paper thead th.serial{width:1.5cm}
   .paper thead th.col-sender{width:4.8cm}
   .paper thead th.mobile{width:3.2cm}
@@ -215,14 +215,14 @@ tfoot.register-totals .totals-row>th{font-size:calc(var(--entry-font) + 2px);fon
   .head-party #branch-heading{font-size:16px;font-weight:700}
   .date-print-label{font-size:15px}
   .date-print-val{font-size:14px}
-  td.number{font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#1e3c32}
+  td.number{font-family:Arial,sans-serif;font-size:var(--entry-font);font-weight:700;color:#1e3c32}
   #rows>tr>td{height:1.25cm;min-height:0;padding:0;vertical-align:middle;text-align:center}
-  #rows .print-value{display:inline-block;vertical-align:middle;text-align:center;font-size:13.5px;line-height:2.0;transform:translateY(2px)}
+  #rows .print-value{display:inline-block;vertical-align:middle;text-align:center;font-size:var(--entry-font);line-height:2.0;transform:translateY(2px)}
   #rows td.col-place .print-value{transform:translateY(3.5px)}
   #rows td.number,#rows input.amount+.print-value,#rows input.phone+.print-value,#total-balance,#total-aed,#total-pkr{transform:translateY(0);text-align:center}
-  input.amount+.print-value,input.phone+.print-value,#total-balance,#total-aed,#total-pkr{font-size:13.5px;font-weight:700}
-  tfoot.register-totals .totals-row>th{font-size:16px;font-weight:700}
-  tfoot.register-totals .totals-row>td{font-size:14px;font-weight:700}
+  input.amount+.print-value,input.phone+.print-value,#total-balance,#total-aed,#total-pkr{font-size:var(--entry-font);font-weight:700}
+  tfoot.register-totals .totals-row>th{font-size:calc(var(--entry-font) + 2px);font-weight:700}
+  tfoot.register-totals .totals-row>td{font-size:var(--entry-font);font-weight:700}
   .paper-foot{padding:6px 2px 0;font-size:11.5px;color:#355648;font-weight:600}
 }
 
