@@ -27,7 +27,8 @@
   function blank(branch=''){return {...Object.fromEntries(rowFields.map(f=>[f,''])),id:uid(),entryDate:state.date||today(),branch};}
   function fmtDate(iso){if(!iso)return '';const [y,m,d]=iso.split('-');return `${d}/${m}/${y}`;}
   let journalController=null;
-  let state={journal:{date:today(),rows:[]},version:4,title:'اندراج رجسٹر',date:today(),startSerial:1,partySerials:Object.create(null),fontSize:13,branches:[],partyCurrencies:Object.create(null),rows:[],trash:[],lastBackupAt:null,lockedDates:[],pinCode:''};
+  let state={journal:{date:today(),rows:[]},version:4,title:'اندراج رجسٹر',date:today(),pageNumber:1,startSerial:1,partySerials:Object.create(null),fontSize:13,branches:[],partyCurrencies:Object.create(null),rows:[],trash:[],lastBackupAt:null,lockedDates:[],pinCode:''};
+  function activePageNumber(){return (Number(state.pageNumber)||1)+(viewPage||0);}
   const partyCurrency=name=>name&&Object.hasOwn(state.partyCurrencies||{},name)&&state.partyCurrencies[name]==='afn'?'afn':'pkr';
   function currencyTotals(rows){const sums={pkr:0n,afn:0n},invalid=new Set();for(const r of rows){const c=partyCurrency(r.branch),v=integerAmount(r.pkr);if(v===null)invalid.add(c);else sums[c]+=v;}return {sums,invalid};}
   function currencyText(rows){const currencies=[...new Set(rows.map(r=>partyCurrency(r.branch)))];const {sums,invalid}=currencyTotals(rows);return (currencies.length?currencies:['pkr']).map(c=>(currencies.length>1?c.toUpperCase()+': ':'')+(invalid.has(c)?'رقم درست کریں':formatted(sums[c]))).join('\n');}
@@ -88,7 +89,7 @@
     const partyCurrencies=Object.create(null);for(const name of registry){const raw=source.partyCurrencies;if(raw&&Object.hasOwn(raw,name)){if(!['pkr','afn'].includes(raw[name]))throw Error('Invalid currency');partyCurrencies[name]=raw[name];}}
     const lockedDates=Array.isArray(source.lockedDates)?source.lockedDates.filter(d=>typeof d==='string'&&dateValid(d)):[];
     const pinCode=typeof source.pinCode==='string'&&/^\d{4,8}$/.test(source.pinCode)?source.pinCode:'';
-    return {journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:formatAllah(source.title),date:source.date||today(),startSerial,partySerials,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates,pinCode};
+    return {journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:formatAllah(source.title),date:source.date||today(),pageNumber:Number.isInteger(source.pageNumber)&&source.pageNumber>0?source.pageNumber:1,startSerial,partySerials,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates,pinCode};
   }
   try{
     if(nativeStorage){
@@ -407,6 +408,9 @@
     const pageIds=new Set((forPrint?filtered:filtered.slice(viewPage*pageSize,(viewPage+1)*pageSize)).map(r=>r.id));
     pageNav.hidden=forPrint||pages===1;pagePrev.disabled=viewPage===0;pageNext.disabled=viewPage===pages-1;
     pageLabel.textContent=`صفحہ ${viewPage+1} / ${pages} · ${filtered.length} اندراجات · مجموعہ اور پرنٹ تمام منتخب اندراجات کا ہے`;
+    const currPage=activePageNumber();
+    if($('page-no-input')&&document.activeElement!==$('page-no-input'))$('page-no-input').value=currPage;
+    if($('page-no-val'))$('page-no-val').textContent=currPage;
     const findDuplicate=duplicateLookup(),visibleNodes=[];
     state.rows.forEach(r=>{let tr=rowNodes.get(r.id);const hasData=populated(r);let draft=day&&branchMatch(r)&&!hasData&&!draftShown;if(draft)draftShown=true;const matched=matchedIds.has(r.id);
       const serial=matched?start+offset++:null;
@@ -681,7 +685,7 @@
   function appendRow(row){$('rows').append(createRowElement(row));}
   function prependRow(row){$('rows').prepend(createRowElement(row));}
   function applyFont(){document.documentElement.style.setProperty('--entry-font',state.fontSize+'px');$('font-size').textContent=state.fontSize;$('font-smaller').disabled=state.fontSize<=10;$('font-larger').disabled=state.fontSize>=22;}
-  function render(){rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;$('date').value=state.date;if($('start-serial'))$('start-serial').value=activeStartSerial();applyFont();updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
+  function render(){rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;if($('title-print'))$('title-print').textContent=state.title||'اندراج رجسٹر';$('date').value=state.date;if($('start-serial'))$('start-serial').value=activeStartSerial();const currPage=activePageNumber();if($('page-no-input'))$('page-no-input').value=currPage;if($('page-no-val'))$('page-no-val').textContent=currPage;applyFont();updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
   function focusRow(row){
     const tr=rowNodes.get(row.id);
     const el=tr?.querySelector('[data-field="sender"]');
@@ -1040,6 +1044,20 @@
       $('start-serial').value=activeStartSerial();
     });
   }
+  if($('page-no-input')){
+    $('page-no-input').addEventListener('input',()=>{
+      const clean=englishDigits($('page-no-input').value);
+      if(clean!==$('page-no-input').value)$('page-no-input').value=clean;
+      const val=parseInt(clean,10);
+      state.pageNumber=(!isNaN(val)&&val>0)?Math.max(1,val-(viewPage||0)):1;
+      if($('page-no-val'))$('page-no-val').textContent=activePageNumber();
+      save();
+    });
+    $('page-no-input').addEventListener('blur',()=>{
+      $('page-no-input').value=activePageNumber();
+      if($('page-no-val'))$('page-no-val').textContent=activePageNumber();
+    });
+  }
   $('branch-filter').onchange=()=>{selectedBranch=$('branch-filter').value;applyFilter();updatePartyTabsActive();};
   $('all-dates').onchange=()=>applyFilter();
   for(const id of ['search','date-from','date-to'])$(id).addEventListener('input',()=>applyFilter());
@@ -1068,7 +1086,7 @@
   function resetFilters(){selectedBranch='';$('branch-filter').value='';$('all-dates').checked=false;for(const id of ['search','date-from','date-to'])$(id).value='';if($('party-search'))$('party-search').value='';if($('range-drawer'))$('range-drawer').hidden=true;if($('toggle-range'))$('toggle-range').classList.remove('active');applyFilter();renderPartyTabs();}
   $('reset-filters').onclick=resetFilters;
   $('font-smaller').onclick=()=>{state.fontSize=Math.max(10,state.fontSize-1);applyFont();save();};$('font-larger').onclick=()=>{state.fontSize=Math.min(22,state.fontSize+1);applyFont();save();};
-  $('title').addEventListener('input',()=>{state.title=$('title').value;save();});
+  $('title').addEventListener('input',()=>{state.title=$('title').value;if($('title-print'))$('title-print').textContent=$('title').value||'اندراج رجسٹر';save();});
   $('date').addEventListener('input',()=>{
     state.date=$('date').value;
     state.rows.forEach(row=>{if(!populated(row))row.entryDate=state.date||today();});
@@ -1415,7 +1433,7 @@
     finally{document.body.inert=false;clearReceiptOutput();}
   }
   $('receipt-preview').onclick=()=>outputReceipt();$('receipt-save').onclick=()=>outputReceipt(true);
-  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output')||document.body.classList.contains('summary-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{const span=document.createElement('span');span.className='print-value';span.textContent=input.classList.contains('amount')?wholeText(input.value):input.value;if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
+  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output')||document.body.classList.contains('summary-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());const titlePrint=$('title-print');if(titlePrint)titlePrint.textContent=$('title').value||state.title||'اندراج رجسٹر';if($('page-no-val'))$('page-no-val').textContent=activePageNumber();document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{const span=document.createElement('span');span.className='print-value';span.textContent=input.classList.contains('amount')?wholeText(input.value):input.value;if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
   window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else if($('summary-dialog').open)prepareSummaryOutput();else preparePrint();});window.addEventListener('afterprint',()=>{registerPrintActive=false;clearReceiptOutput();applyFilter();});
   function canOutput(rows,filtered=true){if(filtered&&!rangeValid()){alert('تاریخ کا دورانیہ درست کریں۔');return false;}if(!rows.length){alert('کوئی انٹری منتخب نہیں ہے۔');return false;}if(rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null))){alert('رقم کے خانے درست کریں۔ صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم خود تبدیل نہیں کی گئی۔');return false;}return true;}
   if(window.electronAPI?.savePDF){

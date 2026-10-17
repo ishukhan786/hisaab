@@ -70,6 +70,7 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 .app-shell .btn-lock{min-height:34px;margin:0;padding:2px 14px;font-size:11px;font-weight:700;border-radius:999px;background:linear-gradient(180deg,#f4fbf7 0%,#e3f1ea 100%);border:1px solid #a9cfb9;color:#145740;box-shadow:0 1px 3px rgba(18,84,64,0.08),inset 0 1px 0 #fff;transition:all .18s cubic-bezier(.22,1,.36,1)}
 .app-shell .btn-lock:hover{background:linear-gradient(180deg,#e9f7ef 0%,#d5ebe0 100%);border-color:#68ab90;color:#0c4430;box-shadow:0 4px 10px rgba(18,84,64,0.15),inset 0 1px 0 #fff}
 .app-shell .date-screen-badge{font-size:11px;color:#728477}
+.app-shell .page-no-line{margin-top:2px;gap:5px}
 .app-shell .paper .table-wrap{scrollbar-width:thin}
 .app-shell .paper table{width:100%;min-width:1100px;max-width:none}
 .app-shell .paper col.serial{width:5.775%}.app-shell .paper col.remove{width:3.5%}
@@ -163,3 +164,10 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
   .app-shell .totals-title-wrap{flex-wrap:wrap;gap:4px;justify-content:center}
   .app-shell .net-aed-badge,.app-shell .orders-count-badge{font-size:inherit;padding:0}
 }
+
+@media print{
+  .app-shell .paper{border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;background:transparent!important}
+  .app-shell .paper-head{background:transparent!important;border-bottom:0!important;padding:10px 0 6px!important;overflow:visible!important}
+  .app-shell .date-block{display:flex!important;flex-direction:row!important;align-items:center!important;gap:18px!important}
+}
+
