@@ -2,6 +2,12 @@
   'use strict';
   const KEY = 'hisaab-register-v1';
   const $ = id => document.getElementById(id);
+  const nativeStorage=window.electronAPI?.storage;
+  let storageRevision=0,nativeNeedsInit=false,legacySource=null,storageReadFailed=false,unsavedNative=false;
+  let autoBackupTimer=null,autoBackupHandle=null,diskWriteBusy=false,diskWritePending=false,diskSyncTimer=null,pendingDiskHandle=null,unsavedDisk=false;
+  const retrySave=document.createElement('button');retrySave.type='button';retrySave.id='retry-save';retrySave.textContent='دوبارہ محفوظ کریں';retrySave.hidden=true;
+  const reconnectDiskBtn=document.createElement('button');reconnectDiskBtn.type='button';reconnectDiskBtn.id='reconnect-disk-file';reconnectDiskBtn.hidden=true;
+  $('save-state').after(retrySave,reconnectDiskBtn);
   const rowFields = ['entryDate','sender','mobile','receiver','place','branch','balance','aed','pkr'];
   const fields = ['sender','mobile','receiver','place','branch','balance','aed','pkr'];
   const labels = ['ارسال کنندہ','موبائیل نمبر','وصول کنندہ','مقام','پارٹی','بقایا','درہم','روپیہ'];
@@ -84,9 +90,32 @@
     const pinCode=typeof source.pinCode==='string'&&/^\d{4,8}$/.test(source.pinCode)?source.pinCode:'';
     return {journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:formatAllah(source.title),date:source.date||today(),startSerial,partySerials,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates,pinCode};
   }
-  try{const raw=localStorage.getItem(KEY);if(raw)state=migrate(JSON.parse(raw));}catch{storageBlocked=true;alert('محفوظ ڈیٹا نہیں کھل سکا۔ اصل ڈیٹا محفوظ رکھا گیا ہے؛ درست بیک اَپ کھولیں۔');}
-  function persist(){if(storageBlocked){$('save-state').textContent='محفوظ نہیں ہو رہا — بیک اَپ بحال کریں';return false;}try{const clean={...state,rows:state.rows.filter(populated)};localStorage.setItem(KEY,JSON.stringify(clean));$('save-state').textContent='✓ محفوظ ہے';return true;}catch{$('save-state').textContent='محفوظ نہیں ہو سکا — بیک اَپ لیں';return false;}}
-  function save(){const ok=persist();if(ok)scheduleAutoBackup();return ok;}
+  try{
+    if(nativeStorage){
+      const loaded=nativeStorage.load();
+      if(loaded?.status!=='ok')throw Error(loaded?.message||'Database unavailable');
+      storageRevision=loaded.revision;nativeNeedsInit=loaded.state===null;
+      $('save-state').title=loaded.filePath;
+      if(nativeNeedsInit){legacySource=localStorage.getItem(KEY);if(legacySource)state=migrate(JSON.parse(legacySource));}
+      else state=migrate(loaded.state);
+      const help=$('storage-help');if(help)help.textContent='ڈیٹا اسی کمپیوٹر کی SQLite فائل میں محفوظ ہے؛ دوسرے کمپیوٹر کے لیے بیک اَپ لے کر بحال کریں۔';
+    }else{const raw=localStorage.getItem(KEY);if(raw)state=migrate(JSON.parse(raw));}
+  }catch{storageBlocked=true;storageReadFailed=true;alert('محفوظ ڈیٹا نہیں کھل سکا۔ اصل ڈیٹا محفوظ رکھا گیا ہے؛ دوبارہ کھولیں یا درست بیک اَپ بحال کریں۔');}
+  function writeState(data,restore=false){
+    if(!nativeStorage){localStorage.setItem(KEY,JSON.stringify(data));return;}
+    const result=nativeNeedsInit?nativeStorage.initialize(data,legacySource,storageRevision):restore?nativeStorage.restore(data,storageRevision,state):nativeStorage.save(data,storageRevision);
+    if(result?.status!=='saved')throw Error(result?.message||'Database save failed');
+    storageRevision=result.revision;nativeNeedsInit=false;unsavedNative=false;
+  }
+  function savedStatus(){retrySave.hidden=true;$('save-state').textContent=nativeStorage?'✓ SQLite میں محفوظ ہے':autoBackupHandle?'✓ پی سی فائل میں محفوظ ہے':'✓ محفوظ ہے';if(!nativeStorage&&autoBackupHandle)$('save-state').title=autoBackupHandle.name;}
+  function persist(){
+    if(storageBlocked){$('save-state').textContent='محفوظ نہیں ہو رہا — دوبارہ کھولیں یا بیک اَپ بحال کریں';retrySave.hidden=false;return false;}
+    try{writeState({...state,rows:state.rows.filter(populated)});savedStatus();return true;}
+    catch{unsavedNative=!!nativeStorage;retrySave.hidden=false;$('save-state').textContent='محفوظ نہیں ہو سکا — دوبارہ کوشش کریں یا بیک اَپ لیں';return false;}
+  }
+  function save(){const ok=persist();if(ok){scheduleDiskSync();scheduleAutoBackup();}return ok;}
+  retrySave.onclick=()=>{if(storageReadFailed)location.reload();else save();};
+  window.addEventListener('beforeunload',event=>{if(unsavedNative||unsavedDisk){event.preventDefault();event.returnValue='';}});
   const branchMatch=r=>!selectedBranch||(selectedBranch==='__unassigned'?!r.branch:r.branch===selectedBranch.slice(2));
   function rangeValid(){return !$('date-from').value||!$('date-to').value||$('date-from').value<=$('date-to').value;}
   // View modes: a date range wins; otherwise "all dates" or just the working date (day view).
@@ -670,15 +699,87 @@
   }
   $('add').onclick=add;
   $('undo').onclick=()=>{const item=state.trash.pop();if(!item)return;if(item.row.branch&&!state.branches.includes(item.row.branch))state.branches.push(item.row.branch);state.rows.splice(Math.min(item.index,state.rows.length),0,item.row);render();save();if(!rowNodes.has(item.row.id)||rowNodes.get(item.row.id).hidden)$('filter-message').textContent='انٹری واپس آ گئی ہے۔ اسے دیکھنے کے لیے فلٹر صاف کریں۔';};
-  let autoBackupTimer=null,autoBackupHandle=null;
-  async function executeAutoBackup(isSafety=false){
-    const clean={...state,rows:state.rows.filter(populated)};
-    if(autoBackupHandle&&!isSafety){
-      try{
+  const DISK_DB_NAME='hisaab-disk-db-v1',DISK_STORE='handles',DISK_KEY='primary';
+  function openHandleDB(){
+    return new Promise((resolve,reject)=>{
+      if(typeof indexedDB==='undefined')return reject(Error('No IndexedDB'));
+      const req=indexedDB.open(DISK_DB_NAME,1);
+      req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(DISK_STORE))req.result.createObjectStore(DISK_STORE);};
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error);
+    });
+  }
+  async function saveDiskHandle(handle){
+    let db;
+    try{
+      db=await openHandleDB();
+      await new Promise((resolve,reject)=>{
+        const tx=db.transaction(DISK_STORE,'readwrite');
+        tx.objectStore(DISK_STORE).put(handle,DISK_KEY);
+        tx.oncomplete=()=>resolve();
+        tx.onerror=()=>reject(tx.error);
+      });
+    }catch(_){}finally{db?.close();}
+  }
+  async function loadDiskHandle(){
+    let db;
+    try{
+      db=await openHandleDB();
+      return await new Promise((resolve,reject)=>{
+        const tx=db.transaction(DISK_STORE,'readonly');
+        const req=tx.objectStore(DISK_STORE).get(DISK_KEY);
+        req.onsuccess=()=>resolve(req.result||null);
+        req.onerror=()=>reject(req.error);
+      });
+    }catch(_){return null;}finally{db?.close();}
+  }
+  function updateDiskFileStatus(){
+    const help=$('storage-help');
+    if(!nativeStorage&&autoBackupHandle){
+      if($('auto-backup-status'))$('auto-backup-status').textContent=`پی سی فائل فعال: ${autoBackupHandle.name} ✓`;
+      if(help)help.textContent=`ڈیٹا براہِ راست آپ کے کمپیوٹر کی فائل (${autoBackupHandle.name}) میں محفوظ ہو رہا ہے؛ براؤزر ہسٹری صاف ہونے سے ڈیٹا ضائع نہیں ہوگا۔`;
+    }
+  }
+  async function flushDiskFileNow(){
+    if(!autoBackupHandle)return false;
+    if(diskWriteBusy){diskWritePending=true;return true;}
+    diskWriteBusy=true;
+    unsavedDisk=true;
+    try{
+      do{
+        diskWritePending=false;
+        const clean={...state,rows:state.rows.filter(populated)};
         const writable=await autoBackupHandle.createWritable();
         await writable.write(JSON.stringify(clean,null,2));
         await writable.close();
-      }catch(_){}
+      }while(diskWritePending);
+      unsavedDisk=false;
+      updateDiskFileStatus();
+      savedStatus();
+      return true;
+    }catch(_){
+      unsavedDisk=false;
+      if(!nativeStorage){
+        pendingDiskHandle=autoBackupHandle;
+        reconnectDiskBtn.textContent=`🔗 پی سی فائل دوبارہ جوڑیں (${autoBackupHandle.name})`;
+        reconnectDiskBtn.hidden=false;
+        $('save-state').textContent='پی سی فائل میں محفوظ نہیں ہو سکا — دوبارہ جوڑیں';
+      }
+      return false;
+    }finally{
+      diskWriteBusy=false;
+    }
+  }
+  function scheduleDiskSync(){
+    if(!autoBackupHandle)return;
+    unsavedDisk=true;
+    clearTimeout(diskSyncTimer);
+    diskSyncTimer=setTimeout(()=>{diskSyncTimer=null;flushDiskFileNow();},120);
+  }
+  async function executeAutoBackup(isSafety=false){
+    const clean={...state,rows:state.rows.filter(populated)};
+    if(autoBackupHandle&&!isSafety){
+      await flushDiskFileNow();
     }
     if(window.electronAPI?.saveAutoBackup){
       try{
@@ -696,7 +797,7 @@
         list.unshift({time:new Date().toISOString(),isSafety,data:clean});
         localStorage.setItem(key,JSON.stringify(list.slice(0,30)));
         const time=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-        if($('auto-backup-status'))$('auto-backup-status').textContent=`خودکار محفوظ: ${time} ✓`;
+        if($('auto-backup-status'))$('auto-backup-status').textContent=autoBackupHandle?`پی سی فائل فعال: ${autoBackupHandle.name} (${time}) ✓`:`خودکار محفوظ: ${time} ✓`;
       }catch(_){}
     }
   }
@@ -721,18 +822,18 @@
     const wasInert=document.body.inert;
     document.body.inert=true;
     try{
-      if(!await makeSafetyBackup()){
+      if(!nativeStorage&&!await makeSafetyBackup()){
         alert('سیفٹی بیک اَپ محفوظ نہیں ہو سکا۔ بحالی روک دی گئی؛ موجودہ ڈیٹا تبدیل نہیں ہوا۔');
         return false;
       }
-      try{localStorage.setItem(KEY,JSON.stringify({...data,rows:data.rows.filter(populated)}));}
+      try{writeState({...data,rows:data.rows.filter(populated)},true);}
       catch{
         alert('بیک اَپ بحال نہیں ہو سکا کیونکہ ڈیٹا محفوظ نہیں ہو رہا۔ موجودہ ڈیٹا تبدیل نہیں ہوا۔');
         return false;
       }
-      state=data;storageBlocked=false;selectedBranch='';
+      state=data;storageBlocked=false;storageReadFailed=false;selectedBranch='';
       for(const id of ['search','date-from','date-to'])$(id).value='';
-      render();$('save-state').textContent='✓ محفوظ ہے';scheduleAutoBackup();
+      render();savedStatus();scheduleDiskSync();scheduleAutoBackup();
       return true;
     }finally{document.body.inert=wasInert;restoreBusy=false;}
   }
@@ -809,17 +910,111 @@
     if(!window.showSaveFilePicker)return;
     try{
       const handle=await window.showSaveFilePicker({
-        suggestedName:`hisaab-auto-backup.json`,
-        types:[{description:'JSON Backup',accept:{'application/json':['.json']}}]
+        suggestedName:`hisaab-database.json`,
+        types:[{description:'Hisaab Database File (.json)',accept:{'application/json':['.json']}}]
       });
       autoBackupHandle=handle;
-      $('auto-backup-status').textContent='خودکار فائل: فعال ✓';
+      pendingDiskHandle=null;
+      reconnectDiskBtn.hidden=true;
+      await saveDiskHandle(handle);
+      await flushDiskFileNow();
       scheduleAutoBackup(true);
     }catch(e){/* cancelled by user */}
+  }
+  async function linkExistingDiskFile(){
+    if(!window.showOpenFilePicker)return;
+    try{
+      const [handle]=await window.showOpenFilePicker({
+        multiple:false,
+        types:[{description:'Hisaab Database File (.json)',accept:{'application/json':['.json']}}]
+      });
+      if(!handle)return;
+      if(handle.requestPermission){
+        const perm=await handle.requestPermission({mode:'readwrite'});
+        if(perm!=='granted')return;
+      }
+      const file=await handle.getFile();
+      if(file.size>15000000)throw Error('Large file');
+      const text=await file.text();
+      if(text.trim()){
+        const hasCurrentData=state.rows.some(populated)||state.journal?.rows?.some(r=>r.detail?.trim()||r.debit?.trim()||r.credit?.trim());
+        const parsed=migrate(JSON.parse(text));
+        if(hasCurrentData&&!confirm(`پی سی فائل "${handle.name}" سے ڈیٹا لوڈ کر کے موجودہ اسکرین سے بدل دیا جائے اور آگے کی تمام انٹریاں اسی فائل میں محفوظ کی جائیں؟`))return;
+        state=parsed;
+        storageBlocked=false;storageReadFailed=false;selectedBranch='';
+        for(const id of ['search','date-from','date-to'])$(id).value='';
+      }
+      autoBackupHandle=handle;
+      pendingDiskHandle=null;
+      reconnectDiskBtn.hidden=true;
+      await saveDiskHandle(handle);
+      persist();
+      render();
+      await flushDiskFileNow();
+      scheduleAutoBackup(true);
+    }catch{
+      alert('یہ درست حساب ڈیٹا فائل نہیں ہے یا کھل نہیں سکی۔');
+    }
+  }
+  reconnectDiskBtn.onclick=async()=>{
+    const handle=pendingDiskHandle||autoBackupHandle;
+    if(!handle)return;
+    try{
+      const perm=handle.requestPermission?await handle.requestPermission({mode:'readwrite'}):'granted';
+      if(perm!=='granted')return;
+      autoBackupHandle=handle;
+      pendingDiskHandle=null;
+      reconnectDiskBtn.hidden=true;
+      const file=await handle.getFile();
+      const hasLocalData=state.rows.some(populated)||state.journal?.rows?.some(r=>r.detail?.trim()||r.debit?.trim()||r.credit?.trim());
+      if(!hasLocalData&&file.size>0&&file.size<=15000000){
+        state=migrate(JSON.parse(await file.text()));
+        persist();
+        render();
+      }else{
+        await flushDiskFileNow();
+      }
+      updateDiskFileStatus();
+      savedStatus();
+    }catch(_){}
+  };
+  async function initDiskPersistence(){
+    if(nativeStorage)return;
+    try{navigator.storage?.persist?.().catch(()=>{});}catch(_){}
+    const handle=await loadDiskHandle();
+    if(!handle)return;
+    try{
+      const perm=handle.queryPermission?await handle.queryPermission({mode:'readwrite'}):'granted';
+      if(perm==='granted'){
+        autoBackupHandle=handle;
+        reconnectDiskBtn.hidden=true;
+        const file=await handle.getFile();
+        const hasLocalData=state.rows.some(populated)||state.journal?.rows?.some(r=>r.detail?.trim()||r.debit?.trim()||r.credit?.trim());
+        if(!hasLocalData&&file.size>0&&file.size<=15000000){
+          state=migrate(JSON.parse(await file.text()));
+          persist();
+          render();
+        }else{
+          await flushDiskFileNow();
+        }
+        updateDiskFileStatus();
+        savedStatus();
+      }else{
+        pendingDiskHandle=handle;
+        reconnectDiskBtn.textContent=`🔗 پی سی فائل جوڑیں (${handle.name})`;
+        reconnectDiskBtn.hidden=false;
+        $('save-state').textContent='پی سی فائل دوبارہ جوڑیں';
+      }
+    }catch(_){}
   }
   if(window.showSaveFilePicker){
     $('auto-backup').hidden=false;
     $('auto-backup').onclick=setupAutoBackup;
+    if(!nativeStorage&&$('dialog-setup-disk-btn')){$('dialog-setup-disk-btn').hidden=false;$('dialog-setup-disk-btn').onclick=setupAutoBackup;}
+  }
+  if(!nativeStorage&&window.showOpenFilePicker){
+    if($('link-disk-file')){$('link-disk-file').hidden=false;$('link-disk-file').onclick=linkExistingDiskFile;}
+    if($('dialog-link-disk-btn')){$('dialog-link-disk-btn').hidden=false;$('dialog-link-disk-btn').onclick=linkExistingDiskFile;}
   }
   if($('start-serial')){
     $('start-serial').addEventListener('input',()=>{
@@ -1291,4 +1486,6 @@
   if(state.pinCode)requestPinUnlock('جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں',false);
   journalController=window.HisaabJournal.mount({getState:()=>state,save,today,exportSheet:(rows,name)=>download(window.HisaabExcel.create(rows),name)});
   save();
+  initDiskPersistence();
 })();
+

@@ -31,6 +31,7 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 .app-shell #print{background:linear-gradient(180deg,#f1fbf5 0%,#dff2e7 100%);color:#0f573f;border-color:#9dd0b3;box-shadow:0 2px 6px rgba(18,92,69,0.08),inset 0 1px 0 rgba(255,255,255,0.9)}
 .app-shell #print:hover{background:linear-gradient(180deg,#e7f8ee 0%,#d1ecdd 100%);border-color:#5ea882;color:#0a4531;box-shadow:0 6px 16px -2px rgba(18,92,69,0.18),inset 0 1px 0 #fff}
 .app-shell #save-state{order:9;margin:0;padding:4px 14px;line-height:2.2;background:linear-gradient(180deg,#f0faf4 0%,#e2f2e9 100%);border:1px solid #b8dec6;color:#14583d;font-weight:700;border-radius:999px;font-size:10.5px;max-width:190px;white-space:normal;display:inline-flex;align-items:center;gap:5px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.85)}
+.app-shell #retry-save,.app-shell #reconnect-disk-file{order:10}
 .app-shell .all-dates-toggle{height:auto;min-height:44px;font-size:11px;margin:0;gap:8px;border-radius:12px;background:linear-gradient(180deg,#ffffff 0%,#f3f8f5 100%);border:1px solid #c6dcd0;box-shadow:0 1px 3px rgba(16,56,41,0.05),inset 0 1px 0 #fff;transition:all .18s ease}
 .app-shell .all-dates-toggle:hover{border-color:#68ab90;background:linear-gradient(180deg,#ffffff 0%,#eaf5ef 100%);box-shadow:0 4px 12px rgba(20,90,66,0.1)}
 .app-shell .range-drawer{padding:14px 24px;background:#f8fbf8;box-shadow:none}

@@ -12,7 +12,7 @@ const {pathToFileURL}=require('node:url');
     if(packaged)await browser.evaluate(({BrowserWindow},target)=>{BrowserWindow.getAllWindows()[0].webContents.session.on('will-download',(_,item)=>item.setSavePath(target));},path.resolve('scratch','performance-packaged.xlsx'));
     const rows=Array.from({length:450},(_,i)=>({id:'r'+i,entryDate:'2026-10-17',sender:'Customer '+i,mobile:'0300'+String(i).padStart(7,'0'),receiver:'Receiver',place:'Dubai',branch:'',balance:'10',aed:'100',pkr:'200',history:[]}));
     rows[449]={...rows[0],id:'r449'};
-    const seed=async data=>{await page.evaluate(rows=>localStorage.setItem('hisaab-register-v1',JSON.stringify({version:4,title:'Performance regression',date:'2026-10-17',branches:[],rows,trash:[]})),data);await page.reload();};
+    const seed=async rows=>require('./seed-state.cjs')(page,{version:4,title:'Performance regression',date:'2026-10-17',branches:[],rows,trash:[]});
     await seed(rows);
     assert.equal(await page.locator('#rows tr:not(.draft-row)').count(),200);
     assert.equal(await page.locator('#total-aed').innerText(),'45,000');

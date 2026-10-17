@@ -3,7 +3,7 @@
     "date": "2026-10-15",
     "rows": [
       {
-        "id": "800ea63a-28cd-422a-9f65-7dea6929fa6b",
+        "id": "8067f432-fa03-412d-a612-a6778d19b71c",
         "date": "2026-10-15",
         "detail": "",
         "debit": "",
@@ -15,6 +15,7 @@
   "title": "Test register",
   "date": "2026-10-12",
   "startSerial": 1,
+  "partySerials": {},
   "fontSize": 13,
   "branches": [
     "Alpha",
@@ -35,7 +36,7 @@
       "aed": "125",
       "pkr": "1,000",
       "history": [],
-      "id": "96961452-0675-40cf-85cd-8c623602c75a"
+      "id": "682df807-263d-4e0f-bacf-b1daed2dfa25"
     },
     {
       "entryDate": "2026-10-12",
@@ -49,28 +50,29 @@
       "pkr": "",
       "history": [
         {
-          "at": "2026-10-16T20:32:16.151Z",
+          "at": "2026-10-17T20:57:12.366Z",
           "field": "sender",
           "from": "",
           "to": "New sender"
         },
         {
-          "at": "2026-10-16T20:32:16.173Z",
+          "at": "2026-10-17T20:57:12.404Z",
           "field": "mobile",
           "from": "",
           "to": "+971 50 1234567"
         },
         {
-          "at": "2026-10-16T20:32:16.192Z",
+          "at": "2026-10-17T20:57:12.434Z",
           "field": "aed",
           "from": "",
           "to": "24"
         }
       ],
-      "id": "6b3a23e9-04b6-49eb-bc5d-aae5dc45a85c"
+      "id": "567888c3-6980-46e9-81fc-27a5e49979b9"
     }
   ],
   "trash": [],
-  "lastBackupAt": "2026-10-16T20:32:17.756Z",
-  "lockedDates": []
+  "lastBackupAt": "2026-10-17T20:57:15.496Z",
+  "lockedDates": [],
+  "pinCode": ""
 }

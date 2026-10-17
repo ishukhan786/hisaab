@@ -86,7 +86,8 @@
           <button id="manage-backups" type="button">🛡 بیک اَپ سنبھالیں (تاریخچہ)</button>
           <button id="backup" type="button">💾 بیک اَپ ڈاؤن لوڈ</button>
           <button id="restore" type="button">📂 بیک اَپ کھولیں</button>
-          <button id="auto-backup" type="button" hidden>خودکار بیک اَپ فائل</button>
+          <button id="auto-backup" type="button" hidden>💿 نئی پی سی ڈسک فائل بنائیں</button>
+          <button id="link-disk-file" type="button" hidden>🔗 موجودہ پی سی فائل جوڑیں</button>
           <span id="auto-backup-status"></span>
         </div>
       </details>
@@ -122,7 +123,7 @@
       <div class="table-wrap"><table><thead><tr><th class="serial">نمبر شمار</th><th class="person col-sender">ارسال کنندہ</th><th class="mobile">موبائیل نمبر</th><th class="person col-receiver">وصول کنندہ</th><th class="place col-place">مقام</th><th class="branch col-branch no-print">پارٹی</th><th class="money col-balance">بقایا</th><th class="money col-aed">درہم</th><th id="th-currency" class="money col-pkr">روپیہ</th><th class="col-receipt no-print">رسید</th><th class="remove no-print"><span class="sr-only">حذف</span></th></tr></thead><tbody id="rows"></tbody><tfoot class="register-totals"><tr class="totals-gap" aria-hidden="true"><td colspan="5"></td><td class="col-branch no-print"></td><td colspan="3"></td><td class="col-receipt no-print"></td><td class="no-print"></td></tr><tr class="totals-row"><th colspan="5" scope="row"><div class="totals-title-wrap"><span>کل مجموعہ حساب</span><span id="total-net-aed" class="net-aed-badge">موجودہ درہم: 0</span></div></th><td class="col-branch no-print"></td><td id="total-balance">0</td><td id="total-aed">0</td><td id="total-pkr">(0)</td><td class="col-receipt no-print"></td><td class="no-print"></td></tr></tfoot></table></div>
       <div class="paper-foot"><span id="count">0 اندراجات</span><span>حساب · اندراج رجسٹر</span></div>
     </section>
-    <footer class="help"><span>نئی انٹری اوپر والی "رپورٹ کی تاریخ" پر محفوظ ہوتی ہے • Tab سے اگلا خانہ • Ctrl+D اوپر سے کاپی • Alt+1..9 پارٹی • Ctrl+P پرنٹ • Ctrl+Z واپس</span><span>ڈیٹا اسی براؤزر میں محفوظ ہوتا ہے؛ "مزید" میں خودکار بیک اَپ اور پن لاک (PIN) فعال کریں۔</span></footer>
+    <footer class="help"><span>نئی انٹری اوپر والی "رپورٹ کی تاریخ" پر محفوظ ہوتی ہے • Tab سے اگلا خانہ • Ctrl+D اوپر سے کاپی • Alt+1..9 پارٹی • Ctrl+P پرنٹ • Ctrl+Z واپس</span><span id="storage-help">ڈیٹا اسی براؤزر میں محفوظ ہوتا ہے؛ "مزید" میں خودکار بیک اَپ اور پن لاک (PIN) فعال کریں۔</span></footer>
   </main>
   <main id="journal-page" hidden>
     <section class="journal-card" aria-label="روزنامچہ">
@@ -147,6 +148,8 @@
     <div class="backup-actions-bar" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
       <button id="open-backup-folder-btn" type="button" class="btn-sm">📁 بیک اَپ فولڈر کھولیں</button>
       <button id="create-backup-now-btn" type="button" class="btn-sm primary">⚡ فوری خودکار بیک اَپ لیں</button>
+      <button id="dialog-setup-disk-btn" type="button" class="btn-sm" hidden>💿 نئی پی سی ڈسک فائل بنائیں</button>
+      <button id="dialog-link-disk-btn" type="button" class="btn-sm" hidden>🔗 موجودہ پی سی فائل جوڑیں</button>
     </div>
     <div class="summary-wrap" style="max-height:48vh;">
       <table id="backup-list-table">

@@ -6,6 +6,34 @@ const { randomUUID } = require('crypto');
 app.setAppUserModelId('com.ishukhan.hisaab');
 
 let mainWindow = null;
+let database = null;
+function getDatabase() {
+  if (!database) {
+    const { HisaabDatabase } = require('./database');
+    database = new HisaabDatabase(path.join(app.getPath('userData'),'hisaab.sqlite'));
+  }
+  return database;
+}
+
+// Only the trusted top-level application frame can read or mutate local data.
+for (const action of ['load','initialize','save','restore']) {
+  ipcMain.on('database-'+action,(event,payload={})=>{
+    try {
+      const expectedURL=require('url').pathToFileURL(path.join(__dirname,'index.html')).href;
+      if (!gotTheLock || !mainWindow || event.sender!==mainWindow.webContents || event.senderFrame!==mainWindow.webContents.mainFrame || event.senderFrame.url!==expectedURL) throw new Error('Unauthorized database request');
+      const store=getDatabase();
+      if(action==='load')event.returnValue={status:'ok',...store.load(),filePath:store.filename};
+      else {
+        const options=action==='initialize'?{initialize:true,legacyRaw:payload.legacyRaw??null}:action==='restore'?{restore:true,current:payload.current}:{};
+        event.returnValue={status:'saved',...store.commit(payload.state,payload.revision,options)};
+      }
+    } catch(error) {
+      console.error('Database '+action+' failed:',error.message);
+      event.returnValue={status:'error',message:error.message};
+    }
+  });
+}
+app.on('will-quit',()=>{database?.close();});
 
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -165,7 +193,7 @@ ipcMain.handle('save-auto-backup', async (event, data, isSafety = false) => {
     const dateStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
     const timeStr = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
     const prefix = isSafety ? 'safety-pre-restore' : 'auto-backup';
-    const filename = `${prefix}_${dateStr}_${timeStr}.json`;
+    const filename = `${prefix}_${dateStr}_${timeStr}_${randomUUID()}.json`;
     const target = path.join(dir, filename);
     const temp = path.join(dir, `.tmp-${randomUUID()}.json`);
 
@@ -202,7 +230,7 @@ ipcMain.handle('get-auto-backups', async (event) => {
   try {
     const dir = await getBackupsDir();
     const files = await fs.readdir(dir);
-    const jsonFiles = files.filter(f => f.endsWith('.json') && (f.startsWith('auto-backup_') || f.startsWith('safety-pre-restore_')));
+    const jsonFiles = files.filter(f => f.endsWith('.json') && (f.startsWith('auto-backup_') || f.startsWith('safety-pre-restore_') || f.startsWith('migration-localstorage_')));
     const list = [];
     for (const f of jsonFiles) {
       try {
@@ -225,7 +253,7 @@ ipcMain.handle('get-auto-backups', async (event) => {
 
 ipcMain.handle('read-auto-backup', async (event, filename) => {
   if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Unauthorized');
-  if (typeof filename !== 'string' || !/^(auto-backup_|safety-pre-restore_)[a-zA-Z0-9_\-\.]+\.json$/.test(filename)) {
+  if (typeof filename !== 'string' || !/^(auto-backup_|safety-pre-restore_|migration-localstorage_)[a-zA-Z0-9_\-\.]+\.json$/.test(filename)) {
     throw new Error('Invalid filename');
   }
   const dir = await getBackupsDir();
@@ -278,6 +306,10 @@ function createWindow() {
   mainWindow.maximize();
   mainWindow.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   mainWindow.webContents.on('will-navigate',event=>event.preventDefault());
+  mainWindow.webContents.on('will-prevent-unload',event=>{
+    const choice=dialog.showMessageBoxSync(mainWindow,{type:'warning',title:'غیر محفوظ تبدیلیاں',message:'کچھ تبدیلیاں محفوظ نہیں ہو سکیں۔ واپس جا کر دوبارہ محفوظ کریں یا بیک اَپ لیں۔',buttons:['واپس جائیں','بغیر محفوظ کیے بند کریں'],defaultId:0,cancelId:0});
+    if(choice===1)event.preventDefault();
+  });
   mainWindow.loadFile('index.html');
 
   mainWindow.once('ready-to-show', () => {
