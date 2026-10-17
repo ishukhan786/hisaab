@@ -227,6 +227,9 @@ tfoot.register-totals .totals-row>th{font-size:calc(var(--entry-font) + 2px);fon
 }
 
 .totals-title-wrap{display:flex;align-items:center;justify-content:space-between;padding:0 8px;width:100%}
+.register-pagination{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px;flex-wrap:wrap}
+.register-pagination[hidden]{display:none}
+.register-pagination span{font-size:13px;color:#355648;text-align:center}
 .net-aed-badge{display:inline-flex;align-items:center;gap:4px;font-family:Arial,'Noto Nastaliq Urdu',sans-serif;font-size:13px;font-weight:700;color:#12563f;background:#e3f5ea;border:1px solid #b2dcbf;padding:2px 10px;border-radius:6px;line-height:1.7;white-space:nowrap}
 @media print{
   .totals-title-wrap{display:flex;align-items:center;justify-content:space-between;padding:0 8px;width:100%}

@@ -28,6 +28,15 @@
   const activeCurrency=()=>selectedBranch.startsWith('b:')?partyCurrency(selectedBranch.slice(2)):'pkr';
   let storageBlocked=false, selectedBranch='', pendingBranchRow=null;
   const rowNodes=new Map();
+  const pageSize=200;
+  let viewPage=0,viewKey='',registerPrintActive=false;
+  const pageNav=document.createElement('div');pageNav.className='register-pagination no-print';pageNav.hidden=true;
+  const pagePrev=document.createElement('button'),pageNext=document.createElement('button'),pageLabel=document.createElement('span');
+  pagePrev.type=pageNext.type='button';pagePrev.textContent='پچھلا صفحہ';pageNext.textContent='اگلا صفحہ';
+  pagePrev.id='register-page-prev';pageNext.id='register-page-next';pageLabel.id='register-page-label';
+  pageNav.append(pagePrev,pageLabel,pageNext);document.querySelector('.table-wrap').after(pageNav);
+  pagePrev.onclick=()=>{viewPage=Math.max(0,viewPage-1);applyFilter();};
+  pageNext.onclick=()=>{viewPage++;applyFilter();};
   function migrate(source){
     if(!source || ![1,2,3,4].includes(source.version) || typeof source.title!=='string' || source.title.length>100 || typeof source.date!=='string' || (source.date && !dateValid(source.date)) || !Array.isArray(source.rows) || source.rows.length>10000)throw Error('Invalid backup');
     const registry=[];
@@ -112,7 +121,7 @@
     updatePartyTabsActive();
     if(value.startsWith('b:')){
       const draft=state.rows.find(r=>branchMatch(r)&&!populated(r));
-      if(draft)setTimeout(()=>focusRow(draft),50);
+      if(draft)focusRow(draft);
     }
   }
   function updatePartyTabsActive(){
@@ -144,7 +153,7 @@
     appendRow(row);
     save();
   }
-  function totals(){const rows=selectedRows();let totalBalance=0n,totalAed=0n,invalidAny=false;for(const field of moneyFields){let total=0n,invalid=false;for(const row of rows){const value=integerAmount(row[field]);if(value===null)invalid=true;else total+=value;}if(field==='balance'){totalBalance=total;if(invalid)invalidAny=true;}if(field==='aed'){totalAed=total;if(invalid)invalidAny=true;}$('total-'+field).textContent=invalid?'رقم درست کریں':formatted(total);}const netEl=$('total-net-aed');if(netEl){const netAed=totalAed-totalBalance;netEl.textContent=invalidAny?'موجودہ درہم (صافی): رقم درست کریں':`موجودہ درہم (صافی): ${formatted(netAed)}`;}$('total-pkr').textContent=currencyText(rows);$('count').textContent=`${rows.length} اندراجات`;
+  function totals(rows=selectedRows()){let totalBalance=0n,totalAed=0n,invalidAny=false;for(const field of moneyFields){let total=0n,invalid=false;for(const row of rows){const value=integerAmount(row[field]);if(value===null)invalid=true;else total+=value;}if(field==='balance'){totalBalance=total;if(invalid)invalidAny=true;}if(field==='aed'){totalAed=total;if(invalid)invalidAny=true;}$('total-'+field).textContent=invalid?'رقم درست کریں':formatted(total);}const netEl=$('total-net-aed');if(netEl){const netAed=totalAed-totalBalance;netEl.textContent=invalidAny?'موجودہ درہم (صافی): رقم درست کریں':`موجودہ درہم (صافی): ${formatted(netAed)}`;}$('total-pkr').textContent=currencyText(rows);$('count').textContent=`${rows.length} اندراجات`;
     const fractional=rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null));
     $('filter-message').textContent=!rangeValid()?'تاریخ سے، تاریخ تک سے آگے نہیں ہو سکتی۔':dayMode()?`${fmtDate(state.date)} کی ${rows.length} انٹریاں۔ پرنٹ اور مجموعہ انہی کا ہے۔`:`${rows.length} انٹریاں منتخب ہیں۔ پرنٹ اور مجموعہ انہی کا ہے۔ نئی انٹری کے لیے "＋ نئی قطار" دبائیں۔`;
     if(fractional)$('filter-message').textContent+=' رقم میں صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم کو خود نہیں بدلا گیا۔';
@@ -155,20 +164,28 @@
     return $('all-dates').checked?'تمام تاریخیں':fmtDate(state.date);
   }
   const fieldUrduLabels={sender:'ارسال کنندہ',mobile:'موبائیل نمبر',receiver:'وصول کنندہ',place:'مقام',branch:'پارٹی',balance:'بقایا',aed:'درہم',pkr:'روپیہ / افغانی'};
-  function findDuplicate(row){
-    if(!populated(row))return null;
-    const s=cleanName(row.sender||'').toLowerCase();
-    const m=englishDigits(row.mobile||'').replace(/\D/g,'');
-    const b=integerAmount(row.balance)||0n, a=integerAmount(row.aed)||0n, p=integerAmount(row.pkr)||0n;
-    const hasMoney=b>0n||a>0n||p>0n;
-    if(!s&&!m)return null;
-    const allPopulated=state.rows.filter(populated);
-    const otherIdx=allPopulated.findIndex(r=>r.id!==row.id && (s&&cleanName(r.sender||'').toLowerCase()===s) && (!m||englishDigits(r.mobile||'').replace(/\D/g,'')===m) && ((hasMoney&&(integerAmount(r.balance)||0n)===b&&(integerAmount(r.aed)||0n)===a&&(integerAmount(r.pkr)||0n)===p)||(!hasMoney&&m.length>=7)));
-    if(otherIdx>=0){
-      const start=Number(state.startSerial)||1;
-      return {index:start+otherIdx};
+  // Keep the first two entries per key: enough to find the earliest other row,
+  // including the original asymmetric rule for rows with no phone or no money.
+  const duplicateRecords=new WeakMap();
+  function duplicateLookup(){
+    const exact=new Map(),withoutPhone=new Map(),phoneOnly=new Map(),keys=new Map();
+    const add=(map,key,item)=>{const list=map.get(key);if(!list)map.set(key,[item]);else if(list.length<2)list.push(item);};
+    let index=0;
+    for(const row of state.rows){
+      if(!populated(row))continue;
+      const item={id:row.id,index:(Number(state.startSerial)||1)+index++};
+      let record=duplicateRecords.get(row);
+      if(!record||['sender','mobile',...moneyFields].some(f=>record.raw[f]!==row[f])){
+        const sender=cleanName(row.sender).toLowerCase(),phone=englishDigits(row.mobile).replace(/\D/g,'');
+        const values=moneyFields.map(f=>integerAmount(row[f])||0n),hasMoney=values.some(v=>v>0n),amounts=values.map(String);
+        record={raw:{sender:row.sender,mobile:row.mobile,balance:row.balance,aed:row.aed,pkr:row.pkr},sender,phone,hasMoney,fullKey:JSON.stringify([sender,phone,...amounts]),amountKey:JSON.stringify([sender,...amounts]),phoneKey:JSON.stringify([sender,phone])};
+        duplicateRecords.set(row,record);
+      }
+      const {sender,phone,hasMoney,fullKey,amountKey,phoneKey}=record;
+      add(exact,fullKey,item);add(withoutPhone,amountKey,item);add(phoneOnly,phoneKey,item);
+      if(sender&&(hasMoney||phone.length>=7))keys.set(row.id,{map:hasMoney?(phone?exact:withoutPhone):phoneOnly,key:hasMoney?(phone?fullKey:amountKey):phoneKey});
     }
-    return null;
+    return row=>{const entry=keys.get(row.id);return entry?entry.map.get(entry.key)?.find(item=>item.id!==row.id):null;};
   }
   const isDayLocked=d=>!!(state.lockedDates&&state.lockedDates.includes(d||state.date));
   function updateLockBtn(){
@@ -217,18 +234,39 @@
     }
     d.showModal();
   }
-  function applyFilter(keepFocus=false){ensureDraft();const start=(Number(state.startSerial)||1);let offset=0;const active=keepFocus?document.activeElement?.closest('#rows tr'):null;let draftShown=false;const day=dayMode();
+  function applyFilter(keepFocus=false,forPrint=false){ensureDraft();const start=(Number(state.startSerial)||1);let offset=0;const active=keepFocus?document.activeElement?.closest('#rows tr'):null;let draftShown=false;const day=dayMode();
+    forPrint=forPrint||registerPrintActive;
     updateLockBtn();
-    state.rows.forEach(r=>{const tr=rowNodes.get(r.id);let draft=day&&branchMatch(r)&&!populated(r)&&!draftShown;if(draft)draftShown=true;const matched=matches(r);tr.hidden=!(matched||draft||tr===active);tr.classList.toggle('draft-row',!populated(r));
+    const nextKey=JSON.stringify([selectedBranch,state.date,$('all-dates').checked,$('search').value,$('date-from').value,$('date-to').value]);
+    if(nextKey!==viewKey){viewPage=0;viewKey=nextKey;}
+    const filtered=selectedRows(),matchedIds=new Set(filtered.map(r=>r.id)),pages=Math.max(1,Math.ceil(filtered.length/pageSize));
+    viewPage=Math.min(viewPage,pages-1);
+    const pageIds=new Set((forPrint?filtered:filtered.slice(viewPage*pageSize,(viewPage+1)*pageSize)).map(r=>r.id));
+    pageNav.hidden=forPrint||pages===1;pagePrev.disabled=viewPage===0;pageNext.disabled=viewPage===pages-1;
+    pageLabel.textContent=`صفحہ ${viewPage+1} / ${pages} · ${filtered.length} اندراجات · مجموعہ اور پرنٹ تمام منتخب اندراجات کا ہے`;
+    const findDuplicate=duplicateLookup(),visibleNodes=[];
+    state.rows.forEach(r=>{let tr=rowNodes.get(r.id);const hasData=populated(r);let draft=day&&branchMatch(r)&&!hasData&&!draftShown;if(draft)draftShown=true;const matched=matchedIds.has(r.id);
+      const serial=matched?start+offset++:null;
+      if(!(pageIds.has(r.id)||draft||(tr&&tr===active))){if(tr){tr.remove();rowNodes.delete(r.id);}return;}
+      if(!tr)tr=createRowElement(r);
+      visibleNodes.push(tr);tr.hidden=false;tr.classList.toggle('draft-row',!hasData);
       const rLocked=isDayLocked(r.entryDate||state.date);
-      tr.classList.toggle('row-locked',rLocked);
-      tr.querySelectorAll('input,select,textarea').forEach(el=>{el.disabled=rLocked;});
-      const delBtn=tr.querySelector('.delete');if(delBtn)delBtn.disabled=rLocked;
-      const cell=tr.firstElementChild;const val=matched?(start+offset++):!populated(r)?'＋':'—';
+      if(tr._locked!==rLocked){
+        tr.classList.toggle('row-locked',rLocked);
+        tr.querySelectorAll('input,select,textarea').forEach(el=>{el.disabled=rLocked;});
+        const delBtn=tr.querySelector('.delete');if(delBtn)delBtn.disabled=rLocked;
+        tr._locked=rLocked;
+      }
+      const currency=partyCurrency(r.branch).toUpperCase();
+      if(tr._currency!==currency){const input=tr.querySelector('[data-field="pkr"]');input.parentElement.dataset.currency=currency;input.setAttribute('aria-label',currency==='AFN'?'افغانی':'روپیہ');tr._currency=currency;}
+      const cell=tr.firstElementChild;const val=matched?serial:!populated(r)?'＋':'—';
+      const dup=matched&&hasData?findDuplicate(r):null;
+      const decoration=JSON.stringify([matched,val,dup?.index,r.history?.length||0,r.entryDate,day]);
+      if(tr._decoration===decoration)return;
+      tr._decoration=decoration;
       cell.replaceChildren();
       const wrap=document.createElement('div');wrap.className='serial-cell';
       if(matched && populated(r)){
-        const dup=findDuplicate(r);
         if(dup){
           const badge=document.createElement('span');badge.className='dup-badge no-print';badge.textContent='⚠️';
           badge.title=`ممکنہ ڈپلیکیٹ انٹری: نام، موبائل اور رقم انٹری #${dup.index} پر بھی موجود ہے`;
@@ -256,6 +294,9 @@
         }
       }
     });
+    // Retain focused controls and their selection; mount only the current view.
+    let cursor=$('rows').firstElementChild;
+    for(const node of visibleNodes){if(node===cursor)cursor=cursor.nextElementSibling;else $('rows').insertBefore(node,cursor);}
     const isParty=selectedBranch.startsWith('b:');
     const paper=document.querySelector('.paper');
     if(paper)paper.classList.toggle('party-page',isParty);
@@ -265,13 +306,12 @@
     if($('date-screen-badge'))$('date-screen-badge').textContent=fmtDate(state.date||today());
     const hasRange=rangeActive();
     if($('toggle-range'))$('toggle-range').classList.toggle('active',hasRange||!($('range-drawer')?.hidden??true));
-    totals();
+    totals(filtered);
     const curr=activeCurrency();
     const isAfn=curr==='afn';
-    const hasAnyAfn=selectedRows().some(r=>partyCurrency(r.branch)==='afn');
-    const mixed=new Set(selectedRows().map(r=>partyCurrency(r.branch))).size>1;
+    const hasAnyAfn=filtered.some(r=>partyCurrency(r.branch)==='afn');
+    const mixed=new Set(filtered.map(r=>partyCurrency(r.branch))).size>1;
     paper?.classList.toggle('mixed-currencies',mixed);
-    state.rows.forEach(r=>{const td=rowNodes.get(r.id)?.querySelector('[data-field="pkr"]')?.parentElement;if(td)td.dataset.currency=partyCurrency(r.branch).toUpperCase();});
     const currLabel=isAfn?'افغانی':(selectedBranch===''&&hasAnyAfn?'روپیہ / افغانی':'روپیہ');
     if($('th-currency'))$('th-currency').textContent=currLabel;
     if($('total-pkr'))$('total-pkr').title=isAfn?'کل افغانی':'کل روپیہ';
@@ -329,6 +369,7 @@
       function accept(event){
         if(event?.isComposing)return;
         if(field==='branch'&&input.value==='__new_party__'){input.value=row.branch;openBranches(row);return;}
+        const wasPopulated=populated(row);
         if(moneyFields.includes(field)||field==='mobile'){const value=englishDigits(input.value);if(value!==input.value){const start=input.selectionStart,end=input.selectionEnd;input.value=value;if(start!==null)input.setSelectionRange(start,end);}}
         if(isText){const value=formatAllah(input.value);if(value!==input.value){const pos=input.selectionStart,diff=value.length-input.value.length;input.value=value;if(pos!==null){const nextPos=Math.max(0,pos+diff);input.setSelectionRange(nextPos,nextPos);}}}
         row[field]=input.value;
@@ -336,6 +377,7 @@
         if(!row.entryDate)row.entryDate=state.date||today();
         if(selectedBranch.startsWith('b:')&&!row.branch)row.branch=selectedBranch.slice(2);
         if(moneyFields.includes(field))input.setCustomValidity(integerAmount(input.value)===null?'صرف مکمل عدد لکھیں، اعشاری رقم نہیں':'');
+        if(!wasPopulated&&matches(row))viewPage=Math.floor(selectedRows().findIndex(r=>r.id===row.id)/pageSize);
         applyFilter(true);save();
       }
       if(moneyFields.includes(field)){
@@ -347,9 +389,9 @@
       input.addEventListener('keydown',e=>{
         if(e.key==='Tab'&&!e.shiftKey&&i===fields.length-1){
           e.preventDefault();
-          const visible=state.rows.filter(r=>!rowNodes.get(r.id).hidden);
+          const visible=state.rows.filter(r=>matches(r)||(!populated(r)&&rowNodes.has(r.id)));
           const next=visible[visible.indexOf(row)+1];
-          if(!next){add();}else{focusRow(next);}
+          if(!next){add();}else{if(!rowNodes.has(next.id)){viewPage=Math.floor(selectedRows().indexOf(next)/pageSize);applyFilter();}focusRow(next);}
         }
       });
       td.append(input);tr.append(td);
@@ -364,7 +406,7 @@
   function appendRow(row){$('rows').append(createRowElement(row));}
   function prependRow(row){$('rows').prepend(createRowElement(row));}
   function applyFont(){document.documentElement.style.setProperty('--entry-font',state.fontSize+'px');$('font-size').textContent=state.fontSize;$('font-smaller').disabled=state.fontSize<=10;$('font-larger').disabled=state.fontSize>=22;}
-  function render(){rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;$('date').value=state.date;if($('start-serial'))$('start-serial').value=state.startSerial||1;applyFont();state.rows.forEach(appendRow);updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
+  function render(){rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;$('date').value=state.date;if($('start-serial'))$('start-serial').value=state.startSerial||1;applyFont();updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
   function focusRow(row){rowNodes.get(row.id)?.querySelector('[data-field="sender"]').focus();}
   function add(){
     if(journalController?.isActive()){journalController.add();return;}
@@ -386,7 +428,7 @@
     focusRow(row);
   }
   $('add').onclick=add;
-  $('undo').onclick=()=>{const item=state.trash.pop();if(!item)return;if(item.row.branch&&!state.branches.includes(item.row.branch))state.branches.push(item.row.branch);state.rows.splice(Math.min(item.index,state.rows.length),0,item.row);render();save();if(rowNodes.get(item.row.id).hidden)$('filter-message').textContent='انٹری واپس آ گئی ہے۔ اسے دیکھنے کے لیے فلٹر صاف کریں۔';};
+  $('undo').onclick=()=>{const item=state.trash.pop();if(!item)return;if(item.row.branch&&!state.branches.includes(item.row.branch))state.branches.push(item.row.branch);state.rows.splice(Math.min(item.index,state.rows.length),0,item.row);render();save();if(!rowNodes.has(item.row.id)||rowNodes.get(item.row.id).hidden)$('filter-message').textContent='انٹری واپس آ گئی ہے۔ اسے دیکھنے کے لیے فلٹر صاف کریں۔';};
   let autoBackupTimer=null,autoBackupHandle=null;
   async function executeAutoBackup(isSafety=false){
     const clean={...state,rows:state.rows.filter(populated)};
@@ -754,8 +796,8 @@
     finally{document.body.inert=false;clearReceiptOutput();}
   }
   $('receipt-preview').onclick=()=>outputReceipt();$('receipt-save').onclick=()=>outputReceipt(true);
-  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output'))return;applyFilter();const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{const span=document.createElement('span');span.className='print-value';span.textContent=input.classList.contains('amount')?wholeText(input.value):input.value;if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign='center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
-  window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else preparePrint();});window.addEventListener('afterprint',()=>{clearReceiptOutput();applyFilter();});
+  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{const span=document.createElement('span');span.className='print-value';span.textContent=input.classList.contains('amount')?wholeText(input.value):input.value;if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign='center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
+  window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else preparePrint();});window.addEventListener('afterprint',()=>{registerPrintActive=false;clearReceiptOutput();applyFilter();});
   function canOutput(rows,filtered=true){if(filtered&&!rangeValid()){alert('تاریخ کا دورانیہ درست کریں۔');return false;}if(!rows.length){alert('کوئی انٹری منتخب نہیں ہے۔');return false;}if(rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null))){alert('رقم کے خانے درست کریں۔ صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم خود تبدیل نہیں کی گئی۔');return false;}return true;}
   if(window.electronAPI?.savePDF){
     const button=$('save-pdf');button.hidden=false;
@@ -772,7 +814,7 @@
         if(result.status==='saved'){button.textContent='✓ PDF محفوظ ہو گئی';if(result.filePath)recordSavedPdf(result.filePath);}
         else if(result.status==='error')alert('PDF محفوظ نہیں ہو سکی۔ دوسری جگہ منتخب کریں یا کھلی ہوئی فائل بند کریں۔');
       }catch{alert('PDF محفوظ نہیں ہو سکی۔ دوبارہ کوشش کریں۔');}
-      finally{document.body.inert=false;button.disabled=false;applyFilter();setTimeout(()=>{button.replaceChildren(...label);},2500);}
+      finally{registerPrintActive=false;document.body.inert=false;button.disabled=false;applyFilter();setTimeout(()=>{button.replaceChildren(...label);},2500);}
     };
   }
   $('print').onclick=async()=>{
@@ -783,7 +825,7 @@
     document.body.inert=true;
     try{preparePrint();const result=await window.electronAPI.previewPDF();if(result.status==='error')alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');}
     catch{alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');}
-    finally{document.body.inert=false;applyFilter();}
+    finally{registerPrintActive=false;document.body.inert=false;applyFilter();}
   };
   window.addEventListener('keydown',e=>{
     if((e.ctrlKey||e.metaKey)&&(e.key==='p'||e.key==='P')){e.preventDefault();$('print').click();}

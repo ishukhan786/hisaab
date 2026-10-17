@@ -1,4 +1,17 @@
-# Hisaab Desktop 1.2.1 — Verification (2026-10-17)
+# Hisaab Desktop 1.2.2 — Verification (2026-10-17)
+
+Performance update: indexed duplicate checking, cached row decorations, and 200-record screen pages. Full-selection totals, Excel export and print are preserved. See `PERFORMANCE.md` for before/after measurements and test coverage.
+
+Packaged performance/restore tests and the visible desktop smoke test passed. A native 33-page PDF contains all 450 test entries. Packaged source files match the workspace; packaged version and installer SHA-512 match `dist/latest.yml`. Build completed with `npm run dist -- --publish never`.
+
+- `dist/Hisaab-Setup-1.2.2.exe` — 82,735,959 bytes
+- `dist/Hisaab-Portable-1.2.2.exe` — 82,528,828 bytes
+- `dist/Hisaab-Setup-1.2.2.exe.blockmap`
+- `dist/latest.yml`
+
+Evidence: `scratch/electron-audit-1792233243811/` and `scratch/performance-*`. Binaries are unsigned. Installation/uninstallation, portable launcher extraction and physical printing remain untested.
+
+## Previous verification: 1.2.1
 
 Changes: restore now requires a safety snapshot and a successful storage write before replacing the active register; edit history is persisted immediately. Includes the existing net-AED total display update.
 
