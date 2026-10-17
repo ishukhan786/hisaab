@@ -21,7 +21,7 @@
   function blank(branch=''){return {...Object.fromEntries(rowFields.map(f=>[f,''])),id:uid(),entryDate:state.date||today(),branch};}
   function fmtDate(iso){if(!iso)return '';const [y,m,d]=iso.split('-');return `${d}/${m}/${y}`;}
   let journalController=null;
-  let state={journal:{date:today(),rows:[]},version:4,title:'اندراج رجسٹر',date:today(),startSerial:1,partySerials:Object.create(null),fontSize:13,branches:[],partyCurrencies:Object.create(null),rows:[],trash:[],lastBackupAt:null,lockedDates:[]};
+  let state={journal:{date:today(),rows:[]},version:4,title:'اندراج رجسٹر',date:today(),startSerial:1,partySerials:Object.create(null),fontSize:13,branches:[],partyCurrencies:Object.create(null),rows:[],trash:[],lastBackupAt:null,lockedDates:[],pinCode:''};
   const partyCurrency=name=>name&&Object.hasOwn(state.partyCurrencies||{},name)&&state.partyCurrencies[name]==='afn'?'afn':'pkr';
   function currencyTotals(rows){const sums={pkr:0n,afn:0n},invalid=new Set();for(const r of rows){const c=partyCurrency(r.branch),v=integerAmount(r.pkr);if(v===null)invalid.add(c);else sums[c]+=v;}return {sums,invalid};}
   function currencyText(rows){const currencies=[...new Set(rows.map(r=>partyCurrency(r.branch)))];const {sums,invalid}=currencyTotals(rows);return (currencies.length?currencies:['pkr']).map(c=>(currencies.length>1?c.toUpperCase()+': ':'')+(invalid.has(c)?'رقم درست کریں':formatted(sums[c]))).join('\n');}
@@ -81,7 +81,8 @@
     }
     const partyCurrencies=Object.create(null);for(const name of registry){const raw=source.partyCurrencies;if(raw&&Object.hasOwn(raw,name)){if(!['pkr','afn'].includes(raw[name]))throw Error('Invalid currency');partyCurrencies[name]=raw[name];}}
     const lockedDates=Array.isArray(source.lockedDates)?source.lockedDates.filter(d=>typeof d==='string'&&dateValid(d)):[];
-    return {journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:formatAllah(source.title),date:source.date||today(),startSerial,partySerials,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates};
+    const pinCode=typeof source.pinCode==='string'&&/^\d{4,8}$/.test(source.pinCode)?source.pinCode:'';
+    return {journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:formatAllah(source.title),date:source.date||today(),startSerial,partySerials,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates,pinCode};
   }
   try{const raw=localStorage.getItem(KEY);if(raw)state=migrate(JSON.parse(raw));}catch{storageBlocked=true;alert('محفوظ ڈیٹا نہیں کھل سکا۔ اصل ڈیٹا محفوظ رکھا گیا ہے؛ درست بیک اَپ کھولیں۔');}
   function persist(){if(storageBlocked){$('save-state').textContent='محفوظ نہیں ہو رہا — بیک اَپ بحال کریں';return false;}try{const clean={...state,rows:state.rows.filter(populated)};localStorage.setItem(KEY,JSON.stringify(clean));$('save-state').textContent='✓ محفوظ ہے';return true;}catch{$('save-state').textContent='محفوظ نہیں ہو سکا — بیک اَپ لیں';return false;}}
@@ -231,11 +232,96 @@
     btn.classList.toggle('is-locked',locked);
     btn.title=locked?'یہ تاریخ لاک ہے، ترمیم کے لیے کلک کر کے ان لاک کریں':'اس تاریخ کا رجسٹر لاک کریں تاکہ غلطی سے ترمیم نہ ہو';
   }
-  if($('lock-day'))$('lock-day').onclick=()=>{
+  let pinUnlockResolve=null;
+  function updatePinUI(){
+    const hasPin=!!state.pinCode;
+    if($('lock-app-now-btn'))$('lock-app-now-btn').hidden=!hasPin;
+  }
+  function requestPinUnlock(reasonText='جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں',allowCancel=false){
+    if(!state.pinCode)return Promise.resolve(true);
+    const overlay=$('pin-lock-overlay');
+    if(!overlay)return Promise.resolve(true);
+    $('pin-unlock-reason').textContent=reasonText;
+    $('pin-unlock-error').textContent='';
+    const input=$('pin-unlock-input');
+    input.value='';
+    const cancelBtn=$('pin-unlock-cancel');
+    if(cancelBtn)cancelBtn.hidden=!allowCancel;
+    overlay.hidden=false;
+    document.querySelectorAll('body > :not(#pin-lock-overlay)').forEach(el=>{el.inert=true;});
+    setTimeout(()=>input.focus(),20);
+    return new Promise(resolve=>{pinUnlockResolve=resolve;});
+  }
+  function finishPinUnlock(unlocked){
+    const overlay=$('pin-lock-overlay');
+    if(overlay)overlay.hidden=true;
+    document.querySelectorAll('body > :not(#pin-lock-overlay)').forEach(el=>{el.inert=false;});
+    if(pinUnlockResolve){const fn=pinUnlockResolve;pinUnlockResolve=null;fn(unlocked);}
+  }
+  if($('pin-unlock-input')){
+    $('pin-unlock-input').addEventListener('input',()=>{
+      const val=englishDigits($('pin-unlock-input').value).replace(/\D/g,'');
+      if(val!==$('pin-unlock-input').value)$('pin-unlock-input').value=val;
+      $('pin-unlock-error').textContent='';
+      if(state.pinCode&&val===state.pinCode)finishPinUnlock(true);
+    });
+  }
+  if($('pin-unlock-form')){
+    $('pin-unlock-form').onsubmit=e=>{
+      e.preventDefault();
+      const val=englishDigits($('pin-unlock-input').value).trim();
+      if(val===state.pinCode)finishPinUnlock(true);
+      else{$('pin-unlock-error').textContent='غلط پن کوڈ! دوبارہ کوشش کریں۔';$('pin-unlock-input').select();}
+    };
+  }
+  if($('pin-unlock-cancel'))$('pin-unlock-cancel').onclick=()=>finishPinUnlock(false);
+  if($('lock-app-now-btn'))$('lock-app-now-btn').onclick=()=>{if(state.pinCode)requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔',false);};
+  function openPinSettings(){
+    const d=$('pin-dialog');if(!d)return;
+    const hasPin=!!state.pinCode;
+    $('pin-current-wrap').hidden=!hasPin;
+    $('pin-remove-btn').hidden=!hasPin;
+    $('pin-current').value='';
+    $('pin-new').value='';
+    $('pin-form-msg').textContent='';
+    $('pin-status-text').textContent=hasPin?'✓ حفاظتی پن لاک فعال ہے۔ تبدیل کرنے یا ختم کرنے کے لیے موجودہ پن لکھیں۔':'ابھی کوئی پن لاک نہیں لگا۔ نیا 4 سے 8 ہندسوں کا پن کوڈ مقرر کریں۔';
+    d.showModal();
+    setTimeout(()=>$(hasPin?'pin-current':'pin-new').focus(),20);
+  }
+  if($('pin-settings-btn'))$('pin-settings-btn').onclick=openPinSettings;
+  if($('close-pin-dialog'))$('close-pin-dialog').onclick=()=>$('pin-dialog').close();
+  if($('pin-form')){
+    $('pin-form').onsubmit=e=>{
+      e.preventDefault();
+      const hasPin=!!state.pinCode;
+      const cur=englishDigits($('pin-current').value).trim();
+      const next=englishDigits($('pin-new').value).trim();
+      if(hasPin&&cur!==state.pinCode){$('pin-form-msg').textContent='موجودہ پن کوڈ درست نہیں ہے۔';return;}
+      if(!/^\d{4,8}$/.test(next)){$('pin-form-msg').textContent='نیا پن کم از کم 4 ہندسوں (صرف نمبر) کا ہونا چاہیے۔';return;}
+      state.pinCode=next;
+      save();updatePinUI();
+      $('pin-dialog').close();
+    };
+  }
+  if($('pin-remove-btn')){
+    $('pin-remove-btn').onclick=()=>{
+      const cur=englishDigits($('pin-current').value).trim();
+      if(state.pinCode&&cur!==state.pinCode){$('pin-form-msg').textContent='پن ختم کرنے کے لیے پہلے موجودہ پن کوڈ لکھیں۔';return;}
+      state.pinCode='';
+      save();updatePinUI();
+      $('pin-dialog').close();
+    };
+  }
+  if($('lock-day'))$('lock-day').onclick=async()=>{
     const d=state.date||today();
     if(!Array.isArray(state.lockedDates))state.lockedDates=[];
-    if(state.lockedDates.includes(d))state.lockedDates=state.lockedDates.filter(x=>x!==d);
-    else state.lockedDates.push(d);
+    if(state.lockedDates.includes(d)){
+      if(state.pinCode){
+        const ok=await requestPinUnlock(`${fmtDate(d)} کا لاک کھولنے کے لیے اپنا پن کوڈ (PIN) درج کریں`,true);
+        if(!ok)return;
+      }
+      state.lockedDates=state.lockedDates.filter(x=>x!==d);
+    }else state.lockedDates.push(d);
     save();applyFilter(true);
   };
   function recordHistory(row,field,from,to){
@@ -360,23 +446,31 @@
   placeSuggestMenu.hidden=true;
   document.body.append(placeSuggestMenu);
   let activePlaceInput=null,placeSuggestItems=[],placeSuggestIndex=0;
-  function getPlaceSuggestions(query,currentRowId){
+  function getFieldSuggestions(field,query,row){
     const q=nameKey(query);
     if(!q)return [];
+    const ctxSender=field==='receiver'&&row?.sender?nameKey(row.sender):'';
+    const ctxReceiver=field==='place'&&row?.receiver?nameKey(row.receiver):'';
     const map=new Map();
     for(let i=state.rows.length-1;i>=0;i--){
       const r=state.rows[i];
-      if(r.id===currentRowId||!populated(r))continue;
-      const p=cleanName(r.place);
+      if(r.id===row?.id||!populated(r))continue;
+      const p=cleanName(r[field]);
       if(!p)continue;
       const k=nameKey(p);
-      if(!map.has(k))map.set(k,{text:p,key:k,count:1,last:i});
-      else map.get(k).count++;
+      const sameCtx=(ctxSender&&nameKey(r.sender)===ctxSender)||(ctxReceiver&&nameKey(r.receiver)===ctxReceiver);
+      if(!map.has(k))map.set(k,{text:p,key:k,count:1,last:i,sameCtx:!!sameCtx});
+      else{
+        const entry=map.get(k);
+        entry.count++;
+        if(sameCtx)entry.sameCtx=true;
+      }
     }
     const matches=[...map.values()].filter(m=>m.key.includes(q)&&m.key!==q);
     matches.sort((a,b)=>{
       const aStarts=a.key.startsWith(q)?1:0,bStarts=b.key.startsWith(q)?1:0;
       if(aStarts!==bStarts)return bStarts-aStarts;
+      if(a.sameCtx!==b.sameCtx)return (b.sameCtx?1:0)-(a.sameCtx?1:0);
       if(b.count!==a.count)return b.count-a.count;
       return b.last-a.last;
     });
@@ -392,8 +486,8 @@
   function updateActivePlaceItem(){
     Array.from(placeSuggestMenu.children).forEach((el,idx)=>el.classList.toggle('active',idx===placeSuggestIndex));
   }
-  function showPlaceSuggestions(input,row,acceptFn){
-    const items=getPlaceSuggestions(input.value,row.id);
+  function showFieldSuggestions(field,input,row,acceptFn,onPicked){
+    const items=getFieldSuggestions(field,input.value,row);
     if(!items.length){hidePlaceSuggestions();return;}
     activePlaceInput=input;
     placeSuggestItems=items;
@@ -409,6 +503,7 @@
         input.value=text;
         hidePlaceSuggestions();
         acceptFn();
+        if(onPicked)onPicked();
       };
       placeSuggestMenu.append(btn);
     });
@@ -420,6 +515,17 @@
   }
   window.addEventListener('scroll',()=>{if(!placeSuggestMenu.hidden)hidePlaceSuggestions();},true);
   window.addEventListener('resize',()=>{if(!placeSuggestMenu.hidden)hidePlaceSuggestions();});
+  function autoFillFromSender(row,tr){
+    if(!row.sender.trim()||row.mobile.trim())return;
+    const sKey=nameKey(row.sender);
+    const prev=[...state.rows].reverse().find(r=>r.id!==row.id&&populated(r)&&nameKey(r.sender)===sKey&&r.mobile.trim());
+    if(prev){
+      row.mobile=prev.mobile;
+      const mobEl=tr.querySelector('[data-field="mobile"]');
+      if(mobEl)mobEl.value=prev.mobile;
+      save();
+    }
+  }
   function createRowElement(row){
     const tr=document.createElement('tr');tr.dataset.id=row.id;rowNodes.set(row.id,tr);
     const num=document.createElement('td');num.className='number';
@@ -445,7 +551,8 @@
       const td=document.createElement('td');if(field==='branch')td.className='col-branch no-print';if(field==='place')td.className='col-place';if(field==='pkr')td.className='col-pkr';
       const isText=['sender','receiver','place'].includes(field);
       const input=document.createElement(field==='branch'?'select':(isText?'textarea':'input'));input.dataset.field=field;input.setAttribute('aria-label',labels[i]);input.autocomplete='off';input.maxLength=moneyFields.includes(field)?20:300;
-      if(field==='place'){
+      const afterSuggestionPick=()=>{if(field==='sender')autoFillFromSender(row,tr);};
+      if(isText){
         input.addEventListener('keydown',e=>{
           if(placeSuggestMenu.hidden||activePlaceInput!==input||!placeSuggestItems.length)return;
           if(e.key==='ArrowDown'){e.preventDefault();placeSuggestIndex=(placeSuggestIndex+1)%placeSuggestItems.length;updateActivePlaceItem();}
@@ -454,11 +561,11 @@
           else if(e.key==='Enter'&&!e.shiftKey){
             e.preventDefault();e.stopImmediatePropagation();
             const picked=placeSuggestItems[placeSuggestIndex]||placeSuggestItems[0];
-            if(picked){input.value=picked;hidePlaceSuggestions();accept();}
+            if(picked){input.value=picked;hidePlaceSuggestions();accept();afterSuggestionPick();}
           }else if(e.key==='Tab'&&!e.shiftKey){
             const picked=placeSuggestItems[placeSuggestIndex]||placeSuggestItems[0];
             if(picked&&(placeSuggestIndex>0||nameKey(picked).startsWith(nameKey(input.value)))){
-              input.value=picked;hidePlaceSuggestions();accept();
+              input.value=picked;hidePlaceSuggestions();accept();afterSuggestionPick();
             }else hidePlaceSuggestions();
           }
         });
@@ -473,18 +580,9 @@
       if(rLocked)input.disabled=true;
       input.addEventListener('focus',()=>{input._prevVal=input.value;});
       input.addEventListener('blur',()=>{
-        if(field==='place')hidePlaceSuggestions();
+        if(isText)hidePlaceSuggestions();
         if(input._prevVal!==undefined&&input._prevVal!==input.value){recordHistory(row,field,input._prevVal,input.value);input._prevVal=input.value;}
-        if(field==='sender'&&row.sender.trim()&&!row.mobile.trim()){
-          const sKey=nameKey(row.sender);
-          const prev=[...state.rows].reverse().find(r=>r.id!==row.id&&populated(r)&&nameKey(r.sender)===sKey&&r.mobile.trim());
-          if(prev){
-            row.mobile=prev.mobile;
-            const mobEl=tr.querySelector('[data-field="mobile"]');
-            if(mobEl)mobEl.value=prev.mobile;
-            save();
-          }
-        }
+        if(field==='sender')autoFillFromSender(row,tr);
       });
       function accept(event){
         if(event?.isComposing)return;
@@ -499,8 +597,8 @@
         if(moneyFields.includes(field))input.setCustomValidity(integerAmount(input.value)===null?'صرف مکمل عدد لکھیں، اعشاری رقم نہیں':'');
         if(!wasPopulated&&matches(row))viewPage=Math.floor(selectedRows().findIndex(r=>r.id===row.id)/pageSize);
         applyFilter(true);save();
-        if(field==='place'){
-          if(input._dismissedFor!==input.value){input._dismissedFor=null;showPlaceSuggestions(input,row,accept);}
+        if(isText){
+          if(input._dismissedFor!==input.value){input._dismissedFor=null;showFieldSuggestions(field,input,row,accept,afterSuggestionPick);}
         }
       }
       if(moneyFields.includes(field)){
@@ -510,6 +608,19 @@
       input.addEventListener(field==='branch'?'change':'input',accept);input.addEventListener('compositionend',()=>accept());
       if(field==='branch'){input.addEventListener('change',()=>{if(input._prevVal!==undefined&&input._prevVal!==input.value){recordHistory(row,'branch',input._prevVal,input.value);input._prevVal=input.value;}});}
       input.addEventListener('keydown',e=>{
+        if((e.ctrlKey||e.metaKey)&&(e.key==='d'||e.key==='D')&&!e.shiftKey&&!e.altKey){
+          e.preventDefault();
+          const visible=state.rows.filter(r=>matches(r)||(!populated(r)&&rowNodes.has(r.id)));
+          const curIdx=visible.indexOf(row);
+          const prevRow=curIdx>0?visible[curIdx-1]:null;
+          if(prevRow&&prevRow[field]){
+            hidePlaceSuggestions();
+            input.value=moneyFields.includes(field)?wholeText(prevRow[field]):prevRow[field];
+            accept();
+            if(field==='sender')autoFillFromSender(row,tr);
+          }
+          return;
+        }
         if(e.key==='Tab'&&!e.shiftKey&&i===fields.length-1){
           e.preventDefault();
           const visible=state.rows.filter(r=>matches(r)||(!populated(r)&&rowNodes.has(r.id)));
@@ -964,20 +1075,36 @@
     new ResizeObserver(syncTopNavH).observe(topNavEl);
   }
   window.addEventListener('keydown',e=>{
+    if(!$('pin-lock-overlay')?.hidden)return;
     if((e.ctrlKey||e.metaKey)&&(e.key==='p'||e.key==='P')){e.preventDefault();$('print').click();}
+    if((e.ctrlKey||e.metaKey)&&(e.key==='l'||e.key==='L')&&!e.shiftKey&&state.pinCode){
+      e.preventDefault();
+      requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔',false);
+      return;
+    }
     if((e.ctrlKey||e.metaKey)&&(e.key==='z'||e.key==='Z')&&!e.shiftKey&&!journalController?.isActive()){
       const active=document.activeElement;
       const inInput=active&&(active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.isContentEditable);
       if(!inInput&&state.trash.length){e.preventDefault();$('undo').click();}
     }
-    if(e.altKey&&!e.ctrlKey&&!e.metaKey&&(e.key==='ArrowLeft'||e.key==='ArrowRight')&&!journalController?.isActive()){
-      const tabs=Array.from($('party-tabs')?.querySelectorAll('.party-tab')||[]);
-      if(tabs.length>1){
-        e.preventDefault();
-        const curIdx=tabs.findIndex(t=>t.classList.contains('active'));
-        const step=e.key==='ArrowLeft'?1:-1;
-        const nextTab=tabs[(curIdx+step+tabs.length)%tabs.length];
-        if(nextTab){nextTab.click();nextTab.scrollIntoView({block:'nearest',inline:'nearest'});}
+    if(e.altKey&&!e.ctrlKey&&!e.metaKey&&!journalController?.isActive()){
+      if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+        const tabs=Array.from($('party-tabs')?.querySelectorAll('.party-tab')||[]);
+        if(tabs.length>1){
+          e.preventDefault();
+          const curIdx=tabs.findIndex(t=>t.classList.contains('active'));
+          const step=e.key==='ArrowLeft'?1:-1;
+          const nextTab=tabs[(curIdx+step+tabs.length)%tabs.length];
+          if(nextTab){nextTab.click();nextTab.scrollIntoView({block:'nearest',inline:'nearest'});}
+        }
+      }else if(/^[0-9]$/.test(e.key)){
+        const tabs=Array.from($('party-tabs')?.querySelectorAll('.party-tab')||[]);
+        const target=tabs[Number(e.key)];
+        if(target){
+          e.preventDefault();
+          target.click();
+          target.scrollIntoView({block:'nearest',inline:'nearest'});
+        }
       }
     }
   });
@@ -1009,6 +1136,8 @@
   }
   $('export-filtered').onclick=()=>exportExcel(false);$('export-all').onclick=()=>exportExcel(true);
   render();
+  updatePinUI();
+  if(state.pinCode)requestPinUnlock('جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں',false);
   journalController=window.HisaabJournal.mount({getState:()=>state,save,today,exportSheet:(rows,name)=>download(window.HisaabExcel.create(rows),name)});
   save();
 })();

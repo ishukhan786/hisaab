@@ -75,6 +75,8 @@
           </div>
           <button id="manage-branches" type="button">🏢 پارٹیاں سنبھالیں</button>
           <button id="reset-filters" type="button">🔄 فلٹر صاف کریں</button>
+          <button id="pin-settings-btn" type="button">🔐 پن لاک (PIN سیٹنگز)</button>
+          <button id="lock-app-now-btn" type="button" hidden>🔒 ابھی ایپ لاک کریں (Ctrl+L)</button>
           <hr class="menu-divider">
           <button id="manage-backups" type="button">🛡 بیک اَپ سنبھالیں (تاریخچہ)</button>
           <button id="backup" type="button">💾 بیک اَپ ڈاؤن لوڈ</button>
@@ -116,7 +118,7 @@
       <div class="table-wrap"><table><thead><tr><th class="serial">نمبر شمار</th><th class="person col-sender">ارسال کنندہ</th><th class="mobile">موبائیل نمبر</th><th class="person col-receiver">وصول کنندہ</th><th class="place col-place">مقام</th><th class="branch col-branch no-print">پارٹی</th><th class="money col-balance">بقایا</th><th class="money col-aed">درہم</th><th id="th-currency" class="money col-pkr">روپیہ</th><th class="col-receipt no-print">رسید</th><th class="remove no-print"><span class="sr-only">حذف</span></th></tr></thead><tbody id="rows"></tbody><tfoot class="register-totals"><tr class="totals-gap" aria-hidden="true"><td colspan="5"></td><td class="col-branch no-print"></td><td colspan="3"></td><td class="col-receipt no-print"></td><td class="no-print"></td></tr><tr class="totals-row"><th colspan="5" scope="row"><div class="totals-title-wrap"><span>کل مجموعہ حساب</span><span id="total-net-aed" class="net-aed-badge">موجودہ درہم: 0</span></div></th><td class="col-branch no-print"></td><td id="total-balance">0</td><td id="total-aed">0</td><td id="total-pkr">(0)</td><td class="col-receipt no-print"></td><td class="no-print"></td></tr></tfoot></table></div>
       <div class="paper-foot"><span id="count">0 اندراجات</span><span>حساب · اندراج رجسٹر</span></div>
     </section>
-    <footer class="help"><span>نئی انٹری اوپر والی "رپورٹ کی تاریخ" پر محفوظ ہوتی ہے • Tab سے اگلا خانہ • Ctrl+P پرنٹ • Ctrl+Z حذف شدہ واپس</span><span>ڈیٹا اسی براؤزر میں محفوظ ہوتا ہے؛ "مزید" میں خودکار بیک اَپ فائل فعال کریں۔</span></footer>
+    <footer class="help"><span>نئی انٹری اوپر والی "رپورٹ کی تاریخ" پر محفوظ ہوتی ہے • Tab سے اگلا خانہ • Ctrl+D اوپر سے کاپی • Alt+1..9 پارٹی • Ctrl+P پرنٹ • Ctrl+Z واپس</span><span>ڈیٹا اسی براؤزر میں محفوظ ہوتا ہے؛ "مزید" میں خودکار بیک اَپ اور پن لاک (PIN) فعال کریں۔</span></footer>
   </main>
   <main id="journal-page" hidden>
     <section class="journal-card" aria-label="روزنامچہ">
@@ -173,6 +175,38 @@
       <footer class="receipt-signatures"><span>تیار کنندہ</span><span>دستخط</span></footer>
     </article>
   </dialog>
+  <dialog closedby='any' id="pin-dialog" aria-labelledby="pin-dialog-title">
+    <div class="dialog-head"><h2 id="pin-dialog-title">🔐 حفاظتی پن لاک (PIN Lock)</h2><button id="close-pin-dialog" type="button" aria-label="بند کریں">×</button></div>
+    <p id="pin-status-text">ایپ کھلتے وقت اور لاک شدہ تاریخ کو ان لاک کرتے وقت حفاظتی پن کوڈ مانگا جائے گا۔</p>
+    <form id="pin-form" class="pin-form">
+      <div id="pin-current-wrap" class="pin-field" hidden>
+        <label for="pin-current">موجودہ پن کوڈ (Current PIN)</label>
+        <input id="pin-current" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="موجودہ پن لکھیں">
+      </div>
+      <div class="pin-field">
+        <label for="pin-new">نیا پن کوڈ (4 سے 8 ہندسے)</label>
+        <input id="pin-new" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="مثلاً 1234">
+      </div>
+      <p id="pin-form-msg" role="status" class="pin-msg"></p>
+      <div class="pin-actions">
+        <button type="submit" class="primary">پن محفوظ کریں</button>
+        <button type="button" id="pin-remove-btn" hidden>پن لاک ختم کریں</button>
+      </div>
+    </form>
+  </dialog>
+  <div id="pin-lock-overlay" class="pin-lock-overlay no-print" hidden>
+    <form id="pin-unlock-form" class="pin-lock-card">
+      <div class="logo-mini pin-logo">ح</div>
+      <h2 id="pin-unlock-title">حساب لاک ہے</h2>
+      <p id="pin-unlock-reason">جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں</p>
+      <input id="pin-unlock-input" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="••••">
+      <p id="pin-unlock-error" role="status" class="pin-error"></p>
+      <div class="pin-actions">
+        <button type="submit" class="primary">کھولیں (Unlock)</button>
+        <button type="button" id="pin-unlock-cancel" hidden>منسوخ کریں</button>
+      </div>
+    </form>
+  </div>
   <section id="receipt-print" hidden aria-hidden="true"></section>
   <input id="file" type="file" accept="application/json,.json" hidden>
   <script src="excel-export.js"></script>
