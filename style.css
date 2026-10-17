@@ -239,3 +239,6 @@ td.col-pkr,td input[data-field="pkr"],#total-pkr{text-align:left}
   .totals-title-wrap{display:flex;align-items:center;justify-content:space-between;padding:0 8px;width:100%}
   .net-aed-badge{font-size:inherit;font-weight:700;color:inherit;background:transparent;border:0;padding:0;line-height:inherit;white-space:nowrap}
 }
+.place-suggest-menu{position:fixed;z-index:100;background:#fff;border:1px solid #b8d0c0;border-radius:10px;box-shadow:0 8px 24px rgba(18,63,46,0.16);padding:4px;display:flex;flex-direction:column;gap:2px;max-height:220px;overflow-y:auto;direction:rtl}
+.place-suggest-item{border:0;background:transparent;color:var(--ink);font-family:inherit;font-size:var(--entry-font);line-height:1.9;padding:4px 12px;border-radius:7px;text-align:center;cursor:pointer;white-space:nowrap}
+.place-suggest-item:hover,.place-suggest-item.active{background:#e7f3ec;color:var(--green);font-weight:700}

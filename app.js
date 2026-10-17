@@ -355,6 +355,71 @@
   }
   function updateBackup(){const at=state.lastBackupAt;const overdue=!at||Date.now()-Date.parse(at)>7*86400000;$('backup-banner').classList.toggle('backup-due',overdue);$('backup-status').textContent=at?`آخری بیک اَپ ڈاؤن لوڈ: ${new Date(at).toLocaleString('en-GB')}${overdue?' — نیا بیک اَپ لے لیں۔':''}`:'ابھی بیک اَپ نہیں لیا گیا۔ اپنی انٹریوں کا بیک اَپ محفوظ کریں۔';}
   function updateUndo(){$('undo-bar').hidden=!state.trash.length;$('undo-message').textContent=`${state.trash.length} حذف شدہ انٹریاں واپس لائی جا سکتی ہیں۔ آخری حذف پہلے واپس ہوگا۔`;}
+  const placeSuggestMenu=document.createElement('div');
+  placeSuggestMenu.className='place-suggest-menu no-print';
+  placeSuggestMenu.hidden=true;
+  document.body.append(placeSuggestMenu);
+  let activePlaceInput=null,placeSuggestItems=[],placeSuggestIndex=0;
+  function getPlaceSuggestions(query,currentRowId){
+    const q=nameKey(query);
+    if(!q)return [];
+    const map=new Map();
+    for(let i=state.rows.length-1;i>=0;i--){
+      const r=state.rows[i];
+      if(r.id===currentRowId||!populated(r))continue;
+      const p=cleanName(r.place);
+      if(!p)continue;
+      const k=nameKey(p);
+      if(!map.has(k))map.set(k,{text:p,key:k,count:1,last:i});
+      else map.get(k).count++;
+    }
+    const matches=[...map.values()].filter(m=>m.key.includes(q)&&m.key!==q);
+    matches.sort((a,b)=>{
+      const aStarts=a.key.startsWith(q)?1:0,bStarts=b.key.startsWith(q)?1:0;
+      if(aStarts!==bStarts)return bStarts-aStarts;
+      if(b.count!==a.count)return b.count-a.count;
+      return b.last-a.last;
+    });
+    return matches.slice(0,6).map(m=>m.text);
+  }
+  function hidePlaceSuggestions(){
+    placeSuggestMenu.hidden=true;
+    placeSuggestMenu.replaceChildren();
+    placeSuggestItems=[];
+    placeSuggestIndex=0;
+    activePlaceInput=null;
+  }
+  function updateActivePlaceItem(){
+    Array.from(placeSuggestMenu.children).forEach((el,idx)=>el.classList.toggle('active',idx===placeSuggestIndex));
+  }
+  function showPlaceSuggestions(input,row,acceptFn){
+    const items=getPlaceSuggestions(input.value,row.id);
+    if(!items.length){hidePlaceSuggestions();return;}
+    activePlaceInput=input;
+    placeSuggestItems=items;
+    placeSuggestIndex=0;
+    placeSuggestMenu.replaceChildren();
+    items.forEach((text,idx)=>{
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className='place-suggest-item'+(idx===0?' active':'');
+      btn.textContent=text;
+      btn.onmousedown=e=>{
+        e.preventDefault();
+        input.value=text;
+        hidePlaceSuggestions();
+        acceptFn();
+      };
+      placeSuggestMenu.append(btn);
+    });
+    const rect=input.getBoundingClientRect();
+    placeSuggestMenu.style.top=(rect.bottom+2)+'px';
+    placeSuggestMenu.style.left=rect.left+'px';
+    placeSuggestMenu.style.minWidth=Math.max(120,rect.width)+'px';
+    placeSuggestMenu.hidden=false;
+  }
+  window.addEventListener('scroll',()=>{if(!placeSuggestMenu.hidden)hidePlaceSuggestions();},true);
+  window.addEventListener('resize',()=>{if(!placeSuggestMenu.hidden)hidePlaceSuggestions();});
   function createRowElement(row){
     const tr=document.createElement('tr');tr.dataset.id=row.id;rowNodes.set(row.id,tr);
     const num=document.createElement('td');num.className='number';
@@ -380,6 +445,24 @@
       const td=document.createElement('td');if(field==='branch')td.className='col-branch no-print';if(field==='place')td.className='col-place';if(field==='pkr')td.className='col-pkr';
       const isText=['sender','receiver','place'].includes(field);
       const input=document.createElement(field==='branch'?'select':(isText?'textarea':'input'));input.dataset.field=field;input.setAttribute('aria-label',labels[i]);input.autocomplete='off';input.maxLength=moneyFields.includes(field)?20:300;
+      if(field==='place'){
+        input.addEventListener('keydown',e=>{
+          if(placeSuggestMenu.hidden||activePlaceInput!==input||!placeSuggestItems.length)return;
+          if(e.key==='ArrowDown'){e.preventDefault();placeSuggestIndex=(placeSuggestIndex+1)%placeSuggestItems.length;updateActivePlaceItem();}
+          else if(e.key==='ArrowUp'){e.preventDefault();placeSuggestIndex=(placeSuggestIndex-1+placeSuggestItems.length)%placeSuggestItems.length;updateActivePlaceItem();}
+          else if(e.key==='Escape'){e.preventDefault();input._dismissedFor=input.value;hidePlaceSuggestions();}
+          else if(e.key==='Enter'&&!e.shiftKey){
+            e.preventDefault();e.stopImmediatePropagation();
+            const picked=placeSuggestItems[placeSuggestIndex]||placeSuggestItems[0];
+            if(picked){input.value=picked;hidePlaceSuggestions();accept();}
+          }else if(e.key==='Tab'&&!e.shiftKey){
+            const picked=placeSuggestItems[placeSuggestIndex]||placeSuggestItems[0];
+            if(picked&&(placeSuggestIndex>0||nameKey(picked).startsWith(nameKey(input.value)))){
+              input.value=picked;hidePlaceSuggestions();accept();
+            }else hidePlaceSuggestions();
+          }
+        });
+      }
       if(isText){input.rows=1;input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();input.blur();}});}
       if(field==='branch')branchOptions(input,row.branch);else input.value=moneyFields.includes(field)?wholeText(row[field]):row[field];
       function adjustHeight(el){if(typeof CSS!=='undefined'&&CSS.supports&&CSS.supports('field-sizing','content'))return;el.style.height='auto';el.style.height=el.scrollHeight+'px';}
@@ -390,6 +473,7 @@
       if(rLocked)input.disabled=true;
       input.addEventListener('focus',()=>{input._prevVal=input.value;});
       input.addEventListener('blur',()=>{
+        if(field==='place')hidePlaceSuggestions();
         if(input._prevVal!==undefined&&input._prevVal!==input.value){recordHistory(row,field,input._prevVal,input.value);input._prevVal=input.value;}
         if(field==='sender'&&row.sender.trim()&&!row.mobile.trim()){
           const sKey=nameKey(row.sender);
@@ -415,6 +499,9 @@
         if(moneyFields.includes(field))input.setCustomValidity(integerAmount(input.value)===null?'صرف مکمل عدد لکھیں، اعشاری رقم نہیں':'');
         if(!wasPopulated&&matches(row))viewPage=Math.floor(selectedRows().findIndex(r=>r.id===row.id)/pageSize);
         applyFilter(true);save();
+        if(field==='place'){
+          if(input._dismissedFor!==input.value){input._dismissedFor=null;showPlaceSuggestions(input,row,accept);}
+        }
       }
       if(moneyFields.includes(field)){
         input.addEventListener('blur',()=>{const value=wholeText(input.value);if(value!==input.value){input.value=value;row[field]=value;save();}});
