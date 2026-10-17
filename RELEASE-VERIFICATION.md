@@ -1,4 +1,23 @@
-# Hisaab Desktop 1.0.1 — Verification
+# Hisaab Desktop 1.2.1 — Verification (2026-10-17)
+
+Changes: restore now requires a safety snapshot and a successful storage write before replacing the active register; edit history is persisted immediately. Includes the existing net-AED total display update.
+
+Verified:
+- `tests/restore-history.cjs`: failed safety backup and failed storage write preserve current data; successful restore and latest edit history survive reload. Passed against source and packaged 1.2.1 with isolated profiles and injected storage/backup failures.
+- Journal and currency-security regression suites passed during the fix verification.
+- `tests/electron-release.cjs`: visible packaged 1.2.1, real entry/dialog interactions, restart persistence, native Excel download, mixed-currency totals, HTML escaping and guide window; zero captured renderer errors.
+- Installer and portable build completed with `npm run dist -- --publish never`.
+- Packaged renderer files match source; packaged version is 1.2.1. Installer SHA-512 matches `dist/latest.yml`.
+
+Artifacts:
+- `dist/Hisaab-Setup-1.2.1.exe` — 82,734,931 bytes
+- `dist/Hisaab-Portable-1.2.1.exe` — 82,527,815 bytes
+- `dist/Hisaab-Setup-1.2.1.exe.blockmap`
+- `dist/latest.yml`
+
+Evidence: `scratch/electron-audit-1792232530948/`. Sandboxed UI launch failed; packaged checks passed outside the sandbox. Installation/uninstallation and portable launcher extraction were not tested. Binaries are unsigned. No real user records were used.
+
+## Previous verification: 1.0.1
 
 All four findings from the 1.0.0 audit are fixed:
 - PKR and AFN now have separate totals in the register, daily summary, print, and Excel. Mixed-currency Excel exports have separate columns. Existing populated party currencies cannot be silently relabeled.

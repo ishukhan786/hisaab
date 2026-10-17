@@ -144,7 +144,7 @@
     appendRow(row);
     save();
   }
-  function totals(){const rows=selectedRows();for(const field of moneyFields){let total=0n,invalid=false;for(const row of rows){const value=integerAmount(row[field]);if(value===null)invalid=true;else total+=value;}$('total-'+field).textContent=invalid?'رقم درست کریں':formatted(total);}$('total-pkr').textContent=currencyText(rows);$('count').textContent=`${rows.length} اندراجات`;
+  function totals(){const rows=selectedRows();let totalBalance=0n,totalAed=0n,invalidAny=false;for(const field of moneyFields){let total=0n,invalid=false;for(const row of rows){const value=integerAmount(row[field]);if(value===null)invalid=true;else total+=value;}if(field==='balance'){totalBalance=total;if(invalid)invalidAny=true;}if(field==='aed'){totalAed=total;if(invalid)invalidAny=true;}$('total-'+field).textContent=invalid?'رقم درست کریں':formatted(total);}const netEl=$('total-net-aed');if(netEl){const netAed=totalAed-totalBalance;netEl.textContent=invalidAny?'موجودہ درہم (صافی): رقم درست کریں':`موجودہ درہم (صافی): ${formatted(netAed)}`;}$('total-pkr').textContent=currencyText(rows);$('count').textContent=`${rows.length} اندراجات`;
     const fractional=rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null));
     $('filter-message').textContent=!rangeValid()?'تاریخ سے، تاریخ تک سے آگے نہیں ہو سکتی۔':dayMode()?`${fmtDate(state.date)} کی ${rows.length} انٹریاں۔ پرنٹ اور مجموعہ انہی کا ہے۔`:`${rows.length} انٹریاں منتخب ہیں۔ پرنٹ اور مجموعہ انہی کا ہے۔ نئی انٹری کے لیے "＋ نئی قطار" دبائیں۔`;
     if(fractional)$('filter-message').textContent+=' رقم میں صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم کو خود نہیں بدلا گیا۔';
@@ -191,6 +191,7 @@
     if(!row.history)row.history=[];
     row.history.push({at:new Date().toISOString(),field,from:String(from||''),to:String(to||'')});
     if(row.history.length>30)row.history=row.history.slice(-30);
+    save();
   }
   $('close-history').onclick=()=>$('history-dialog').close();
   function openHistory(row){
@@ -421,19 +422,36 @@
     autoBackupTimer=setTimeout(()=>executeAutoBackup(false),immediate?100:2500);
   }
   async function makeSafetyBackup(){
+    const backup=await executeAutoBackup(true);
     try{
-      await executeAutoBackup(true);
-      localStorage.setItem('hisaab-safety-pre-restore',JSON.stringify({...state,rows:state.rows.filter(populated)}));
-    }catch(_){}
+      const snapshot=storageBlocked?localStorage.getItem(KEY):JSON.stringify({...state,rows:state.rows.filter(populated)});
+      localStorage.setItem('hisaab-safety-pre-restore',snapshot);
+      return true;
+    }catch(_){return !storageBlocked&&backup?.status==='saved';}
   }
+  let restoreBusy=false;
   async function restoreBackupData(rawObj){
+    if(restoreBusy)return false;
     const data=migrate(rawObj);
     if(!confirm('موجودہ رجسٹر اور روزنامچہ بیک اَپ سے بدل جائیں گے۔ جاری رکھیں؟'))return false;
-    await makeSafetyBackup();
-    state=data;storageBlocked=false;selectedBranch='';
-    for(const id of ['search','date-from','date-to'])$(id).value='';
-    save();render();
-    return true;
+    restoreBusy=true;
+    const wasInert=document.body.inert;
+    document.body.inert=true;
+    try{
+      if(!await makeSafetyBackup()){
+        alert('سیفٹی بیک اَپ محفوظ نہیں ہو سکا۔ بحالی روک دی گئی؛ موجودہ ڈیٹا تبدیل نہیں ہوا۔');
+        return false;
+      }
+      try{localStorage.setItem(KEY,JSON.stringify({...data,rows:data.rows.filter(populated)}));}
+      catch{
+        alert('بیک اَپ بحال نہیں ہو سکا کیونکہ ڈیٹا محفوظ نہیں ہو رہا۔ موجودہ ڈیٹا تبدیل نہیں ہوا۔');
+        return false;
+      }
+      state=data;storageBlocked=false;selectedBranch='';
+      for(const id of ['search','date-from','date-to'])$(id).value='';
+      render();$('save-state').textContent='✓ محفوظ ہے';scheduleAutoBackup();
+      return true;
+    }finally{document.body.inert=wasInert;restoreBusy=false;}
   }
   async function renderBackupList(){
     const tbody=$('backup-list-rows');
