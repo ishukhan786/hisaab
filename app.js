@@ -230,7 +230,7 @@
     appendRow(row);
     save();
   }
-  function totals(rows=selectedRows()){let totalBalance=0n,totalAed=0n,invalidAny=false;for(const field of moneyFields){let total=0n,invalid=false;for(const row of rows){const value=integerAmount(row[field]);if(value===null)invalid=true;else total+=value;}if(field==='balance'){totalBalance=total;if(invalid)invalidAny=true;}if(field==='aed'){totalAed=total;if(invalid)invalidAny=true;}$('total-'+field).textContent=invalid?'رقم درست کریں':formatted(total);}const netEl=$('total-net-aed');if(netEl){const netAed=totalAed-totalBalance;netEl.textContent=invalidAny?'موجودہ درہم: رقم درست کریں':`موجودہ درہم: ${formatted(netAed)}`;}$('total-pkr').textContent=currencyText(rows).split('\n').map(s=>`(${s})`).join('\n');$('count').textContent=`${rows.length} اندراجات`;
+  function totals(rows=selectedRows()){let totalBalance=0n,totalAed=0n,invalidAny=false;for(const field of moneyFields){let total=0n,invalid=false;for(const row of rows){const value=integerAmount(row[field]);if(value===null)invalid=true;else total+=value;}if(field==='balance'){totalBalance=total;if(invalid)invalidAny=true;}if(field==='aed'){totalAed=total;if(invalid)invalidAny=true;}$('total-'+field).textContent=invalid?'رقم درست کریں':formatted(total);}const netEl=$('total-net-aed');if(netEl){const netAed=totalAed-totalBalance;netEl.textContent=invalidAny?'موجودہ درہم: رقم درست کریں':`موجودہ درہم: ${formatted(netAed)}`;}const ordersEl=$('total-orders-count');if(ordersEl){ordersEl.textContent=`آرڈرز تعداد: ${rows.length}`;}$('total-pkr').textContent=currencyText(rows).split('\n').map(s=>`(${s})`).join('\n');$('count').textContent=`${rows.length} اندراجات`;
     const fractional=rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null));
     $('filter-message').textContent=!rangeValid()?'تاریخ سے، تاریخ تک سے آگے نہیں ہو سکتی۔':dayMode()?`${fmtDate(state.date)} کی ${rows.length} انٹریاں۔ پرنٹ اور مجموعہ انہی کا ہے۔`:`${rows.length} انٹریاں منتخب ہیں۔ پرنٹ اور مجموعہ انہی کا ہے۔ نئی انٹری کے لیے "＋ نئی قطار" دبائیں۔`;
     if(fractional)$('filter-message').textContent+=' رقم میں صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم کو خود نہیں بدلا گیا۔';
@@ -1509,7 +1509,7 @@
     const headers=['نمبر شمار','تاریخ','ارسال کنندہ','موبائیل نمبر','وصول کنندہ','مقام','پارٹی','بقایا','درہم',mixed?'روپیہ (PKR)':onlyAfn?'افغانی (AFN)':'روپیہ (PKR)'];if(mixed)headers.push('افغانی (AFN)');
     const num=v=>({number:String(v)});
     const data=rows.map((r,i)=>{const values=[start+i,r.entryDate||state.date,...fields.map(f=>moneyFields.includes(f)?num(f==='pkr'&&mixed&&partyCurrency(r.branch)==='afn'?0n:integerAmount(r[f])):r[f])];if(mixed)values.push(num(partyCurrency(r.branch)==='afn'?integerAmount(r.pkr):0n));return values;});
-    const {sums}=currencyTotals(rows);const tail=['کل مجموعہ حساب','','','','','','',...['balance','aed'].map(f=>num(rows.reduce((n,r)=>n+integerAmount(r[f]),0n))),num(mixed?sums.pkr:onlyAfn?sums.afn:sums.pkr)];if(mixed)tail.push(num(sums.afn));
+    const {sums}=currencyTotals(rows);const tail=['کل مجموعہ حساب','',`آرڈرز تعداد: ${rows.length}`,'','','','',...['balance','aed'].map(f=>num(rows.reduce((n,r)=>n+integerAmount(r[f]),0n))),num(mixed?sums.pkr:onlyAfn?sums.afn:sums.pkr)];if(mixed)tail.push(num(sums.afn));
     download(window.HisaabExcel.create([headers,...data,tail]),`hisaab-${all?'all':'filtered'}-${today()}.xlsx`);$('export-dialog').close();
   }
   $('export-filtered').onclick=()=>exportExcel(false);$('export-all').onclick=()=>exportExcel(true);
