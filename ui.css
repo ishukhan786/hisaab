@@ -154,6 +154,8 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 }
 
 .app-shell #rows td.col-pkr,.app-shell #rows td input[data-field="pkr"]{text-align:left}
+.app-shell #rows td input.amount,.app-shell .register-totals #total-balance,.app-shell .register-totals #total-aed{font-family:Calibri,'Segoe UI',Arial,sans-serif;font-weight:700;font-variant-numeric:tabular-nums}
+.app-shell #rows td input.phone{font-family:Calibri,'Segoe UI',Arial,sans-serif;font-variant-numeric:tabular-nums}
 .app-shell .register-totals #total-pkr{text-align:left;font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif}
 .app-shell .totals-title-wrap{display:flex;align-items:center;justify-content:space-between;padding:0 8px;width:100%}
 .app-shell .net-aed-badge,.app-shell .orders-count-badge{display:inline-flex;align-items:center;gap:4px;font-family:inherit;font-size:inherit;font-weight:700;color:inherit;background:transparent;border:0;padding:0;line-height:inherit;white-space:nowrap}
