@@ -1,5 +1,5 @@
-.workspace-nav{display:flex;gap:6px;padding:10px 24px;background:white;border-bottom:1px solid #dce6df}
-.workspace-nav button{background:#f5f8f5;border:1px solid #d3dfd5;min-width:130px;padding:5px 20px}
+.workspace-nav{display:inline-flex;align-items:center;gap:6px;padding:0;background:transparent;border:0}
+.workspace-nav button{background:#f5f8f5;border:1px solid #d3dfd5;min-width:0;padding:5px 14px;height:36px}
 .workspace-nav button.active{background:#17634c;color:white;border-color:#17634c}
 body.journal-view .top-nav-start>:not(.brand-mini),body.journal-view .top-nav-center,body.journal-view .top-serial-field,body.journal-view #add,body.journal-view #summary-open,body.journal-view #manage-branches,body.journal-view #manage-backups,body.journal-view #reset-filters{display:none!important}
 body.journal-view .top-nav{grid-template-columns:auto 1fr}
