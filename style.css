@@ -156,13 +156,13 @@
 }
 
 /* Separate totals from entries and keep only the outside border. */
-tfoot.register-totals .totals-gap{height:.2cm}
-tfoot.register-totals .totals-gap>td{height:.2cm;min-height:0;padding:0;border:0;background:#fff;font-size:0;line-height:0;box-shadow:none}
+tfoot.register-totals .totals-gap{height:0.25cm}
+tfoot.register-totals .totals-gap>td{height:0.25cm;min-height:0;padding:0;border:0;background:#fff;font-size:0;line-height:0;box-shadow:none}
 tfoot.register-totals .totals-row,tfoot.register-totals .totals-row>th,tfoot.register-totals .totals-row>td{height:1.5cm;border:0;border-top:1px solid #99aa9a;border-bottom:1px solid #99aa9a;box-shadow:none;vertical-align:middle}
 tfoot.register-totals .totals-row>:first-child{border-right:1px solid #99aa9a}
 tfoot.register-totals .totals-row>:last-child{border-left:1px solid #99aa9a}
 tfoot.register-totals .totals-row>th{font-size:calc(var(--entry-font) + 2px);font-weight:700;color:#213e35;line-height:2.2;padding:6px 12px;white-space:nowrap}
-@media print{tfoot.register-totals #total-pkr{border-left:1px solid #99aa9a}tfoot.register-totals .totals-gap,tfoot.register-totals .totals-gap>td{height:.1cm}tfoot.register-totals .totals-row,tfoot.register-totals .totals-row>th,tfoot.register-totals .totals-row>td{height:1.5cm;line-height:2.2;padding:6px 8px}}
+@media print{tfoot.register-totals #total-pkr{border-left:1px solid #99aa9a}tfoot.register-totals .totals-gap,tfoot.register-totals .totals-gap>td{height:0.25cm}tfoot.register-totals .totals-row,tfoot.register-totals .totals-row>th,tfoot.register-totals .totals-row>td{height:1.5cm;line-height:2.2;padding:6px 8px}}
 
 /* Individual entry receipt, with its own portrait print page. */
 .receipt-btn{font-size:10px;padding:3px 5px;line-height:1.8;background:#fff;border:1px solid #b9cfc1;border-radius:6px;color:#17634c}
