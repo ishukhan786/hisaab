@@ -148,11 +148,11 @@
     selectedBranch=value;
     if($('branch-filter'))$('branch-filter').value=value;
     applyFilter();
+    const pages=Math.max(1,Math.ceil(selectedRows().length/pageSize));
+    if(viewPage!==pages-1){viewPage=pages-1;applyFilter();}
     updatePartyTabsActive();
-    if(value.startsWith('b:')){
-      const draft=state.rows.find(r=>branchMatch(r)&&!populated(r));
-      if(draft)focusRow(draft);
-    }
+    const draft=state.rows.find(r=>branchMatch(r)&&!populated(r));
+    if(draft)focusRow(draft);
   }
   function updatePartyTabsActive(){
     const container=$('party-tabs');
@@ -530,7 +530,14 @@
   function prependRow(row){$('rows').prepend(createRowElement(row));}
   function applyFont(){document.documentElement.style.setProperty('--entry-font',state.fontSize+'px');$('font-size').textContent=state.fontSize;$('font-smaller').disabled=state.fontSize<=10;$('font-larger').disabled=state.fontSize>=22;}
   function render(){rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;$('date').value=state.date;if($('start-serial'))$('start-serial').value=activeStartSerial();applyFont();updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
-  function focusRow(row){rowNodes.get(row.id)?.querySelector('[data-field="sender"]').focus();}
+  function focusRow(row){
+    const tr=rowNodes.get(row.id);
+    const el=tr?.querySelector('[data-field="sender"]');
+    if(el){
+      el.focus({preventScroll:true});
+      tr.scrollIntoView({block:'center',behavior:'smooth'});
+    }
+  }
   function add(){
     if(journalController?.isActive()){journalController.add();return;}
     if(isDayLocked(state.date)){alert('یہ تاریخ لاک ہے؛ نئی انٹری کے لیے پہلے اوپر تاریخ کے ساتھ "دن لاک ہے" پر کلک کر کے ان لاک کریں۔');return;}
@@ -950,12 +957,28 @@
     catch{alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');}
     finally{registerPrintActive=false;document.body.inert=false;applyFilter();}
   };
+  const topNavEl=document.querySelector('.top-nav');
+  if(topNavEl&&typeof ResizeObserver!=='undefined'){
+    const syncTopNavH=()=>document.documentElement.style.setProperty('--top-nav-h',topNavEl.offsetHeight+'px');
+    syncTopNavH();
+    new ResizeObserver(syncTopNavH).observe(topNavEl);
+  }
   window.addEventListener('keydown',e=>{
     if((e.ctrlKey||e.metaKey)&&(e.key==='p'||e.key==='P')){e.preventDefault();$('print').click();}
     if((e.ctrlKey||e.metaKey)&&(e.key==='z'||e.key==='Z')&&!e.shiftKey&&!journalController?.isActive()){
       const active=document.activeElement;
       const inInput=active&&(active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.isContentEditable);
       if(!inInput&&state.trash.length){e.preventDefault();$('undo').click();}
+    }
+    if(e.altKey&&!e.ctrlKey&&!e.metaKey&&(e.key==='ArrowLeft'||e.key==='ArrowRight')&&!journalController?.isActive()){
+      const tabs=Array.from($('party-tabs')?.querySelectorAll('.party-tab')||[]);
+      if(tabs.length>1){
+        e.preventDefault();
+        const curIdx=tabs.findIndex(t=>t.classList.contains('active'));
+        const step=e.key==='ArrowLeft'?1:-1;
+        const nextTab=tabs[(curIdx+step+tabs.length)%tabs.length];
+        if(nextTab){nextTab.click();nextTab.scrollIntoView({block:'nearest',inline:'nearest'});}
+      }
     }
   });
   if(window.electronAPI?.onMenuAction){

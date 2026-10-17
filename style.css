@@ -54,7 +54,7 @@
 @media(max-width:600px){.filter-panel .actions{margin-inline-start:0;width:100%}.filter-panel .actions>*{flex:1}.more-menu .menu{inset-inline-end:auto;inset-inline-start:0}}
 
 /* Party Tabs & Dedicated Party Page */
-.party-tabs-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:-1px;position:relative;z-index:1}
+.party-tabs-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:-1px;position:sticky;top:var(--top-nav-h,52px);z-index:35;background:#f3f5f1;padding-top:4px}
 .party-tabs-scroll{display:flex;align-items:flex-end;gap:4px;overflow-x:auto;padding:4px 6px 0 6px;scrollbar-width:thin;scrollbar-color:#cbdacf transparent;flex:1;min-width:0}
 .party-tabs-scroll::-webkit-scrollbar{height:4px}
 .party-tabs-scroll::-webkit-scrollbar-thumb{background:#cbdacf;border-radius:4px}
