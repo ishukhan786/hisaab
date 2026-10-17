@@ -21,12 +21,26 @@
   function blank(branch=''){return {...Object.fromEntries(rowFields.map(f=>[f,''])),id:uid(),entryDate:state.date||today(),branch};}
   function fmtDate(iso){if(!iso)return '';const [y,m,d]=iso.split('-');return `${d}/${m}/${y}`;}
   let journalController=null;
-  let state={journal:{date:today(),rows:[]},version:4,title:'اندراج رجسٹر',date:today(),startSerial:1,fontSize:13,branches:[],partyCurrencies:Object.create(null),rows:[],trash:[],lastBackupAt:null,lockedDates:[]};
+  let state={journal:{date:today(),rows:[]},version:4,title:'اندراج رجسٹر',date:today(),startSerial:1,partySerials:Object.create(null),fontSize:13,branches:[],partyCurrencies:Object.create(null),rows:[],trash:[],lastBackupAt:null,lockedDates:[]};
   const partyCurrency=name=>name&&Object.hasOwn(state.partyCurrencies||{},name)&&state.partyCurrencies[name]==='afn'?'afn':'pkr';
   function currencyTotals(rows){const sums={pkr:0n,afn:0n},invalid=new Set();for(const r of rows){const c=partyCurrency(r.branch),v=integerAmount(r.pkr);if(v===null)invalid.add(c);else sums[c]+=v;}return {sums,invalid};}
   function currencyText(rows){const currencies=[...new Set(rows.map(r=>partyCurrency(r.branch)))];const {sums,invalid}=currencyTotals(rows);return (currencies.length?currencies:['pkr']).map(c=>(currencies.length>1?c.toUpperCase()+': ':'')+(invalid.has(c)?'رقم درست کریں':formatted(sums[c]))).join('\n');}
   const activeCurrency=()=>selectedBranch.startsWith('b:')?partyCurrency(selectedBranch.slice(2)):'pkr';
   let storageBlocked=false, selectedBranch='', pendingBranchRow=null;
+  function activeStartSerial(){
+    if(!state.partySerials)state.partySerials=Object.create(null);
+    if(selectedBranch.startsWith('b:')){const name=selectedBranch.slice(2);return Number.isInteger(state.partySerials[name])&&state.partySerials[name]>0?state.partySerials[name]:1;}
+    if(selectedBranch==='__unassigned')return Number.isInteger(state.partySerials.__unassigned)&&state.partySerials.__unassigned>0?state.partySerials.__unassigned:1;
+    return Number(state.startSerial)||1;
+  }
+  function setActiveStartSerial(val){
+    const n=(!isNaN(val)&&val>0)?val:1;
+    if(!state.partySerials)state.partySerials=Object.create(null);
+    if(selectedBranch.startsWith('b:'))state.partySerials[selectedBranch.slice(2)]=n;
+    else if(selectedBranch==='__unassigned')state.partySerials.__unassigned=n;
+    else state.startSerial=n;
+    return n;
+  }
   const rowNodes=new Map();
   const pageSize=200;
   let viewPage=0,viewKey='',registerPrintActive=false;
@@ -60,9 +74,14 @@
     if(source.trash!==undefined&&(!Array.isArray(source.trash)||source.trash.length>20))throw Error('Invalid undo');
     const trash=(source.trash||[]).map(item=>{if(!item||!Number.isInteger(item.index)||item.index<0)throw Error('Invalid undo');return {row:convert(item.row),index:item.index};});
     const startSerial=Number.isInteger(source.startSerial)&&source.startSerial>0?source.startSerial:1;
+    const partySerials=Object.create(null);
+    if(source.partySerials&&typeof source.partySerials==='object'){
+      for(const name of registry){if(Object.hasOwn(source.partySerials,name)&&Number.isInteger(source.partySerials[name])&&source.partySerials[name]>0)partySerials[name]=source.partySerials[name];}
+      if(Object.hasOwn(source.partySerials,'__unassigned')&&Number.isInteger(source.partySerials.__unassigned)&&source.partySerials.__unassigned>0)partySerials.__unassigned=source.partySerials.__unassigned;
+    }
     const partyCurrencies=Object.create(null);for(const name of registry){const raw=source.partyCurrencies;if(raw&&Object.hasOwn(raw,name)){if(!['pkr','afn'].includes(raw[name]))throw Error('Invalid currency');partyCurrencies[name]=raw[name];}}
     const lockedDates=Array.isArray(source.lockedDates)?source.lockedDates.filter(d=>typeof d==='string'&&dateValid(d)):[];
-    return {journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:formatAllah(source.title),date:source.date||today(),startSerial,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates};
+    return {journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:formatAllah(source.title),date:source.date||today(),startSerial,partySerials,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates};
   }
   try{const raw=localStorage.getItem(KEY);if(raw)state=migrate(JSON.parse(raw));}catch{storageBlocked=true;alert('محفوظ ڈیٹا نہیں کھل سکا۔ اصل ڈیٹا محفوظ رکھا گیا ہے؛ درست بیک اَپ کھولیں۔');}
   function persist(){if(storageBlocked){$('save-state').textContent='محفوظ نہیں ہو رہا — بیک اَپ بحال کریں';return false;}try{const clean={...state,rows:state.rows.filter(populated)};localStorage.setItem(KEY,JSON.stringify(clean));$('save-state').textContent='✓ محفوظ ہے';return true;}catch{$('save-state').textContent='محفوظ نہیں ہو سکا — بیک اَپ لیں';return false;}}
@@ -169,7 +188,7 @@
     appendRow(row);
     save();
   }
-  function totals(rows=selectedRows()){let totalBalance=0n,totalAed=0n,invalidAny=false;for(const field of moneyFields){let total=0n,invalid=false;for(const row of rows){const value=integerAmount(row[field]);if(value===null)invalid=true;else total+=value;}if(field==='balance'){totalBalance=total;if(invalid)invalidAny=true;}if(field==='aed'){totalAed=total;if(invalid)invalidAny=true;}$('total-'+field).textContent=invalid?'رقم درست کریں':formatted(total);}const netEl=$('total-net-aed');if(netEl){const netAed=totalAed-totalBalance;netEl.textContent=invalidAny?'موجودہ درہم (صافی): رقم درست کریں':`موجودہ درہم (صافی): ${formatted(netAed)}`;}$('total-pkr').textContent=currencyText(rows);$('count').textContent=`${rows.length} اندراجات`;
+  function totals(rows=selectedRows()){let totalBalance=0n,totalAed=0n,invalidAny=false;for(const field of moneyFields){let total=0n,invalid=false;for(const row of rows){const value=integerAmount(row[field]);if(value===null)invalid=true;else total+=value;}if(field==='balance'){totalBalance=total;if(invalid)invalidAny=true;}if(field==='aed'){totalAed=total;if(invalid)invalidAny=true;}$('total-'+field).textContent=invalid?'رقم درست کریں':formatted(total);}const netEl=$('total-net-aed');if(netEl){const netAed=totalAed-totalBalance;netEl.textContent=invalidAny?'موجودہ درہم: رقم درست کریں':`موجودہ درہم: ${formatted(netAed)}`;}$('total-pkr').textContent=currencyText(rows).split('\n').map(s=>`(${s})`).join('\n');$('count').textContent=`${rows.length} اندراجات`;
     const fractional=rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null));
     $('filter-message').textContent=!rangeValid()?'تاریخ سے، تاریخ تک سے آگے نہیں ہو سکتی۔':dayMode()?`${fmtDate(state.date)} کی ${rows.length} انٹریاں۔ پرنٹ اور مجموعہ انہی کا ہے۔`:`${rows.length} انٹریاں منتخب ہیں۔ پرنٹ اور مجموعہ انہی کا ہے۔ نئی انٹری کے لیے "＋ نئی قطار" دبائیں۔`;
     if(fractional)$('filter-message').textContent+=' رقم میں صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم کو خود نہیں بدلا گیا۔';
@@ -230,8 +249,9 @@
   function openHistory(row){
     const d=$('history-dialog');
     if(!d)return;
-    const allPopulated=state.rows.filter(populated);
-    const idx=(Number(state.startSerial)||1)+allPopulated.indexOf(row);
+    const filtered=selectedRows();
+    const pos=filtered.indexOf(row);
+    const idx=pos>=0?activeStartSerial()+pos:(Number(state.startSerial)||1)+state.rows.filter(populated).indexOf(row);
     $('history-subtitle').textContent=`انٹری #${idx>0?idx:''} — ${row.sender||'نامعلوم'} (${fmtDate(row.entryDate)})`;
     const tbody=$('history-rows');
     tbody.replaceChildren();
@@ -250,7 +270,7 @@
     }
     d.showModal();
   }
-  function applyFilter(keepFocus=false,forPrint=false){ensureDraft();const start=(Number(state.startSerial)||1);let offset=0;const active=keepFocus?document.activeElement?.closest('#rows tr'):null;let draftShown=false;const day=dayMode();
+  function applyFilter(keepFocus=false,forPrint=false){ensureDraft();const start=activeStartSerial();if($('start-serial')&&document.activeElement!==$('start-serial'))$('start-serial').value=start;let offset=0;const active=keepFocus?document.activeElement?.closest('#rows tr'):null;let draftShown=false;const day=dayMode();
     forPrint=forPrint||registerPrintActive;
     updateLockBtn();
     const nextKey=JSON.stringify([selectedBranch,state.date,$('all-dates').checked,$('search').value,$('date-from').value,$('date-to').value]);
@@ -340,7 +360,7 @@
     const num=document.createElement('td');num.className='number';
     num.onclick=()=>{
       if(!populated(row))return;
-      const current=parseInt(englishDigits(num.querySelector('.serial-num')?.textContent||num.textContent),10)||(state.startSerial||1);
+      const current=parseInt(englishDigits(num.querySelector('.serial-num')?.textContent||num.textContent),10)||activeStartSerial();
       const next=prompt('اس قطار کا نیا نمبر شمار لکھیں (یہیں سے آگے خودکار نمبر بنیں گے):',current);
       if(next===null)return;
       const val=parseInt(englishDigits(next.trim()),10);
@@ -348,7 +368,7 @@
         const visible=state.rows.filter(matches);
         const idx=visible.indexOf(row);
         const newStart=Math.max(1,val-(idx>=0?idx:0));
-        state.startSerial=newStart;
+        setActiveStartSerial(newStart);
         if($('start-serial'))$('start-serial').value=newStart;
         save();applyFilter(true);
       }
@@ -357,7 +377,7 @@
     const rLocked=isDayLocked(row.entryDate||state.date);
     if(rLocked)tr.classList.add('row-locked');
     fields.forEach((field,i)=>{
-      const td=document.createElement('td');if(field==='branch')td.className='col-branch no-print';if(field==='place')td.className='col-place';
+      const td=document.createElement('td');if(field==='branch')td.className='col-branch no-print';if(field==='place')td.className='col-place';if(field==='pkr')td.className='col-pkr';
       const isText=['sender','receiver','place'].includes(field);
       const input=document.createElement(field==='branch'?'select':(isText?'textarea':'input'));input.dataset.field=field;input.setAttribute('aria-label',labels[i]);input.autocomplete='off';input.maxLength=moneyFields.includes(field)?20:300;
       if(isText){input.rows=1;input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();input.blur();}});}
@@ -422,7 +442,7 @@
   function appendRow(row){$('rows').append(createRowElement(row));}
   function prependRow(row){$('rows').prepend(createRowElement(row));}
   function applyFont(){document.documentElement.style.setProperty('--entry-font',state.fontSize+'px');$('font-size').textContent=state.fontSize;$('font-smaller').disabled=state.fontSize<=10;$('font-larger').disabled=state.fontSize>=22;}
-  function render(){rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;$('date').value=state.date;if($('start-serial'))$('start-serial').value=state.startSerial||1;applyFont();updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
+  function render(){rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;$('date').value=state.date;if($('start-serial'))$('start-serial').value=activeStartSerial();applyFont();updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
   function focusRow(row){rowNodes.get(row.id)?.querySelector('[data-field="sender"]').focus();}
   function add(){
     if(journalController?.isActive()){journalController.add();return;}
@@ -601,11 +621,11 @@
       const clean=englishDigits($('start-serial').value);
       if(clean!==$('start-serial').value)$('start-serial').value=clean;
       const val=parseInt(clean,10);
-      state.startSerial=(!isNaN(val)&&val>0)?val:1;
+      setActiveStartSerial((!isNaN(val)&&val>0)?val:1);
       save();applyFilter(true);
     });
     $('start-serial').addEventListener('blur',()=>{
-      $('start-serial').value=state.startSerial||1;
+      $('start-serial').value=activeStartSerial();
     });
   }
   $('branch-filter').onchange=()=>{selectedBranch=$('branch-filter').value;applyFilter();updatePartyTabsActive();};
@@ -745,8 +765,8 @@
     for(const name of state.branches){const div=document.createElement('div');div.className='party-item';const input=document.createElement('input');input.value=name;input.maxLength=300;input.setAttribute('aria-label','پارٹی کا نام تبدیل کریں');const count=document.createElement('small');count.textContent=state.rows.filter(r=>r.branch===name&&populated(r)).length+' اندراجات';
       const currSelect=document.createElement('select');currSelect.className='party-currency-select';currSelect.append(makeOption('pkr','روپیہ (PKR)'),makeOption('afn','افغانی (AFN)'));currSelect.value=partyCurrency(name);
       currSelect.onchange=()=>{if([...state.rows,...state.trash.map(t=>t.row)].some(r=>r.branch===name&&populated(r))){currSelect.value=partyCurrency(name);$('branch-error').textContent='اس پارٹی کی انٹریاں موجود ہیں؛ نئی کرنسی کے لیے الگ پارٹی بنائیں۔';return;}if(!state.partyCurrencies)state.partyCurrencies={};state.partyCurrencies[name]=currSelect.value;save();updateBranches();applyFilter();$('branch-error').textContent=name+' کی کرنسی اب '+(currSelect.value==='afn'?'افغانی':'روپیہ')+' ہے۔';};
-      const rename=document.createElement('button');rename.textContent='نام محفوظ کریں';rename.onclick=()=>{const next=cleanName(input.value);if(!next){$('branch-error').textContent='پارٹی کا نام لکھیں۔';return;}if(state.branches.some(n=>n!==name&&nameKey(n)===nameKey(next))){$('branch-error').textContent='یہ نام پہلے سے موجود ہے۔';return;}state.branches[state.branches.indexOf(name)]=next;if(next!==name&&state.partyCurrencies&&Object.hasOwn(state.partyCurrencies,name)){state.partyCurrencies[next]=state.partyCurrencies[name];delete state.partyCurrencies[name];}for(const row of [...state.rows,...state.trash.map(t=>t.row)])if(row.branch===name)row.branch=next;if(selectedBranch==='b:'+name)selectedBranch='b:'+next;save();updateBranches();applyFilter();renderBranchList();$('branch-error').textContent='نام اور متعلقہ انٹریاں اپ ڈیٹ ہو گئیں۔';};
-      const remove=document.createElement('button');remove.textContent='ہٹائیں';remove.onclick=()=>{if(state.rows.some(r=>r.branch===name&&populated(r))||state.trash.some(t=>t.row.branch===name)){$('branch-error').textContent='اس پارٹی کی انٹریاں موجود ہیں؛ پہلے ان کی پارٹی تبدیل کریں۔';return;}state.rows.forEach(r=>{if(r.branch===name)r.branch='';});state.branches=state.branches.filter(n=>n!==name);if(state.partyCurrencies)delete state.partyCurrencies[name];if(selectedBranch==='b:'+name)selectedBranch='';save();updateBranches();applyFilter();renderBranchList();$('branch-error').textContent='پارٹی ہٹا دی گئی۔';};div.append(input,currSelect,count,rename,remove);$('branch-list').append(div);
+      const rename=document.createElement('button');rename.textContent='نام محفوظ کریں';rename.onclick=()=>{const next=cleanName(input.value);if(!next){$('branch-error').textContent='پارٹی کا نام لکھیں۔';return;}if(state.branches.some(n=>n!==name&&nameKey(n)===nameKey(next))){$('branch-error').textContent='یہ نام پہلے سے موجود ہے۔';return;}state.branches[state.branches.indexOf(name)]=next;if(next!==name&&state.partyCurrencies&&Object.hasOwn(state.partyCurrencies,name)){state.partyCurrencies[next]=state.partyCurrencies[name];delete state.partyCurrencies[name];}if(next!==name&&state.partySerials&&Object.hasOwn(state.partySerials,name)){state.partySerials[next]=state.partySerials[name];delete state.partySerials[name];}for(const row of [...state.rows,...state.trash.map(t=>t.row)])if(row.branch===name)row.branch=next;if(selectedBranch==='b:'+name)selectedBranch='b:'+next;save();updateBranches();applyFilter();renderBranchList();$('branch-error').textContent='نام اور متعلقہ انٹریاں اپ ڈیٹ ہو گئیں۔';};
+      const remove=document.createElement('button');remove.textContent='ہٹائیں';remove.onclick=()=>{if(state.rows.some(r=>r.branch===name&&populated(r))||state.trash.some(t=>t.row.branch===name)){$('branch-error').textContent='اس پارٹی کی انٹریاں موجود ہیں؛ پہلے ان کی پارٹی تبدیل کریں۔';return;}state.rows.forEach(r=>{if(r.branch===name)r.branch='';});state.branches=state.branches.filter(n=>n!==name);if(state.partyCurrencies)delete state.partyCurrencies[name];if(state.partySerials)delete state.partySerials[name];if(selectedBranch==='b:'+name)selectedBranch='';save();updateBranches();applyFilter();renderBranchList();$('branch-error').textContent='پارٹی ہٹا دی گئی۔';};div.append(input,currSelect,count,rename,remove);$('branch-list').append(div);
     }
   }
   $('branch-form').onsubmit=e=>{e.preventDefault();const name=cleanName($('branch-name').value);if(!name)return;const existing=state.branches.find(n=>nameKey(n)===nameKey(name));if(existing){$('branch-error').textContent='یہ پارٹی پہلے سے موجود ہے؛ فہرست سے منتخب کریں۔';return;}const curr=$('branch-currency')?.value||'pkr';state.branches.push(name);if(!state.partyCurrencies)state.partyCurrencies={};state.partyCurrencies[name]=curr;if(pendingBranchRow)pendingBranchRow.branch=name;else selectedBranch='b:'+name;save();updateBranches();applyFilter(true);renderBranchList();$('branch-name').value='';$('branch-error').textContent='پارٹی شامل ہو گئی ('+(curr==='afn'?'افغانی':'روپیہ')+')۔';if(pendingBranchRow){const target=pendingBranchRow;$('branch-dialog').close();focusRow(target);}else{$('branch-dialog').close();}};
@@ -812,7 +832,7 @@
     finally{document.body.inert=false;clearReceiptOutput();}
   }
   $('receipt-preview').onclick=()=>outputReceipt();$('receipt-save').onclick=()=>outputReceipt(true);
-  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{const span=document.createElement('span');span.className='print-value';span.textContent=input.classList.contains('amount')?wholeText(input.value):input.value;if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign='center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
+  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{const span=document.createElement('span');span.className='print-value';span.textContent=input.classList.contains('amount')?wholeText(input.value):input.value;if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
   window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else preparePrint();});window.addEventListener('afterprint',()=>{registerPrintActive=false;clearReceiptOutput();applyFilter();});
   function canOutput(rows,filtered=true){if(filtered&&!rangeValid()){alert('تاریخ کا دورانیہ درست کریں۔');return false;}if(!rows.length){alert('کوئی انٹری منتخب نہیں ہے۔');return false;}if(rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null))){alert('رقم کے خانے درست کریں۔ صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم خود تبدیل نہیں کی گئی۔');return false;}return true;}
   if(window.electronAPI?.savePDF){
@@ -869,7 +889,7 @@
   $('export-open').onclick=()=>{if(journalController?.isActive())journalController.exportExcel();else $('export-dialog').showModal();};$('close-export').onclick=()=>$('export-dialog').close();
   function exportExcel(all){
     const rows=all?state.rows.filter(populated):selectedRows();if(!canOutput(rows,!all))return;
-    const start=Number(state.startSerial)||1;const mixed=new Set(rows.map(r=>partyCurrency(r.branch))).size>1;
+    const start=all?(Number(state.startSerial)||1):activeStartSerial();const mixed=new Set(rows.map(r=>partyCurrency(r.branch))).size>1;
     const onlyAfn=rows.every(r=>partyCurrency(r.branch)==='afn');
     const headers=['نمبر شمار','تاریخ','ارسال کنندہ','موبائیل نمبر','وصول کنندہ','مقام','پارٹی','بقایا','درہم',mixed?'روپیہ (PKR)':onlyAfn?'افغانی (AFN)':'روپیہ (PKR)'];if(mixed)headers.push('افغانی (AFN)');
     const num=v=>({number:String(v)});
