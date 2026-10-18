@@ -83,6 +83,7 @@
           <button id="reset-filters" type="button">🔄 فلٹر صاف کریں</button>
           <button id="pin-settings-btn" type="button">🔐 پن لاک (PIN سیٹنگز)</button>
           <button id="lock-app-now-btn" type="button" hidden>🔒 ابھی ایپ لاک کریں (Ctrl+L)</button>
+          <button id="logout-btn" type="button" hidden>🚪 لاگ آؤٹ (Logout)</button>
           <hr class="menu-divider">
           <button id="manage-backups" type="button">🛡 بیک اَپ سنبھالیں (تاریخچہ)</button>
           <button id="backup" type="button">💾 بیک اَپ ڈاؤن لوڈ</button>
@@ -219,14 +220,18 @@
   <div id="pin-lock-overlay" class="pin-lock-overlay no-print" hidden>
     <form id="pin-unlock-form" class="pin-lock-card">
       <div class="logo-mini pin-logo">ح</div>
-      <h2 id="pin-unlock-title">حساب لاک ہے</h2>
-      <p id="pin-unlock-reason">جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں</p>
-      <input id="pin-unlock-input" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="••••">
+      <h2 id="pin-unlock-title">حساب — لاگ ان</h2>
+      <p id="pin-unlock-reason">جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں</p>
+      <div style="position:relative;width:100%;max-width:260px;">
+        <input id="pin-unlock-input" type="password" maxlength="40" autocomplete="current-password" placeholder="پن کوڈ یا پاس ورڈ" style="padding-left:36px;width:100%;">
+        <button id="toggle-pwd-btn" type="button" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;padding:4px;color:#4f6b5c;" title="پاس ورڈ دکھائیں">👁</button>
+      </div>
       <p id="pin-unlock-error" role="status" class="pin-error"></p>
       <div class="pin-actions">
-        <button type="submit" class="primary">کھولیں (Unlock)</button>
+        <button type="submit" class="primary">لاگ ان کریں</button>
         <button type="button" id="pin-unlock-cancel" hidden>منسوخ کریں</button>
       </div>
+      <p id="pin-default-hint" style="font-size:11px;color:#708b7d;margin-top:6px;" hidden>ابتدائی ڈیفالٹ پن: <strong>1234</strong> ہے (سیٹنگز سے تبدیل کر سکتے ہیں)</p>
     </form>
   </div>
   <section id="receipt-print" hidden aria-hidden="true"></section>

@@ -92,17 +92,36 @@
     return {journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:formatAllah(source.title),date:source.date||today(),pageNumber:Number.isInteger(source.pageNumber)&&source.pageNumber>0?source.pageNumber:1,startSerial,partySerials,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates,pinCode};
   }
   const isWebMode = !nativeStorage && window.location.protocol.startsWith('http');
+  const AUTH_KEY = 'hisaab-auth-token-v1';
+  const getAuthToken = () => localStorage.getItem(AUTH_KEY) || '';
+  const setAuthToken = token => {
+    if (token) localStorage.setItem(AUTH_KEY, token);
+    else localStorage.removeItem(AUTH_KEY);
+    updateLogoutBtn();
+  };
+  function updateLogoutBtn() {
+    if ($('logout-btn')) $('logout-btn').hidden = !isWebMode || !getAuthToken();
+  }
   let mongoSaveTimer = null, pendingMongoSave = null;
 
   async function pushToMongo(cleanState) {
     if (!isWebMode) return;
     try {
       $('save-state').textContent = 'کلاؤڈ پر محفوظ ہو رہا ہے...';
+      const token = getAuthToken();
       const res = await fetch('/api/save', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+        },
         body: JSON.stringify({ state: cleanState, revision: storageRevision })
       });
+      if (res.status === 401) {
+        setAuthToken('');
+        requestWebLogin('لاگ ان کی مدت ختم ہو گئی۔ براہ کرم دوبارہ پن درج کریں۔');
+        return;
+      }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const result = await res.json();
       if (result.status === 'saved') {
@@ -335,11 +354,29 @@
   function updatePinUI(){
     const hasPin=!!state.pinCode;
     if($('lock-app-now-btn'))$('lock-app-now-btn').hidden=!hasPin;
+    updateLogoutBtn();
+  }
+  let webLoginResolve = null;
+  function requestWebLogin(reasonText='جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں') {
+    const overlay=$('pin-lock-overlay');
+    if(!overlay)return Promise.resolve(false);
+    $('pin-unlock-title').textContent='حساب — لاگ ان';
+    $('pin-unlock-reason').textContent=reasonText;
+    $('pin-unlock-error').textContent='';
+    const input=$('pin-unlock-input');
+    input.value='';
+    const cancelBtn=$('pin-unlock-cancel');
+    if(cancelBtn)cancelBtn.hidden=true;
+    overlay.hidden=false;
+    document.querySelectorAll('body > :not(#pin-lock-overlay)').forEach(el=>{el.inert=true;});
+    setTimeout(()=>input.focus(),30);
+    return new Promise(resolve=>{webLoginResolve=resolve;});
   }
   function requestPinUnlock(reasonText='جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں',allowCancel=false){
     if(!state.pinCode)return Promise.resolve(true);
     const overlay=$('pin-lock-overlay');
     if(!overlay)return Promise.resolve(true);
+    $('pin-unlock-title').textContent='حساب لاک ہے';
     $('pin-unlock-reason').textContent=reasonText;
     $('pin-unlock-error').textContent='';
     const input=$('pin-unlock-input');
@@ -359,44 +396,115 @@
   }
   if($('pin-unlock-input')){
     $('pin-unlock-input').addEventListener('input',()=>{
-      const val=englishDigits($('pin-unlock-input').value).replace(/\D/g,'');
-      if(val!==$('pin-unlock-input').value)$('pin-unlock-input').value=val;
       $('pin-unlock-error').textContent='';
-      if(state.pinCode&&val===state.pinCode)finishPinUnlock(true);
     });
   }
+  if($('toggle-pwd-btn')){
+    $('toggle-pwd-btn').onclick=()=>{
+      const input=$('pin-unlock-input');
+      const isPwd=input.type==='password';
+      input.type=isPwd?'text':'password';
+      $('toggle-pwd-btn').textContent=isPwd?'🔒':'👁';
+    };
+  }
   if($('pin-unlock-form')){
-    $('pin-unlock-form').onsubmit=e=>{
+    $('pin-unlock-form').onsubmit=async e=>{
       e.preventDefault();
       const val=englishDigits($('pin-unlock-input').value).trim();
+      if(!val)return;
+
+      if(isWebMode&&webLoginResolve){
+        $('pin-unlock-error').textContent='لاگ ان ہو رہا ہے...';
+        try{
+          const res=await fetch('/api/auth/login',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({password:val})
+          });
+          const data=await res.json();
+          if(res.ok&&data.status==='ok'&&data.token){
+            setAuthToken(data.token);
+            finishPinUnlock(true);
+            if(webLoginResolve){
+              const fn=webLoginResolve;
+              webLoginResolve=null;
+              fn(true);
+            }
+            initMongoWebState();
+            return;
+          }
+          $('pin-unlock-error').textContent=data.message||'غلط پن کوڈ یا پاس ورڈ!';
+          $('pin-unlock-input').select();
+        }catch(_){
+          $('pin-unlock-error').textContent='کنکشن کا مسئلہ! انٹرنیٹ چیک کریں۔';
+        }
+        return;
+      }
+
       if(val===state.pinCode)finishPinUnlock(true);
       else{$('pin-unlock-error').textContent='غلط پن کوڈ! دوبارہ کوشش کریں۔';$('pin-unlock-input').select();}
     };
   }
   if($('pin-unlock-cancel'))$('pin-unlock-cancel').onclick=()=>finishPinUnlock(false);
-  if($('lock-app-now-btn'))$('lock-app-now-btn').onclick=()=>{if(state.pinCode)requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔',false);};
+  if($('lock-app-now-btn'))$('lock-app-now-btn').onclick=()=>{
+    if(isWebMode)requestWebLogin('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔');
+    else if(state.pinCode)requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔',false);
+  };
+  if($('logout-btn'))$('logout-btn').onclick=()=>{
+    setAuthToken('');
+    $('save-state').textContent='لاگ آؤٹ ہو چکا';
+    requestWebLogin('آپ لاگ آؤٹ ہو چکے ہیں۔ دوبارہ لاگ ان کریں۔');
+  };
   function openPinSettings(){
     const d=$('pin-dialog');if(!d)return;
-    const hasPin=!!state.pinCode;
+    const hasPin=isWebMode?true:!!state.pinCode;
     $('pin-current-wrap').hidden=!hasPin;
-    $('pin-remove-btn').hidden=!hasPin;
+    $('pin-remove-btn').hidden=isWebMode||!hasPin;
     $('pin-current').value='';
     $('pin-new').value='';
     $('pin-form-msg').textContent='';
-    $('pin-status-text').textContent=hasPin?'✓ حفاظتی پن لاک فعال ہے۔ تبدیل کرنے یا ختم کرنے کے لیے موجودہ پن لکھیں۔':'ابھی کوئی پن لاک نہیں لگا۔ نیا 4 سے 8 ہندسوں کا پن کوڈ مقرر کریں۔';
+    $('pin-status-text').textContent=isWebMode?'لاگ ان پاس ورڈ / پن کوڈ تبدیل کریں۔ کم از کم 4 ہندسے یا حروف لکھیں۔':hasPin?'✓ حفاظتی پن لاک فعال ہے۔ تبدیل کرنے یا ختم کرنے کے لیے موجودہ پن لکھیں۔':'ابھی کوئی پن لاک نہیں لگا۔ نیا 4 سے 8 ہندسوں کا پن کوڈ مقرر کریں۔';
     d.showModal();
     setTimeout(()=>$(hasPin?'pin-current':'pin-new').focus(),20);
   }
   if($('pin-settings-btn'))$('pin-settings-btn').onclick=openPinSettings;
   if($('close-pin-dialog'))$('close-pin-dialog').onclick=()=>$('pin-dialog').close();
   if($('pin-form')){
-    $('pin-form').onsubmit=e=>{
+    $('pin-form').onsubmit=async e=>{
       e.preventDefault();
-      const hasPin=!!state.pinCode;
       const cur=englishDigits($('pin-current').value).trim();
       const next=englishDigits($('pin-new').value).trim();
+      if(!next||next.length<4){$('pin-form-msg').textContent='نیا پن کم از کم 4 ہندسوں یا حروف کا ہونا چاہیے۔';return;}
+
+      if(isWebMode){
+        $('pin-form-msg').textContent='سرور پر تبدیل ہو رہا ہے...';
+        try{
+          const res=await fetch('/api/auth/change-pin',{
+            method:'POST',
+            headers:{
+              'Content-Type':'application/json',
+              'Authorization':'Bearer '+getAuthToken()
+            },
+            body:JSON.stringify({currentPassword:cur,newPassword:next})
+          });
+          const result=await res.json();
+          if(res.ok&&result.status==='ok'){
+            setAuthToken(result.token);
+            state.pinCode=next;
+            save();updatePinUI();
+            alert('✓ پن کوڈ کامیابی سے تبدیل ہو گیا!');
+            $('pin-dialog').close();
+            return;
+          }
+          $('pin-form-msg').textContent=result.message||'پن تبدیل نہیں ہو سکا۔';
+        }catch(_){
+          $('pin-form-msg').textContent='سرور سے رابطہ نہیں ہو سکا۔ انٹرنیٹ چیک کریں۔';
+        }
+        return;
+      }
+
+      const hasPin=!!state.pinCode;
       if(hasPin&&cur!==state.pinCode){$('pin-form-msg').textContent='موجودہ پن کوڈ درست نہیں ہے۔';return;}
-      if(!/^\d{4,8}$/.test(next)){$('pin-form-msg').textContent='نیا پن کم از کم 4 ہندسوں (صرف نمبر) کا ہونا چاہیے۔';return;}
       state.pinCode=next;
       save();updatePinUI();
       $('pin-dialog').close();
@@ -1592,8 +1700,29 @@
   $('export-filtered').onclick=()=>exportExcel(false);$('export-all').onclick=()=>exportExcel(true);
   async function initMongoWebState() {
     if (!isWebMode) return;
+    updateLogoutBtn();
     try {
-      const res = await fetch('/api/state');
+      const token = getAuthToken();
+      const statusRes = await fetch('/api/auth/status', {
+        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+      });
+      if (statusRes.ok) {
+        const authInfo = await statusRes.json();
+        if ($('pin-default-hint')) $('pin-default-hint').hidden = !authInfo.isDefaultPin;
+        if (!authInfo.isAuthenticated) {
+          const ok = await requestWebLogin('جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں');
+          if (!ok) return;
+        }
+      }
+
+      const res = await fetch('/api/state', {
+        headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+      });
+      if (res.status === 401) {
+        setAuthToken('');
+        requestWebLogin('لاگ ان کی مدت ختم ہو گئی۔ دوبارہ پاس ورڈ لکھیں۔');
+        return;
+      }
       if (!res.ok) return;
       const data = await res.json();
       if (data.status === 'ok' && data.state) {
@@ -1617,7 +1746,7 @@
 
   render();
   updatePinUI();
-  if(state.pinCode)requestPinUnlock('جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں',false);
+  if(!isWebMode && state.pinCode) requestPinUnlock('جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں',false);
   journalController=window.HisaabJournal.mount({getState:()=>state,save,today,exportSheet:(rows,name)=>download(window.HisaabExcel.create(rows),name)});
   save();
   initDiskPersistence();
