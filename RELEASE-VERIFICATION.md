@@ -1,3 +1,24 @@
+# Hisaab Desktop 1.4.1 — Verification (2026-10-18)
+
+Party tabs now wrap across multiple rows, with no internal scrolling. Removed the party search field and its filtering handlers. Long names can wrap within a tab. Version updated in package.json and package-lock.json.
+
+Verified:
+- Browser layout with 35 parties at 1400, 1024 and 390 pixels: all 36 tabs rendered, multiple rows, no internal overflow, search removed and party selection working.
+- Visible packaged 1.4.1: 35 parties in five rows, search removed, party selection and SQLite restore/reload passed. Screenshot inspected.
+- Packaged SQLite suite: migration, localStorage deletion, restart, journal/history/settings, injected save failure/retry, safety backup failure, restore rollback and frame authorization passed.
+- Build completed with npm run dist -- --publish never. Packaged source files match the workspace. Version, latest.yml size and installer SHA-512 verified.
+
+Artifacts:
+- dist/Hisaab-Setup-1.4.1.exe — 85,739,024 bytes
+- dist/Hisaab-Portable-1.4.1.exe — 85,531,891 bytes
+- dist/Hisaab-Setup-1.4.1.exe.blockmap
+- dist/latest.yml
+
+Evidence: scratch/release-1.4.1-1792329079200/ and scratch/sqlite-desktop-1792329090230/.
+Binaries are unsigned. Installer installation/uninstallation and portable launcher extraction remain untested. Tests used isolated profiles.
+
+---
+
 # Hisaab Desktop 1.2.2 — Verification (2026-10-17)
 
 Performance update: indexed duplicate checking, cached row decorations, and 200-record screen pages. Full-selection totals, Excel export and print are preserved. See `PERFORMANCE.md` for before/after measurements and test coverage.

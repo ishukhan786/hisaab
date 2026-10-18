@@ -55,9 +55,7 @@
 
 /* Party Tabs & Dedicated Party Page */
 .party-tabs-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:-1px;position:sticky;top:var(--top-nav-h,52px);z-index:35;background:#f3f5f1;padding-top:4px}
-.party-tabs-scroll{display:flex;align-items:flex-end;gap:4px;overflow-x:auto;padding:4px 6px 0 6px;scrollbar-width:thin;scrollbar-color:#cbdacf transparent;flex:1;min-width:0}
-.party-tabs-scroll::-webkit-scrollbar{height:4px}
-.party-tabs-scroll::-webkit-scrollbar-thumb{background:#cbdacf;border-radius:4px}
+.party-tabs-scroll{display:flex;align-items:flex-end;gap:4px;flex-wrap:wrap;overflow:visible;padding:4px 6px;flex:1;min-width:0}
 .party-tab{background:#e2ede5;color:#355648;border:1px solid #cbdacf;border-bottom:1px solid #cbdacf;border-radius:10px 10px 0 0;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s ease;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;font-family:inherit;user-select:none;line-height:1.6}
 .party-tab:hover{background:#eaf3ec;color:var(--green)}
 .party-tab.active{background:#ffffff;color:var(--green);border-color:#d3dfd5 #d3dfd5 #ffffff;font-weight:700;box-shadow:0 -3px 8px #17634c12;padding-top:10px;border-bottom:1px solid #ffffff}

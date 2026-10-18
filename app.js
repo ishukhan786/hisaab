@@ -150,28 +150,21 @@
     }
     return {allCount,unassignedCount,byBranch};
   }
-  function partySearchQuery(){
-    return formatAllah(cleanName($('party-search')?.value||'')).toLocaleLowerCase();
-  }
+
   function renderPartyTabs(){
     const container=$('party-tabs');
     if(!container)return;
     container.replaceChildren();
-    const query=partySearchQuery();
+
     const {allCount,unassignedCount,byBranch}=partyDateCounts();
-    if(!query){
+    {
       const allTab=document.createElement('button');allTab.type='button';allTab.className='party-tab'+(selectedBranch===''?' active':'');allTab.role='tab';allTab.setAttribute('aria-selected',selectedBranch===''?'true':'false');
       allTab.innerHTML=`<span>📁 تمام پارٹیاں</span><span class="tab-badge">${allCount}</span>`;
       allTab.onclick=()=>selectPartyTab('');
       container.append(allTab);
     }
     const sorted=state.branches.slice().sort((a,b)=>a.localeCompare(b,'ur'));
-    const matched=query?sorted.filter(name=>formatAllah(cleanName(name)).toLocaleLowerCase().includes(query)):sorted;
-    if(query&&!matched.length&&!('بغیر پارٹی'.includes(query))){
-      const emptyMsg=document.createElement('span');emptyMsg.className='party-search-empty';emptyMsg.textContent='کوئی پارٹی نہیں ملی';
-      container.append(emptyMsg);
-    }
-    for(const name of matched){
+    for(const name of sorted){
       const tab=document.createElement('button');tab.type='button';const isSel=selectedBranch==='b:'+name;tab.className='party-tab'+(isSel?' active':'');tab.role='tab';tab.setAttribute('aria-selected',isSel?'true':'false');
       const count=byBranch.get(name)||0;
       const isAfn=partyCurrency(name)==='afn';
@@ -179,7 +172,7 @@
       tab.onclick=()=>selectPartyTab('b:'+name);
       container.append(tab);
     }
-    if((!query||'بغیر پارٹی'.includes(query))&&(unassignedCount>0||selectedBranch==='__unassigned')){
+    if(unassignedCount>0||selectedBranch==='__unassigned'){
       const unassignedTab=document.createElement('button');unassignedTab.type='button';const isSel=selectedBranch==='__unassigned';unassignedTab.className='party-tab'+(isSel?' active':'');unassignedTab.role='tab';unassignedTab.setAttribute('aria-selected',isSel?'true':'false');
       unassignedTab.innerHTML=`<span>بغیر پارٹی</span><span class="tab-badge">${unassignedCount}</span>`;
       unassignedTab.onclick=()=>selectPartyTab('__unassigned');
@@ -199,7 +192,7 @@
   function updatePartyTabsActive(){
     const container=$('party-tabs');
     if(!container)return;
-    if(partySearchQuery()){renderPartyTabs();return;}
+
     const sorted=state.branches.slice().sort((a,b)=>a.localeCompare(b,'ur'));
     const {allCount,unassignedCount,byBranch}=partyDateCounts();
     const expectedCount=1+sorted.length+(unassignedCount>0||selectedBranch==='__unassigned'?1:0);
@@ -1063,27 +1056,7 @@
   for(const id of ['search','date-from','date-to'])$(id).addEventListener('input',()=>applyFilter());
   if($('toggle-range'))$('toggle-range').onclick=()=>{const d=$('range-drawer');if(!d)return;d.hidden=!d.hidden;$('toggle-range').classList.toggle('active',!d.hidden||rangeActive());if(!d.hidden)$('date-from').focus();};
   if($('clear-range-btn'))$('clear-range-btn').onclick=()=>{for(const id of ['date-from','date-to'])$(id).value='';if($('range-drawer'))$('range-drawer').hidden=true;if($('toggle-range'))$('toggle-range').classList.remove('active');applyFilter();};
-  if($('party-search')){
-    $('party-search').addEventListener('input',()=>{
-      renderPartyTabs();
-    });
-    $('party-search').addEventListener('keydown',e=>{
-      if(e.key==='Enter'){
-        e.preventDefault();
-        const firstTab=$('party-tabs')?.querySelector('.party-tab');
-        if(firstTab){
-          firstTab.click();
-          firstTab.scrollIntoView({block:'nearest',inline:'nearest'});
-        }
-      }else if(e.key==='Escape'){
-        if($('party-search').value){
-          $('party-search').value='';
-          renderPartyTabs();
-        }
-      }
-    });
-  }
-  function resetFilters(){selectedBranch='';$('branch-filter').value='';$('all-dates').checked=false;for(const id of ['search','date-from','date-to'])$(id).value='';if($('party-search'))$('party-search').value='';if($('range-drawer'))$('range-drawer').hidden=true;if($('toggle-range'))$('toggle-range').classList.remove('active');applyFilter();renderPartyTabs();}
+  function resetFilters(){selectedBranch='';$('branch-filter').value='';$('all-dates').checked=false;for(const id of ['search','date-from','date-to'])$(id).value='';if($('range-drawer'))$('range-drawer').hidden=true;if($('toggle-range'))$('toggle-range').classList.remove('active');applyFilter();renderPartyTabs();}
   $('reset-filters').onclick=resetFilters;
   $('font-smaller').onclick=()=>{state.fontSize=Math.max(10,state.fontSize-1);applyFont();save();};$('font-larger').onclick=()=>{state.fontSize=Math.min(22,state.fontSize+1);applyFont();save();};
   $('title').addEventListener('input',()=>{state.title=$('title').value;if($('title-print'))$('title-print').textContent=$('title').value||'اندراج رجسٹر';save();});
