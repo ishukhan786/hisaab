@@ -130,6 +130,18 @@
       <header class="journal-heading"><div><h1>روزنامچہ</h1><p id="journal-message" role="status">بقایا = پچھلا بقایا + جمع − بنام</p></div><div class="journal-tools no-print"><label for="journal-date">تاریخ</label><input id="journal-date" type="date"><button id="journal-add" type="button" class="primary">＋ نئی قطار</button><button id="journal-undo" type="button" hidden>حذف شدہ واپس لائیں</button></div><span id="journal-date-print"></span></header>
       <div class="journal-opening-line">پچھلا بقایا <strong id="journal-opening">0</strong></div>
       <div class="journal-table-wrap"><table class="journal-table"><colgroup><col class="journal-serial-col"><col class="journal-detail-col"><col class="journal-money-col"><col class="journal-money-col"><col class="journal-balance-col"></colgroup><thead><tr><th class="journal-serial-th">نمبر شمار</th><th>تفصیل</th><th>بنام</th><th>جمع</th><th>بقایا</th></tr></thead><tbody id="journal-rows"></tbody><tfoot><tr><th colspan="2" scope="row">کل حساب / آخری بقایا</th><td id="journal-total-debit">0</td><td id="journal-total-credit">0</td><td id="journal-closing">0</td></tr></tfoot></table></div>
+      <section class="cash-summary" aria-labelledby="cash-summary-title">
+        <div class="cash-summary-heading"><h2 id="cash-summary-title">روزانہ کیش خلاصہ</h2><span>ابتدائی بیلنس + جمع − بنام = حسابی اختتامی بیلنس</span></div>
+        <div class="cash-summary-grid">
+          <div class="cash-item"><span>ابتدائی بیلنس</span><strong id="cash-opening">0</strong></div>
+          <div class="cash-item"><span>آج کی جمع — وصولی</span><strong id="cash-credit">0</strong></div>
+          <div class="cash-item"><span>آج کی بنام — ادائیگی</span><strong id="cash-debit">0</strong></div>
+          <div class="cash-item cash-expected"><span>حساب کے مطابق موجود ہونا چاہیے</span><strong id="cash-expected">0</strong></div>
+          <div class="cash-item cash-count"><label for="journal-cash-count">اصل موجود نقدی — Cash in Hand</label><input id="journal-cash-count" type="text" inputmode="numeric" maxlength="30" autocomplete="off" placeholder="0.00" aria-describedby="cash-summary-help"><strong id="cash-count-print"></strong></div>
+          <div class="cash-item cash-result"><span>فرق — کمی / زیادتی</span><strong id="cash-difference" role="status" aria-live="polite">اصل نقدی درج کریں</strong></div>
+        </div>
+        <p id="cash-summary-help">نقدی گن کر درج کریں؛ ہر تاریخ کی رقم الگ محفوظ ہے۔ یہ رقم اگلے دن کا ابتدائی بیلنس تبدیل نہیں کرتی۔</p>
+      </section>
       <footer class="journal-foot"><span id="journal-count"></span><span>حساب · روزنامچہ</span></footer>
     </section><p class="journal-help no-print">بنام میں ادائیگی اور جمع میں وصولی لکھیں۔ پہلی انٹری سے حساب صفر پر شروع ہوتا ہے۔ نئی قطار خود بنے گی؛ Tab سے اگلے خانے میں جائیں۔</p>
   </main>

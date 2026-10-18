@@ -9,8 +9,17 @@
   function normalize(raw,fallback){
     if(raw===undefined)return {date:fallback,rows:[]};
     if(!raw||!validDate(raw.date)||!Array.isArray(raw.rows)||raw.rows.length>10001)throw Error('Invalid journal');
+    const cashCounts={};
+    if(raw.cashCounts!==undefined){
+      if(!raw.cashCounts||typeof raw.cashCounts!=='object'||Array.isArray(raw.cashCounts)||Object.keys(raw.cashCounts).length>10000)throw Error('Invalid cash counts');
+      for(const [date,value] of Object.entries(raw.cashCounts)){
+        if(!validDate(date)||typeof value!=='string'||value.length>40)throw Error('Invalid cash count');
+        const v=digits(value),n=amount(v);
+        if(v.trim())cashCounts[date]=n===null?v:format(n);
+      }
+    }
     const ids=new Set();
-    return {date:raw.date,rows:raw.rows.map(r=>{
+    return {date:raw.date,cashCounts,rows:raw.rows.map(r=>{
       if(!r||!validDate(r.date)||typeof r.detail!=='string'||r.detail.length>2000||['debit','credit'].some(k=>typeof r[k]!=='string'||r[k].length>40))throw Error('Invalid journal entry');
       const id=typeof r.id==='string'&&r.id.length<100&&!ids.has(r.id)?r.id:crypto.randomUUID();ids.add(id);
       const result={id,date:r.date,detail:formatAllah(r.detail)};
@@ -40,6 +49,7 @@
     function recalculate(){
       let opening=0n,valid=true,debit=0n,credit=0n,dayValid=true,serial=1;
       for(const r of data().rows.filter(r=>hasData(r)&&r.date<data().date)){const d=amount(r.debit),c=amount(r.credit);if(d===null||c===null)valid=false;else opening+=c-d;}
+      const openingValid=valid;
       renderBalance($('journal-opening'),opening,valid,'رقم درست کریں');let balance=opening;
       for(const r of data().rows.filter(r=>r.date===data().date)){
         const d=amount(r.debit),c=amount(r.credit),tr=nodes.get(r.id);if(!tr)continue;
@@ -56,9 +66,25 @@
       $('journal-total-debit').textContent=dayValid?format(debit):'—';$('journal-total-credit').textContent=dayValid?format(credit):'—';
       renderBalance($('journal-closing'),balance,valid,'—');
       $('journal-message').textContent=valid?'بقایا = پچھلا بقایا + جمع − بنام':'رقم درست کریں؛ غلط رقم کی وجہ سے بقایا کا حساب مکمل نہیں ہے۔';$('journal-message').classList.toggle('error',!valid);
+      $('cash-opening').textContent=openingValid?format(opening):'—';
+      $('cash-credit').textContent=dayValid?format(credit):'—';
+      $('cash-debit').textContent=dayValid?format(debit):'—';
+      $('cash-expected').textContent=valid?format(balance):'—';
+      const cashInput=$('journal-cash-count'),raw=data().cashCounts?.[data().date]||'',count=amount(raw),entered=!!raw.trim();
+      cashInput.setAttribute('aria-invalid',String(count===null));
+      cashInput.setCustomValidity(count===null?'صرف مثبت مکمل رقم لکھیں':'');
+      $('cash-count-print').textContent=entered?(count===null?'رقم درست کریں':format(count)):'درج نہیں کیا';
+      const difference=$('cash-difference');difference.classList.remove('cash-short','cash-extra','cash-equal');
+      if(!valid||count===null)difference.textContent='رقم درست کریں';
+      else if(!entered)difference.textContent='اصل نقدی درج کریں';
+      else {
+        const delta=count-balance;
+        difference.classList.add(delta<0n?'cash-short':delta>0n?'cash-extra':'cash-equal');
+        difference.textContent=delta===0n?'حساب برابر ✓':format(delta<0n?-delta:delta)+(delta<0n?' کمی':' زیادہ');
+      }
       $('journal-count').textContent=selected().length+' اندراجات';$('journal-date-print').textContent=dateLabel(data().date);
       $('journal-undo').hidden=!undo;
-      return valid;
+      return valid&&count!==null;
     }
     function addNode(r){
       const tr=document.createElement('tr');tr.dataset.journalId=r.id;nodes.set(r.id,tr);
@@ -76,22 +102,37 @@
       }
       const balance=document.createElement('td');balance.className='journal-balance';tr.append(balance);$('journal-rows').append(tr);
     }
-    function refresh(){if(!data())getState().journal={date:today(),rows:[]};$('journal-date').value=data().date;ensureDraft();nodes.clear();$('journal-rows').replaceChildren();data().rows.filter(r=>r.date===data().date).forEach(addNode);recalculate();}
+    function refresh(){if(!data())getState().journal={date:today(),rows:[]};$('journal-date').value=data().date;$('journal-cash-count').value=data().cashCounts?.[data().date]||'';ensureDraft();nodes.clear();$('journal-rows').replaceChildren();data().rows.filter(r=>r.date===data().date).forEach(addNode);recalculate();}
     function setPage(journal){document.body.classList.toggle('journal-view',journal);$('register-page').hidden=journal;$('journal-page').hidden=!journal;$('range-drawer').hidden=true;for(const [id,sel] of [['view-register',!journal],['view-journal',journal]]){$(id).setAttribute('aria-pressed',String(sel));$(id).classList.toggle('active',sel);}if(journal)refresh();try{localStorage.setItem('hisaab-workspace',journal?'journal':'register');}catch{}}
+    $('journal-cash-count').addEventListener('input',e=>{
+      const input=e.target;input.value=digits(input.value);
+      data().cashCounts??={};
+      if(input.value.trim())data().cashCounts[data().date]=input.value;
+      else delete data().cashCounts[data().date];
+      recalculate();save();
+    });
+    $('journal-cash-count').addEventListener('blur',e=>{
+      const n=amount(e.target.value);
+      if(e.target.value.trim()&&n!==null){e.target.value=format(n);data().cashCounts[data().date]=e.target.value;recalculate();save();}
+    });
     $('view-register').onclick=()=>setPage(false);$('view-journal').onclick=()=>setPage(true);
     $('journal-date').onchange=()=>{if(!validDate($('journal-date').value)){$('journal-date').value=data().date;return;}data().date=$('journal-date').value;refresh();save();};
     function add(){const row=ensureDraft();if(!nodes.has(row.id))addNode(row);nodes.get(row.id).querySelector('textarea').focus();}
     $('journal-add').onclick=add;
     $('journal-undo').onclick=()=>{if(!undo)return;data().rows.splice(Math.min(undo.index,data().rows.length),0,undo.row);data().date=undo.row.date;undo=null;refresh();save();};
     function preparePrint(){recalculate();document.querySelectorAll('.journal-print-value').forEach(n=>n.remove());for(const tr of nodes.values())tr.querySelectorAll('input,textarea').forEach(input=>{const span=document.createElement('span');span.className='journal-print-value'+(input.dataset.journal==='detail'?'':' journal-money');span.textContent=input.value;input.after(span);});}
-    async function output(pdf=false){if(!selected().length){alert('اس تاریخ پر کوئی انٹری موجود نہیں ہے۔');return;}if(!recalculate()){alert('پرنٹ سے پہلے روزنامچے کی رقم درست کریں۔');return;}await document.fonts.ready;preparePrint();if(!window.electronAPI?.previewPDF){window.print();return;}if(document.body.inert)return;document.body.inert=true;try{const result=pdf?await window.electronAPI.savePDF('روزنامچہ_'+data().date+'.pdf'):await window.electronAPI.previewPDF();if(result.status==='error')alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');return result;}catch{alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');}finally{document.body.inert=false;}}
+    async function output(pdf=false){if(!selected().length&&!data().cashCounts?.[data().date]?.trim()){alert('اس تاریخ پر کوئی انٹری موجود نہیں ہے۔');return;}if(!recalculate()){alert('پرنٹ سے پہلے روزنامچے کی رقم درست کریں۔');return;}await document.fonts.ready;preparePrint();if(!window.electronAPI?.previewPDF){window.print();return;}if(document.body.inert)return;document.body.inert=true;try{const result=pdf?await window.electronAPI.savePDF('روزنامچہ_'+data().date+'.pdf'):await window.electronAPI.previewPDF();if(result.status==='error')alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');return result;}catch{alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');}finally{document.body.inert=false;}}
     function exportExcel(){
-      if(!selected().length||!recalculate()){alert('ایکسپورٹ کے لیے درست انٹریاں منتخب کریں۔');return;}
+      if((!selected().length&&!data().cashCounts?.[data().date]?.trim())||!recalculate()){alert('ایکسپورٹ کے لیے درست انٹریاں منتخب کریں۔');return;}
       let bal=0n,totD=0n,totC=0n;
       for(const r of data().rows.filter(r=>hasData(r)&&r.date<data().date))bal+=amount(r.credit)-amount(r.debit);
       const openText=fmtBalText(bal);
       const entryRows=selected().map((r,i)=>{const d=amount(r.debit),c=amount(r.credit);bal+=c-d;totD+=d;totC+=c;return [i+1,r.detail,{number:String(d)},{number:String(c)},fmtBalText(bal)];});
       const rows=[['نمبر شمار','تفصیل','بنام','جمع','بقایا'],['','پچھلا بقایا','','',openText],...entryRows,['','کل حساب / آخری بقایا',{number:String(totD)},{number:String(totC)},fmtBalText(bal)]];
+      rows.push([],['','روزانہ کیش خلاصہ'],['','ابتدائی بیلنس','','',openText],['','آج کی جمع','','',{number:String(totC)}],['','آج کی بنام','','',{number:String(totD)}],['','حساب کے مطابق موجود ہونا چاہیے','','',{number:String(bal)}]);
+      const raw=data().cashCounts?.[data().date]||'',count=amount(raw);
+      rows.push(['','اصل موجود نقدی','','',raw.trim()?{number:String(count)}:'درج نہیں کیا']);
+      rows.push(['','فرق — کمی / زیادتی','','',$('cash-difference').textContent]);
       exportSheet(rows,'روزنامچہ_'+data().date+'.xlsx');
     }
     refresh();try{if(localStorage.getItem('hisaab-workspace')==='journal')setPage(true);}catch{}

@@ -3,7 +3,7 @@ const {HisaabDatabase}=require('../database');
 const root=path.resolve('scratch','database-test-'+Date.now());fs.mkdirSync(root,{recursive:true});
 const filename=path.join(root,'hisaab.sqlite');
 const row=(id,branch='Alpha')=>({id,entryDate:'2026-10-17',sender:'Customer '+id,mobile:'03001234567',receiver:'Receiver',place:'Dubai',branch,balance:'10',aed:'100',pkr:'200',history:[]});
-const original={version:4,title:'Database test',date:'2026-10-17',fontSize:13,startSerial:7,partySerials:{Alpha:55},branches:['Alpha'],partyCurrencies:{Alpha:'afn'},rows:[row('1'),row('2')],trash:[{row:row('deleted'),index:2}],lockedDates:['2026-10-16'],pinCode:'1234',lastBackupAt:null,journal:{date:'2026-10-17',rows:[{id:'j1',date:'2026-10-17',detail:'Opening',debit:'',credit:'1000'}]}};
+const original={version:4,title:'Database test',date:'2026-10-17',fontSize:13,startSerial:7,partySerials:{Alpha:55},branches:['Alpha'],partyCurrencies:{Alpha:'afn'},rows:[row('1'),row('2')],trash:[{row:row('deleted'),index:2}],lockedDates:['2026-10-16'],pinCode:'1234',lastBackupAt:null,journal:{date:'2026-10-17',cashCounts:{'2026-10-17':'28,000','2026-10-18':'0'},rows:[{id:'j1',date:'2026-10-17',detail:'Opening',debit:'',credit:'1000'}]}};
 let store=new HisaabDatabase(filename);
 try{
   assert.equal(store.load().state,null);
@@ -20,6 +20,7 @@ try{
   assert.throws(()=>store.commit(original,1),/STALE_STATE/);
   const bad=structuredClone(updated);bad.rows[0].branch='missing';
   assert.throws(()=>store.commit(bad,2),/missing party/);
+  for(const counts of [[],{'invalid-date':'20'},{'2026-10-17':20}]){const badCash=structuredClone(updated);badCash.journal.cashCounts=counts;assert.throws(()=>store.commit(badCash,2),/cash count/);}
   const duplicate=structuredClone(updated);duplicate.rows[1].id='1';assert.throws(()=>store.commit(duplicate,2),/entry/);
   store.db.exec("CREATE TRIGGER fail_write BEFORE UPDATE ON app_state BEGIN SELECT RAISE(ABORT,'disk failure test'); END");
   const failed=structuredClone(updated);failed.rows[0].sender='Not saved';failed.branches.push('Beta');

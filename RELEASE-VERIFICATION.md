@@ -1,3 +1,25 @@
+# Hisaab Desktop 1.4.2 — Verification (2026-10-18)
+
+Adds daily journal cash reconciliation: opening, receipts, payments, expected closing, manually counted cash and shortage/excess. Cash counts are saved per date in SQLite and JSON backups without changing the next day's calculated opening. Blank cash counts remain distinct from zero. Print uses a compact monochrome summary table with bold closing/cash/difference, page numbering and no signatures. Excel includes the reconciliation.
+
+Verified:
+- Packaged cash-summary suite: arithmetic, shortage/excess/equal, zero vs blank, invalid input, Urdu digits, per-date reload, unchanged opening carry-forward, entry edits, JSON backup/restore and native Excel download.
+- Native packaged A4 PDF rendered and visually inspected: compact summary, no signatures, page counter. Earlier 44-entry browser PDF verified repeated column headings and complete summary on the final page.
+- Packaged SQLite suite: migration, localStorage deletion, restart, journal/history/settings, actual save failure/retry, safety backup failure, restore rollback and frame authorization.
+- Database suite: cash-count validation and preservation, atomic rollback, restart, integrity checks and 5,000-record dataset.
+- Build completed with npm run dist -- --publish never. Packaged application source matches workspace. Version, latest.yml size and installer SHA-512 match.
+
+Artifacts:
+- dist/Hisaab-Setup-1.4.2.exe — 85,740,951 bytes
+- dist/Hisaab-Portable-1.4.2.exe — 85,533,804 bytes
+- dist/Hisaab-Setup-1.4.2.exe.blockmap
+- dist/latest.yml
+
+Evidence: scratch/cash-summary-1792344369625/ and scratch/sqlite-desktop-1792344391392/.
+Tests used isolated profiles. Binaries remain unsigned. Installation/uninstallation, portable launcher extraction and physical printing remain untested.
+
+---
+
 # Hisaab Desktop 1.4.1 — Verification (2026-10-18)
 
 Party tabs now wrap across multiple rows, with no internal scrolling. Removed the party search field and its filtering handlers. Long names can wrap within a tab. Version updated in package.json and package-lock.json.

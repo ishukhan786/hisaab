@@ -40,6 +40,11 @@ function validateState(input) {
     registerRow(item.row);
   }
   if (!data.journal || !validDate(data.journal.date) || !Array.isArray(data.journal.rows) || data.journal.rows.length > 10001) invalid('journal');
+  if(data.journal.cashCounts!==undefined){
+    const counts=data.journal.cashCounts;
+    if(!counts||typeof counts!=='object'||Array.isArray(counts)||Object.keys(counts).length>10000)invalid('cash counts');
+    for(const [date,value] of Object.entries(counts))if(!validDate(date)||!text(value,40))invalid('cash count');
+  }
   const journalIds = new Set();
   for (const row of data.journal.rows) {
     if (!row || !text(row.id,99) || journalIds.has(row.id) || !validDate(row.date) || !text(row.detail,2000) || !text(row.debit,40) || !text(row.credit,40)) invalid('journal entry');
