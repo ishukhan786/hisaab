@@ -33,6 +33,15 @@ for (const action of ['load','initialize','save','restore']) {
     }
   });
 }
+
+let externalBackup;
+function getExternalBackup(){return externalBackup??=new (require('./external-backup.cjs').ExternalBackup)(app.getPath('userData'));}
+function trustedBackupFrame(event){const url=require('url').pathToFileURL(path.join(__dirname,'index.html')).href;if(!gotTheLock||!mainWindow||event.sender!==mainWindow.webContents||event.senderFrame!==mainWindow.webContents.mainFrame||event.senderFrame.url!==url)throw Error('Unauthorized backup request');}
+ipcMain.handle('external-backup-status',async event=>{trustedBackupFrame(event);return getExternalBackup().status();});
+ipcMain.handle('external-backup-select',async event=>{trustedBackupFrame(event);const result=await dialog.showOpenDialog(mainWindow,{title:'بیک اَپ کے لیے USB یا synced فولڈر منتخب کریں',properties:['openDirectory','createDirectory']});if(result.canceled)return {cancelled:true};return getExternalBackup().configure(result.filePaths[0]);});
+ipcMain.handle('external-backup-disable',async event=>{trustedBackupFrame(event);return getExternalBackup().configure(null);});
+ipcMain.handle('external-backup-save',async(event,data)=>{trustedBackupFrame(event);return getExternalBackup().save(require('./database').validateState(data));});
+
 app.on('will-quit',()=>{database?.close();});
 
 const gotTheLock = app.requestSingleInstanceLock();

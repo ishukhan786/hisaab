@@ -65,3 +65,15 @@
 
 - **Excel ایکسپورٹ**: فلٹر شدہ یا تمام انٹریوں کی اصل `.xlsx` فائل (رقم عددی فارمیٹ میں اور مجموعے کے ساتھ) حاصل کریں۔
 - **پرنٹ**: A4 لینڈ اسکیپ (افقی) پرنٹ۔ غیر متعلقہ بٹن اور خالی قطاریں خود بخود چھپ جاتی ہیں، اور «کل مجموعہ حساب» ہمیشہ مرکز میں اور واضح ظاہر ہوتا ہے۔ پرنٹ پیج کے اوپر رپورٹ کی تاریخ نمایاں ہوتی ہے۔
+
+## External backups and restore preview
+
+Open More > Backup Manager > Select folder to keep automatic JSON snapshots in a USB or synced folder. The app creates `Hisaab-Backups` inside the chosen folder and retains its latest 30 snapshots. This is a count of snapshots, not 30 days. Primary SQLite/local browser storage stays independent. The last successful backup and failures are shown; reconnect the drive and use Retry to recover. Cloud upload completion must be checked in the sync provider's app.
+
+Desktop uses the native folder picker. Web folder backups require a browser supporting the File System Access directory picker (for example Chrome/Edge on a supported secure origin); permission may need to be granted again after restart. Unsupported browsers show an explanation and can still download JSON backups manually. Restore external JSON files through More > Open backup.
+
+Restore confirmation previews the backup title, date range, counts of parties/register/journal entries and cash-count days alongside current record counts. Cancel leaves existing data unchanged; proceeding still requires the existing safety-backup/write checks.
+
+Possible duplicate register entries now have a visible warning with Review and Keep actions. Matching is scoped to the same date and party; keeping a warning is acknowledged for the current session and does not delete or change records.
+
+Web and desktop both expose PDF/PNG receipt actions and Backup Manager from register/journal views. Web PDF opens browser print (select Save as PDF); image copy depends on browser clipboard permission/support. PNG download remains available when copying is unsupported.

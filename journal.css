@@ -1,7 +1,7 @@
 .workspace-nav{display:inline-flex;align-items:center;gap:6px;padding:0;background:transparent;border:0}
 .workspace-nav button{background:#f5f8f5;border:1px solid #d3dfd5;min-width:0;padding:5px 14px;height:36px}
 .workspace-nav button.active{background:#17634c;color:white;border-color:#17634c}
-body.journal-view .top-nav-start>:not(.brand-mini),body.journal-view .top-nav-center,body.journal-view .top-serial-field,body.journal-view #add,body.journal-view #summary-open,body.journal-view #manage-branches,body.journal-view #manage-backups,body.journal-view #reset-filters{display:none!important}
+body.journal-view .top-nav-start>:not(.brand-mini),body.journal-view .top-nav-center,body.journal-view .top-serial-field,body.journal-view #add,body.journal-view #summary-open,body.journal-view #manage-branches,body.journal-view #reset-filters{display:none!important}
 body.journal-view .top-nav{grid-template-columns:auto 1fr}
 body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justify-content:flex-end}
 .journal-card{background:white;border:1px solid #d3dfd5;border-radius:16px;overflow:hidden;box-shadow:0 5px 22px #234b3408}

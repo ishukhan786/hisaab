@@ -91,6 +91,44 @@
     const pinCode=typeof source.pinCode==='string'&&/^\d{4,8}$/.test(source.pinCode)?source.pinCode:'';
     return {journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:formatAllah(source.title),date:source.date||today(),pageNumber:Number.isInteger(source.pageNumber)&&source.pageNumber>0?source.pageNumber:1,startSerial,partySerials,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates,pinCode};
   }
+  const isWebMode = !nativeStorage && window.location.protocol.startsWith('http');
+  let mongoSaveTimer = null, pendingMongoSave = null;
+
+  async function pushToMongo(cleanState) {
+    if (!isWebMode) return;
+    try {
+      $('save-state').textContent = 'کلاؤڈ پر محفوظ ہو رہا ہے...';
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: cleanState, revision: storageRevision })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const result = await res.json();
+      if (result.status === 'saved') {
+        storageRevision = result.revision;
+        unsavedNative = false;
+        savedStatus();
+      }
+    } catch (err) {
+      console.warn('MongoDB save error:', err);
+      unsavedNative = true;
+      $('save-state').textContent = 'لوکل محفوظ — کلاؤڈ سنک ناکام';
+      retrySave.hidden = false;
+    }
+  }
+
+  function scheduleMongoSave(cleanState) {
+    if (!isWebMode) return;
+    pendingMongoSave = cleanState;
+    clearTimeout(mongoSaveTimer);
+    mongoSaveTimer = setTimeout(() => {
+      const data = pendingMongoSave;
+      pendingMongoSave = null;
+      pushToMongo(data);
+    }, 400);
+  }
+
   try{
     if(nativeStorage){
       const loaded=nativeStorage.load();
@@ -100,15 +138,32 @@
       if(nativeNeedsInit){legacySource=localStorage.getItem(KEY);if(legacySource)state=migrate(JSON.parse(legacySource));}
       else state=migrate(loaded.state);
       const help=$('storage-help');if(help)help.textContent='ڈیٹا اسی کمپیوٹر کی SQLite فائل میں محفوظ ہے؛ دوسرے کمپیوٹر کے لیے بیک اَپ لے کر بحال کریں۔';
-    }else{const raw=localStorage.getItem(KEY);if(raw)state=migrate(JSON.parse(raw));}
+    }else{
+      const raw=localStorage.getItem(KEY);if(raw)state=migrate(JSON.parse(raw));
+      if(isWebMode){
+        const help=$('storage-help');if(help)help.textContent='ڈیٹا کلاؤڈ MongoDB Atlas سے منسلک ہو رہا ہے...';
+      }
+    }
   }catch{storageBlocked=true;storageReadFailed=true;alert('محفوظ ڈیٹا نہیں کھل سکا۔ اصل ڈیٹا محفوظ رکھا گیا ہے؛ دوبارہ کھولیں یا درست بیک اَپ بحال کریں۔');}
   function writeState(data,restore=false){
-    if(!nativeStorage){localStorage.setItem(KEY,JSON.stringify(data));return;}
+    if(!nativeStorage){
+      localStorage.setItem(KEY,JSON.stringify(data));
+      if(isWebMode){
+        if(restore) pushToMongo(data);
+        else scheduleMongoSave(data);
+      }
+      return;
+    }
     const result=nativeNeedsInit?nativeStorage.initialize(data,legacySource,storageRevision):restore?nativeStorage.restore(data,storageRevision,state):nativeStorage.save(data,storageRevision);
     if(result?.status!=='saved')throw Error(result?.message||'Database save failed');
     storageRevision=result.revision;nativeNeedsInit=false;unsavedNative=false;
   }
-  function savedStatus(){retrySave.hidden=true;$('save-state').textContent=nativeStorage?'✓ SQLite میں محفوظ ہے':autoBackupHandle?'✓ پی سی فائل میں محفوظ ہے':'✓ محفوظ ہے';if(!nativeStorage&&autoBackupHandle)$('save-state').title=autoBackupHandle.name;}
+  function savedStatus(){
+    retrySave.hidden=true;
+    $('save-state').textContent=nativeStorage?'✓ SQLite میں محفوظ ہے':isWebMode?'✓ MongoDB Atlas میں محفوظ ہے':autoBackupHandle?'✓ پی سی فائل میں محفوظ ہے':'✓ محفوظ ہے';
+    if(!nativeStorage&&autoBackupHandle)$('save-state').title=autoBackupHandle.name;
+    if(isWebMode)$('save-state').title='MongoDB Atlas Cloud Database';
+  }
   function persist(){
     if(storageBlocked){$('save-state').textContent='محفوظ نہیں ہو رہا — دوبارہ کھولیں یا بیک اَپ بحال کریں';retrySave.hidden=false;return false;}
     try{writeState({...state,rows:state.rows.filter(populated)});savedStatus();return true;}
@@ -237,7 +292,16 @@
   const fieldUrduLabels={sender:'ارسال کنندہ',mobile:'موبائیل نمبر',receiver:'وصول کنندہ',place:'مقام',branch:'پارٹی',balance:'بقایا',aed:'درہم',pkr:'روپیہ / افغانی'};
   // Keep the first two entries per key: enough to find the earliest other row,
   // including the original asymmetric rule for rows with no phone or no money.
-  const duplicateRecords=new WeakMap();
+  const duplicateRecords=new WeakMap(),duplicateAccepted=new Map();
+  const duplicateSignature=r=>JSON.stringify([r.entryDate,r.branch,r.sender,r.mobile,r.balance,r.aed,r.pkr]);
+  let duplicatePending=[];
+  function reviewDuplicates(rows,lookup){
+    duplicatePending=rows.filter(r=>lookup(r)&&duplicateAccepted.get(r.id)!==duplicateSignature(r));
+    const banner=$('duplicate-warning');banner.hidden=!duplicatePending.length;
+    $('duplicate-warning-text').textContent=duplicatePending.length+' ممکنہ دہرے اندراجات: اسی تاریخ اور پارٹی میں ملتا جلتا نام، موبائل یا رقم موجود ہے۔ انٹریاں محفوظ ہیں؛ جائزہ لے کر درست کریں یا برقرار رکھیں۔';
+  }
+  $('duplicate-keep').onclick=()=>{for(const r of duplicatePending)duplicateAccepted.set(r.id,duplicateSignature(r));applyFilter();};
+  $('duplicate-review').onclick=()=>{const r=duplicatePending[0];if(!r)return;const rows=selectedRows();viewPage=Math.floor(rows.findIndex(x=>x.id===r.id)/pageSize);applyFilter();focusRow(r);};
   function duplicateLookup(){
     const exact=new Map(),withoutPhone=new Map(),phoneOnly=new Map(),keys=new Map();
     const add=(map,key,item)=>{const list=map.get(key);if(!list)map.set(key,[item]);else if(list.length<2)list.push(item);};
@@ -246,10 +310,10 @@
       if(!populated(row))continue;
       const item={id:row.id,index:(Number(state.startSerial)||1)+index++};
       let record=duplicateRecords.get(row);
-      if(!record||['sender','mobile',...moneyFields].some(f=>record.raw[f]!==row[f])){
+      if(!record||['sender','mobile','branch','entryDate',...moneyFields].some(f=>record.raw[f]!==row[f])){
         const sender=cleanName(row.sender).toLowerCase(),phone=englishDigits(row.mobile).replace(/\D/g,'');
         const values=moneyFields.map(f=>integerAmount(row[f])||0n),hasMoney=values.some(v=>v>0n),amounts=values.map(String);
-        record={raw:{sender:row.sender,mobile:row.mobile,balance:row.balance,aed:row.aed,pkr:row.pkr},sender,phone,hasMoney,fullKey:JSON.stringify([sender,phone,...amounts]),amountKey:JSON.stringify([sender,...amounts]),phoneKey:JSON.stringify([sender,phone])};
+        record={raw:{branch:row.branch,entryDate:row.entryDate,sender:row.sender,mobile:row.mobile,balance:row.balance,aed:row.aed,pkr:row.pkr},sender,phone,hasMoney,fullKey:JSON.stringify([row.entryDate,row.branch,sender,phone,...amounts]),amountKey:JSON.stringify([row.entryDate,row.branch,sender,...amounts]),phoneKey:JSON.stringify([row.entryDate,row.branch,sender,phone])};
         duplicateRecords.set(row,record);
       }
       const {sender,phone,hasMoney,fullKey,amountKey,phoneKey}=record;
@@ -405,6 +469,7 @@
     if($('page-no-input')&&document.activeElement!==$('page-no-input'))$('page-no-input').value=currPage;
     if($('page-no-val'))$('page-no-val').textContent=currPage;
     const findDuplicate=duplicateLookup(),visibleNodes=[];
+    reviewDuplicates(filtered,findDuplicate);
     state.rows.forEach(r=>{let tr=rowNodes.get(r.id);const hasData=populated(r);let draft=day&&branchMatch(r)&&!hasData&&!draftShown;if(draft)draftShown=true;const matched=matchedIds.has(r.id);
       const serial=matched?start+offset++:null;
       if(!(pageIds.has(r.id)||draft||(tr&&tr===active))){if(tr){tr.remove();rowNodes.delete(r.id);}return;}
@@ -429,7 +494,7 @@
       if(matched && populated(r)){
         if(dup){
           const badge=document.createElement('span');badge.className='dup-badge no-print';badge.textContent='⚠️';
-          badge.title=`ممکنہ ڈپلیکیٹ انٹری: نام، موبائل اور رقم انٹری #${dup.index} پر بھی موجود ہے`;
+          badge.title=`اسی تاریخ اور پارٹی میں ممکنہ دہرائی گئی انٹری #${dup.index}`;
           wrap.append(badge);
         }
       }
@@ -787,6 +852,7 @@
   }
   async function executeAutoBackup(isSafety=false){
     const clean={...state,rows:state.rows.filter(populated)};
+    await window.HisaabExternalBackup?.save(clean);
     if(autoBackupHandle&&!isSafety){
       await flushDiskFileNow();
     }
@@ -822,11 +888,22 @@
       return true;
     }catch(_){return !storageBlocked&&backup?.status==='saved';}
   }
+  window.HisaabExternalBackup.init(()=>{if(storageReadFailed)throw Error('اصل ڈیٹا نہیں کھل سکا؛ پہلے ڈیٹا بحال کریں');return {...state,rows:state.rows.filter(populated)};});
   let restoreBusy=false;
   async function restoreBackupData(rawObj){
     if(restoreBusy)return false;
     const data=migrate(rawObj);
-    if(!confirm('موجودہ رجسٹر اور روزنامچہ بیک اَپ سے بدل جائیں گے۔ جاری رکھیں؟'))return false;
+    const entries=data.rows.filter(populated),journal=data.journal.rows.filter(r=>r.detail.trim()||r.debit.trim()||r.credit.trim());
+    const dates=[...entries.map(r=>r.entryDate),...journal.map(r=>r.date)].sort();
+    const preview=['بیک اَپ بحال کرنے سے پہلے جائزہ',
+      'عنوان: '+data.title,
+      'آخری بیک اَپ ڈاؤن لوڈ: '+(data.lastBackupAt?new Date(data.lastBackupAt).toLocaleString('en-GB'):'درج نہیں'),
+      'تاریخیں: '+(dates.length?dates[0]+' — '+dates.at(-1):'کوئی اندراج نہیں'),
+      'پارٹیاں: '+data.branches.length+' | رجسٹر: '+entries.length+' | روزنامچہ: '+journal.length,
+      'کیش گنتی والے دن: '+Object.keys(data.journal.cashCounts||{}).length,
+      'موجودہ: رجسٹر '+state.rows.filter(populated).length+' | روزنامچہ '+state.journal.rows.filter(r=>r.detail.trim()||r.debit.trim()||r.credit.trim()).length,
+      'موجودہ ڈیٹا بدل جائے گا۔ پہلے سیفٹی بیک اَپ محفوظ ہوگا۔ جاری رکھیں؟'].join('\n');
+    if(!confirm(preview))return false;
     restoreBusy=true;
     const wasInert=document.body.inert;
     document.body.inert=true;
@@ -1358,8 +1435,8 @@
     receiptSelection={serial:String(serial),date:row.entryDate||state.date||today(),branch:row.branch||'بغیر پارٹی'};
     const values={title:state.title||'اندراج رجسٹر',serial:String(serial),date:fmtDate(receiptSelection.date),branch:receiptSelection.branch,sender:row.sender||'—',mobile:row.mobile||'—',receiver:row.receiver||'—',place:row.place||'—',balance:formatted(integerAmount(row.balance)),aed:formatted(integerAmount(row.aed)),pkr:formatted(integerAmount(row.pkr)),currency:partyCurrency(row.branch)==='afn'?'افغانی (AFN)':'روپیہ (PKR)'};
     for(const [field,value] of Object.entries(values))$('receipt-paper').querySelector('[data-receipt="'+field+'"]').textContent=value;
-    $('receipt-status').textContent='';$('receipt-save').hidden=!window.electronAPI?.savePDF;$('receipt-png').hidden=false;
-    if($('receipt-copy'))$('receipt-copy').hidden=!window.electronAPI?.copyReceiptPNG;
+    $('receipt-status').textContent='';$('receipt-save').hidden=false;$('receipt-png').hidden=false;
+    if($('receipt-copy')){$('receipt-copy').hidden=false;$('receipt-copy').disabled=!window.electronAPI?.copyReceiptPNG&&!(window.ClipboardItem&&navigator.clipboard?.write);$('receipt-copy').title=$('receipt-copy').disabled?'اس براؤزر میں تصویر کاپی دستیاب نہیں؛ PNG ڈاؤن لوڈ کریں':'تصویر کاپی کریں';}
     $('receipt-dialog').showModal();
   }
   $('receipt-png').onclick=async()=>{
@@ -1382,7 +1459,7 @@
     $('receipt-paper').querySelectorAll('[data-receipt]').forEach(el=>{values[el.dataset.receipt]=el.textContent;});
     document.body.inert=true;$('receipt-status').textContent='تصویر کاپی ہو رہی ہے…';
     try{
-      const result=await window.electronAPI.copyReceiptPNG(values);
+      let result;if(window.electronAPI?.copyReceiptPNG)result=await window.electronAPI.copyReceiptPNG(values);else{const image=window.createReceiptPNG(values);await navigator.clipboard.write([new ClipboardItem({'image/png':image})]);result={status:'copied'};}
       $('receipt-status').textContent=result.status==='copied'?'✓ رسید کی تصویر کاپی ہو گئی (WhatsApp میں Ctrl+V کریں)':result.status==='busy'?'پہلی تصویر مکمل ہونے دیں۔':'تصویر کاپی نہیں ہو سکی؛ دوبارہ کوشش کریں۔';
     }catch{$('receipt-status').textContent='تصویر کاپی نہیں ہو سکی؛ دوبارہ کوشش کریں۔';}
     finally{document.body.inert=false;}
@@ -1412,6 +1489,12 @@
   function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output')||document.body.classList.contains('summary-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());const titlePrint=$('title-print');if(titlePrint)titlePrint.textContent=$('title').value||state.title||'اندراج رجسٹر';if($('page-no-val'))$('page-no-val').textContent=activePageNumber();document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{const span=document.createElement('span');span.className='print-value';span.textContent=input.classList.contains('amount')?wholeText(input.value):input.value;if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
   window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else if($('summary-dialog').open)prepareSummaryOutput();else preparePrint();});window.addEventListener('afterprint',()=>{registerPrintActive=false;clearReceiptOutput();applyFilter();});
   function canOutput(rows,filtered=true){if(filtered&&!rangeValid()){alert('تاریخ کا دورانیہ درست کریں۔');return false;}if(!rows.length){alert('کوئی انٹری منتخب نہیں ہے۔');return false;}if(rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null))){alert('رقم کے خانے درست کریں۔ صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم خود تبدیل نہیں کی گئی۔');return false;}return true;}
+  if(!window.electronAPI?.savePDF){
+    $('save-pdf').hidden=false;$('save-pdf').title='براؤزر پرنٹ میں Save as PDF منتخب کریں';
+    $('save-pdf').onclick=()=>{if(journalController?.isActive())journalController.output(true);else $('print').click();};
+    $('receipt-save').title='براؤزر پرنٹ میں Save as PDF منتخب کریں';
+    $('summary-pdf').title='براؤزر پرنٹ میں Save as PDF منتخب کریں';
+  }
   if(window.electronAPI?.savePDF){
     const button=$('save-pdf');button.hidden=false;
     button.onclick=async()=>{
@@ -1507,11 +1590,37 @@
     download(window.HisaabExcel.create([headers,...data,tail]),`hisaab-${all?'all':'filtered'}-${today()}.xlsx`);$('export-dialog').close();
   }
   $('export-filtered').onclick=()=>exportExcel(false);$('export-all').onclick=()=>exportExcel(true);
+  async function initMongoWebState() {
+    if (!isWebMode) return;
+    try {
+      const res = await fetch('/api/state');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.status === 'ok' && data.state) {
+        storageRevision = data.revision || 0;
+        state = migrate(data.state);
+        localStorage.setItem(KEY, JSON.stringify(state));
+        render();
+        savedStatus();
+      } else if (data.status === 'empty') {
+        const currentClean = {...state, rows: state.rows.filter(populated)};
+        if (currentClean.rows.length > 0 || currentClean.branches.length > 0) {
+          pushToMongo(currentClean);
+        }
+      }
+      const help = $('storage-help');
+      if (help) help.textContent = 'ڈیٹا براہِ راست کلاؤڈ MongoDB Atlas میں محفوظ ہو رہا ہے۔';
+    } catch (e) {
+      console.warn('Could not sync MongoDB on startup:', e);
+    }
+  }
+
   render();
   updatePinUI();
   if(state.pinCode)requestPinUnlock('جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں',false);
   journalController=window.HisaabJournal.mount({getState:()=>state,save,today,exportSheet:(rows,name)=>download(window.HisaabExcel.create(rows),name)});
   save();
   initDiskPersistence();
+  initMongoWebState();
 })();
 

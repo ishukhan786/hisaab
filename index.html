@@ -96,6 +96,7 @@
       <span id="save-state" class="save-badge" role="status">محفوظ ہے</span>
     </div>
   </header>
+  <p id="external-backup-banner" class="external-backup-banner no-print" role="status"></p>
 
   <div class="range-drawer no-print" id="range-drawer" hidden>
     <div class="range-drawer-inner">
@@ -119,6 +120,7 @@
         <button id="manage-parties-tab" class="tab-manage-btn" type="button" title="پارٹیاں سنبھالیں">⚙</button>
       </div>
     </div>
+    <div id="duplicate-warning" class="duplicate-warning no-print" hidden role="status"><span id="duplicate-warning-text"></span><button id="duplicate-review" type="button">انٹری دیکھیں</button><button id="duplicate-keep" type="button">درست ہیں، برقرار رکھیں</button></div>
     <section class="paper" aria-label="اندراج رجسٹر">
       <div class="paper-head"><div class="head-party"><span class="party-label">پارٹی:</span><strong id="branch-heading"><bdi>تمام پارٹیاں</bdi></strong><span class="view-note" id="view-note"></span></div><div class="head-center"><input id="title" aria-label="رجسٹر کا عنوان" maxlength="100" value="اندراج رجسٹر"><span id="title-print" class="title-print" aria-hidden="true">اندراج رجسٹر</span></div><div class="date-block"><button id="lock-day" class="btn-lock no-print" type="button" title="اس تاریخ کا رجسٹر لاک یا ان لاک کریں">🔓 دن کھلا ہے</button><span class="date-screen-badge" id="date-screen-badge"></span><div class="date-print-line"><span class="date-print-label">تاریخ:</span><span class="date-print-val" id="date-print-val"></span></div><div class="page-no-line" id="page-no-line"><span class="page-no-label">صفحہ نمبر:</span><input id="page-no-input" class="page-no-input no-print" type="text" inputmode="numeric" value="1" maxlength="6" aria-label="صفحہ نمبر" title="صفحہ نمبر تبدیل کریں"><span class="page-no-val" id="page-no-val">1</span></div></div></div>
       <div class="table-wrap"><table><thead><tr><th class="serial">نمبر شمار</th><th class="person col-sender">ارسال کنندہ</th><th class="mobile">موبائیل نمبر</th><th class="person col-receiver">وصول کنندہ</th><th class="place col-place">مقام</th><th class="branch col-branch no-print">پارٹی</th><th class="money col-balance">بقایا</th><th class="money col-aed">درہم</th><th id="th-currency" class="money col-pkr">روپیہ</th><th class="col-receipt no-print">رسید</th><th class="remove no-print"><span class="sr-only">حذف</span></th></tr></thead><tbody id="rows"></tbody><tfoot class="register-totals"><tr class="totals-gap" aria-hidden="true"><td colspan="5"></td><td class="col-branch no-print"></td><td colspan="3"></td><td class="col-receipt no-print"></td><td class="no-print"></td></tr><tr class="totals-row"><th colspan="5" scope="row"><div class="totals-title-wrap"><span>کل مجموعہ حساب</span><span id="total-orders-count" class="orders-count-badge" title="منتخب آرڈرز کی کل تعداد">آرڈرز تعداد: 0</span><span id="total-net-aed" class="net-aed-badge">موجودہ درہم: 0</span></div></th><td class="col-branch no-print"></td><td id="total-balance">0</td><td id="total-aed">0</td><td id="total-pkr">(0)</td><td class="col-receipt no-print"></td><td class="no-print"></td></tr></tfoot></table></div>
@@ -157,14 +159,14 @@
 
   <dialog closedby='any' id="backup-dialog" aria-labelledby="backup-dialog-title">
     <div class="dialog-head"><h2 id="backup-dialog-title">خودکار بیک اَپ اور بحالی (Backup Manager)</h2><button id="close-backups" aria-label="بند کریں">×</button></div>
-    <p>ایپ ہر تبدیلی پر خودکار بیک اَپ محفوظ رکھتی ہے اور پچھلے 7 سے 30 بیک اَپس محفوظ رہتے ہیں۔ ری سٹور کرنے سے پہلے موجودہ ڈیٹا کا سیفٹی بیک اَپ بھی خود بن جاتا ہے۔</p>
+    <p>تبدیلی کے تقریباً 2.5 سیکنڈ بعد خودکار بیک اَپ بنتا ہے۔ آخری 30 کاپیاں محفوظ رہتی ہیں، ضروری نہیں کہ یہ 30 دن کی ہوں۔ ری سٹور کرنے سے پہلے موجودہ ڈیٹا کا سیفٹی بیک اَپ بھی خود بن جاتا ہے۔</p>
     <div class="backup-actions-bar" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
       <button id="open-backup-folder-btn" type="button" class="btn-sm">📁 بیک اَپ فولڈر کھولیں</button>
       <button id="create-backup-now-btn" type="button" class="btn-sm primary">⚡ فوری خودکار بیک اَپ لیں</button>
       <button id="dialog-setup-disk-btn" type="button" class="btn-sm" hidden>💿 نئی پی سی ڈسک فائل بنائیں</button>
       <button id="dialog-link-disk-btn" type="button" class="btn-sm" hidden>🔗 موجودہ پی سی فائل جوڑیں</button>
     </div>
-    <div class="summary-wrap" style="max-height:48vh;">
+    <section class="external-backup-settings"><h3>بیرونی فولڈر بیک اَپ</h3><p id="external-backup-status" role="status"></p><div class="backup-actions-bar"><button id="external-backup-select" type="button">فولڈر منتخب کریں</button><button id="external-backup-retry" type="button" hidden>دوبارہ جوڑیں / بیک اَپ لیں</button><button id="external-backup-disable" type="button" hidden>بند کریں</button></div><p id="external-backup-help">منتخب USB یا synced فولڈر میں Hisaab-Backups کے اندر آخری 30 کاپیاں محفوظ ہوں گی۔ Cloud sync کی تصدیق اپنی sync app میں کریں۔</p></section><div class="summary-wrap" style="max-height:48vh;">
       <table id="backup-list-table">
         <thead><tr><th>فائل / تاریخ</th><th>قسم</th><th>سائز</th><th>عمل</th></tr></thead>
         <tbody id="backup-list-rows"></tbody>
@@ -233,6 +235,7 @@
   <script src="journal.js"></script>
   <script src="assets/html2canvas.min.js"></script>
   <script src="receipt-png.js"></script>
+  <script src="external-backup-ui.js"></script>
   <script src="app.js"></script>
   <script src="ui.js"></script>
 </body>

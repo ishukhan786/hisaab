@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   isElectron: true,
+  externalBackup:{status:()=>ipcRenderer.invoke('external-backup-status'),select:()=>ipcRenderer.invoke('external-backup-select'),disable:()=>ipcRenderer.invoke('external-backup-disable'),save:data=>ipcRenderer.invoke('external-backup-save',data)},
   storage: {
     load: () => ipcRenderer.sendSync('database-load'),
     initialize: (state, legacyRaw, revision) => ipcRenderer.sendSync('database-initialize',{state,legacyRaw,revision}),
