@@ -189,8 +189,8 @@ app.get('/api/auth/status', async (req, res) => {
   }
 });
 
-// 4. Change PIN (Protected)
-app.post('/api/auth/change-pin', requireAuth, async (req, res) => {
+// 4. Change PIN (Verified with currentPassword)
+app.post('/api/auth/change-pin', async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const currentPin = await getStoredPin();
