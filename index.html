@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="ui.css">
   <link rel="stylesheet" href="journal.css">
+  <link rel="stylesheet" href="receipt-export.css">
 </head>
 <body class="app-shell">
   <header class="top-nav no-print">
@@ -184,7 +185,7 @@
 
   <dialog closedby='any' id="receipt-dialog" aria-labelledby="receipt-heading">
     <div class="dialog-head no-print"><h2 id="receipt-heading">انٹری کی رسید</h2><button id="close-receipt" type="button" aria-label="بند کریں">×</button></div>
-    <div class="receipt-actions no-print"><button id="receipt-preview" type="button" class="primary">رسید پرنٹ کریں</button><button id="receipt-save" type="button" hidden>PDF محفوظ کریں</button><button id="receipt-png" type="button" hidden>PNG محفوظ کریں (1:1)</button><button id="receipt-copy" type="button" hidden>تصویر کاپی کریں</button><span id="receipt-status" role="status"></span></div>
+    <div class="receipt-actions no-print"><button id="receipt-preview" type="button" class="primary">رسید پرنٹ کریں</button><button id="receipt-save" type="button" hidden>PDF محفوظ کریں</button><button id="receipt-png" type="button" hidden>PNG محفوظ کریں</button><button id="receipt-copy" type="button" hidden>تصویر کاپی کریں</button><span id="receipt-status" role="status"></span></div>
     <article id="receipt-paper" class="receipt-sheet" dir="rtl">
       <header class="receipt-header"><div><span class="receipt-kicker">حساب</span><h3 data-receipt="title"></h3></div><strong class="receipt-badge">انٹری رسید</strong></header>
       <div class="receipt-meta"><div><span>نمبر شمار</span><strong data-receipt="serial" class="receipt-number"></strong></div><div><span>تاریخ</span><strong data-receipt="date" class="receipt-number"></strong></div></div>
@@ -230,6 +231,7 @@
   <input id="file" type="file" accept="application/json,.json" hidden>
   <script src="excel-export.js"></script>
   <script src="journal.js"></script>
+  <script src="assets/html2canvas.min.js"></script>
   <script src="receipt-png.js"></script>
   <script src="app.js"></script>
   <script src="ui.js"></script>

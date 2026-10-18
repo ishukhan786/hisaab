@@ -1388,7 +1388,7 @@
     finally{document.body.inert=false;}
   };
   function prepareReceiptOutput(){
-    const sheet=$('receipt-paper').cloneNode(true);sheet.removeAttribute('id');$('receipt-print').replaceChildren(sheet);document.body.classList.add('receipt-output');
+    const sheet=$('receipt-paper').cloneNode(true);sheet.removeAttribute('id');sheet.classList.add('receipt-export');$('receipt-print').replaceChildren(sheet);document.body.classList.add('receipt-output');
   }
   function clearReceiptOutput(){document.body.classList.remove('receipt-output','summary-output');$('receipt-print').replaceChildren();}
   $('close-receipt').onclick=()=>$('receipt-dialog').close();

@@ -62,24 +62,22 @@ const receiptFields = ['title','serial','date','branch','sender','mobile','recei
 async function renderReceiptImage(values) {
   let renderer;
   try {
-    renderer = new BrowserWindow({width:1600,height:1600,useContentSize:true,show:false,webPreferences:{offscreen:true,contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
+    renderer = new BrowserWindow({width:560,height:794,useContentSize:true,show:false,webPreferences:{offscreen:true,contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
     // Windows clamps the initial window to the display; explicitly size the render surface.
-    renderer.setContentSize(1600,1600);
+    renderer.setContentSize(560,794);
     renderer.webContents.setWindowOpenHandler(()=>({action:'deny'}));
     await renderer.loadFile(path.join(__dirname,'receipt-image.html'));
     const data = Object.fromEntries(receiptFields.map(key=>[key,values[key]]));
-    await renderer.webContents.executeJavaScript(`(async()=>{
+    const receiptSize=await renderer.webContents.executeJavaScript(`(async()=>{
       const values=${JSON.stringify(data)};
       document.querySelectorAll('[data-receipt]').forEach(el=>{el.textContent=values[el.dataset.receipt];});
       await document.fonts.ready;
       const sheet=document.getElementById('receipt-paper');
-      const width=sheet.offsetWidth,height=sheet.scrollHeight;
-      const scale=Math.min((innerWidth-80)/width,(innerHeight-80)/height);
-      sheet.style.transform='scale('+scale+')';
-      sheet.style.left=((innerWidth-width*scale)/2)+'px';
-      sheet.style.top=((innerHeight-height*scale)/2)+'px';
+      sheet.style.left='10mm';sheet.style.top='10mm';
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      return {width:560,height:Math.max(794,Math.ceil(sheet.scrollHeight+76))};
     })()`);
+    renderer.setContentSize(receiptSize.width,receiptSize.height);
     // Wait for the compositor to paint the populated receipt, not the initial blank template.
     await new Promise(resolve=>setTimeout(resolve,300));
     const captured = await new Promise((resolve,reject)=>{
@@ -89,7 +87,7 @@ async function renderReceiptImage(values) {
       renderer.webContents.invalidate();
     });
     if (captured.isEmpty()) throw new Error('Empty receipt image');
-    return captured.resize({width:1600,height:1600,quality:'best'});
+    return captured.resize({width:1600,quality:'best'});
   } finally {
     if (renderer && !renderer.isDestroyed()) renderer.destroy();
   }

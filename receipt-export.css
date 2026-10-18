@@ -1,0 +1,10 @@
+/* Shared receipt typography and dimensions for PDF and PNG exports. */
+.receipt-sheet.receipt-export{box-sizing:border-box;font-size:12px;padding:6mm;box-shadow:none;width:128mm;max-width:none;line-height:2.6}
+.receipt-export .receipt-header h3{font-size:20px}
+.receipt-export .receipt-badge{font-size:16px;padding:4px 14px}
+.receipt-export .receipt-details>div{grid-template-columns:100px minmax(0,1fr);gap:14px;padding:6px 0;break-inside:avoid}
+.receipt-export .receipt-details dd{font-size:13px}
+.receipt-export .receipt-amounts strong{font-size:18px}
+.receipt-export .receipt-party strong{min-width:0;overflow-wrap:anywhere}
+.receipt-export-page{box-sizing:border-box;width:148mm;min-height:210mm;padding:10mm;background:#fff;color:#213e35;font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif;direction:rtl}
+.receipt-export .receipt-amounts{display:flex}.receipt-export .receipt-amounts>div{flex:1}

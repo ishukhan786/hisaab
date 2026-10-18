@@ -22,7 +22,8 @@
   "license": "ISC",
   "devDependencies": {
     "electron": "^34.0.0",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "html2canvas": "^1.4.1"
   },
   "build": {
     "appId": "com.ishukhan.hisaab",
@@ -73,7 +74,8 @@
       "ui.js",
       "journal.js",
       "journal.css",
-      "receipt-png.js"
+      "receipt-png.js",
+      "receipt-export.css"
     ]
   },
   "dependencies": {
