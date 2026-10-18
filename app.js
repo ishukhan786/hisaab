@@ -1358,7 +1358,7 @@
     receiptSelection={serial:String(serial),date:row.entryDate||state.date||today(),branch:row.branch||'بغیر پارٹی'};
     const values={title:state.title||'اندراج رجسٹر',serial:String(serial),date:fmtDate(receiptSelection.date),branch:receiptSelection.branch,sender:row.sender||'—',mobile:row.mobile||'—',receiver:row.receiver||'—',place:row.place||'—',balance:formatted(integerAmount(row.balance)),aed:formatted(integerAmount(row.aed)),pkr:formatted(integerAmount(row.pkr)),currency:partyCurrency(row.branch)==='afn'?'افغانی (AFN)':'روپیہ (PKR)'};
     for(const [field,value] of Object.entries(values))$('receipt-paper').querySelector('[data-receipt="'+field+'"]').textContent=value;
-    $('receipt-status').textContent='';$('receipt-save').hidden=!window.electronAPI?.savePDF;$('receipt-png').hidden=!window.electronAPI?.saveReceiptPNG;
+    $('receipt-status').textContent='';$('receipt-save').hidden=!window.electronAPI?.savePDF;$('receipt-png').hidden=false;
     if($('receipt-copy'))$('receipt-copy').hidden=!window.electronAPI?.copyReceiptPNG;
     $('receipt-dialog').showModal();
   }
@@ -1368,7 +1368,10 @@
     $('receipt-paper').querySelectorAll('[data-receipt]').forEach(el=>{values[el.dataset.receipt]=el.textContent;});
     document.body.inert=true;$('receipt-status').textContent='تصویر تیار ہو رہی ہے…';
     try{
-      const result=await window.electronAPI.saveReceiptPNG(values,selection.branch+'_'+selection.date+'_رسید-'+selection.serial+'.png');
+      const filename=selection.branch+'_'+selection.date+'_رسید-'+selection.serial+'.png';
+      let result;
+      if(window.electronAPI?.saveReceiptPNG)result=await window.electronAPI.saveReceiptPNG(values,filename);
+      else{const blob=await window.createReceiptPNG(values);download(blob,filename.replace(/[<>:"/\\|?*\x00-\x1f]/g,'-'));result={status:'saved'};}
       $('receipt-status').textContent=result.status==='saved'?'✓ PNG رسید محفوظ ہو گئی':result.status==='cancelled'?'':result.status==='busy'?'پہلی تصویر مکمل ہونے دیں۔':'تصویر محفوظ نہیں ہو سکی؛ دوبارہ کوشش کریں۔';
     }catch{$('receipt-status').textContent='تصویر محفوظ نہیں ہو سکی؛ دوبارہ کوشش کریں۔';}
     finally{document.body.inert=false;}

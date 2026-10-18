@@ -72,7 +72,8 @@
       "ui.css",
       "ui.js",
       "journal.js",
-      "journal.css"
+      "journal.css",
+      "receipt-png.js"
     ]
   },
   "dependencies": {
