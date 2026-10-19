@@ -18,7 +18,76 @@ const crypto = require('node:crypto');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
-const JWT_SECRET = process.env.JWT_SECRET || 'hisaab-secret-key-2026';
+const isProduction = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
+
+// Ephemeral fallback secret generated uniquely per process startup (never hardcoded in source)
+const DEV_FALLBACK_SECRET = crypto.randomBytes(32).toString('hex');
+
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET ? String(process.env.JWT_SECRET).trim() : '';
+  if (secret.length >= 16) {
+    return secret;
+  }
+  if (isProduction) {
+    throw new Error('SECURITY CONFIGURATION ERROR: JWT_SECRET environment variable is missing or insecure (< 16 characters) in production.');
+  }
+  return DEV_FALLBACK_SECRET;
+}
+
+// In-memory rate limiting for login attempts (Brute-force protection)
+const loginAttempts = new Map();
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes lockout
+
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded && typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.socket?.remoteAddress || '127.0.0.1';
+}
+
+function checkRateLimit(ip) {
+  const record = loginAttempts.get(ip);
+  if (!record) return { locked: false, remainingAttempts: MAX_FAILED_ATTEMPTS };
+  const now = Date.now();
+  if (record.lockUntil && now < record.lockUntil) {
+    const remainingSeconds = Math.ceil((record.lockUntil - now) / 1000);
+    const remainingMinutes = Math.ceil(remainingSeconds / 60);
+    return { locked: true, remainingSeconds, remainingMinutes };
+  }
+  if (record.lockUntil && now >= record.lockUntil) {
+    loginAttempts.delete(ip);
+    return { locked: false, remainingAttempts: MAX_FAILED_ATTEMPTS };
+  }
+  const remaining = Math.max(0, MAX_FAILED_ATTEMPTS - record.attempts);
+  return { locked: false, remainingAttempts: remaining };
+}
+
+function recordFailedLogin(ip) {
+  const now = Date.now();
+  const record = loginAttempts.get(ip) || { attempts: 0, firstAttempt: now, lockUntil: 0 };
+  record.attempts += 1;
+  if (record.attempts >= MAX_FAILED_ATTEMPTS) {
+    record.lockUntil = now + LOCKOUT_WINDOW_MS;
+  }
+  loginAttempts.set(ip, record);
+  return record;
+}
+
+function clearRateLimit(ip) {
+  loginAttempts.delete(ip);
+}
+
+// Periodic cleanup of stale rate-limit records
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of loginAttempts.entries()) {
+    if ((record.lockUntil && now > record.lockUntil) || (!record.lockUntil && now - record.firstAttempt > LOCKOUT_WINDOW_MS)) {
+      loginAttempts.delete(ip);
+    }
+  }
+}, 10 * 60 * 1000).unref?.();
 
 // Middleware
 app.use(cors());
@@ -76,23 +145,52 @@ const AppSetting = mongoose.models.AppSetting || mongoose.model('AppSetting', se
 async function getStoredPin() {
   const doc = await AppSetting.findOne({ key: 'auth_pin' });
   if (doc && doc.value) return String(doc.value).trim();
-  return String(process.env.APP_PIN || process.env.ADMIN_PASSWORD || '1234').trim();
+
+  const envPin = (process.env.APP_PIN || process.env.ADMIN_PASSWORD || '').trim();
+  if (envPin) return envPin;
+
+  if (isProduction) {
+    // In production, never fall back to '1234'. Return null to force initial PIN setup.
+    return null;
+  }
+  // In local development, fall back to '1234' for developer convenience
+  return '1234';
 }
 
 function generateToken(pin) {
-  const payload = JSON.stringify({ pin, time: Date.now() });
-  const signature = crypto.createHmac('sha256', JWT_SECRET).update(payload).digest('hex');
-  return Buffer.from(payload).toString('base64') + '.' + signature;
+  const payload = JSON.stringify({
+    pin,
+    time: Date.now(),
+    exp: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7-day expiration
+  });
+  const b64 = Buffer.from(payload).toString('base64');
+  const signature = crypto.createHmac('sha256', getJwtSecret()).update(b64).digest('hex');
+  return `${b64}.${signature}`;
 }
 
 function verifyToken(token, expectedPin) {
-  if (!token || !token.includes('.')) return false;
-  const [b64, signature] = token.split('.');
+  if (!token || typeof token !== 'string' || !token.includes('.') || !expectedPin) return false;
+  const parts = token.split('.');
+  if (parts.length !== 2) return false;
+  const [b64, signature] = parts;
   try {
+    const expectedSig = crypto.createHmac('sha256', getJwtSecret()).update(b64).digest('hex');
+    
+    // Timing-safe comparison to prevent timing attacks
+    const sigBuf = Buffer.from(signature, 'hex');
+    const expSigBuf = Buffer.from(expectedSig, 'hex');
+    if (sigBuf.length !== expSigBuf.length || !crypto.timingSafeEqual(sigBuf, expSigBuf)) {
+      return false;
+    }
+
     const payload = Buffer.from(b64, 'base64').toString('utf8');
-    const expectedSig = crypto.createHmac('sha256', JWT_SECRET).update(payload).digest('hex');
-    if (signature !== expectedSig) return false;
     const data = JSON.parse(payload);
+    
+    // Validate token expiry
+    if (data.exp && typeof data.exp === 'number' && Date.now() > data.exp) {
+      return false;
+    }
+
     return String(data.pin).trim() === expectedPin;
   } catch (_) {
     return false;
@@ -105,7 +203,7 @@ async function requireAuth(req, res, next) {
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : req.headers['x-auth-token'];
   const expectedPin = await getStoredPin();
 
-  if (!verifyToken(token, expectedPin)) {
+  if (!expectedPin || !verifyToken(token, expectedPin)) {
     return res.status(401).json({
       status: 'unauthorized',
       message: 'براہ کرم پہلے پن کوڈ / پاس ورڈ سے لاگ ان کریں۔'
@@ -152,19 +250,53 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// 2. Auth Login (Public)
+// 2. Auth Login (Public with rate-limiting & brute-force protection)
 app.post('/api/auth/login', async (req, res) => {
   try {
+    const ip = getClientIp(req);
+    const rateCheck = checkRateLimit(ip);
+    if (rateCheck.locked) {
+      return res.status(429).json({
+        status: 'error',
+        message: `بہت زیادہ غلط کوششیں! اکاؤنٹ عارضی طور پر لاک ہے۔ براہ کرم ${rateCheck.remainingMinutes} منٹ بعد دوبارہ کوشش کریں۔`,
+        retryAfterSeconds: rateCheck.remainingSeconds
+      });
+    }
+
     const { password } = req.body;
     if (!password) {
       return res.status(400).json({ status: 'error', message: 'پن کوڈ درج کریں' });
     }
+
     const currentPin = await getStoredPin();
+    if (currentPin === null) {
+      return res.status(400).json({
+        status: 'error',
+        needsSetup: true,
+        message: 'پہلی بار کے استعمال کے لیے نیا پن کوڈ سیٹ کریں۔'
+      });
+    }
+
     if (String(password).trim() === currentPin) {
+      clearRateLimit(ip);
       const token = generateToken(currentPin);
       return res.json({ status: 'ok', token, isDefault: currentPin === '1234' });
     }
-    return res.status(401).json({ status: 'error', message: 'غلط پن کوڈ! دوبارہ کوشش کریں۔' });
+
+    const failed = recordFailedLogin(ip);
+    if (failed.lockUntil) {
+      return res.status(429).json({
+        status: 'error',
+        message: 'بہت زیادہ غلط کوششیں! اکاؤنٹ 15 منٹ کے لیے عارضی لاک کر دیا گیا ہے۔',
+        retryAfterSeconds: Math.ceil(LOCKOUT_WINDOW_MS / 1000)
+      });
+    }
+
+    const remaining = Math.max(0, MAX_FAILED_ATTEMPTS - failed.attempts);
+    return res.status(401).json({
+      status: 'error',
+      message: `غلط پن کوڈ! دوبارہ کوشش کریں۔ (باقی کوششیں: ${remaining})`
+    });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
@@ -176,12 +308,14 @@ app.get('/api/auth/status', async (req, res) => {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : req.headers['x-auth-token'];
     const currentPin = await getStoredPin();
-    const isAuthenticated = verifyToken(token, currentPin);
+    const needsSetup = currentPin === null;
+    const isAuthenticated = !needsSetup && verifyToken(token, currentPin);
 
     res.json({
       status: 'ok',
       requiresAuth: true,
       isAuthenticated,
+      needsSetup,
       isDefaultPin: currentPin === '1234'
     });
   } catch (err) {
@@ -189,13 +323,50 @@ app.get('/api/auth/status', async (req, res) => {
   }
 });
 
-// 4. Change PIN (Verified with currentPassword)
+// 4. Initial Setup (Only accessible when no PIN is configured)
+app.post('/api/auth/setup', async (req, res) => {
+  try {
+    const currentPin = await getStoredPin();
+    if (currentPin !== null) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'پن پہلے سے موجود ہے۔ لاگ ان کر کے سیٹنگز سے تبدیل کریں۔'
+      });
+    }
+
+    const { newPassword } = req.body;
+    const cleanNew = String(newPassword || '').trim();
+    if (!cleanNew || cleanNew.length < 4) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'نیا پن کم از کم 4 ہندسوں یا حروف کا ہونا چاہیے۔'
+      });
+    }
+
+    await AppSetting.findOneAndUpdate(
+      { key: 'auth_pin' },
+      { key: 'auth_pin', value: cleanNew },
+      { upsert: true, returnDocument: 'after' }
+    );
+
+    const token = generateToken(cleanNew);
+    res.json({
+      status: 'ok',
+      message: 'پن کوڈ کامیابی سے سیٹ ہو گیا!',
+      token
+    });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// 5. Change PIN (Verified with currentPassword)
 app.post('/api/auth/change-pin', async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const currentPin = await getStoredPin();
 
-    if (String(currentPassword).trim() !== currentPin) {
+    if (!currentPin || String(currentPassword).trim() !== currentPin) {
       return res.status(400).json({ status: 'error', message: 'موجودہ پن کوڈ درست نہیں ہے۔' });
     }
     const cleanNew = String(newPassword || '').trim();
@@ -303,13 +474,15 @@ app.use((req, res) => {
 if (!process.env.VERCEL) {
   console.log('Connecting to MongoDB Atlas...');
   connectDb()
-    .then(() => {
+    .then(async () => {
       console.log('✓ Successfully connected to MongoDB Atlas!');
+      const currentPin = await getStoredPin();
       app.listen(PORT, () => {
         console.log(`\n==================================================`);
         console.log(`🚀 Hisaab Web App is running at: http://localhost:${PORT}`);
         console.log(`📦 Database: MongoDB Atlas (Connected)`);
-        console.log(`🔑 Login Security: Enabled (Default PIN: 1234)`);
+        console.log(`🔑 Login Security: ${currentPin ? (currentPin === '1234' ? 'Dev Default PIN (1234)' : 'Custom PIN Active') : 'Setup Required (Production)'}`);
+        console.log(`🛡️ JWT Protection: ${process.env.JWT_SECRET ? 'Production Secret' : 'Ephemeral Random Key'}`);
         console.log(`==================================================\n`);
       });
     })

@@ -358,10 +358,12 @@
     updateLogoutBtn();
   }
   let webLoginResolve = null;
-  function requestWebLogin(reasonText='جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں') {
+  let isWebSetupMode = false;
+  function requestWebLogin(reasonText='جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں', setupMode=false) {
+    isWebSetupMode = !!setupMode;
     const overlay=$('pin-lock-overlay');
     if(!overlay)return Promise.resolve(false);
-    $('pin-unlock-title').textContent='حساب — لاگ ان';
+    $('pin-unlock-title').textContent=isWebSetupMode?'حساب — نیا پن سیٹ کریں':'حساب — لاگ ان';
     $('pin-unlock-reason').textContent=reasonText;
     $('pin-unlock-error').textContent='';
     const input=$('pin-unlock-input');
@@ -415,8 +417,36 @@
       if(!val)return;
 
       if(isWebMode&&webLoginResolve){
-        $('pin-unlock-error').textContent='لاگ ان ہو رہا ہے...';
+        $('pin-unlock-error').textContent=isWebSetupMode?'نیا پن محفوظ ہو رہا ہے...':'لاگ ان ہو رہا ہے...';
         try{
+          if(isWebSetupMode){
+            if(val.length < 4){
+              $('pin-unlock-error').textContent='نیا پن کم از کم 4 ہندسوں یا حروف کا ہونا چاہیے۔';
+              return;
+            }
+            const res=await fetch('/api/auth/setup',{
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({newPassword:val})
+            });
+            const data=await res.json();
+            if(res.ok&&data.status==='ok'&&data.token){
+              setAuthToken(data.token);
+              isWebSetupMode=false;
+              finishPinUnlock(true);
+              if(webLoginResolve){
+                const fn=webLoginResolve;
+                webLoginResolve=null;
+                fn(true);
+              }
+              initMongoWebState();
+              return;
+            }
+            $('pin-unlock-error').textContent=data.message||'پن محفوظ نہیں ہو سکا!';
+            $('pin-unlock-input').select();
+            return;
+          }
+
           const res=await fetch('/api/auth/login',{
             method:'POST',
             headers:{'Content-Type':'application/json'},
@@ -432,6 +462,15 @@
               fn(true);
             }
             initMongoWebState();
+            return;
+          }
+          if(data.needsSetup){
+            isWebSetupMode=true;
+            $('pin-unlock-title').textContent='حساب — نیا پن سیٹ کریں';
+            $('pin-unlock-reason').textContent='پہلی بار کے استعمال کے لیے نیا پن کوڈ سیٹ کریں (کم از کم 4 ہندسے)';
+            $('pin-unlock-error').textContent=data.message||'';
+            $('pin-unlock-input').value='';
+            $('pin-unlock-input').focus();
             return;
           }
           $('pin-unlock-error').textContent=data.message||'غلط پن کوڈ یا پاس ورڈ!';
@@ -1710,8 +1749,11 @@
       if (statusRes.ok) {
         const authInfo = await statusRes.json();
         if ($('pin-default-hint')) $('pin-default-hint').hidden = !authInfo.isDefaultPin;
-        if (!authInfo.isAuthenticated) {
-          const ok = await requestWebLogin('جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں');
+        if (authInfo.needsSetup) {
+          const ok = await requestWebLogin('پہلی بار استعمال کے لیے نیا سیکیورٹی پن (PIN) کوڈ سیٹ کریں', true);
+          if (!ok) return;
+        } else if (!authInfo.isAuthenticated) {
+          const ok = await requestWebLogin('جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں', false);
           if (!ok) return;
         }
       }
