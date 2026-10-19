@@ -406,28 +406,97 @@ app.get('/api/state', requireAuth, async (req, res) => {
   }
 });
 
-// 6. Save state (Protected)
+// 6. Save state (Protected with Compare-And-Set / OCC)
 app.post('/api/save', requireAuth, async (req, res) => {
   try {
-    const { state, revision } = req.body;
+    const { state, revision, force } = req.body;
     if (!state) {
       return res.status(400).json({ status: 'error', message: 'Missing state data' });
     }
 
     const doc = await HisaabState.findOne({ key: 'primary' });
-    const currentRevision = doc ? (doc.revision || 0) : 0;
-    const nextRevision = currentRevision + 1;
 
+    // Explicit force overwrite if user confirmed override
+    if (force === true) {
+      const nextRevision = (doc ? (doc.revision || 0) : 0) + 1;
+      const forced = await HisaabState.findOneAndUpdate(
+        { key: 'primary' },
+        {
+          key: 'primary',
+          revision: nextRevision,
+          state,
+          updatedAt: new Date()
+        },
+        { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+      );
+      return res.json({
+        status: 'saved',
+        revision: forced.revision,
+        updatedAt: forced.updatedAt
+      });
+    }
+
+    // Case 1: First-time state creation (no record exists yet)
+    if (!doc) {
+      try {
+        const created = await HisaabState.create({
+          key: 'primary',
+          revision: 1,
+          state,
+          updatedAt: new Date()
+        });
+        return res.json({
+          status: 'saved',
+          revision: created.revision,
+          updatedAt: created.updatedAt
+        });
+      } catch (err) {
+        if (err.code !== 11000) throw err;
+        // Concurrent insert occurred, re-fetch doc and evaluate conflict
+      }
+    }
+
+    // Case 2: Document exists. Enforce compare-and-set revision semantics.
+    const currentDoc = doc || (await HisaabState.findOne({ key: 'primary' }));
+    const currentRevision = currentDoc ? (currentDoc.revision || 0) : 0;
+    const clientRevision = Number.isSafeInteger(revision) ? Number(revision) : (revision !== undefined && !isNaN(Number(revision)) ? Number(revision) : null);
+
+    if (clientRevision === null || clientRevision !== currentRevision) {
+      return res.status(409).json({
+        status: 'conflict',
+        message: 'STALE_STATE: سرور پر موجود ڈیٹا کسی اور سیشن میں تبدیل ہو چکا ہے۔',
+        serverRevision: currentRevision,
+        clientRevision,
+        serverState: currentDoc ? currentDoc.state : null,
+        updatedAt: currentDoc ? currentDoc.updatedAt : new Date()
+      });
+    }
+
+    // Atomic Compare-And-Set: Only update if revision still matches clientRevision
     const updated = await HisaabState.findOneAndUpdate(
-      { key: 'primary' },
+      { key: 'primary', revision: currentRevision },
       {
-        key: 'primary',
-        revision: nextRevision,
-        state,
-        updatedAt: new Date()
+        $set: {
+          state,
+          updatedAt: new Date()
+        },
+        $inc: { revision: 1 }
       },
-      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+      { returnDocument: 'after' }
     );
+
+    if (!updated) {
+      // Race condition detected: Another write succeeded between findOne and findOneAndUpdate
+      const latest = await HisaabState.findOne({ key: 'primary' });
+      return res.status(409).json({
+        status: 'conflict',
+        message: 'STALE_STATE: سرور پر موجود ڈیٹا کسی اور سیشن میں تبدیل ہو چکا ہے۔',
+        serverRevision: latest ? (latest.revision || 0) : 0,
+        clientRevision,
+        serverState: latest ? latest.state : null,
+        updatedAt: latest ? latest.updatedAt : new Date()
+      });
+    }
 
     res.json({
       status: 'saved',

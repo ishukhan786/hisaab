@@ -105,7 +105,7 @@
   }
   let mongoSaveTimer = null, pendingMongoSave = null;
 
-  async function pushToMongo(cleanState) {
+  async function pushToMongo(cleanState, force=false) {
     if (!isWebMode) return;
     try {
       $('save-state').textContent = 'کلاؤڈ پر محفوظ ہو رہا ہے...';
@@ -116,11 +116,31 @@
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': 'Bearer ' + token } : {})
         },
-        body: JSON.stringify({ state: cleanState, revision: storageRevision })
+        body: JSON.stringify({ state: cleanState, revision: storageRevision, force })
       });
       if (res.status === 401) {
         setAuthToken('');
         requestWebLogin('لاگ ان کی مدت ختم ہو گئی۔ براہ کرم دوبارہ پن درج کریں۔');
+        return;
+      }
+      if (res.status === 409) {
+        const conflictData = await res.json();
+        console.warn('Concurrent edit conflict detected:', conflictData);
+        unsavedNative = true;
+        $('save-state').textContent = '⚠️ تضاد: سرور پر نیا ڈیٹا موجود ہے';
+        retrySave.hidden = false;
+        retrySave.textContent = 'نیا ڈیٹا لوڈ کریں';
+        retrySave.onclick = () => {
+          if (confirm('سرور پر نیا ڈیٹا آ چکا ہے۔ کیا آپ نیا ڈیٹا لوڈ کرنا چاہتے ہیں؟ (آپ کی مقامی غیر محفوظ تبدیلیاں تبدیل ہو جائیں گی)')) {
+            storageRevision = conflictData.serverRevision || 0;
+            if (conflictData.serverState) {
+              state = migrate(conflictData.serverState);
+              localStorage.setItem(KEY, JSON.stringify(state));
+              render();
+            }
+            savedStatus();
+          }
+        };
         return;
       }
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -135,6 +155,8 @@
       unsavedNative = true;
       $('save-state').textContent = 'لوکل محفوظ — کلاؤڈ سنک ناکام';
       retrySave.hidden = false;
+      retrySave.textContent = 'دوبارہ محفوظ کریں';
+      retrySave.onclick = () => { if (storageReadFailed) location.reload(); else save(); };
     }
   }
 
@@ -180,6 +202,8 @@
   }
   function savedStatus(){
     retrySave.hidden=true;
+    retrySave.textContent='دوبارہ محفوظ کریں';
+    retrySave.onclick=()=>{if(storageReadFailed)location.reload();else save();};
     $('save-state').textContent=nativeStorage?'✓ SQLite میں محفوظ ہے':isWebMode?'✓ MongoDB Atlas میں محفوظ ہے':autoBackupHandle?'✓ پی سی فائل میں محفوظ ہے':'✓ محفوظ ہے';
     if(!nativeStorage&&autoBackupHandle)$('save-state').title=autoBackupHandle.name;
     if(isWebMode)$('save-state').title='MongoDB Atlas Cloud Database';
