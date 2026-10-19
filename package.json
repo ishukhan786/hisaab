@@ -5,6 +5,7 @@
   "description": "حساب — آف لائن روزانہ کھاتہ، اندراج رجسٹر اور پرنٹ سسٹم",
   "main": "main.js",
   "scripts": {
+    "test": "node scripts/test-runner.cjs",
     "start": "electron .",
     "serve": "node server.js",
     "pack": "electron-builder --dir",

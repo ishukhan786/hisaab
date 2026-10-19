@@ -667,8 +667,8 @@ app.use((req, res) => {
   res.status(404).send('Not Found');
 });
 
-// If running locally (not on Vercel), start HTTP server
-if (!process.env.VERCEL) {
+// If running locally (not on Vercel and run directly), start HTTP server
+if (!process.env.VERCEL && require.main === module) {
   console.log('Connecting to MongoDB Atlas...');
   connectDb()
     .then(async () => {
