@@ -22,14 +22,51 @@ const isProduction = process.env.NODE_ENV === 'production' || !!process.env.VERC
 
 // Ephemeral fallback secret generated uniquely per process startup (never hardcoded in source)
 const DEV_FALLBACK_SECRET = crypto.randomBytes(32).toString('hex');
+let cachedJwtSecret = null;
 
-function getJwtSecret() {
-  const secret = process.env.JWT_SECRET ? String(process.env.JWT_SECRET).trim() : '';
-  if (secret.length >= 16) {
-    return secret;
+async function getJwtSecret() {
+  if (cachedJwtSecret && cachedJwtSecret.length >= 16) {
+    return cachedJwtSecret;
   }
-  if (isProduction) {
-    throw new Error('SECURITY CONFIGURATION ERROR: JWT_SECRET environment variable is missing or insecure (< 16 characters) in production.');
+
+  const envSecret = process.env.JWT_SECRET ? String(process.env.JWT_SECRET).trim() : '';
+  if (envSecret.length >= 16) {
+    cachedJwtSecret = envSecret;
+    return cachedJwtSecret;
+  }
+
+  // Look up or auto-generate persistent 256-bit random secret in MongoDB
+  try {
+    const doc = await AppSetting.findOne({ key: 'jwt_secret' });
+    if (doc && doc.value && doc.value.length >= 16) {
+      cachedJwtSecret = String(doc.value).trim();
+      return cachedJwtSecret;
+    }
+
+    const generated = crypto.randomBytes(32).toString('hex');
+    await AppSetting.findOneAndUpdate(
+      { key: 'jwt_secret' },
+      { key: 'jwt_secret', value: generated },
+      { upsert: true, returnDocument: 'after' }
+    );
+    cachedJwtSecret = generated;
+    return cachedJwtSecret;
+  } catch (_) {
+    if (!cachedJwtSecret) {
+      cachedJwtSecret = DEV_FALLBACK_SECRET;
+    }
+    return cachedJwtSecret;
+  }
+}
+
+function getJwtSecretSync() {
+  if (cachedJwtSecret && cachedJwtSecret.length >= 16) {
+    return cachedJwtSecret;
+  }
+  const envSecret = process.env.JWT_SECRET ? String(process.env.JWT_SECRET).trim() : '';
+  if (envSecret.length >= 16) {
+    cachedJwtSecret = envSecret;
+    return cachedJwtSecret;
   }
   return DEV_FALLBACK_SECRET;
 }
@@ -154,6 +191,16 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// App Setting Schema (for persistent settings like PIN, JWT secret)
+const settingSchema = new mongoose.Schema(
+  {
+    key: { type: String, unique: true },
+    value: String
+  },
+  { minimize: false }
+);
+const AppSetting = mongoose.models.AppSetting || mongoose.model('AppSetting', settingSchema);
+
 // MongoDB connection caching for Serverless (Vercel) & local dev
 let cachedDb = null;
 async function connectDb() {
@@ -168,6 +215,12 @@ async function connectDb() {
     bufferCommands: false,
     serverSelectionTimeoutMS: 8000
   });
+
+  // Ensure persistent JWT secret is loaded from MongoDB Atlas if not in env
+  if (!cachedJwtSecret || cachedJwtSecret.length < 16) {
+    await getJwtSecret().catch(() => {});
+  }
+
   return cachedDb;
 }
 
@@ -189,16 +242,6 @@ app.use(async (req, res, next) => {
   }
 });
 
-// App Setting Schema (for PIN/Password)
-const settingSchema = new mongoose.Schema(
-  {
-    key: { type: String, unique: true },
-    value: String
-  },
-  { minimize: false }
-);
-const AppSetting = mongoose.models.AppSetting || mongoose.model('AppSetting', settingSchema);
-
 async function getStoredPin() {
   const doc = await AppSetting.findOne({ key: 'auth_pin' });
   if (doc && doc.value) return String(doc.value).trim();
@@ -206,11 +249,7 @@ async function getStoredPin() {
   const envPin = (process.env.APP_PIN || process.env.ADMIN_PASSWORD || '').trim();
   if (envPin) return envPin;
 
-  if (isProduction) {
-    // In production, never fall back to '1234'. Return null to force initial PIN setup.
-    return null;
-  }
-  // In local development, fall back to '1234' for developer convenience
+  // Fallback PIN (1234) for initial setup/login so existing deployments are never locked out
   return '1234';
 }
 
@@ -247,7 +286,7 @@ function verifyPin(candidatePin, storedValue) {
 // Session fingerprint derived from current stored PIN (invalidates old tokens when PIN changes)
 function getPinFingerprint(storedValue) {
   if (!storedValue) return '';
-  return crypto.createHmac('sha256', getJwtSecret()).update(String(storedValue).trim()).digest('hex').slice(0, 16);
+  return crypto.createHmac('sha256', getJwtSecretSync()).update(String(storedValue).trim()).digest('hex').slice(0, 16);
 }
 
 function generateToken(storedValue) {
@@ -258,7 +297,7 @@ function generateToken(storedValue) {
     exp: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7-day expiration
   });
   const b64 = Buffer.from(payload).toString('base64');
-  const signature = crypto.createHmac('sha256', getJwtSecret()).update(b64).digest('hex');
+  const signature = crypto.createHmac('sha256', getJwtSecretSync()).update(b64).digest('hex');
   return `${b64}.${signature}`;
 }
 
@@ -268,7 +307,7 @@ function verifyToken(token, storedValue) {
   if (parts.length !== 2) return false;
   const [b64, signature] = parts;
   try {
-    const expectedSig = crypto.createHmac('sha256', getJwtSecret()).update(b64).digest('hex');
+    const expectedSig = crypto.createHmac('sha256', getJwtSecretSync()).update(b64).digest('hex');
     
     // Timing-safe comparison to prevent timing attacks
     const sigBuf = Buffer.from(signature, 'hex');
