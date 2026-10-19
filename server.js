@@ -214,10 +214,47 @@ async function getStoredPin() {
   return '1234';
 }
 
-function generateToken(pin) {
+// Salted password hashing using Node.js scrypt (KDF)
+function hashPin(pin) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(String(pin).trim(), salt, 64).toString('hex');
+  return `scrypt:${salt}:${hash}`;
+}
+
+function verifyPin(candidatePin, storedValue) {
+  if (!candidatePin || !storedValue) return false;
+  const cleanCandidate = String(candidatePin).trim();
+  const cleanStored = String(storedValue).trim();
+
+  // Modern salted hash check
+  if (cleanStored.startsWith('scrypt:')) {
+    const parts = cleanStored.split(':');
+    if (parts.length !== 3) return false;
+    const [, salt, expectedHashHex] = parts;
+    const candidateHash = crypto.scryptSync(cleanCandidate, salt, 64);
+    const expectedHash = Buffer.from(expectedHashHex, 'hex');
+    if (candidateHash.length !== expectedHash.length) return false;
+    return crypto.timingSafeEqual(candidateHash, expectedHash);
+  }
+
+  // Backward compatibility with timing-safe comparison for legacy plain-text entries
+  const candidateBuf = Buffer.from(cleanCandidate);
+  const storedBuf = Buffer.from(cleanStored);
+  if (candidateBuf.length !== storedBuf.length) return false;
+  return crypto.timingSafeEqual(candidateBuf, storedBuf);
+}
+
+// Session fingerprint derived from current stored PIN (invalidates old tokens when PIN changes)
+function getPinFingerprint(storedValue) {
+  if (!storedValue) return '';
+  return crypto.createHmac('sha256', getJwtSecret()).update(String(storedValue).trim()).digest('hex').slice(0, 16);
+}
+
+function generateToken(storedValue) {
   const payload = JSON.stringify({
-    pin,
-    time: Date.now(),
+    sub: 'admin',
+    fp: getPinFingerprint(storedValue),
+    iat: Date.now(),
     exp: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7-day expiration
   });
   const b64 = Buffer.from(payload).toString('base64');
@@ -225,8 +262,8 @@ function generateToken(pin) {
   return `${b64}.${signature}`;
 }
 
-function verifyToken(token, expectedPin) {
-  if (!token || typeof token !== 'string' || !token.includes('.') || !expectedPin) return false;
+function verifyToken(token, storedValue) {
+  if (!token || typeof token !== 'string' || !token.includes('.') || !storedValue) return false;
   const parts = token.split('.');
   if (parts.length !== 2) return false;
   const [b64, signature] = parts;
@@ -243,12 +280,22 @@ function verifyToken(token, expectedPin) {
     const payload = Buffer.from(b64, 'base64').toString('utf8');
     const data = JSON.parse(payload);
     
-    // Validate token expiry
-    if (data.exp && typeof data.exp === 'number' && Date.now() > data.exp) {
+    // Validate token expiry (7 days)
+    if (!data.exp || typeof data.exp !== 'number' || Date.now() > data.exp) {
       return false;
     }
 
-    return String(data.pin).trim() === expectedPin;
+    // Verify session fingerprint matches current stored PIN
+    if (data.fp) {
+      return data.fp === getPinFingerprint(storedValue);
+    }
+
+    // Backward compatibility for tokens issued with legacy 'pin' field
+    if (data.pin) {
+      return verifyPin(data.pin, storedValue);
+    }
+
+    return false;
   } catch (_) {
     return false;
   }
@@ -334,10 +381,26 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
-    if (String(password).trim() === currentPin) {
+    if (verifyPin(password, currentPin)) {
       clearRateLimit(ip);
-      const token = generateToken(currentPin);
-      return res.json({ status: 'ok', token, isDefault: currentPin === '1234' });
+
+      // Transparent upgrade to hashed PIN in DB if currently plain text
+      if (!currentPin.startsWith('scrypt:')) {
+        const hashed = hashPin(password);
+        await AppSetting.findOneAndUpdate(
+          { key: 'auth_pin' },
+          { key: 'auth_pin', value: hashed },
+          { upsert: true }
+        ).catch(() => {});
+      }
+
+      const updatedPin = await getStoredPin();
+      const token = generateToken(updatedPin);
+      return res.json({
+        status: 'ok',
+        token,
+        isDefault: verifyPin('1234', currentPin)
+      });
     }
 
     const failed = recordFailedLogin(ip);
@@ -373,7 +436,7 @@ app.get('/api/auth/status', async (req, res) => {
       requiresAuth: true,
       isAuthenticated,
       needsSetup,
-      isDefaultPin: currentPin === '1234'
+      isDefaultPin: !needsSetup && verifyPin('1234', currentPin)
     });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
@@ -400,13 +463,14 @@ app.post('/api/auth/setup', async (req, res) => {
       });
     }
 
+    const hashed = hashPin(cleanNew);
     await AppSetting.findOneAndUpdate(
       { key: 'auth_pin' },
-      { key: 'auth_pin', value: cleanNew },
+      { key: 'auth_pin', value: hashed },
       { upsert: true, returnDocument: 'after' }
     );
 
-    const token = generateToken(cleanNew);
+    const token = generateToken(hashed);
     res.json({
       status: 'ok',
       message: 'پن کوڈ کامیابی سے سیٹ ہو گیا!',
@@ -423,7 +487,7 @@ app.post('/api/auth/change-pin', async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     const currentPin = await getStoredPin();
 
-    if (!currentPin || String(currentPassword).trim() !== currentPin) {
+    if (!currentPin || !verifyPin(currentPassword, currentPin)) {
       return res.status(400).json({ status: 'error', message: 'موجودہ پن کوڈ درست نہیں ہے۔' });
     }
     const cleanNew = String(newPassword || '').trim();
@@ -431,13 +495,14 @@ app.post('/api/auth/change-pin', async (req, res) => {
       return res.status(400).json({ status: 'error', message: 'نیا پن کم از کم 4 ہندسوں یا حروف کا ہونا چاہیے۔' });
     }
 
+    const hashed = hashPin(cleanNew);
     await AppSetting.findOneAndUpdate(
       { key: 'auth_pin' },
-      { key: 'auth_pin', value: cleanNew },
+      { key: 'auth_pin', value: hashed },
       { upsert: true, returnDocument: 'after' }
     );
 
-    const newToken = generateToken(cleanNew);
+    const newToken = generateToken(hashed);
     res.json({ status: 'ok', message: 'پن کوڈ کامیابی سے تبدیل ہو گیا!', token: newToken });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
@@ -613,7 +678,7 @@ if (!process.env.VERCEL) {
         console.log(`\n==================================================`);
         console.log(`🚀 Hisaab Web App is running at: http://localhost:${PORT}`);
         console.log(`📦 Database: MongoDB Atlas (Connected)`);
-        console.log(`🔑 Login Security: ${currentPin ? (currentPin === '1234' ? 'Dev Default PIN (1234)' : 'Custom PIN Active') : 'Setup Required (Production)'}`);
+        console.log(`🔑 Login Security: ${currentPin ? (verifyPin('1234', currentPin) ? 'Dev Default PIN (1234)' : 'Custom Salted Hash Active') : 'Setup Required (Production)'}`);
         console.log(`🛡️ JWT Protection: ${process.env.JWT_SECRET ? 'Production Secret' : 'Ephemeral Random Key'}`);
         console.log(`==================================================\n`);
       });
