@@ -94,8 +94,65 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Serve frontend static files
-app.use(express.static(__dirname));
+// Block direct access to sensitive files, hidden dotfiles, and backend source files
+app.use((req, res, next) => {
+  try {
+    const rawNormalized = path.normalize(decodeURIComponent(req.path)).replace(/^(\.\.[\/\\])+/, '');
+    const safePath = rawNormalized.replace(/\\/g, '/');
+    const lower = safePath.toLowerCase();
+
+    if (
+      lower.startsWith('/.') ||
+      lower.includes('/.') ||
+      /\.(env|json|cjs|sqlite|md|cmd|lock|yml|yaml|log)$/i.test(lower) ||
+      /^\/(server|main|database|preload)\.js$/i.test(lower) ||
+      /^\/(scratch|tests|scripts|node_modules|dist|\.git)(\/|$)/i.test(lower)
+    ) {
+      return res.status(404).send('Not Found');
+    }
+  } catch (_) {
+    return res.status(400).send('Bad Request');
+  }
+  next();
+});
+
+// Serve static assets from assets/ directory only
+app.use('/assets', express.static(path.join(__dirname, 'assets'), {
+  dotfiles: 'deny',
+  index: false,
+  maxAge: '1d'
+}));
+
+// Whitelist of allowed root frontend static files
+const ALLOWED_ROOT_FILES = new Set([
+  'index.html',
+  'guide.html',
+  'receipt-image.html',
+  'style.css',
+  'ui.css',
+  'journal.css',
+  'receipt-export.css',
+  'app.js',
+  'ui.js',
+  'journal.js',
+  'excel-export.js',
+  'receipt-png.js',
+  'external-backup-ui.js'
+]);
+
+// Serve allowed frontend files
+app.get('/:filename', (req, res, next) => {
+  const filename = req.params.filename;
+  if (ALLOWED_ROOT_FILES.has(filename)) {
+    return res.sendFile(path.join(__dirname, filename));
+  }
+  next();
+});
+
+// Serve index.html on root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // MongoDB connection caching for Serverless (Vercel) & local dev
 let cachedDb = null;
@@ -534,9 +591,15 @@ app.get('/api/backups', requireAuth, async (req, res) => {
   }
 });
 
-// Fallback to index.html for SPA routes
+// Fallback to index.html for SPA routes (only for HTML GET requests without file extensions)
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ status: 'error', message: 'API endpoint not found' });
+  }
+  if (req.method === 'GET' && !path.extname(req.path) && (req.accepts('html') || req.path === '/')) {
+    return res.sendFile(path.join(__dirname, 'index.html'));
+  }
+  res.status(404).send('Not Found');
 });
 
 // If running locally (not on Vercel), start HTTP server
