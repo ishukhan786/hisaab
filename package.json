@@ -1,7 +1,7 @@
 {
   "name": "hisaab",
   "productName": "حساب",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "حساب — آف لائن روزانہ کھاتہ، اندراج رجسٹر اور پرنٹ سسٹم",
   "main": "main.js",
   "scripts": {
@@ -9,7 +9,9 @@
     "serve": "node server.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "dist:portable": "electron-builder --win portable"
+    "dist:portable": "electron-builder --win portable",
+    "signing:check": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-signed.ps1 -CheckOnly",
+    "dist:signed": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-signed.ps1"
   },
   "keywords": [
     "accounting",

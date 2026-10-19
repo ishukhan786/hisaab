@@ -68,7 +68,7 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 .app-shell .page-no-line{margin-top:2px;gap:5px}
 .app-shell .paper .table-wrap{scrollbar-width:thin}
 .app-shell .paper table{width:100%;min-width:1100px;max-width:none}
-.app-shell .paper col.serial{width:5.775%}.app-shell .paper col.remove{width:3.5%}
+.app-shell .paper col.serial{width:6.93%}.app-shell .paper col.remove{width:3.5%}
 .app-shell .paper thead th{background:#ecf3ee;color:#274d3d;font-weight:700;line-height:2.4;padding:6px 6px;font-size:13px;height:1.5cm;border-bottom:2px solid #c2d8c9}
 .app-shell #rows>tr{transition:background-color .12s ease}
 .app-shell #rows>tr:nth-child(even){background:#fafcfb}
@@ -136,7 +136,7 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 @media screen{
   /* Full-width responsive table across both All Parties and Party-specific pages. */
   .app-shell .paper table,.app-shell .paper.party-page table{width:100%;min-width:1100px;max-width:none}
-  .app-shell .paper th.serial{width:5.775%}
+  .app-shell .paper th.serial{width:6.93%}
   .app-shell .paper th.col-sender{width:14%}
   .app-shell .paper th.mobile{width:11%}
   .app-shell .paper th.col-receiver{width:auto}

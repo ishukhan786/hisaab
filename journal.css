@@ -12,8 +12,8 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 .journal-opening-line{padding:10px 24px;background:#f5f9f3;display:flex;justify-content:space-between;align-items:center;font-size:13px;border-bottom:1px solid #dce6df}
 #journal-opening{font:700 17px Arial,sans-serif;direction:rtl}
 .journal-table-wrap{overflow:auto}.journal-table{min-width:650px;width:100%;table-layout:fixed;border-collapse:collapse}
-.journal-table col.journal-serial-col{width:7.5%}
-.journal-table col.journal-detail-col{width:41.5%}
+.journal-table col.journal-serial-col{width:9%}
+.journal-table col.journal-detail-col{width:40%}
 .journal-table col.journal-money-col{width:17%}
 .journal-table col.journal-balance-col{width:17%}
 .journal-table th{height:48.3px;line-height:2.6;padding:6px 8px;background:#edf4ed;border:1px solid #d3e0d5;position:static}

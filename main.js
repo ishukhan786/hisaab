@@ -34,13 +34,37 @@ for (const action of ['load','initialize','save','restore']) {
   });
 }
 
+function isSameFrameUrl(frameUrl, targetUrl) {
+  if (frameUrl === targetUrl) return true;
+  if (!frameUrl || !targetUrl) return false;
+  try {
+    return decodeURI(frameUrl).toLowerCase() === decodeURI(targetUrl).toLowerCase();
+  } catch (_) {
+    return frameUrl.toLowerCase() === targetUrl.toLowerCase();
+  }
+}
+
 let externalBackup;
 function getExternalBackup(){return externalBackup??=new (require('./external-backup.cjs').ExternalBackup)(app.getPath('userData'));}
-function trustedBackupFrame(event){const url=require('url').pathToFileURL(path.join(__dirname,'index.html')).href;if(!gotTheLock||!mainWindow||event.sender!==mainWindow.webContents||event.senderFrame!==mainWindow.webContents.mainFrame||event.senderFrame.url!==url)throw Error('Unauthorized backup request');}
+function trustedBackupFrame(event){const url=require('url').pathToFileURL(path.join(__dirname,'index.html')).href;if(!gotTheLock||!mainWindow||event.sender!==mainWindow.webContents||event.senderFrame!==mainWindow.webContents.mainFrame||!isSameFrameUrl(event.senderFrame.url,url))throw Error('Unauthorized backup request');}
 ipcMain.handle('external-backup-status',async event=>{trustedBackupFrame(event);return getExternalBackup().status();});
-ipcMain.handle('external-backup-select',async event=>{trustedBackupFrame(event);const result=await dialog.showOpenDialog(mainWindow,{title:'بیک اَپ کے لیے USB یا synced فولڈر منتخب کریں',properties:['openDirectory','createDirectory']});if(result.canceled)return {cancelled:true};return getExternalBackup().configure(result.filePaths[0]);});
+ipcMain.handle('external-backup-select',async event=>{
+  trustedBackupFrame(event);
+  const result=await dialog.showOpenDialog(mainWindow,{title:'بیک اَپ کے لیے USB یا synced فولڈر منتخب کریں',properties:['openDirectory','createDirectory']});
+  if(result.canceled || !result.filePaths || !result.filePaths.length || !result.filePaths[0])return {cancelled:true};
+  return getExternalBackup().configure(result.filePaths[0]);
+});
 ipcMain.handle('external-backup-disable',async event=>{trustedBackupFrame(event);return getExternalBackup().configure(null);});
-ipcMain.handle('external-backup-save',async(event,data)=>{trustedBackupFrame(event);return getExternalBackup().save(require('./database').validateState(data));});
+ipcMain.handle('external-backup-save',async(event,data)=>{
+  trustedBackupFrame(event);
+  try {
+    const validated = require('./database').validateState(data);
+    return await getExternalBackup().save(validated);
+  } catch (err) {
+    const config = await getExternalBackup().status();
+    return { status: 'error', ...config, error: err.message };
+  }
+});
 
 app.on('will-quit',()=>{database?.close();});
 
