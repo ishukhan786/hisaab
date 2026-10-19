@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Hisaab</title>
+  <desc id="desc">An H monogram with a check mark, representing clear and balanced accounts.</desc>
+  <defs><linearGradient id="emerald" x1="30" y1="18" x2="226" y2="244" gradientUnits="userSpaceOnUse"><stop stop-color="#20856A"/><stop offset="1" stop-color="#0B4034"/></linearGradient></defs>
+  <rect x="8" y="8" width="240" height="240" rx="58" fill="url(#emerald)"/>
+  <rect x="9" y="9" width="238" height="238" rx="57" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="2"/>
+  <path d="M76 70V186M180 70V186" stroke="#FFFFFF" stroke-width="25" stroke-linecap="round"/>
+  <path d="M77 130L116 157L179 98" stroke="#96E7C4" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
