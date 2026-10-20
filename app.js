@@ -731,6 +731,13 @@
     if(paper)paper.classList.toggle('party-page',isParty);
     const branch=selectedBranch===''?'تمام پارٹیاں':selectedBranch==='__unassigned'?'بغیر پارٹی':selectedBranch.slice(2);
     $('branch-heading').textContent=(isParty?'🏢 ':'')+branch+($('search').value.trim()?' | تلاش: '+$('search').value.trim():'');
+    const delActiveBtn=$('delete-party-active-btn');
+    if(delActiveBtn){
+      delActiveBtn.hidden=!isParty;
+      if(isParty){
+        delActiveBtn.title=`پارٹی "${branch}" حذف کریں`;
+      }
+    }
     $('view-note').textContent=day?'':'دکھایا جا رہا ہے: '+viewLabel();
     if($('date-screen-badge'))$('date-screen-badge').textContent=fmtDate(state.date||today());
     const hasRange=rangeActive();
@@ -1690,6 +1697,53 @@
   if($('add-party-tab'))$('add-party-tab').onclick=()=>openBranches();
   if($('manage-parties-tab'))$('manage-parties-tab').onclick=()=>openBranches();
   $('branch-dialog').addEventListener('close',()=>{pendingBranchRow=null;});
+  function deleteParty(name){
+    if(!name||!state.branches.includes(name))return;
+    const populatedCount=state.rows.filter(r=>r.branch===name&&populated(r)).length;
+    let confirmMsg='';
+    if(populatedCount>0){
+      confirmMsg=`کیا آپ واقعی پارٹی "${name}" کو حذف کرنا چاہتے ہیں؟\n\nاس پارٹی کے ${populatedCount} اندراجات موجود ہیں۔ پارٹی حذف کرنے سے تمام اندراجات محفوظ رہیں گے اور "بغیر پارٹی" میں منتقل ہو جائیں گے۔`;
+    }else{
+      confirmMsg=`کیا آپ واقعی پارٹی "${name}" کو حذف کرنا چاہتے ہیں؟`;
+    }
+    if(!confirm(confirmMsg))return;
+
+    state.rows=state.rows.filter(r=>populated(r)||r.branch!==name);
+    state.rows.forEach(r=>{
+      if(r.branch===name)r.branch='';
+    });
+    if(state.trash&&state.trash.length){
+      state.trash.forEach(t=>{
+        if(t.row&&t.row.branch===name)t.row.branch='';
+      });
+    }
+    state.branches=state.branches.filter(n=>n!==name);
+    if(state.partyCurrencies&&Object.hasOwn(state.partyCurrencies,name)){
+      delete state.partyCurrencies[name];
+    }
+    if(state.partySerials&&Object.hasOwn(state.partySerials,name)){
+      delete state.partySerials[name];
+    }
+    if(selectedBranch==='b:'+name){
+      selectedBranch='';
+      ensureActiveParty();
+    }
+    save();
+    updateBranches();
+    applyFilter();
+    renderBranchList();
+    if($('branch-error')){
+      $('branch-error').textContent=`پارٹی "${name}" کامیابی سے حذف کر دی گئی۔`;
+      $('branch-error').style.color='#17634c';
+    }
+  }
+  if($('delete-party-active-btn')){
+    $('delete-party-active-btn').onclick=()=>{
+      if(selectedBranch&&selectedBranch.startsWith('b:')){
+        deleteParty(selectedBranch.slice(2));
+      }
+    };
+  }
   function renderBranchList(){
     $('branch-list').replaceChildren();
     if(!state.branches.length){const p=document.createElement('p');p.textContent='ابھی کوئی پارٹی نہیں بنی۔';$('branch-list').append(p);}
@@ -1697,7 +1751,7 @@
       const currSelect=document.createElement('select');currSelect.className='party-currency-select';currSelect.append(makeOption('pkr','روپیہ (PKR)'),makeOption('afn','افغانی (AFN)'));currSelect.value=partyCurrency(name);
       currSelect.onchange=()=>{if([...state.rows,...state.trash.map(t=>t.row)].some(r=>r.branch===name&&populated(r))){currSelect.value=partyCurrency(name);$('branch-error').textContent='اس پارٹی کی انٹریاں موجود ہیں؛ نئی کرنسی کے لیے الگ پارٹی بنائیں۔';return;}if(!state.partyCurrencies)state.partyCurrencies={};state.partyCurrencies[name]=currSelect.value;save();updateBranches();applyFilter();$('branch-error').textContent=name+' کی کرنسی اب '+(currSelect.value==='afn'?'افغانی':'روپیہ')+' ہے۔';};
       const rename=document.createElement('button');rename.textContent='نام محفوظ کریں';rename.onclick=()=>{const next=cleanName(input.value);if(!next){$('branch-error').textContent='پارٹی کا نام لکھیں۔';return;}if(state.branches.some(n=>n!==name&&nameKey(n)===nameKey(next))){$('branch-error').textContent='یہ نام پہلے سے موجود ہے۔';return;}state.branches[state.branches.indexOf(name)]=next;if(next!==name&&state.partyCurrencies&&Object.hasOwn(state.partyCurrencies,name)){state.partyCurrencies[next]=state.partyCurrencies[name];delete state.partyCurrencies[name];}if(next!==name&&state.partySerials&&Object.hasOwn(state.partySerials,name)){state.partySerials[next]=state.partySerials[name];delete state.partySerials[name];}for(const row of [...state.rows,...state.trash.map(t=>t.row)])if(row.branch===name)row.branch=next;if(selectedBranch==='b:'+name)selectedBranch='b:'+next;save();updateBranches();applyFilter();renderBranchList();$('branch-error').textContent='نام اور متعلقہ انٹریاں اپ ڈیٹ ہو گئیں۔';};
-      const remove=document.createElement('button');remove.textContent='ہٹائیں';remove.onclick=()=>{if(state.rows.some(r=>r.branch===name&&populated(r))||state.trash.some(t=>t.row.branch===name)){$('branch-error').textContent='اس پارٹی کی انٹریاں موجود ہیں؛ پہلے ان کی پارٹی تبدیل کریں۔';return;}state.rows.forEach(r=>{if(r.branch===name)r.branch='';});state.branches=state.branches.filter(n=>n!==name);if(state.partyCurrencies)delete state.partyCurrencies[name];if(state.partySerials)delete state.partySerials[name];if(selectedBranch==='b:'+name){selectedBranch='';ensureActiveParty();}save();updateBranches();applyFilter();renderBranchList();$('branch-error').textContent='پارٹی ہٹا دی گئی۔';};div.append(input,currSelect,count,rename,remove);$('branch-list').append(div);
+      const remove=document.createElement('button');remove.type='button';remove.className='delete-party-btn';remove.textContent='🗑 حذف کریں';remove.title=`پارٹی "${name}" حذف کریں`;remove.onclick=()=>deleteParty(name);div.append(input,currSelect,count,rename,remove);$('branch-list').append(div);
     }
   }
   $('branch-form').onsubmit=e=>{e.preventDefault();const name=cleanName($('branch-name').value);if(!name)return;const existing=state.branches.find(n=>nameKey(n)===nameKey(name));if(existing){$('branch-error').textContent='یہ پارٹی پہلے سے موجود ہے؛ فہرست سے منتخب کریں۔';return;}const curr=$('branch-currency')?.value||'pkr';state.branches.push(name);if(!state.partyCurrencies)state.partyCurrencies={};state.partyCurrencies[name]=curr;if(pendingBranchRow)pendingBranchRow.branch=name;else selectedBranch='b:'+name;save();updateBranches();applyFilter(true);renderBranchList();$('branch-name').value='';$('branch-error').textContent='پارٹی شامل ہو گئی ('+(curr==='afn'?'افغانی':'روپیہ')+')۔';if(pendingBranchRow){const target=pendingBranchRow;$('branch-dialog').close();focusRow(target);}else{$('branch-dialog').close();}};
