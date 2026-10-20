@@ -1,7 +1,7 @@
 {
   "name": "hisaab",
   "productName": "حساب",
-  "version": "1.4.11",
+  "version": "1.4.12",
   "description": "حساب — آف لائن روزانہ کھاتہ، اندراج رجسٹر اور پرنٹ سسٹم",
   "main": "main.js",
   "scripts": {
@@ -57,8 +57,9 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "حساب",
-      "artifactName": "Hisaab-Setup-${version}.exe"
+      "shortcutName": "Hisaab App",
+      "artifactName": "Hisaab-Setup-${version}.exe",
+      "uninstallDisplayName": "Hisaab App"
     },
     "portable": {
       "artifactName": "Hisaab-Portable-${version}.exe"

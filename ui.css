@@ -273,3 +273,79 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 .backup-menu-group{display:grid;gap:6px;border-top:1px solid #e0e7df;padding-top:8px}.backup-menu-group h3{margin:0 6px;font-size:12px;color:#617367}.backup-history{margin-top:12px;border-top:1px solid #d5e2d9;padding-top:10px}.backup-history>summary{cursor:pointer;font-size:13px;font-weight:700;padding:5px 0}.backup-history .backup-actions-bar{margin-top:10px}.backup-download-info{font-size:11px;color:#617367;line-height:2}
 
 .app-shell #backup-dialog .external-backup-banner{margin:0 0 12px}
+
+/* Workspace layout: compact chrome, spacious entry cells and consistent dialogs. */
+@media screen {
+  .app-shell {--workspace-line:#dbe6e0;--workspace-accent:#176b55}
+  .app-shell .top-nav {padding:10px 20px;gap:8px 20px;background:rgba(255,255,255,.97);box-shadow:0 3px 15px #183c2d08}
+  .app-shell .top-nav-end {gap:7px;padding-top:8px;align-items:center}
+  .app-shell .top-nav :is(.btn-nav,.btn-range,.top-date-field,.top-search-wrap,.top-serial-field,.all-dates-toggle) {min-height:40px}
+  .app-shell .top-nav :is(.top-date-field,.top-search-wrap,.top-serial-field) {height:40px}
+  .app-shell .top-nav :is(button,summary.btn-nav) {min-height:40px;padding-block:4px}
+  .app-shell .workspace-nav {padding:3px;border-radius:12px}
+  .app-shell .workspace-nav button {min-height:34px;padding:3px 13px}
+  .app-shell .top-nav #save-state {padding:3px 12px;line-height:2}
+  .app-shell main {margin:14px auto}
+  .app-shell .party-tabs-bar {margin-bottom:12px;border-radius:13px;padding:6px 10px;box-shadow:0 2px 8px #163d2b08}
+  .app-shell .party-tab,.app-shell .tab-add-btn {min-height:38px;padding:4px 13px}
+  .app-shell .paper {border-radius:15px;box-shadow:0 3px 18px #183c2d06}
+  .app-shell .paper-head {padding:12px 18px;gap:12px;background:#fbfdfc}
+  .app-shell .paper-head #title {font-size:21px;min-width:0}
+  .app-shell .head-party {row-gap:2px}
+  .app-shell .paper .table-wrap {overscroll-behavior-inline:contain}
+  .app-shell .paper thead th {height:52px;padding:6px 5px;font-family:"Noto Nastaliq Urdu Print","Noto Nastaliq Urdu",serif;line-height:2.5;background:#eef4f1;border-bottom:1px solid #c6d8cc}
+  .app-shell #rows>tr>td {height:54px;vertical-align:middle;border-color:#e3ebe6}
+  .app-shell #rows td textarea {height:auto;min-height:54px;padding:8px 9px;line-height:2.5;font-family:"Noto Nastaliq Urdu Print","Noto Nastaliq Urdu",serif;field-sizing:content;resize:none}
+  .app-shell #rows td.col-place textarea {padding-block:8px}
+  .app-shell #rows td input {height:54px;font-variant-numeric:tabular-nums}
+  .app-shell #rows tr:focus-within>td {background:#edf7f2}
+  .app-shell #rows td :is(input,textarea):focus {box-shadow:inset 0 0 0 2px var(--workspace-accent);background:#fff}
+  .app-shell #rows tr.draft-row>td {background:#f7fbf8;border-bottom-style:dashed}
+  .app-shell #rows td.number {background:#f2f7f4}
+  .app-shell .table-scroll-hint {display:none}
+  .app-shell dialog {padding-inline:22px;border-radius:18px;box-shadow:0 24px 70px #132f2540}
+  .app-shell .dialog-head {padding:16px 0 12px;margin-bottom:14px}
+  .app-shell .dialog-head h2 {font-size:19px}
+  .app-shell .dialog-head button {width:40px;min-width:40px;min-height:40px;height:40px}
+  .app-shell dialog :is(input,select) {min-height:46px;background:#fbfdfc;border-color:#cbdcd2}
+  .app-shell dialog :is(input,select):focus {background:#fff;border-color:var(--workspace-accent)}
+  .app-shell .inline-form {gap:10px}
+  .app-shell #branch-form {padding:14px;border:1px solid var(--workspace-line);background:#f7faf8;border-radius:12px}
+  .app-shell .party-item {padding:12px 0;row-gap:10px}
+  .app-shell .party-item input {flex-basis:190px}
+  .app-shell .export-actions {gap:10px;margin:16px 0 0}
+  .app-shell .export-actions button {min-height:64px}
+  .app-shell #export-filtered,.app-shell #branch-form button[type="submit"],.app-shell .pin-form button[type="submit"] {background:var(--action,#176b55)!important;color:#fff!important}
+  .app-shell .summary-toolbar {padding:8px 0}
+  .app-shell .summary-wrap {box-shadow:none}
+}
+@media screen and (max-width:1000px) {
+  .app-shell .top-nav {padding:10px 16px;gap:8px}
+}
+@media screen and (max-width:700px) {
+  .app-shell .table-scroll-hint {display:flex;align-items:center;gap:7px;margin:0;padding:6px 12px;border-bottom:1px solid #e1eae4;background:#f5f9f7;color:#536d60;font-size:10px;line-height:2.2}
+}
+@media screen and (max-width:600px) {
+  .app-shell .top-nav {position:static;padding:10px 12px}
+  .app-shell .top-nav-end {gap:6px}
+  .app-shell .top-nav-start {gap:7px}
+  .app-shell .top-nav :is(button,summary.btn-nav) {min-height:42px}
+  .app-shell .workspace-nav button {min-height:36px;padding:3px 9px}
+  .app-shell main {padding:0 10px;margin:10px auto}
+  .app-shell .party-tabs-bar {top:0;padding:6px;gap:6px}
+  .app-shell .party-tabs-actions {gap:6px}
+  .app-shell .paper-head {padding:10px 12px;gap:8px}
+  .app-shell .paper-head #title {font-size:19px}
+  .app-shell #rows>tr>td,.app-shell #rows td :is(input,textarea) {min-height:56px}
+  .app-shell dialog {padding:0 14px 16px;max-width:calc(100vw - 16px);max-height:92dvh}
+  .app-shell .dialog-head h2 {font-size:17px}
+  .app-shell .party-item :is(input,select) {flex-basis:100%;width:100%;min-width:0}
+  .app-shell .party-item button {flex:1}
+  .app-shell .summary-tabs {gap:4px}
+  .app-shell .summary-tab {padding-inline:8px;font-size:11px}
+}
+
+@media screen{.app-shell .paper th.col-pkr{width:10%}.app-shell #total-pkr{white-space:pre;overflow-wrap:normal}}
+@media screen and (max-width:600px){.app-shell .top-nav-end .workspace-nav{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;margin-inline:0}.app-shell .top-nav-end .workspace-nav button{min-height:44px;white-space:nowrap;line-height:2.5;font-size:12px}}
+
+@media screen and (max-width:600px){.app-shell .duplicate-warning{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px}.app-shell .duplicate-warning>span{grid-column:1/-1;min-width:0;font-size:11px;line-height:2.2}.app-shell .duplicate-warning>button{width:100%;min-height:44px;padding:4px 7px;white-space:normal}}
