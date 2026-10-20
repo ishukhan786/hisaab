@@ -1,7 +1,7 @@
 {
   "name": "hisaab",
   "productName": "حساب",
-  "version": "1.4.9",
+  "version": "1.4.10",
   "description": "حساب — آف لائن روزانہ کھاتہ، اندراج رجسٹر اور پرنٹ سسٹم",
   "main": "main.js",
   "scripts": {
