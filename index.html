@@ -21,9 +21,14 @@
         <img class="hisaab-logo" src="assets/hisaab-logo.svg" width="44" height="44" alt="">
         <strong class="brand-title">Hisaab</strong>
       </div>
-      <div class="top-date-field" title="رپورٹ کی تاریخ">
-        <span class="top-icon">📅</span>
-        <input id="date" type="date" aria-label="رپورٹ کی تاریخ">
+      <div class="top-date-wrap">
+        <button id="prev-day-btn" type="button" class="btn-date-nav" title="پچھلا دن (1 دن پیچھے)" aria-label="پچھلا دن">◀</button>
+        <div class="top-date-field" title="رپورٹ کی تاریخ">
+          <span class="top-icon">📅</span>
+          <input id="date" type="date" aria-label="رپورٹ کی تاریخ">
+        </div>
+        <button id="next-day-btn" type="button" class="btn-date-nav" title="اگلا دن (1 دن آگے)" aria-label="اگلا دن">▶</button>
+        <button id="today-btn" type="button" class="btn-date-today" title="آج کی تاریخ پر جائیں">آج</button>
       </div>
       <label class="all-dates-toggle" title="تمام تاریخوں کی انٹریاں دکھائیں">
         <input id="all-dates" type="checkbox"> تمام تاریخیں

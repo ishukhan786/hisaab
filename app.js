@@ -186,9 +186,11 @@
       $('save-state').title=loaded.filePath;
       if(nativeNeedsInit){legacySource=localStorage.getItem(KEY);if(legacySource)state=migrate(JSON.parse(legacySource));}
       else state=migrate(loaded.state);
+      state.date=today();
       const help=$('storage-help');if(help)help.textContent='ڈیٹا اسی کمپیوٹر کی SQLite فائل میں محفوظ ہے؛ دوسرے کمپیوٹر کے لیے بیک اَپ لے کر بحال کریں۔';
     }else{
       const raw=localStorage.getItem(KEY);if(raw)state=migrate(JSON.parse(raw));
+      state.date=today();
       if(isWebMode){
         const help=$('storage-help');if(help)help.textContent='ڈیٹا کلاؤڈ MongoDB Atlas سے منسلک ہو رہا ہے...';
       }
@@ -1489,12 +1491,47 @@
   $('reset-filters').onclick=resetFilters;
   $('font-smaller').onclick=()=>{state.fontSize=Math.max(10,state.fontSize-1);applyFont();save();};$('font-larger').onclick=()=>{state.fontSize=Math.min(22,state.fontSize+1);applyFont();save();};
   $('title').addEventListener('input',()=>{state.title=$('title').value;if($('title-print'))$('title-print').textContent=$('title').value||'اندراج رجسٹر';save();});
-  $('date').addEventListener('input',()=>{
-    state.date=$('date').value;
-    state.rows.forEach(row=>{if(!populated(row))row.entryDate=state.date||today();});
+  function shiftDate(dateStr, days) {
+    if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) dateStr = today();
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    dateObj.setDate(dateObj.getDate() + days);
+    const nextY = dateObj.getFullYear();
+    const nextM = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const nextD = String(dateObj.getDate()).padStart(2, '0');
+    return `${nextY}-${nextM}-${nextD}`;
+  }
+  function setWorkingDate(targetDate) {
+    state.date = targetDate;
+    if ($('date')) $('date').value = targetDate;
+    if ($('all-dates') && $('all-dates').checked) $('all-dates').checked = false;
+    state.rows.forEach(row => {
+      if (!populated(row)) row.entryDate = state.date || today();
+    });
     save();
-    applyFilter();
+    applyFilter(true);
+    renderPartyTabs();
+  }
+  $('date').addEventListener('input', () => {
+    setWorkingDate($('date').value);
   });
+  if ($('prev-day-btn')) {
+    $('prev-day-btn').onclick = () => {
+      const cur = $('date').value || state.date || today();
+      setWorkingDate(shiftDate(cur, -1));
+    };
+  }
+  if ($('next-day-btn')) {
+    $('next-day-btn').onclick = () => {
+      const cur = $('date').value || state.date || today();
+      setWorkingDate(shiftDate(cur, 1));
+    };
+  }
+  if ($('today-btn')) {
+    $('today-btn').onclick = () => {
+      setWorkingDate(today());
+    };
+  }
   let summaryMode='date';
   function renderSummary(mode='date'){
     summaryMode=mode;
@@ -2163,6 +2200,7 @@
       if (data.status === 'ok' && data.state) {
         storageRevision = data.revision || 0;
         state = migrate(data.state);
+        state.date = today();
         localStorage.setItem(KEY, JSON.stringify(state));
         render();
         savedStatus();

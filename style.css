@@ -84,8 +84,13 @@
 .brand-mini{display:flex;align-items:center;gap:8px;margin-inline-end:6px}
 .logo-mini{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--green);color:#fff;font-size:18px;font-weight:700;line-height:1;box-shadow:0 2px 6px #17634c22}
 .brand-title{font-size:18px;font-weight:700;color:var(--ink)}
+.top-date-wrap{display:inline-flex;align-items:center;gap:3px}
 .top-date-field{display:flex;align-items:center;gap:4px;background:#f5f8f5;border:1px solid #cbdacf;border-radius:8px;padding:2px 8px;height:36px;box-sizing:border-box}
 .top-date-field input[type="date"]{border:0;background:transparent;font-family:Arial,sans-serif;font-size:13px;color:var(--ink);padding:0;height:100%;direction:ltr;outline:none;cursor:pointer}
+.btn-date-nav{display:inline-flex;align-items:center;justify-content:center;width:28px;height:36px;padding:0;background:#fff;border:1px solid #cbdacf;border-radius:8px;color:var(--green);font-size:11px;cursor:pointer;transition:all .15s ease;line-height:1;box-sizing:border-box;user-select:none}
+.btn-date-nav:hover{background:#edf4ef;border-color:var(--green);box-shadow:0 1px 4px rgba(23,99,76,0.15)}
+.btn-date-today{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 9px;background:#fff;border:1px solid #cbdacf;border-radius:8px;color:var(--green);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s ease;font-family:inherit;white-space:nowrap;box-sizing:border-box;user-select:none}
+.btn-date-today:hover{background:#17634c;color:#fff;border-color:#17634c}
 .all-dates-toggle{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#3f5f4f;cursor:pointer;user-select:none;white-space:nowrap;margin-inline-start:4px}
 .all-dates-toggle input{width:16px;height:16px;accent-color:var(--green);cursor:pointer}
 .btn-range{background:#f5f8f5;border:1px solid #cbdacf;border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;transition:all .15s;height:36px;box-sizing:border-box;white-space:nowrap;font-family:inherit}
