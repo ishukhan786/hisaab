@@ -238,6 +238,22 @@
       <p id="pin-default-hint" style="font-size:11px;color:#708b7d;margin-top:6px;" hidden>ابتدائی ڈیفالٹ پن: <strong>1234</strong> ہے (سیٹنگز سے تبدیل کر سکتے ہیں)</p>
     </form>
   </div>
+  <script>
+    (function(){
+      if (!window.electronAPI && window.location.protocol.startsWith('http')) {
+        try {
+          localStorage.removeItem('hisaab-auth-token-v1');
+          if (!sessionStorage.getItem('hisaab-auth-token-v1')) {
+            var ov = document.getElementById('pin-lock-overlay');
+            if (ov) {
+              ov.hidden = false;
+              document.querySelectorAll('body > :not(#pin-lock-overlay)').forEach(function(el){ el.inert = true; });
+            }
+          }
+        } catch(_) {}
+      }
+    })();
+  </script>
   <section id="receipt-print" hidden aria-hidden="true"></section>
   <input id="file" type="file" accept="application/json,.json" hidden>
   <script src="excel-export.js"></script>

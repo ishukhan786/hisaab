@@ -95,10 +95,16 @@
   }
   const isWebMode = !nativeStorage && window.location.protocol.startsWith('http');
   const AUTH_KEY = 'hisaab-auth-token-v1';
-  const getAuthToken = () => localStorage.getItem(AUTH_KEY) || '';
+  try { localStorage.removeItem(AUTH_KEY); } catch(_) {}
+  const getAuthToken = () => {
+    try { return sessionStorage.getItem(AUTH_KEY) || ''; } catch(_) { return ''; }
+  };
   const setAuthToken = token => {
-    if (token) localStorage.setItem(AUTH_KEY, token);
-    else localStorage.removeItem(AUTH_KEY);
+    try {
+      if (token) sessionStorage.setItem(AUTH_KEY, token);
+      else sessionStorage.removeItem(AUTH_KEY);
+      localStorage.removeItem(AUTH_KEY);
+    } catch(_) {}
     updateLogoutBtn();
   };
   function updateLogoutBtn() {
@@ -2056,7 +2062,11 @@
 
   render();
   updatePinUI();
-  if(!isWebMode && state.pinCode) requestPinUnlock('جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں',false);
+  if (isWebMode && !getAuthToken()) {
+    requestWebLogin('جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں', false);
+  } else if (!isWebMode && state.pinCode) {
+    requestPinUnlock('جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں', false);
+  }
   journalController=window.HisaabJournal.mount({getState:()=>state,save,today,exportSheet:(rows,name)=>download(window.HisaabExcel.create(rows),name)});
   save();
   initDiskPersistence();
