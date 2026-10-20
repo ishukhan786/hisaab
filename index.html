@@ -106,7 +106,12 @@
       <span id="save-state" class="save-badge" role="status">محفوظ ہے</span>
     </div>
   </header>
-  <p id="external-backup-banner" class="external-backup-banner no-print" role="status"></p>
+  <section id="external-backup-banner" class="external-backup-banner no-print" aria-label="بیرونی بیک اَپ کی حالت">
+    <div class="external-backup-overview"><strong id="external-backup-state" role="status"></strong><span id="external-backup-last-success"></span></div>
+    <div class="external-backup-location"><span>بیک اَپ مقام:</span><bdi id="external-backup-location" dir="ltr"></bdi></div>
+    <p id="external-backup-error" role="status" hidden></p>
+    <div class="external-backup-quick-actions"><button id="external-backup-quick-select" type="button">بیک اَپ فولڈر منتخب کریں</button><button id="external-backup-quick-retry" type="button" hidden>ابھی بیک اَپ لیں</button></div>
+  </section>
 
   <div class="range-drawer no-print" id="range-drawer" hidden>
     <div class="range-drawer-inner">
@@ -121,7 +126,7 @@
   </div>
 
   <main id="register-page">
-    <div class="backup-banner" id="backup-banner"><span id="backup-status" role="status"></span><button id="backup-now">بیک اَپ لیں</button></div>
+    <div class="backup-banner" id="backup-banner"><span id="backup-status" role="status"></span><button id="backup-now">کاپی ڈاؤن لوڈ کریں</button></div>
     <div class="undo-bar" id="undo-bar" hidden><span id="undo-message" role="status"></span><button id="undo">واپس لائیں (Undo)</button></div>
     <div class="party-tabs-bar no-print" id="party-tabs-bar" role="navigation" aria-label="پارٹی کھاتے">
       <div class="party-tabs-scroll" id="party-tabs" role="tablist"></div>

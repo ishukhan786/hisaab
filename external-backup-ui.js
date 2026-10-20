@@ -2,7 +2,7 @@
 (()=>{
  'use strict';
  const native=window.electronAPI?.externalBackup;
- let config={folder:null,lastSuccess:null},handle=null,chain=Promise.resolve(),snapshot;
+ let config={folder:null,lastSuccess:null},handle=null,chain=Promise.resolve(),snapshot,working=0;
  const $=id=>document.getElementById(id);
  const run=fn=>{const job=chain.then(fn);chain=job.catch(()=>{});return job;};
 
@@ -37,26 +37,29 @@
  }
 
  function paint(){
-  const err=config.error?cleanErrorMessage(config.error):null;
-  let text='';
-  if(config.folder){
-   const successText=config.lastSuccess?'آخری کامیاب: '+new Date(config.lastSuccess).toLocaleString('en-GB'):'ابھی بیک اَپ نہیں بنا';
-   const errorText=err?` — محفوظ نہیں ہوا (${err})؛ فولڈر جوڑ کر دوبارہ کوشش کریں`:'';
-   text=`بیرونی بیک اَپ: ${config.folder} — ${successText}${errorText}`;
-  }else{
-   text=err?
-    `بیرونی بیک اَپ بند ہے (${err})؛ USB یا synced فولڈر منتخب کریں۔`:
-    'بیرونی بیک اَپ بند ہے؛ USB یا synced فولڈر منتخب کریں۔';
+  const err=config.error?cleanErrorMessage(config.error):'';
+  const at=config.lastSuccess?new Date(config.lastSuccess):null;
+  const last=at&&Number.isFinite(at.getTime())?at.toLocaleString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):null;
+  const time=last?'آخری کامیاب بیک اَپ: '+last:'آخری کامیاب بیک اَپ: ابھی کوئی نہیں';
+  const folder=config.folder?(native?config.folder.replace(/[\\/]+$/,'')+'\\Hisaab-Backups':config.folder+'/Hisaab-Backups'):'فولڈر منتخب نہیں کیا گیا';
+  const state=working?'بیک اَپ پر کام ہو رہا ہے…':err?'بیک اَپ ناکام — دوبارہ کوشش کریں':config.folder?(last?'بیرونی بیک اَپ محفوظ ہے ✓':'بیک اَپ ابھی نہیں بنا'):'بیرونی بیک اَپ بند ہے';
+  const banner=$('external-backup-banner');banner.classList.toggle('error',!!err);banner.classList.toggle('backup-working',working>0);
+  $('external-backup-state').textContent=state;
+  const lastStatus=$('external-backup-last-success');lastStatus.replaceChildren(document.createTextNode('آخری کامیاب بیک اَپ: '));
+  if(last){const stamp=document.createElement('time');stamp.dateTime=config.lastSuccess;stamp.dir='ltr';stamp.textContent=last;lastStatus.append(stamp);}else lastStatus.append('ابھی کوئی نہیں');
+  const location=$('external-backup-location');location.textContent=folder;
+  location.title=native?folder:'براؤزر مکمل ڈسک path فراہم نہیں کرتا؛ منتخب فولڈر کا نام دکھایا گیا ہے۔';
+  const error=$('external-backup-error');error.hidden=!err;error.textContent=err?'وجہ: '+err+' — فولڈر یا USB جوڑ کر دوبارہ کوشش کریں۔':'';
+  const details=$('external-backup-status');
+  details.textContent=[state,time,'مقام: '+folder,err?'وجہ: '+err:''].filter(Boolean).join(' — ');
+  details.classList.toggle('error',!!err);
+  const supported=!!native||!!window.showDirectoryPicker;
+  for(const id of ['external-backup-select','external-backup-quick-select'])$(id).disabled=!!working||!supported;
+  for(const id of ['external-backup-retry','external-backup-quick-retry']){
+   $(id).hidden=!config.folder;$(id).disabled=!!working;
+   $(id).textContent=err?'دوبارہ کوشش کریں':working?'بیک اَپ بن رہا ہے…':'ابھی بیک اَپ لیں';
   }
-  for(const id of ['external-backup-status','external-backup-banner']){
-   const e=$(id);
-   if(e){
-    e.textContent=text;
-    e.classList.toggle('error',!!config.error);
-   }
-  }
-  if($('external-backup-retry'))$('external-backup-retry').hidden=!config.folder;
-  if($('external-backup-disable'))$('external-backup-disable').hidden=!config.folder;
+  $('external-backup-disable').hidden=!config.folder;$('external-backup-disable').disabled=!!working;
  }
 
  async function persist(){if(!native)await record({handle,config});}
@@ -75,6 +78,7 @@
   await ready;
   return run(async()=>{
    if(!config.folder)return {status:'disabled'};
+   working++;paint();
    try{
     if(native){
      const result=await native.save(data);
@@ -94,7 +98,7 @@
     await persist().catch(()=>{});
     paint();
     return {status:'error',error:config.error};
-   }
+   }finally{working--;paint();}
   });
  }
 
@@ -105,7 +109,10 @@
   if(choose.disabled)$('external-backup-help').textContent='اس براؤزر میں فولڈر بیک اَپ دستیاب نہیں۔ Chrome / Edge میں HTTPS پر کھولیں، یا JSON بیک اَپ ڈاؤن لوڈ کریں۔';
 
   choose.onclick=async()=>{
+   if(working)return;
+   working++;paint();
    try{
+    await ready;
     let selected;
     if(native)selected=await native.select();
     else{
@@ -127,11 +134,14 @@
      config.error=cleanErrorMessage(e.message);
      paint();
     }
-   }
+   }finally{working--;paint();}
   };
 
   $('external-backup-retry').onclick=async()=>{
+   if(working)return;
+   working++;paint();
    try{
+    await ready;
     if(!native&&handle)await handle.requestPermission({mode:'readwrite'});
     const res=await write(snapshot());
     if(res?.status==='error'&&res?.error){
@@ -141,7 +151,7 @@
    }catch(e){
     config.error=cleanErrorMessage(e.message);
     paint();
-   }
+   }finally{working--;paint();}
   };
 
   $('external-backup-disable').onclick=async()=>{
@@ -158,6 +168,8 @@
    }
   };
 
+  $('external-backup-quick-select').onclick=()=>choose.click();
+  $('external-backup-quick-retry').onclick=()=>$('external-backup-retry').click();
   ready.then(paint);
  }};
 })();

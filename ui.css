@@ -211,3 +211,61 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 }
 
 @media screen{.app-shell #rows tr:focus-within>td{background-color:#f0f8f4}.app-shell #rows tr.duplicate-row>td{box-shadow:inset 0 2px #deb96d,inset 0 -2px #deb96d}.app-shell #rows [data-field]:focus-visible{outline:2px solid #1b755b;outline-offset:-2px}}
+
+.external-backup-banner{display:grid;gap:6px;padding:10px 14px;border:1px solid #c9dbcf;border-radius:10px;background:#f5faf6}.external-backup-overview{display:flex;align-items:center;justify-content:space-between;gap:6px 18px;flex-wrap:wrap}.external-backup-overview strong{color:#14583d}.external-backup-overview>span{font-family:Arial,sans-serif;font-size:12px;unicode-bidi:plaintext}.external-backup-location{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.external-backup-location bdi{font:12px Arial,sans-serif;overflow-wrap:anywhere;min-width:0}.external-backup-banner #external-backup-error{margin:0;color:#a62920;line-height:2}.external-backup-quick-actions{display:flex;gap:8px;flex-wrap:wrap}.external-backup-quick-actions button{font-size:11px;padding:3px 12px;min-height:34px}.external-backup-banner.error{border-color:#d5a89d;background:#fff6f1}.external-backup-banner.error strong{color:#a62920}.external-backup-banner.backup-working{border-color:#b8cbbf}@media(max-width:600px){.external-backup-banner{margin:8px 12px}.external-backup-overview{align-items:flex-start;flex-direction:column}}
+
+.external-backup-overview time{display:inline-block;direction:ltr;unicode-bidi:isolate}
+
+/* Action colors and interaction feedback, limited to app controls. */
+@media screen {
+  .app-shell :where(button,summary.btn-nav) {--action:#475569;--action-tint:#f1f5f9;--action-ink:#334155}
+  .app-shell :is(button,summary.btn-nav) {
+    background:linear-gradient(180deg,#fff,var(--action-tint))!important;
+    border-color:color-mix(in srgb,var(--action) 36%,#fff)!important;
+    color:var(--action-ink)!important;
+    box-shadow:0 2px 5px #0f172a0a,inset 0 1px 0 #ffffffd9;
+    transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,translate .15s ease,scale .12s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .app-shell :is(#add,#journal-add,#add-party-tab,#duplicate-keep,#receipt-copy,#external-backup-quick-retry,#external-backup-retry) {--action:#08775d;--action-tint:#dcf5eb;--action-ink:#075b46}
+  .app-shell :is(#print,#receipt-preview) {--action:#2457c7;--action-tint:#e2ecff;--action-ink:#1747a5}
+  .app-shell :is(#save-pdf,#summary-pdf,#receipt-save) {--action:#b82d59;--action-tint:#ffe5ed;--action-ink:#9d214a}
+  .app-shell :is(#export-open,#export-filtered,#export-all) {--action:#18733d;--action-tint:#dff5e5;--action-ink:#135b31}
+  .app-shell :is(#summary-open,#summary-tab-date,#duplicate-review) {--action:#7440bd;--action-tint:#efe5ff;--action-ink:#62329f}
+  .app-shell :is(#open-pdf,#summary-png,#receipt-png) {--action:#087c90;--action-tint:#def6fa;--action-ink:#066174}
+  .app-shell :is(#open-pdf-folder,#open-backup-folder-btn,#manage-backups,#backup,#backup-now,#external-backup-select,#external-backup-quick-select) {--action:#956000;--action-tint:#fff1cc;--action-ink:#785000}
+  .app-shell :is(#restore,#link-disk-file,#dialog-link-disk-btn,#reconnect-disk-file) {--action:#03699b;--action-tint:#e0f2fe;--action-ink:#075985}
+  .app-shell :is(#auto-backup,#dialog-setup-disk-btn,#create-backup-now-btn,#retry-save) {--action:#a34d15;--action-tint:#ffecd9;--action-ink:#884012}
+  .app-shell :is(#view-register,#prev-day-btn,#journal-date-prev,#register-page-prev,#summary-tab-party) {--action:#4356b7;--action-tint:#e8ecff;--action-ink:#33469a}
+  .app-shell :is(#view-journal,#next-day-btn,#journal-date-next,#register-page-next) {--action:#8052a3;--action-tint:#f3e7fb;--action-ink:#6b3e8b}
+  .app-shell :is(#today-btn,#toggle-range,#reset-filters,#journal-undo,#undo) {--action:#a45215;--action-tint:#fff0dd;--action-ink:#8b4310}
+  .app-shell :is(#pin-settings-btn,#lock-app-now-btn,#lock-day,#manage-branches,#manage-parties-tab) {--action:#4b6683;--action-tint:#e5eef8;--action-ink:#36516e}
+  .app-shell :is(.delete,.journal-delete,.delete-party-btn,#logout-btn,#external-backup-disable,#pin-remove-btn) {--action:#ba303d;--action-tint:#ffe6e8;--action-ink:#a32332}
+  .app-shell :is(.history-btn,.receipt-btn) {--action:#366b91;--action-tint:#e5f3fc;--action-ink:#255979}
+  .app-shell .party-tab {--action:#257d68;--action-tint:#e7f5ef;--action-ink:#155b4a}
+  .app-shell .dialog-head button {--action:#667085;--action-tint:#edf0f5;--action-ink:#475467}
+  .app-shell :is(#add,#journal-add,#add-party-tab,.workspace-nav button.active,.summary-tab.active,.party-tab.active) {
+    background:linear-gradient(135deg,var(--action),color-mix(in srgb,var(--action) 80%,#122033))!important;
+    color:#fff!important;border-color:var(--action)!important;
+    box-shadow:0 3px 9px color-mix(in srgb,var(--action) 24%,transparent),inset 0 1px 0 #ffffff40;
+  }
+  .app-shell :is(button,summary.btn-nav):hover:not(:disabled) {
+    border-color:var(--action)!important;
+    box-shadow:0 5px 13px color-mix(in srgb,var(--action) 21%,transparent),inset 0 1px 0 #ffffff99;
+  }
+  .app-shell :is(button,summary.btn-nav):focus-visible {
+    outline:3px solid var(--action);outline-offset:3px;
+    box-shadow:0 0 0 5px color-mix(in srgb,var(--action) 14%,transparent);
+  }
+  .app-shell :is(button,summary.btn-nav):not(.journal-delete):not(.delete):not(.history-btn):not(.receipt-btn):not(.place-suggest-item):not(#toggle-pwd-btn):hover:not(:disabled) {translate:0 -1px}
+  .app-shell :is(button,summary.btn-nav):not(.journal-delete):not(.delete):not(.history-btn):not(.receipt-btn):not(.place-suggest-item):not(#toggle-pwd-btn):active:not(:disabled) {translate:0 1px;scale:.98}
+  .app-shell button:disabled {opacity:.45;cursor:not-allowed;translate:none;scale:1;transform:none;box-shadow:none}
+  .app-shell details[open]>summary.btn-nav {border-color:var(--action)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--action) 16%,transparent)}
+  .app-shell .place-suggest-item {background:transparent!important;border-color:transparent!important;box-shadow:none}
+  .app-shell .place-suggest-item:hover,.app-shell .place-suggest-item.active {background:#e2f1e9!important}
+  .app-shell #toggle-pwd-btn {background:transparent!important;border-color:transparent!important;box-shadow:none}
+}
+@media screen and (prefers-reduced-motion:reduce) {
+  .app-shell :is(button,summary.btn-nav) {transition:none!important;translate:none!important;scale:1!important}
+  .app-shell :is(button,summary.btn-nav):not(.journal-delete):not(#toggle-pwd-btn) {transform:none!important}
+}
