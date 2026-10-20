@@ -93,6 +93,27 @@
         const td=document.createElement('td');const input=document.createElement(key==='detail'?'textarea':'input');input.dataset.journal=key;input.value=r[key];input.setAttribute('aria-label',key==='detail'?'تفصیل':key==='debit'?'بنام':'جمع');input.autocomplete='off';
         if(key==='detail'){input.rows=1;input.maxLength=2000;input.placeholder='تفصیل لکھیں…';}else{input.inputMode='numeric';input.className='journal-money';input.maxLength=30;input.placeholder='0';}
         input.addEventListener('input',e=>{if(e.isComposing)return;if(key!=='detail')input.value=digits(input.value);else{const v=formatAllah(input.value);if(v!==input.value){const pos=input.selectionStart,diff=v.length-input.value.length;input.value=v;if(pos!==null){const np=Math.max(0,pos+diff);input.setSelectionRange(np,np);}}}r[key]=input.value;const draft=ensureDraft();if(!nodes.has(draft.id))addNode(draft);recalculate();save();});
+        input.addEventListener('paste', e => {
+          const pasteData = (e.clipboardData || window.clipboardData)?.getData('text');
+          if (pasteData === undefined || pasteData === null) return;
+          e.preventDefault();
+          let cleaned = pasteData.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+          if (key === 'detail') {
+            cleaned = formatAllah(cleaned.trim().replace(/\n+/g, ' '));
+          } else {
+            cleaned = digits(cleaned.trim()).replace(/[^\d.-]/g, '');
+          }
+          const start = input.selectionStart ?? input.value.length;
+          const end = input.selectionEnd ?? input.value.length;
+          input.value = input.value.slice(0, start) + cleaned + input.value.slice(end);
+          const nextPos = start + cleaned.length;
+          if (typeof input.setSelectionRange === 'function') input.setSelectionRange(nextPos, nextPos);
+          r[key] = input.value;
+          const draft = ensureDraft();
+          if (!nodes.has(draft.id)) addNode(draft);
+          recalculate();
+          save();
+        });
         input.addEventListener('compositionend',()=>input.dispatchEvent(new Event('input')));
         input.addEventListener('blur',()=>{if(key!=='detail'&&input.value.trim()&&amount(input.value)!==null){input.value=format(amount(input.value));r[key]=input.value;save();}});
         input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();input.blur();}if(e.key==='Tab'&&!e.shiftKey&&key==='credit'){e.preventDefault();input.blur();const rows=data().rows.filter(x=>x.date===data().date),next=rows[rows.indexOf(r)+1]||ensureDraft();if(!nodes.has(next.id))addNode(next);nodes.get(next.id).querySelector('textarea').focus();}});

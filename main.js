@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, shell, ipcMain, clipboard } = require('electron');
+const { app, BrowserWindow, Menu, MenuItem, dialog, shell, ipcMain, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
 const { randomUUID } = require('crypto');
@@ -341,6 +341,25 @@ function createWindow() {
     const choice=dialog.showMessageBoxSync(mainWindow,{type:'warning',title:'غیر محفوظ تبدیلیاں',message:'کچھ تبدیلیاں محفوظ نہیں ہو سکیں۔ واپس جا کر دوبارہ محفوظ کریں یا بیک اَپ لیں۔',buttons:['واپس جائیں','بغیر محفوظ کیے بند کریں'],defaultId:0,cancelId:0});
     if(choice===1)event.preventDefault();
   });
+  mainWindow.webContents.on('context-menu', (event, params) => {
+    const contextMenu = new Menu();
+    if (params.isEditable) {
+      contextMenu.append(new MenuItem({ role: 'undo', label: 'واپس (Undo)' }));
+      contextMenu.append(new MenuItem({ role: 'redo', label: 'دوبارہ (Redo)' }));
+      contextMenu.append(new MenuItem({ type: 'separator' }));
+      contextMenu.append(new MenuItem({ role: 'cut', label: 'کٹ (Cut)', enabled: params.editFlags.canCut }));
+      contextMenu.append(new MenuItem({ role: 'copy', label: 'کاپی (Copy)', enabled: params.editFlags.canCopy }));
+      contextMenu.append(new MenuItem({ role: 'paste', label: 'پیسٹ (Paste)', enabled: params.editFlags.canPaste }));
+      contextMenu.append(new MenuItem({ role: 'pasteAndMatchStyle', label: 'پیسٹ (سادہ ٹیکسٹ)', enabled: params.editFlags.canPaste }));
+      contextMenu.append(new MenuItem({ type: 'separator' }));
+      contextMenu.append(new MenuItem({ role: 'selectAll', label: 'تمام منتخب کریں (Select All)', enabled: params.editFlags.canSelectAll }));
+      contextMenu.popup({ window: mainWindow });
+    } else if (params.selectionText && params.selectionText.trim().length > 0) {
+      contextMenu.append(new MenuItem({ role: 'copy', label: 'کاپی (Copy)' }));
+      contextMenu.popup({ window: mainWindow });
+    }
+  });
+
   mainWindow.loadFile('index.html');
 
   mainWindow.once('ready-to-show', () => {
@@ -386,6 +405,21 @@ function buildMenu() {
           accelerator: 'Alt+F4',
           click: () => app.quit()
         }
+      ]
+    },
+    {
+      label: 'ترمیم (Edit)',
+      submenu: [
+        { role: 'undo', label: 'واپس (Undo)' },
+        { role: 'redo', label: 'دوبارہ (Redo)' },
+        { type: 'separator' },
+        { role: 'cut', label: 'کٹ (Cut)' },
+        { role: 'copy', label: 'کاپی (Copy)' },
+        { role: 'paste', label: 'پیسٹ (Paste)' },
+        { role: 'pasteAndMatchStyle', label: 'پیسٹ اور فارمیٹ ملائیں' },
+        { role: 'delete', label: 'حذف (Delete)' },
+        { type: 'separator' },
+        { role: 'selectAll', label: 'تمام منتخب کریں (Select All)' }
       ]
     },
     {

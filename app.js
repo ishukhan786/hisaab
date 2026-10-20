@@ -901,6 +901,18 @@
             totals();
           }
         }
+        balTypeInput.addEventListener('paste', e => {
+          const pasted = (e.clipboardData || window.clipboardData)?.getData('text');
+          if (pasted === undefined || pasted === null) return;
+          e.preventDefault();
+          const cleaned = formatAllah(pasted.trim().replace(/[\r\n]+/g, ' '));
+          const start = balTypeInput.selectionStart ?? balTypeInput.value.length;
+          const end = balTypeInput.selectionEnd ?? balTypeInput.value.length;
+          balTypeInput.value = balTypeInput.value.slice(0, start) + cleaned + balTypeInput.value.slice(end);
+          const nextPos = start + cleaned.length;
+          if (typeof balTypeInput.setSelectionRange === 'function') balTypeInput.setSelectionRange(nextPos, nextPos);
+          acceptBalType();
+        });
         balTypeInput.addEventListener('change',acceptBalType);
         balTypeInput.addEventListener('blur',acceptBalType);
         balTypeInput.addEventListener('keydown',e=>{
@@ -963,6 +975,59 @@
         input.addEventListener('blur',()=>{const value=wholeText(input.value);if(value!==input.value){input.value=value;row[field]=value;save();}});
         input.addEventListener('keydown',e=>{if(e.key==='Enter')input.blur();});
       }
+      input.addEventListener('paste', e => {
+        const pasteData = (e.clipboardData || window.clipboardData)?.getData('text');
+        if (pasteData === undefined || pasteData === null) return;
+        if (pasteData.includes('\t')) {
+          const lines = pasteData.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+          const firstLine = lines.find(l => l.trim().length > 0) || '';
+          const tokens = firstLine.split('\t');
+          if (tokens.length > 1) {
+            e.preventDefault();
+            const startIdx = fields.indexOf(field);
+            if (startIdx >= 0) {
+              tokens.forEach((tok, offset) => {
+                const targetIdx = startIdx + offset;
+                if (targetIdx < fields.length) {
+                  const targetField = fields[targetIdx];
+                  const targetInput = tr.querySelector('[data-field="' + targetField + '"]');
+                  if (targetInput && !targetInput.disabled) {
+                    let cleanVal = tok.trim();
+                    if (['sender', 'receiver', 'place'].includes(targetField)) cleanVal = formatAllah(cleanVal);
+                    else if (targetField === 'mobile') cleanVal = englishDigits(cleanVal);
+                    else if (moneyFields.includes(targetField)) cleanVal = englishDigits(cleanVal).replace(/[^\d.-]/g, '');
+                    targetInput.value = cleanVal;
+                    row[targetField] = cleanVal;
+                  }
+                }
+              });
+              if (!row.entryDate) row.entryDate = state.date || today();
+              if (selectedBranch.startsWith('b:') && !row.branch) row.branch = selectedBranch.slice(2);
+              applyFilter(true);
+              save();
+              return;
+            }
+          }
+        }
+        e.preventDefault();
+        let cleaned = pasteData.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        if (isText) {
+          cleaned = formatAllah(cleaned.trim().replace(/\n+/g, ' '));
+        } else if (field === 'mobile') {
+          cleaned = englishDigits(cleaned.trim().replace(/\n+/g, ''));
+        } else if (moneyFields.includes(field)) {
+          cleaned = englishDigits(cleaned.trim()).replace(/[^\d.-]/g, '');
+        } else {
+          cleaned = cleaned.trim();
+        }
+        const start = input.selectionStart ?? input.value.length;
+        const end = input.selectionEnd ?? input.value.length;
+        const curVal = input.value;
+        input.value = curVal.slice(0, start) + cleaned + curVal.slice(end);
+        const nextPos = start + cleaned.length;
+        if (typeof input.setSelectionRange === 'function') input.setSelectionRange(nextPos, nextPos);
+        accept();
+      });
       input.addEventListener(field==='branch'?'change':'input',accept);input.addEventListener('compositionend',()=>accept());
       if(field==='branch'){input.addEventListener('change',()=>{if(input._prevVal!==undefined&&input._prevVal!==input.value){recordHistory(row,'branch',input._prevVal,input.value);input._prevVal=input.value;}});}
       input.addEventListener('keydown',e=>{
