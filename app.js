@@ -355,7 +355,7 @@
   }
   function totals(rows=selectedRows()){let totalBalance=0n,totalAed=0n,invalidAny=false;const byType=new Map();for(const field of moneyFields){let total=0n,invalid=false;for(const row of rows){const value=integerAmount(row[field]);if(value===null)invalid=true;else{total+=value;if(field==='balance'&&row.balanceType&&row.balanceType.trim()&&value>0n){const t=row.balanceType.trim();byType.set(t,(byType.get(t)||0n)+value);}}}if(field==='balance'){totalBalance=total;if(invalid)invalidAny=true;}if(field==='aed'){totalAed=total;if(invalid)invalidAny=true;}$('total-'+field).textContent=invalid?'رقم درست کریں':formatted(total);}const balEl=$('total-balance');if(balEl&&!invalidAny){const parts=[];for(const [name,sum] of byType){parts.push(`${name}: ${formatted(sum)}`);}balEl.title=parts.length?`کل بقایا: ${formatted(totalBalance)} (${parts.slice(0,4).join(' | ')}${parts.length>4?'...':''})`:`کل بقایا: ${formatted(totalBalance)}`;}const netEl=$('total-net-aed');if(netEl){const netAed=totalAed-totalBalance;netEl.textContent=invalidAny?'موجودہ درہم: رقم درست کریں':`موجودہ درہم: ${formatted(netAed)}`;}const ordersEl=$('total-orders-count');if(ordersEl){ordersEl.textContent=`آرڈرز تعداد: ${rows.length}`;}$('total-pkr').textContent=currencyText(rows).split('\n').map(s=>`(${s})`).join('\n');$('count').textContent=`${rows.length} اندراجات`;
     const fractional=rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null));
-    $('filter-message').textContent=!rangeValid()?'تاریخ سے، تاریخ تک سے آگے نہیں ہو سکتی۔':dayMode()?`${fmtDate(state.date)} کی ${rows.length} انٹریاں۔ پرنٹ اور مجموعہ انہی کا ہے۔`:`${rows.length} انٹریاں منتخب ہیں۔ پرنٹ اور مجموعہ انہی کا ہے۔ نئی انٹری کے لیے "＋ نئی قطار" دبائیں۔`;
+    $('filter-message').textContent=!rangeValid()?'تاریخ سے، تاریخ تک سے آگے نہیں ہو سکتی۔':dayMode()?`${fmtDate(state.date)} کی ${rows.length} انٹریاں۔ پرنٹ اور مجموعہ انہی کا ہے۔`:`${rows.length} انٹریاں منتخب ہیں۔ پرنٹ اور مجموعہ انہی کا ہے۔ نئی انٹری کے لیے روزانہ منظر کھولیں۔`;
     if(fractional)$('filter-message').textContent+=' رقم میں صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم کو خود نہیں بدلا گیا۔';
     $('filter-message').classList.toggle('error',!rangeValid()||fractional);
   }
@@ -1106,7 +1106,6 @@
     applyFilter();
     focusRow(row);
   }
-  $('add').onclick=add;
   $('undo').onclick=()=>{const item=state.trash.pop();if(!item)return;if(item.row.branch&&!state.branches.includes(item.row.branch))state.branches.push(item.row.branch);state.rows.splice(Math.min(item.index,state.rows.length),0,item.row);render();save();if(!rowNodes.has(item.row.id)||rowNodes.get(item.row.id).hidden)$('filter-message').textContent='انٹری واپس آ گئی ہے۔ اسے دیکھنے کے لیے فلٹر صاف کریں۔';};
   const DISK_DB_NAME='hisaab-disk-db-v1',DISK_STORE='handles',DISK_KEY='primary';
   function openHandleDB(){

@@ -8,7 +8,7 @@ const {pathToFileURL}=require('node:url');
     const page=packaged?await browser.firstWindow():await browser.newPage({viewport:{width:1400,height:1000}}),errors=[];
     page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
     if(!packaged)await page.goto(pathToFileURL(path.resolve('index.html')).href);
-    await page.locator('#add').waitFor();
+    await page.locator('#rows').waitFor({state:'attached'});
     if(packaged)await browser.evaluate(({BrowserWindow},target)=>{BrowserWindow.getAllWindows()[0].webContents.session.on('will-download',(_,item)=>item.setSavePath(target));},path.resolve('scratch','performance-packaged.xlsx'));
     const rows=Array.from({length:450},(_,i)=>({id:'r'+i,entryDate:'2026-10-17',sender:'Customer '+i,mobile:'0300'+String(i).padStart(7,'0'),receiver:'Receiver',place:'Dubai',branch:'',balance:'10',aed:'100',pkr:'200',history:[]}));
     rows[449]={...rows[0],id:'r449'};

@@ -4,7 +4,7 @@ const {chromium,_electron}=require('playwright'),fs=require('fs'),path=require('
  try{
   let p;
   if(process.env.HISAAB_TEST_DESKTOP==='1'||process.env.HISAAB_TEST_PACKAGED==='1'){
-   const packaged=process.env.HISAAB_TEST_PACKAGED==='1';app=await _electron.launch({executablePath:path.resolve(packaged?'dist/win-unpacked/حساب.exe':'node_modules/electron/dist/electron.exe'),args:[...(!packaged?[path.resolve('.')]:[]),'--user-data-dir='+path.join(base,'profile')]});p=await app.firstWindow();await p.locator('#add').waitFor();
+   const packaged=process.env.HISAAB_TEST_PACKAGED==='1';app=await _electron.launch({executablePath:path.resolve(packaged?'dist/win-unpacked/حساب.exe':'node_modules/electron/dist/electron.exe'),args:[...(!packaged?[path.resolve('.')]:[]),'--user-data-dir='+path.join(base,'profile')]});p=await app.firstWindow();await p.locator('#rows').waitFor({state:'attached'});
   }else{browser=await chromium.launch({channel:'msedge',headless:true});p=await browser.newPage({viewport:{width:1366,height:1000}});await p.goto(pathToFileURL(path.resolve('index.html')).href);}
   p.setDefaultTimeout(15000);
   p.on('dialog',d=>d.accept());const errors=[];p.on('pageerror',e=>errors.push(e.message));

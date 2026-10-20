@@ -11,10 +11,10 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
   fs.writeFileSync(seedMain,`const {app,BrowserWindow}=require('electron');app.setPath('userData',${JSON.stringify(profile)});app.whenReady().then(()=>{const w=new BrowserWindow({show:true});w.loadFile(${JSON.stringify(index)});});app.on('window-all-closed',()=>app.quit());`);
   let app;
   try{
-    app=await electron.launch({executablePath:sourceExe,args:[seedMain]});let page=await app.firstWindow();await page.locator('#add').waitFor({state:'attached'});
+    app=await electron.launch({executablePath:sourceExe,args:[seedMain]});let page=await app.firstWindow();await page.locator('#rows').waitFor({state:'attached'});
     await page.evaluate(data=>localStorage.setItem('hisaab-register-v1',JSON.stringify(data)),legacy);await app.close();app=null;
     const launch=()=>electron.launch({executablePath:packaged?path.resolve('dist/win-unpacked/حساب.exe'):sourceExe,args:[...(!packaged?[path.resolve('.')]:[]),'--user-data-dir='+profile],timeout:30000});
-    app=await launch();page=await app.firstWindow();page.setDefaultTimeout(15000);await page.locator('#add').waitFor({state:'attached'});
+    app=await launch();page=await app.firstWindow();page.setDefaultTimeout(15000);await page.locator('#rows').waitFor({state:'attached'});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
     assert.equal(await page.locator('[data-field="sender"]').first().inputValue(),'Legacy customer');
     assert.match(await page.locator('#save-state').innerText(),/SQLite/);
@@ -26,7 +26,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
     assert.equal(await page.locator('[data-field="sender"]').first().inputValue(),'Legacy customer');
     await page.locator('[data-field="sender"]').first().fill('SQLite customer');await page.locator('[data-field="sender"]').first().blur();
     await page.locator('#view-journal').click();await page.locator('[data-journal="credit"]').first().fill('2500');await page.locator('[data-journal="credit"]').first().blur();
-    await app.close();app=await launch();page=await app.firstWindow();page.setDefaultTimeout(15000);page.on('dialog',d=>d.accept());await page.locator('#add').waitFor({state:'attached'});
+    await app.close();app=await launch();page=await app.firstWindow();page.setDefaultTimeout(15000);page.on('dialog',d=>d.accept());await page.locator('#rows').waitFor({state:'attached'});
     await page.locator('#view-register').click();assert.equal(await page.locator('[data-field="sender"]').first().inputValue(),'SQLite customer');
     db=await saved();assert.equal(db.state.journal.rows[0].credit,'2,500');assert(db.state.rows[0].history.some(h=>h.to==='SQLite customer'));
     // Inject a real SQLite transaction failure without modifying user files.

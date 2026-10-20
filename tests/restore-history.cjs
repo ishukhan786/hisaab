@@ -14,7 +14,7 @@ const path=require('node:path');
     const alerts=[];
     page.on('dialog',async d=>{if(d.type()==='alert')alerts.push(d.message());await d.accept();});
     if(!packaged)await page.goto(pathToFileURL(path.resolve('index.html')).href);
-    await page.locator('#add').waitFor();
+    await page.locator('#rows').waitFor({state:'attached'});
     const key='hisaab-register-v1';
     const sender=()=>page.locator('[data-field="sender"]').first();
     const saved=()=>page.evaluate(k=>JSON.parse(localStorage.getItem(k)),key);
