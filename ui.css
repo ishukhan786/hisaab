@@ -138,7 +138,7 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
   .app-shell .paper table,.app-shell .paper.party-page table{width:100%;min-width:1100px;max-width:none}
   .app-shell .paper th.serial{width:6.93%}
   .app-shell .paper th.col-sender{width:14%}
-  .app-shell .paper th.mobile{width:11%}
+  .app-shell .paper th.mobile{width:13%;min-width:130px}
   .app-shell .paper th.col-receiver{width:auto}
   .app-shell .paper th.col-place{width:8.5%}
   .app-shell .paper th.col-branch{width:9.5%}
@@ -170,3 +170,49 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 
 .external-backup-settings{padding:12px;border:1px solid #cadbd0;border-radius:10px;margin:12px 0;background:#f4f8f5}.external-backup-settings h3{margin:0;font-size:15px}.external-backup-settings p{font-size:12px;line-height:2.2;overflow-wrap:anywhere}.backup-actions-bar{display:flex;gap:8px;flex-wrap:wrap}.external-backup-banner{margin:8px 24px;font-size:11px;color:#4c6c59;overflow-wrap:anywhere}.external-backup-banner.error,#external-backup-status.error{color:#a62920;font-weight:bold}.duplicate-warning{padding:12px;margin:10px 0;border:1px solid #d8ac58;background:#fff6df;border-radius:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px;line-height:2.2}.duplicate-warning[hidden]{display:none}.duplicate-warning>span{flex:1;min-width:220px}
 .app-shell .hisaab-logo{display:block;width:44px;height:44px;flex:0 0 44px;filter:drop-shadow(0 3px 5px #123f3020)}
+
+/* Compact register: dedicated order type column and clean place cell. */
+@media screen{
+ .app-shell .paper .table-wrap{border-top:1px solid #d7e4db}
+ .app-shell .paper th.col-place{width:11%}
+ .app-shell .paper th.col-order-type{width:8%;text-align:center}
+ .app-shell .paper th.col-branch{width:8%}
+ .app-shell .paper th.serial{width:5.5%}
+ .app-shell .paper thead th{border-inline-color:#dce7df}
+ .app-shell #rows>tr>td{border-bottom-color:#d5e2d9;height:auto;min-height:44px}
+ .app-shell #rows td.col-place{padding:4px 6px;vertical-align:middle}
+ .app-shell #rows td.col-place textarea{line-height:2.1;padding:4px 6px;transform:none}
+ .app-shell #rows td.col-order-type select,.app-shell #rows .order-type-select{width:100%;max-width:115px;height:32px;min-height:32px;padding:0 4px;border:1px solid #d5e3da;border-radius:6px;background:#f1f6f2;color:#284a39;font-size:11px;line-height:2;cursor:pointer;text-align:center;text-align-last:center;transition:background .15s,color .15s,border-color .15s}
+ .app-shell #rows td.col-order-type select[data-value="bank"],.app-shell #rows .order-type-select[data-value="bank"]{background:#edf5fb;color:#154a6f;border-color:#b9d7ea;font-weight:700}
+ .app-shell #rows td.col-order-type select[data-value="city"],.app-shell #rows .order-type-select[data-value="city"]{background:#edf6ef;color:#17634c;border-color:#c8ded0;font-weight:700}
+ .app-shell #rows td.col-order-type select:focus-visible,.app-shell #rows .order-type-select:focus-visible{outline:2px solid #1b755b;outline-offset:1px;background:#fff}
+ .app-shell #rows td.col-order-type select:disabled,.app-shell #rows .order-type-select:disabled{cursor:default;opacity:.65}
+ .app-shell #rows tr.order-type-bank + tr.order-type-city td{border-top:2px solid #8ebba0}
+ .app-shell #rows td.col-balance{position:relative}
+ .app-shell #rows .bal-type-input{display:none;position:absolute;top:2px;right:3px;height:18px;min-height:0;width:auto;max-width:84px;padding:0 4px;border-radius:9px;font-size:9.5px;font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',Calibri,Arial,sans-serif;line-height:1.1;border:1px dashed #b5cdbe;background:#f4f8f5;color:#3b5c49;cursor:text;text-align:center;text-overflow:ellipsis;white-space:nowrap;overflow:hidden;z-index:2;box-sizing:border-box;transition:all .15s ease}
+ .app-shell #rows .bal-type-input::placeholder{color:#6c8b77;font-size:8.5px}
+ .app-shell #rows .bal-type-input.visible{display:inline-block}
+ .app-shell #rows .bal-type-input.has-value{background:#edf5fb;color:#154c79;border:1px solid #b3d3ed;font-weight:700}
+ .app-shell #rows .bal-type-input:focus{outline:2px solid #1b755b;outline-offset:0;background:#fff;max-width:125px;text-overflow:clip}
+ .app-shell #rows .bal-type-input:disabled{opacity:.65;cursor:default}
+}
+
+/* Give names priority and let multiline Nastaliq entries grow with their content. */
+@media screen{
+ .app-shell .paper th.col-sender{width:14%}
+ .app-shell .paper th.col-balance,.app-shell .paper th.col-aed{width:6%}
+ .app-shell .paper th.col-pkr{width:7%}
+ .app-shell #rows td textarea,.app-shell #rows td.col-place textarea{field-sizing:content;height:auto;min-height:38px;max-height:none;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;overflow:hidden;resize:none;line-height:2.1;padding:5px 6px}
+ .app-shell #rows td input.amount{padding-inline:3px}
+}
+@media print{
+ .paper thead th.col-sender,.order-print-section thead th.col-sender{width:4.8cm}
+ .paper thead th.mobile,.order-print-section thead th.mobile{width:3.5cm;white-space:nowrap!important}
+ .paper thead th.col-balance,.order-print-section thead th.col-balance{width:2.5cm}
+ .paper thead th.col-aed,.order-print-section thead th.col-aed{width:2.5cm}
+ .paper thead th.col-pkr,.order-print-section thead th.col-pkr{width:3cm}
+ .order-print-section td.col-mobile,.order-print-section .col-mobile .print-value{white-space:nowrap!important;text-align:center;direction:ltr}
+ .order-print-section .print-value{display:block!important;white-space:pre-wrap;overflow-wrap:anywhere;line-height:2.2;padding:6px}
+ .print-bal-tag{display:block;font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif;font-size:7.5pt;font-weight:700;line-height:1.1;color:#000;margin-bottom:1px}
+ .print-bal-num{display:block;font-family:Calibri,'Segoe UI',Arial,sans-serif;font-weight:700;line-height:1.2}
+}

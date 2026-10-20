@@ -13,12 +13,12 @@
 @media print{
   col.serial,th.serial{width:1.89cm}
   col.col-sender,th.col-sender{width:4.8cm}
-  col.mobile,th.mobile{width:3.2cm}
+  col.mobile,th.mobile{width:3.5cm;white-space:nowrap}
   col.col-receiver,th.col-receiver{width:auto}
   col.place,th.place{width:2.2cm}
-  col.col-balance,th.col-balance{width:2.4cm}
+  col.col-balance,th.col-balance{width:2.5cm}
   col.col-aed,th.col-aed{width:2.5cm}
-  col.col-pkr,th.col-pkr{width:3.2cm}
+  col.col-pkr,th.col-pkr{width:3cm}
 }
 .date-print-val{display:none}
 .date-screen-badge{font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:var(--muted);direction:ltr;display:inline-block}
@@ -137,7 +137,7 @@
 @media print{.btn-lock,.dup-badge,.history-btn{display:none!important}}
 /* Keep Nastaliq place names clear of both borders; increase entry rows by 2%. */
 @media screen{#rows>tr>td{height:58.14px;min-height:58.14px}#rows td.col-place{vertical-align:middle}#rows td.col-place textarea{line-height:1.8;padding-block:8px;transform:translateY(.12em)}}
-@page{margin:.5cm}
+@page{margin:5mm 5mm 18mm;@bottom-center{vertical-align:middle;line-height:2.2;padding-bottom:2mm}}
 @media print{#rows>tr>td{height:1.25cm;min-height:0;vertical-align:middle}#rows td.col-place .print-value{line-height:1.8;padding:3px 4px;transform:translateY(.12em);text-align:center}}
 /* Nastaliq requires generous leading: center the complete line box, not a shifted glyph. */
 @media screen{
@@ -152,13 +152,13 @@
 }
 
 /* Separate totals from entries and keep only the outside border. */
-tfoot.register-totals .totals-gap{height:0.25cm}
-tfoot.register-totals .totals-gap>td{height:0.25cm;min-height:0;padding:0;border:0;background:#fff;font-size:0;line-height:0;box-shadow:none}
+tfoot.register-totals .totals-gap{height:0.35cm}
+tfoot.register-totals .totals-gap>td{height:0.35cm;min-height:0;padding:0;border:0;background:#fff;font-size:0;line-height:0;box-shadow:none}
 tfoot.register-totals .totals-row,tfoot.register-totals .totals-row>th,tfoot.register-totals .totals-row>td{height:1.5cm;border:0;border-top:1px solid #99aa9a;border-bottom:1px solid #99aa9a;box-shadow:none;vertical-align:middle}
 tfoot.register-totals .totals-row>:first-child{border-right:1px solid #99aa9a}
 tfoot.register-totals .totals-row>:last-child{border-left:1px solid #99aa9a}
 tfoot.register-totals .totals-row>th{font-size:calc(var(--entry-font) + 2px);font-weight:700;color:#213e35;line-height:2.2;padding:6px 12px;white-space:nowrap}
-@media print{tfoot.register-totals #total-pkr{border-left:1px solid #99aa9a}tfoot.register-totals .totals-gap,tfoot.register-totals .totals-gap>td{height:0.25cm}tfoot.register-totals .totals-row,tfoot.register-totals .totals-row>th,tfoot.register-totals .totals-row>td{height:1.5cm;line-height:2.2;padding:6px 8px}}
+@media print{tfoot.register-totals #total-pkr{border-left:1px solid #99aa9a}tfoot.register-totals .totals-gap,tfoot.register-totals .totals-gap>td{height:0.35cm}tfoot.register-totals .totals-row,tfoot.register-totals .totals-row>th,tfoot.register-totals .totals-row>td{height:1.5cm;line-height:2.2;padding:6px 8px}}
 
 /* Individual entry receipt, with its own portrait print page. */
 .receipt-btn{font-size:10px;padding:3px 5px;line-height:1.8;background:#fff;border:1px solid #b9cfc1;border-radius:6px;color:#17634c}
@@ -209,12 +209,12 @@ tfoot.register-totals .totals-row>th{font-size:calc(var(--entry-font) + 2px);fon
   .paper thead th{line-height:2.2;padding:6px 4px;vertical-align:middle;font-size:var(--entry-font);font-weight:700;background:#edf1eb}
   .paper thead th.serial{width:1.89cm}
   .paper thead th.col-sender{width:4.8cm}
-  .paper thead th.mobile{width:3.2cm}
+  .paper thead th.mobile{width:3.5cm;white-space:nowrap}
   .paper thead th.col-receiver{width:auto}
   .paper thead th.place{width:2.2cm}
-  .paper thead th.col-balance{width:2.4cm}
+  .paper thead th.col-balance{width:2.5cm}
   .paper thead th.col-aed{width:2.5cm}
-  .paper thead th.col-pkr{width:3.2cm}
+  .paper thead th.col-pkr{width:3cm}
   .paper-head{padding:10px 0 6px!important;align-items:center!important;overflow:visible!important}
   .paper-head #title{display:none!important}
   .title-print{display:block!important;font-size:24px;line-height:2.2;font-weight:700;text-align:center;color:#000;overflow:visible;padding:4px 12px 0;margin:0}
@@ -272,3 +272,22 @@ td.col-pkr,td input[data-field="pkr"]{text-align:left}
 .pin-lock-card p{margin:0;font-size:12.5px;color:#4f6b5c}
 #pin-unlock-input{width:100%;max-width:220px;height:48px;font-size:24px}
 .pin-lock-card .pin-actions{width:100%;margin-top:8px}
+
+#grouped-register-print{display:none}
+@media print{
+  body.grouped-register-output>*{display:none!important}
+  body.grouped-register-output>#grouped-register-print{display:block!important;direction:rtl}
+  .order-print-section+ .order-print-section{break-before:page}
+  .order-print-section .title-print{display:block!important}
+  .order-print-section .paper-head input{display:none!important}
+  .order-print-section td{height:1.25cm;padding:2px 4px;vertical-align:middle;text-align:center;border:1px solid #99aa9a;font-size:var(--entry-font);line-height:2}
+  .order-print-section .print-value{display:block!important;font-size:var(--entry-font);line-height:2.1;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere}
+  .order-print-section .col-pkr .print-value{text-align:left;padding-inline-start:6px}
+  .order-print-section .amount{font-family:Arial,sans-serif;white-space:pre-line}
+  .order-print-section tfoot{display:table-row-group}
+  .order-print-section tfoot th,.order-print-section tfoot td{padding:6px 8px;vertical-align:middle;text-align:center;border:1px solid #99aa9a}
+  .order-print-section tfoot .totals-gap,.order-print-section tfoot .totals-gap>td{height:0.35cm;padding:0;border:0;background:#fff;font-size:0;line-height:0}
+  .totals-row.grand-total-row th,.totals-row.grand-total-row td{background:#e4eee2;border-top:2px solid #b7cdb6;font-size:var(--entry-font);font-weight:700;height:1.5cm;line-height:2.2}
+  .totals-row.grand-total-row td:last-child{border-left:1px solid #99aa9a;text-align:left}
+  .order-type-print-badge{font-size:14px;font-weight:700;color:#184a34;margin-inline-start:8px}
+}

@@ -29,6 +29,8 @@ function validateState(input) {
   const ids = new Set();
   const registerRow = row => {
     if (!row || !text(row.id,99) || ids.has(row.id) || !validDate(row.entryDate) || fields.some(f => !text(row[f],300))) invalid('entry');
+    if(row.orderType!==undefined&&!['','bank','city'].includes(row.orderType)) invalid('order type');
+    if(row.balanceType!==undefined&&!text(row.balanceType,300)) invalid('balance type');
     ids.add(row.id);
     if (row.branch && !parties.has(row.branch)) invalid('missing party');
     if (row.history !== undefined && (!Array.isArray(row.history) || row.history.length > 30 || row.history.some(h => !h || ['at','field','from','to'].some(f => !text(h[f],2000))))) invalid('history');

@@ -8,7 +8,7 @@
   const retrySave=document.createElement('button');retrySave.type='button';retrySave.id='retry-save';retrySave.textContent='دوبارہ محفوظ کریں';retrySave.hidden=true;
   const reconnectDiskBtn=document.createElement('button');reconnectDiskBtn.type='button';reconnectDiskBtn.id='reconnect-disk-file';reconnectDiskBtn.hidden=true;
   $('save-state').after(retrySave,reconnectDiskBtn);
-  const rowFields = ['entryDate','sender','mobile','receiver','place','branch','balance','aed','pkr'];
+  const rowFields = ['orderType','balanceType','entryDate','sender','mobile','receiver','place','branch','balance','aed','pkr'];
   const fields = ['sender','mobile','receiver','place','branch','balance','aed','pkr'];
   const labels = ['ارسال کنندہ','موبائیل نمبر','وصول کنندہ','مقام','پارٹی','بقایا','درہم','روپیہ'];
   const moneyFields = ['balance','aed','pkr'];
@@ -68,7 +68,8 @@
     function convert(row){
       if(!row||typeof row!=='object')throw Error('Invalid row');
       const result={};
-      rowFields.forEach(f=>{const v=row[f]===undefined&&['entryDate','branch'].includes(f)?'':row[f];if(typeof v!=='string'||v.length>300)throw Error('Invalid field');result[f]=['sender','receiver','place'].includes(f)?formatAllah(v):v;});
+      rowFields.forEach(f=>{const v=row[f]===undefined&&['orderType','balanceType','entryDate','branch'].includes(f)?'':row[f];if(typeof v!=='string'||v.length>300)throw Error('Invalid field');result[f]=['sender','receiver','place','balanceType'].includes(f)?formatAllah(v):v;});
+      if(!['','bank','city'].includes(result.orderType))throw Error('Invalid order type');
       if(result.entryDate&&!dateValid(result.entryDate))throw Error('Invalid date');
       if(!result.entryDate)result.entryDate=source.date||today();
       result.branch=register(result.branch);
@@ -235,7 +236,18 @@
   function matches(r){return populated(r)&&branchMatch(r)&&rangeValid()&&dateMatch(r)&&queryMatch(r);}
   const selectedRows=()=>state.rows.filter(matches);
   function makeOption(value,label){const option=document.createElement('option');option.value=value;option.textContent=label;return option;}
-  function branchOptions(select,value,filter=false){select.replaceChildren(...(filter?[makeOption('','تمام پارٹیاں'),makeOption('__unassigned','بغیر پارٹی')]:[makeOption('','بغیر پارٹی')]),...state.branches.slice().sort((a,b)=>a.localeCompare(b,'ur')).map(n=>makeOption(filter?'b:'+n:n,n)));if(!filter)select.append(makeOption('__new_party__','＋ نئی پارٹی'));select.value=value;}
+  function branchOptions(select,value,filter=false){select.replaceChildren(...(filter?[makeOption('__unassigned','بغیر پارٹی')]:[makeOption('','بغیر پارٹی')]),...state.branches.slice().sort((a,b)=>a.localeCompare(b,'ur')).map(n=>makeOption(filter?'b:'+n:n,n)));if(!filter)select.append(makeOption('__new_party__','＋ نئی پارٹی'));select.value=value;}
+  function ensureActiveParty(){
+    const branches=state.branches||[];
+    const hasBranch=selectedBranch&&selectedBranch.startsWith('b:')&&branches.includes(selectedBranch.slice(2));
+    if(hasBranch||selectedBranch==='__unassigned')return;
+    const sorted=branches.slice().sort((a,b)=>a.localeCompare(b,'ur'));
+    if(sorted.length>0){
+      selectedBranch='b:'+sorted[0];
+    }else{
+      selectedBranch='__unassigned';
+    }
+  }
   function partyDateCounts(){
     const byBranch=new Map();
     let allCount=0,unassignedCount=0;
@@ -253,15 +265,10 @@
   function renderPartyTabs(){
     const container=$('party-tabs');
     if(!container)return;
+    ensureActiveParty();
     container.replaceChildren();
 
-    const {allCount,unassignedCount,byBranch}=partyDateCounts();
-    {
-      const allTab=document.createElement('button');allTab.type='button';allTab.className='party-tab'+(selectedBranch===''?' active':'');allTab.role='tab';allTab.setAttribute('aria-selected',selectedBranch===''?'true':'false');
-      allTab.innerHTML=`<span>📁 تمام پارٹیاں</span><span class="tab-badge">${allCount}</span>`;
-      allTab.onclick=()=>selectPartyTab('');
-      container.append(allTab);
-    }
+    const {unassignedCount,byBranch}=partyDateCounts();
     const sorted=state.branches.slice().sort((a,b)=>a.localeCompare(b,'ur'));
     for(const name of sorted){
       const tab=document.createElement('button');tab.type='button';const isSel=selectedBranch==='b:'+name;tab.className='party-tab'+(isSel?' active':'');tab.role='tab';tab.setAttribute('aria-selected',isSel?'true':'false');
@@ -271,7 +278,7 @@
       tab.onclick=()=>selectPartyTab('b:'+name);
       container.append(tab);
     }
-    if(unassignedCount>0||selectedBranch==='__unassigned'){
+    if(unassignedCount>0||selectedBranch==='__unassigned'||sorted.length===0){
       const unassignedTab=document.createElement('button');unassignedTab.type='button';const isSel=selectedBranch==='__unassigned';unassignedTab.className='party-tab'+(isSel?' active':'');unassignedTab.role='tab';unassignedTab.setAttribute('aria-selected',isSel?'true':'false');
       unassignedTab.innerHTML=`<span>بغیر پارٹی</span><span class="tab-badge">${unassignedCount}</span>`;
       unassignedTab.onclick=()=>selectPartyTab('__unassigned');
@@ -293,22 +300,34 @@
     if(!container)return;
 
     const sorted=state.branches.slice().sort((a,b)=>a.localeCompare(b,'ur'));
-    const {allCount,unassignedCount,byBranch}=partyDateCounts();
-    const expectedCount=1+sorted.length+(unassignedCount>0||selectedBranch==='__unassigned'?1:0);
+    const {unassignedCount,byBranch}=partyDateCounts();
+    const hasUnassigned=unassignedCount>0||selectedBranch==='__unassigned'||sorted.length===0;
+    const expectedCount=sorted.length+(hasUnassigned?1:0);
     if(container.children.length!==expectedCount){renderPartyTabs();return;}
     Array.from(container.children).forEach((tab,i)=>{
-      let tabVal=i===0?'':i-1<sorted.length?'b:'+sorted[i-1]:'__unassigned';
+      let tabVal=i<sorted.length?'b:'+sorted[i]:'__unassigned';
       const isSel=selectedBranch===tabVal;
       tab.classList.toggle('active',isSel);
       tab.setAttribute('aria-selected',isSel?'true':'false');
       const badge=tab.querySelector('.tab-badge');
-      if(badge)badge.textContent=i===0?allCount:i-1<sorted.length?(byBranch.get(sorted[i-1])||0):unassignedCount;
+      if(badge)badge.textContent=i<sorted.length?(byBranch.get(sorted[i])||0):unassignedCount;
     });
   }
-  function updateBranches(){branchOptions($('branch-filter'),selectedBranch,true);state.rows.forEach(row=>{const select=rowNodes.get(row.id)?.querySelector('[data-field="branch"]');if(select)branchOptions(select,row.branch);});renderPartyTabs();}
+  function updateBranches(){ensureActiveParty();branchOptions($('branch-filter'),selectedBranch,true);state.rows.forEach(row=>{const select=rowNodes.get(row.id)?.querySelector('[data-field="branch"]');if(select)branchOptions(select,row.branch);});renderPartyTabs();}
+  function orderTypeRank(type){
+    if(type==='bank')return 0;
+    if(type==='city')return 1;
+    return 2;
+  }
+  function groupRows(rows){
+    const populatedRows=rows.filter(populated);
+    const draftRows=rows.filter(r=>!populated(r));
+    populatedRows.sort((a,b)=>orderTypeRank(a.orderType||'')-orderTypeRank(b.orderType||''));
+    return [...populatedRows,...draftRows];
+  }
   function ensureDraft(){
-    // Keep unpopulated draft row at the bottom (after populated rows)
-    state.rows=[...state.rows.filter(populated),...state.rows.filter(r=>!populated(r))];
+    // Keep rows grouped by order type, unpopulated draft row at the bottom
+    state.rows=groupRows(state.rows);
     for(const r of state.rows.filter(r=>!populated(r))){
       const node=rowNodes.get(r.id);
       if(node && node!==$('rows').lastElementChild && !node.contains(document.activeElement)){
@@ -323,17 +342,18 @@
     appendRow(row);
     save();
   }
-  function totals(rows=selectedRows()){let totalBalance=0n,totalAed=0n,invalidAny=false;for(const field of moneyFields){let total=0n,invalid=false;for(const row of rows){const value=integerAmount(row[field]);if(value===null)invalid=true;else total+=value;}if(field==='balance'){totalBalance=total;if(invalid)invalidAny=true;}if(field==='aed'){totalAed=total;if(invalid)invalidAny=true;}$('total-'+field).textContent=invalid?'رقم درست کریں':formatted(total);}const netEl=$('total-net-aed');if(netEl){const netAed=totalAed-totalBalance;netEl.textContent=invalidAny?'موجودہ درہم: رقم درست کریں':`موجودہ درہم: ${formatted(netAed)}`;}const ordersEl=$('total-orders-count');if(ordersEl){ordersEl.textContent=`آرڈرز تعداد: ${rows.length}`;}$('total-pkr').textContent=currencyText(rows).split('\n').map(s=>`(${s})`).join('\n');$('count').textContent=`${rows.length} اندراجات`;
+  function totals(rows=selectedRows()){let totalBalance=0n,totalAed=0n,invalidAny=false;const byType=new Map();for(const field of moneyFields){let total=0n,invalid=false;for(const row of rows){const value=integerAmount(row[field]);if(value===null)invalid=true;else{total+=value;if(field==='balance'&&row.balanceType&&row.balanceType.trim()&&value>0n){const t=row.balanceType.trim();byType.set(t,(byType.get(t)||0n)+value);}}}if(field==='balance'){totalBalance=total;if(invalid)invalidAny=true;}if(field==='aed'){totalAed=total;if(invalid)invalidAny=true;}$('total-'+field).textContent=invalid?'رقم درست کریں':formatted(total);}const balEl=$('total-balance');if(balEl&&!invalidAny){const parts=[];for(const [name,sum] of byType){parts.push(`${name}: ${formatted(sum)}`);}balEl.title=parts.length?`کل بقایا: ${formatted(totalBalance)} (${parts.slice(0,4).join(' | ')}${parts.length>4?'...':''})`:`کل بقایا: ${formatted(totalBalance)}`;}const netEl=$('total-net-aed');if(netEl){const netAed=totalAed-totalBalance;netEl.textContent=invalidAny?'موجودہ درہم: رقم درست کریں':`موجودہ درہم: ${formatted(netAed)}`;}const ordersEl=$('total-orders-count');if(ordersEl){ordersEl.textContent=`آرڈرز تعداد: ${rows.length}`;}$('total-pkr').textContent=currencyText(rows).split('\n').map(s=>`(${s})`).join('\n');$('count').textContent=`${rows.length} اندراجات`;
     const fractional=rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null));
     $('filter-message').textContent=!rangeValid()?'تاریخ سے، تاریخ تک سے آگے نہیں ہو سکتی۔':dayMode()?`${fmtDate(state.date)} کی ${rows.length} انٹریاں۔ پرنٹ اور مجموعہ انہی کا ہے۔`:`${rows.length} انٹریاں منتخب ہیں۔ پرنٹ اور مجموعہ انہی کا ہے۔ نئی انٹری کے لیے "＋ نئی قطار" دبائیں۔`;
     if(fractional)$('filter-message').textContent+=' رقم میں صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم کو خود نہیں بدلا گیا۔';
     $('filter-message').classList.toggle('error',!rangeValid()||fractional);
   }
+  function updateBalTypeSuggestions(){let dl=$('bal-type-suggestions');if(!dl){dl=document.createElement('datalist');dl.id='bal-type-suggestions';document.body.append(dl);}const set=new Set(['کھاتہ','عارضی قرضہ']);state.rows.forEach(r=>{if(r.balanceType&&r.balanceType.trim())set.add(r.balanceType.trim());});dl.replaceChildren(...Array.from(set).map(val=>{const opt=document.createElement('option');opt.value=val;return opt;}));}
   function viewLabel(){
     if(rangeActive())return [$('date-from').value?fmtDate($('date-from').value):'شروع',$('date-to').value?fmtDate($('date-to').value):'آج تک'].join(' — ');
     return $('all-dates').checked?'تمام تاریخیں':fmtDate(state.date);
   }
-  const fieldUrduLabels={sender:'ارسال کنندہ',mobile:'موبائیل نمبر',receiver:'وصول کنندہ',place:'مقام',branch:'پارٹی',balance:'بقایا',aed:'درہم',pkr:'روپیہ / افغانی'};
+  const fieldUrduLabels={orderType:'آرڈر کی قسم',balanceType:'بقایا کی نوعیت',sender:'ارسال کنندہ',mobile:'موبائیل نمبر',receiver:'وصول کنندہ',place:'مقام',branch:'پارٹی',balance:'بقایا',aed:'درہم',pkr:'روپیہ / افغانی'};
   // Keep the first two entries per key: enough to find the earliest other row,
   // including the original asymmetric rule for rows with no phone or no money.
   const duplicateRecords=new WeakMap(),duplicateAccepted=new Map();
@@ -647,6 +667,12 @@
       if(!(pageIds.has(r.id)||draft||(tr&&tr===active))){if(tr){tr.remove();rowNodes.delete(r.id);}return;}
       if(!tr)tr=createRowElement(r);
       visibleNodes.push(tr);tr.hidden=false;tr.classList.toggle('draft-row',!hasData);
+      tr.classList.toggle('order-type-bank',(r.orderType||'')==='bank');
+      tr.classList.toggle('order-type-city',(r.orderType||'')==='city');
+      const orderSelect=tr.querySelector('.order-type-select');
+      if(orderSelect){orderSelect.value=r.orderType||'';orderSelect.dataset.value=r.orderType||'';}
+      const balInput=tr.querySelector('.bal-type-input');
+      if(balInput){const bAmt=integerAmount(r.balance);balInput.value=r.balanceType||'';balInput.classList.toggle('visible',bAmt!==null&&bAmt!==0n);balInput.classList.toggle('has-value',!!(r.balanceType&&r.balanceType.trim()));}
       const rLocked=isDayLocked(r.entryDate||state.date);
       if(tr._locked!==rLocked){
         tr.classList.toggle('row-locked',rLocked);
@@ -823,9 +849,52 @@
     const rLocked=isDayLocked(row.entryDate||state.date);
     if(rLocked)tr.classList.add('row-locked');
     fields.forEach((field,i)=>{
-      const td=document.createElement('td');if(field==='branch')td.className='col-branch no-print';if(field==='place')td.className='col-place';if(field==='pkr')td.className='col-pkr';
+      const td=document.createElement('td');if(field==='branch')td.className='col-branch no-print';if(field==='place')td.className='col-place';if(field==='pkr')td.className='col-pkr';if(field==='balance')td.className='col-balance';
       const isText=['sender','receiver','place'].includes(field);
       const input=document.createElement(field==='branch'?'select':(isText?'textarea':'input'));input.dataset.field=field;input.setAttribute('aria-label',labels[i]);input.autocomplete='off';input.maxLength=moneyFields.includes(field)?20:300;
+      let updateBalTypeVis=null,balTypeInput=null;
+      if(field==='balance'){
+        balTypeInput=document.createElement('input');
+        balTypeInput.dataset.field='balanceType';
+        balTypeInput.className='bal-type-input no-print';
+        balTypeInput.setAttribute('aria-label','بقایا کی نوعیت یا نام');
+        balTypeInput.setAttribute('list','bal-type-suggestions');
+        balTypeInput.placeholder='＋ نام / نوعیت';
+        balTypeInput.value=row.balanceType||'';
+        balTypeInput.autocomplete='off';
+        balTypeInput.maxLength=100;
+        balTypeInput.disabled=rLocked;
+        updateBalTypeVis=()=>{
+          const amt=integerAmount(input.value);
+          const hasAmt=amt!==null&&amt!==0n;
+          balTypeInput.classList.toggle('visible',hasAmt);
+          balTypeInput.classList.toggle('has-value',!!(balTypeInput.value.trim()));
+        };
+        balTypeInput.addEventListener('focus',()=>{
+          updateBalTypeSuggestions();
+          balTypeInput._prevVal=balTypeInput.value;
+        });
+        function acceptBalType(){
+          const val=formatAllah(balTypeInput.value).trim();
+          balTypeInput.value=val;
+          if(balTypeInput._prevVal!==val){
+            recordHistory(row,'balanceType',balTypeInput._prevVal||'',val);
+            balTypeInput._prevVal=val;
+          }
+          if(row.balanceType!==val){
+            row.balanceType=val;
+            updateBalTypeVis();
+            save();
+            totals();
+          }
+        }
+        balTypeInput.addEventListener('change',acceptBalType);
+        balTypeInput.addEventListener('blur',acceptBalType);
+        balTypeInput.addEventListener('keydown',e=>{
+          if(e.key==='Enter'){e.preventDefault();acceptBalType();balTypeInput.blur();}
+        });
+        updateBalTypeVis();
+      }
       const afterSuggestionPick=()=>{if(field==='sender')autoFillFromSender(row,tr);};
       if(isText){
         input.addEventListener('keydown',e=>{
@@ -871,6 +940,7 @@
         if(selectedBranch.startsWith('b:')&&!row.branch)row.branch=selectedBranch.slice(2);
         if(moneyFields.includes(field))input.setCustomValidity(integerAmount(input.value)===null?'صرف مکمل عدد لکھیں، اعشاری رقم نہیں':'');
         if(!wasPopulated&&matches(row))viewPage=Math.floor(selectedRows().findIndex(r=>r.id===row.id)/pageSize);
+        if(updateBalTypeVis)updateBalTypeVis();
         applyFilter(true);save();
         if(isText){
           if(input._dismissedFor!==input.value){input._dismissedFor=null;showFieldSuggestions(field,input,row,accept,afterSuggestionPick);}
@@ -891,6 +961,11 @@
           if(prevRow&&prevRow[field]){
             hidePlaceSuggestions();
             input.value=moneyFields.includes(field)?wholeText(prevRow[field]):prevRow[field];
+            if(field==='balance'){
+              row.balanceType=prevRow.balanceType||'';
+              const s=td.querySelector('.bal-type-input');
+              if(s){s.value=row.balanceType;if(updateBalTypeVis)updateBalTypeVis();}
+            }
             accept();
             if(field==='sender')autoFillFromSender(row,tr);
           }
@@ -903,7 +978,34 @@
           if(!next){add();}else{if(!rowNodes.has(next.id)){viewPage=Math.floor(selectedRows().indexOf(next)/pageSize);applyFilter();}focusRow(next);}
         }
       });
-      td.append(input);tr.append(td);
+      td.append(input);
+      if(balTypeInput)td.append(balTypeInput);
+      tr.append(td);
+      if(field==='place'){
+        const tdType=document.createElement('td');tdType.className='col-order-type no-print';
+        const type=document.createElement('select');type.dataset.field='orderType';type.className='order-type-select no-print';type.setAttribute('aria-label','آرڈر کی قسم');type.append(makeOption('','قسم منتخب کریں'),makeOption('bank','بینک / والٹ'),makeOption('city','شہر'));type.value=row.orderType||'';type.dataset.value=row.orderType||'';type.disabled=rLocked;
+        type.onchange=()=>{
+          recordHistory(row,'orderType',row.orderType,type.value);
+          row.orderType=type.value;
+          type.dataset.value=type.value;
+          state.rows=groupRows(state.rows);
+          save();
+          applyFilter(true);
+        };
+        type.addEventListener('keydown',e=>{
+          if((e.ctrlKey||e.metaKey)&&(e.key==='d'||e.key==='D')&&!e.shiftKey&&!e.altKey){
+            e.preventDefault();
+            const visible=state.rows.filter(r=>matches(r)||(!populated(r)&&rowNodes.has(r.id)));
+            const curIdx=visible.indexOf(row);
+            const prevRow=curIdx>0?visible[curIdx-1]:null;
+            if(prevRow&&prevRow.orderType!==undefined){
+              type.value=prevRow.orderType;
+              type.onchange();
+            }
+          }
+        });
+        tdType.append(type);tr.append(tdType);
+      }
     });
     tr.addEventListener('focusout',()=>setTimeout(()=>{if(!tr.contains(document.activeElement))applyFilter(true);},0));
     const tdReceipt=document.createElement('td');tdReceipt.className='col-receipt no-print';tr.append(tdReceipt);
@@ -915,7 +1017,7 @@
   function appendRow(row){$('rows').append(createRowElement(row));}
   function prependRow(row){$('rows').prepend(createRowElement(row));}
   function applyFont(){document.documentElement.style.setProperty('--entry-font',state.fontSize+'px');$('font-size').textContent=state.fontSize;$('font-smaller').disabled=state.fontSize<=10;$('font-larger').disabled=state.fontSize>=22;}
-  function render(){rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;if($('title-print'))$('title-print').textContent=state.title||'اندراج رجسٹر';$('date').value=state.date;if($('start-serial'))$('start-serial').value=activeStartSerial();const currPage=activePageNumber();if($('page-no-input'))$('page-no-input').value=currPage;if($('page-no-val'))$('page-no-val').textContent=currPage;applyFont();updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
+  function render(){ensureActiveParty();state.rows=groupRows(state.rows);rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;if($('title-print'))$('title-print').textContent=state.title||'اندراج رجسٹر';$('date').value=state.date;if($('start-serial'))$('start-serial').value=activeStartSerial();const currPage=activePageNumber();if($('page-no-input'))$('page-no-input').value=currPage;if($('page-no-val'))$('page-no-val').textContent=currPage;applyFont();updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
   function focusRow(row){
     const tr=rowNodes.get(row.id);
     const el=tr?.querySelector('[data-field="sender"]');
@@ -1305,7 +1407,7 @@
   for(const id of ['search','date-from','date-to'])$(id).addEventListener('input',()=>applyFilter());
   if($('toggle-range'))$('toggle-range').onclick=()=>{const d=$('range-drawer');if(!d)return;d.hidden=!d.hidden;$('toggle-range').classList.toggle('active',!d.hidden||rangeActive());if(!d.hidden)$('date-from').focus();};
   if($('clear-range-btn'))$('clear-range-btn').onclick=()=>{for(const id of ['date-from','date-to'])$(id).value='';if($('range-drawer'))$('range-drawer').hidden=true;if($('toggle-range'))$('toggle-range').classList.remove('active');applyFilter();};
-  function resetFilters(){selectedBranch='';$('branch-filter').value='';$('all-dates').checked=false;for(const id of ['search','date-from','date-to'])$(id).value='';if($('range-drawer'))$('range-drawer').hidden=true;if($('toggle-range'))$('toggle-range').classList.remove('active');applyFilter();renderPartyTabs();}
+  function resetFilters(){ensureActiveParty();if($('branch-filter'))$('branch-filter').value=selectedBranch;$('all-dates').checked=false;for(const id of ['search','date-from','date-to'])$(id).value='';if($('range-drawer'))$('range-drawer').hidden=true;if($('toggle-range'))$('toggle-range').classList.remove('active');applyFilter();renderPartyTabs();}
   $('reset-filters').onclick=resetFilters;
   $('font-smaller').onclick=()=>{state.fontSize=Math.max(10,state.fontSize-1);applyFont();save();};$('font-larger').onclick=()=>{state.fontSize=Math.min(22,state.fontSize+1);applyFont();save();};
   $('title').addEventListener('input',()=>{state.title=$('title').value;if($('title-print'))$('title-print').textContent=$('title').value||'اندراج رجسٹر';save();});
@@ -1589,7 +1691,7 @@
       const currSelect=document.createElement('select');currSelect.className='party-currency-select';currSelect.append(makeOption('pkr','روپیہ (PKR)'),makeOption('afn','افغانی (AFN)'));currSelect.value=partyCurrency(name);
       currSelect.onchange=()=>{if([...state.rows,...state.trash.map(t=>t.row)].some(r=>r.branch===name&&populated(r))){currSelect.value=partyCurrency(name);$('branch-error').textContent='اس پارٹی کی انٹریاں موجود ہیں؛ نئی کرنسی کے لیے الگ پارٹی بنائیں۔';return;}if(!state.partyCurrencies)state.partyCurrencies={};state.partyCurrencies[name]=currSelect.value;save();updateBranches();applyFilter();$('branch-error').textContent=name+' کی کرنسی اب '+(currSelect.value==='afn'?'افغانی':'روپیہ')+' ہے۔';};
       const rename=document.createElement('button');rename.textContent='نام محفوظ کریں';rename.onclick=()=>{const next=cleanName(input.value);if(!next){$('branch-error').textContent='پارٹی کا نام لکھیں۔';return;}if(state.branches.some(n=>n!==name&&nameKey(n)===nameKey(next))){$('branch-error').textContent='یہ نام پہلے سے موجود ہے۔';return;}state.branches[state.branches.indexOf(name)]=next;if(next!==name&&state.partyCurrencies&&Object.hasOwn(state.partyCurrencies,name)){state.partyCurrencies[next]=state.partyCurrencies[name];delete state.partyCurrencies[name];}if(next!==name&&state.partySerials&&Object.hasOwn(state.partySerials,name)){state.partySerials[next]=state.partySerials[name];delete state.partySerials[name];}for(const row of [...state.rows,...state.trash.map(t=>t.row)])if(row.branch===name)row.branch=next;if(selectedBranch==='b:'+name)selectedBranch='b:'+next;save();updateBranches();applyFilter();renderBranchList();$('branch-error').textContent='نام اور متعلقہ انٹریاں اپ ڈیٹ ہو گئیں۔';};
-      const remove=document.createElement('button');remove.textContent='ہٹائیں';remove.onclick=()=>{if(state.rows.some(r=>r.branch===name&&populated(r))||state.trash.some(t=>t.row.branch===name)){$('branch-error').textContent='اس پارٹی کی انٹریاں موجود ہیں؛ پہلے ان کی پارٹی تبدیل کریں۔';return;}state.rows.forEach(r=>{if(r.branch===name)r.branch='';});state.branches=state.branches.filter(n=>n!==name);if(state.partyCurrencies)delete state.partyCurrencies[name];if(state.partySerials)delete state.partySerials[name];if(selectedBranch==='b:'+name)selectedBranch='';save();updateBranches();applyFilter();renderBranchList();$('branch-error').textContent='پارٹی ہٹا دی گئی۔';};div.append(input,currSelect,count,rename,remove);$('branch-list').append(div);
+      const remove=document.createElement('button');remove.textContent='ہٹائیں';remove.onclick=()=>{if(state.rows.some(r=>r.branch===name&&populated(r))||state.trash.some(t=>t.row.branch===name)){$('branch-error').textContent='اس پارٹی کی انٹریاں موجود ہیں؛ پہلے ان کی پارٹی تبدیل کریں۔';return;}state.rows.forEach(r=>{if(r.branch===name)r.branch='';});state.branches=state.branches.filter(n=>n!==name);if(state.partyCurrencies)delete state.partyCurrencies[name];if(state.partySerials)delete state.partySerials[name];if(selectedBranch==='b:'+name){selectedBranch='';ensureActiveParty();}save();updateBranches();applyFilter();renderBranchList();$('branch-error').textContent='پارٹی ہٹا دی گئی۔';};div.append(input,currSelect,count,rename,remove);$('branch-list').append(div);
     }
   }
   $('branch-form').onsubmit=e=>{e.preventDefault();const name=cleanName($('branch-name').value);if(!name)return;const existing=state.branches.find(n=>nameKey(n)===nameKey(name));if(existing){$('branch-error').textContent='یہ پارٹی پہلے سے موجود ہے؛ فہرست سے منتخب کریں۔';return;}const curr=$('branch-currency')?.value||'pkr';state.branches.push(name);if(!state.partyCurrencies)state.partyCurrencies={};state.partyCurrencies[name]=curr;if(pendingBranchRow)pendingBranchRow.branch=name;else selectedBranch='b:'+name;save();updateBranches();applyFilter(true);renderBranchList();$('branch-name').value='';$('branch-error').textContent='پارٹی شامل ہو گئی ('+(curr==='afn'?'افغانی':'روپیہ')+')۔';if(pendingBranchRow){const target=pendingBranchRow;$('branch-dialog').close();focusRow(target);}else{$('branch-dialog').close();}};
@@ -1658,8 +1760,149 @@
     finally{document.body.inert=false;clearReceiptOutput();}
   }
   $('receipt-preview').onclick=()=>outputReceipt();$('receipt-save').onclick=()=>outputReceipt(true);
-  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output')||document.body.classList.contains('summary-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());const titlePrint=$('title-print');if(titlePrint)titlePrint.textContent=$('title').value||state.title||'اندراج رجسٹر';const currPage=activePageNumber();if($('page-no-val'))$('page-no-val').textContent=currPage;const resetVal=Math.max(0,currPage-1);document.documentElement.style.setProperty('--print-start-page',String(resetVal));document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{const span=document.createElement('span');span.className='print-value';span.textContent=input.classList.contains('amount')?wholeText(input.value):input.value;if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
-  window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else if($('summary-dialog').open)prepareSummaryOutput();else preparePrint();});window.addEventListener('afterprint',()=>{registerPrintActive=false;document.documentElement.style.removeProperty('--print-start-page');clearReceiptOutput();applyFilter();});
+  const groupedPrint=document.createElement('div');groupedPrint.id='grouped-register-print';document.body.append(groupedPrint);
+  function clearGroupedPrint(){document.body.classList.remove('grouped-register-output');groupedPrint.replaceChildren();}
+  function prepareGroupedPrint(){
+    clearGroupedPrint();
+    const all=selectedRows();
+    if(!all.length)return;
+
+    const orderCategories=[{type:'bank',name:'بینک / والٹ آرڈرز'},{type:'city',name:'شہر آرڈرز'},{type:'',name:'دیگر آرڈرز'}];
+    const activeCategories=orderCategories
+      .map(cat=>({...cat,rows:all.filter(r=>(r.orderType||'')===cat.type)}))
+      .filter(cat=>cat.rows.length>0);
+
+    let totalBalance=0n,totalAed=0n,invalidAny=false;
+    for(const r of all){
+      const b=integerAmount(r.balance),a=integerAmount(r.aed);
+      if(b===null||a===null)invalidAny=true;
+      if(b!==null)totalBalance+=b;
+      if(a!==null)totalAed+=a;
+    }
+    const netAed=totalAed-totalBalance;
+    const allPkrText=currencyText(all).split('\n').map(s=>`(${s})`).join('\n');
+    const startPage=activePageNumber();
+
+    let currentSerial=activeStartSerial();
+    activeCategories.forEach((cat,idx)=>{
+      const isLast=idx===activeCategories.length-1;
+      const section=document.createElement('section');section.className='order-print-section';
+      const head=document.querySelector('.paper-head').cloneNode(true);
+      const pageVal=head.querySelector('.page-no-val');
+      if(pageVal)pageVal.textContent=String(startPage+idx);
+      if(cat.type){
+        const bHead=head.querySelector('#branch-heading')||head.querySelector('.head-party strong');
+        if(bHead){
+          const catTag=document.createElement('span');
+          catTag.className='order-type-print-badge';
+          catTag.textContent=` (${cat.name})`;
+          bHead.append(catTag);
+        }
+      }
+      section.append(head);
+
+      const table=document.createElement('table');
+      const thead=document.querySelector('.table-wrap table thead').cloneNode(true);
+      thead.querySelectorAll('.no-print').forEach(el=>el.remove());
+      table.append(thead);
+
+      const body=document.createElement('tbody');
+      for(const row of cat.rows){
+        const tr=document.createElement('tr');
+
+        const tdNum=document.createElement('td');tdNum.className='number';
+        tdNum.textContent=String(currentSerial++);
+        tr.append(tdNum);
+
+        const tdSender=document.createElement('td');tdSender.className='person col-sender';
+        const spanSender=document.createElement('span');spanSender.className='print-value';
+        spanSender.textContent=row.sender||'';
+        tdSender.append(spanSender);
+        tr.append(tdSender);
+
+        const tdMobile=document.createElement('td');tdMobile.className='mobile col-mobile';
+        const spanMobile=document.createElement('span');spanMobile.className='print-value';
+        spanMobile.dir='ltr';
+        spanMobile.textContent=row.mobile||'';
+        tdMobile.append(spanMobile);
+        tr.append(tdMobile);
+
+        const tdReceiver=document.createElement('td');tdReceiver.className='person col-receiver';
+        const spanReceiver=document.createElement('span');spanReceiver.className='print-value';
+        spanReceiver.textContent=row.receiver||'';
+        tdReceiver.append(spanReceiver);
+        tr.append(tdReceiver);
+
+        const tdPlace=document.createElement('td');tdPlace.className='place col-place';
+        const spanPlace=document.createElement('span');spanPlace.className='print-value';
+        spanPlace.textContent=row.place||'';
+        tdPlace.append(spanPlace);
+        tr.append(tdPlace);
+
+        const tdBal=document.createElement('td');tdBal.className='money col-balance';
+        const spanBal=document.createElement('span');spanBal.className='print-value';spanBal.dir='ltr';
+        const bAmt=integerAmount(row.balance);
+        const balText=wholeText(row.balance);
+        if(row.balanceType&&row.balanceType.trim()&&(bAmt!==null&&bAmt!==0n)){
+          const tag=document.createElement('small');tag.className='print-bal-tag';
+          tag.textContent=`(${row.balanceType.trim()})`;
+          const numSpan=document.createElement('span');numSpan.className='print-bal-num';
+          numSpan.textContent=balText;
+          spanBal.replaceChildren(tag,numSpan);
+        }else{
+          spanBal.textContent=balText;
+        }
+        tdBal.append(spanBal);
+        tr.append(tdBal);
+
+        const tdAed=document.createElement('td');tdAed.className='money col-aed';
+        const spanAed=document.createElement('span');spanAed.className='print-value';spanAed.dir='ltr';
+        spanAed.textContent=wholeText(row.aed);
+        tdAed.append(spanAed);
+        tr.append(tdAed);
+
+        const tdPkr=document.createElement('td');tdPkr.className='money col-pkr';
+        const spanPkr=document.createElement('span');spanPkr.className='print-value';spanPkr.dir='ltr';
+        spanPkr.textContent=wholeText(row.pkr);
+        tdPkr.append(spanPkr);
+        tr.append(tdPkr);
+
+        body.append(tr);
+      }
+      table.append(body);
+
+      if(isLast){
+        const foot=document.createElement('tfoot');
+        foot.className='register-totals';
+
+        const gapTr=document.createElement('tr');gapTr.className='totals-gap';gapTr.setAttribute('aria-hidden','true');
+        const gapTd=document.createElement('td');gapTd.colSpan=8;gapTr.append(gapTd);
+        foot.append(gapTr);
+
+        const grandTr=document.createElement('tr');grandTr.className='totals-row grand-total-row';
+        const grandTh=document.createElement('th');grandTh.colSpan=5;grandTh.scope='row';
+        const titleWrap=document.createElement('div');titleWrap.className='totals-title-wrap';
+        const titleSpan=document.createElement('span');titleSpan.textContent='کل مجموعہ حساب';
+        const countSpan=document.createElement('span');countSpan.className='orders-count-badge';countSpan.textContent=`آرڈرز تعداد: ${all.length}`;
+        const netSpan=document.createElement('span');netSpan.className='net-aed-badge';netSpan.textContent=invalidAny?'موجودہ درہم: رقم درست کریں':`موجودہ درہم: ${formatted(netAed)}`;
+        titleWrap.append(titleSpan,countSpan,netSpan);grandTh.append(titleWrap);grandTr.append(grandTh);
+
+        const balTd=document.createElement('td');balTd.id='total-balance';balTd.className='amount';balTd.textContent=formatted(totalBalance);
+        const aedTd=document.createElement('td');aedTd.id='total-aed';aedTd.className='amount';aedTd.textContent=formatted(totalAed);
+        const pkrTd=document.createElement('td');pkrTd.id='total-pkr';pkrTd.className='amount';pkrTd.textContent=allPkrText;
+        grandTr.append(balTd,aedTd,pkrTd);
+        foot.append(grandTr);
+        table.append(foot);
+      }
+      section.append(table);
+      groupedPrint.append(section);
+    });
+
+    groupedPrint.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+    document.body.classList.add('grouped-register-output');
+  }
+  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output')||document.body.classList.contains('summary-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());const titlePrint=$('title-print');if(titlePrint)titlePrint.textContent=$('title').value||state.title||'اندراج رجسٹر';const currPage=activePageNumber();if($('page-no-val'))$('page-no-val').textContent=currPage;const resetVal=Math.max(0,currPage-1);document.documentElement.style.setProperty('--print-start-page',String(resetVal));document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{if(input.classList.contains('no-print')||input.closest('.no-print')||input.dataset.field==='balanceType')return;const span=document.createElement('span');span.className='print-value';const isAmt=input.classList.contains('amount');const valText=isAmt?wholeText(input.value):input.value;const bAmt=integerAmount(row.balance);if(input.dataset.field==='balance'&&row.balanceType&&row.balanceType.trim()&&(bAmt!==null&&bAmt!==0n)){const small=document.createElement('small');small.className='print-bal-tag';small.textContent=`(${row.balanceType.trim()})`;const numSpan=document.createElement('span');numSpan.className='print-bal-num';numSpan.textContent=valText;span.replaceChildren(small,numSpan);}else{span.textContent=valText;}if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});prepareGroupedPrint();}
+  window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else if($('summary-dialog').open)prepareSummaryOutput();else preparePrint();});window.addEventListener('afterprint',()=>{registerPrintActive=false;clearGroupedPrint();document.documentElement.style.removeProperty('--print-start-page');clearReceiptOutput();applyFilter();});
   function canOutput(rows,filtered=true){if(filtered&&!rangeValid()){alert('تاریخ کا دورانیہ درست کریں۔');return false;}if(!rows.length){alert('کوئی انٹری منتخب نہیں ہے۔');return false;}if(rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null))){alert('رقم کے خانے درست کریں۔ صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم خود تبدیل نہیں کی گئی۔');return false;}return true;}
   if(!window.electronAPI?.savePDF){
     $('save-pdf').hidden=false;$('save-pdf').title='براؤزر پرنٹ میں Save as PDF منتخب کریں';
@@ -1682,7 +1925,7 @@
         if(result.status==='saved'){button.textContent='✓ PDF محفوظ ہو گئی';if(result.filePath)recordSavedPdf(result.filePath);}
         else if(result.status==='error')alert('PDF محفوظ نہیں ہو سکی۔ دوسری جگہ منتخب کریں یا کھلی ہوئی فائل بند کریں۔');
       }catch{alert('PDF محفوظ نہیں ہو سکی۔ دوبارہ کوشش کریں۔');}
-      finally{registerPrintActive=false;document.documentElement.style.removeProperty('--print-start-page');document.body.inert=false;button.disabled=false;applyFilter();setTimeout(()=>{button.replaceChildren(...label);},2500);}
+      finally{registerPrintActive=false;clearGroupedPrint();document.documentElement.style.removeProperty('--print-start-page');document.body.inert=false;button.disabled=false;applyFilter();setTimeout(()=>{button.replaceChildren(...label);},2500);}
     };
   }
   $('print').onclick=async()=>{
@@ -1693,7 +1936,7 @@
     document.body.inert=true;
     try{preparePrint();const result=await window.electronAPI.previewPDF();if(result.status==='error')alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');}
     catch{alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');}
-    finally{registerPrintActive=false;document.documentElement.style.removeProperty('--print-start-page');document.body.inert=false;applyFilter();}
+    finally{registerPrintActive=false;clearGroupedPrint();document.documentElement.style.removeProperty('--print-start-page');document.body.inert=false;applyFilter();}
   };
   const topNavEl=document.querySelector('.top-nav');
   if(topNavEl&&typeof ResizeObserver!=='undefined'){
