@@ -90,24 +90,20 @@
           <button id="lock-app-now-btn" type="button" hidden>🔒 ابھی ایپ لاک کریں (Ctrl+L)</button>
           <button id="logout-btn" type="button" hidden>🚪 لاگ آؤٹ (Logout)</button>
           <hr class="menu-divider">
-          <button id="manage-backups" type="button">🛡 بیک اَپ سنبھالیں (تاریخچہ)</button>
-          <button id="backup" type="button">💾 بیک اَپ ڈاؤن لوڈ</button>
-          <button id="restore" type="button">📂 بیک اَپ کھولیں</button>
-          <button id="auto-backup" type="button" hidden>💿 نئی پی سی ڈسک فائل بنائیں</button>
-          <button id="link-disk-file" type="button" hidden>🔗 موجودہ پی سی فائل جوڑیں</button>
-          <span id="auto-backup-status"></span>
+          <section class="backup-menu-group" aria-label="بیک اَپ">
+            <h3>بیک اَپ</h3>
+            <button id="manage-backups" type="button">🛡 خودکار بیک اَپ</button>
+            <button id="backup" type="button">💾 بیک اَپ ڈاؤن لوڈ</button>
+            <button id="restore" type="button">📂 بیک اَپ بحال کریں</button>
+          </section>
+
         </div>
       </details>
 
       <span id="save-state" class="save-badge" role="status">محفوظ ہے</span>
     </div>
   </header>
-  <section id="external-backup-banner" class="external-backup-banner no-print" aria-label="بیرونی بیک اَپ کی حالت">
-    <div class="external-backup-overview"><strong id="external-backup-state" role="status"></strong><span id="external-backup-last-success"></span></div>
-    <div class="external-backup-location"><span>بیک اَپ مقام:</span><bdi id="external-backup-location" dir="ltr"></bdi></div>
-    <p id="external-backup-error" role="status" hidden></p>
-    <div class="external-backup-quick-actions"><button id="external-backup-quick-select" type="button">بیک اَپ فولڈر منتخب کریں</button><button id="external-backup-quick-retry" type="button" hidden>ابھی بیک اَپ لیں</button></div>
-  </section>
+
 
   <div class="range-drawer no-print" id="range-drawer" hidden>
     <div class="range-drawer-inner">
@@ -122,7 +118,6 @@
   </div>
 
   <main id="register-page">
-    <div class="backup-banner" id="backup-banner"><span id="backup-status" role="status"></span><button id="backup-now">کاپی ڈاؤن لوڈ کریں</button></div>
     <div class="undo-bar" id="undo-bar" hidden><span id="undo-message" role="status"></span><button id="undo">واپس لائیں (Undo)</button></div>
     <div class="party-tabs-bar no-print" id="party-tabs-bar" role="navigation" aria-label="پارٹی کھاتے">
       <div class="party-tabs-scroll" id="party-tabs" role="tablist"></div>
@@ -169,20 +164,24 @@
   <dialog closedby='any' id="summary-dialog" aria-labelledby="summary-title"><div class="dialog-head"><h2 id="summary-title">روزانہ خلاصہ</h2><button id="close-summary" aria-label="بند کریں">×</button></div><div class="summary-tabs" role="tablist" aria-label="خلاصہ کی قسم"><button id="summary-tab-date" type="button" role="tab" class="summary-tab active" aria-selected="true">📅 تاریخ وار خلاصہ</button><button id="summary-tab-party" type="button" role="tab" class="summary-tab" aria-selected="false">🏢 پارٹی وار خلاصہ</button></div><div class="summary-toolbar"><p id="summary-scope"></p><div class="summary-export-btns"><button id="summary-pdf" type="button" class="primary">📄 PDF محفوظ کریں</button><button id="summary-png" type="button">🖼 PNG محفوظ کریں</button></div></div><p id="summary-status" role="status"></p><div class="summary-wrap"><table id="summary-table"><thead><tr><th id="summary-first-heading">تاریخ</th><th>آرڈرز تعداد</th><th>بقایا</th><th>درہم</th><th id="summary-currency-heading">روپیہ</th></tr></thead><tbody id="summary-rows"></tbody><tfoot><tr><th>کل</th><td id="summary-count">0</td><td id="summary-balance">0</td><td id="summary-aed">0</td><td id="summary-pkr">0</td></tr></tfoot></table></div><p id="summary-hint">کسی تاریخ پر کلک کریں تو اسی دن کا رجسٹر کھل جائے گا۔</p></dialog>
 
   <dialog closedby='any' id="backup-dialog" aria-labelledby="backup-dialog-title">
-    <div class="dialog-head"><h2 id="backup-dialog-title">خودکار بیک اَپ اور بحالی (Backup Manager)</h2><button id="close-backups" aria-label="بند کریں">×</button></div>
+    <div class="dialog-head"><h2 id="backup-dialog-title">خودکار بیک اَپ</h2><button id="close-backups" aria-label="بند کریں">×</button></div>
     <p>تبدیلی کے تقریباً 2.5 سیکنڈ بعد خودکار بیک اَپ بنتا ہے۔ آخری 30 کاپیاں محفوظ رہتی ہیں، ضروری نہیں کہ یہ 30 دن کی ہوں۔ ری سٹور کرنے سے پہلے موجودہ ڈیٹا کا سیفٹی بیک اَپ بھی خود بن جاتا ہے۔</p>
-    <div class="backup-actions-bar" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+
+  <section id="external-backup-banner" class="external-backup-banner no-print" aria-label="بیرونی بیک اَپ کی حالت">
+    <div class="external-backup-overview"><strong id="external-backup-state" role="status"></strong><span id="external-backup-last-success"></span></div>
+    <div class="external-backup-location"><span>بیک اَپ مقام:</span><bdi id="external-backup-location" dir="ltr"></bdi></div>
+    <p id="external-backup-error" role="status" hidden></p>
+  </section>
+    <section class="external-backup-settings"><h3>بیرونی فولڈر بیک اَپ</h3><p id="external-backup-status" class="sr-only" aria-hidden="true"></p><div class="backup-actions-bar"><button id="external-backup-select" type="button">فولڈر منتخب کریں</button><button id="external-backup-retry" type="button" hidden>دوبارہ جوڑیں / بیک اَپ لیں</button><button id="external-backup-disable" type="button" hidden>بند کریں</button></div><p id="external-backup-help">منتخب USB یا synced فولڈر میں Hisaab-Backups کے اندر آخری 30 کاپیاں محفوظ ہوں گی۔ Cloud sync کی تصدیق اپنی sync app میں کریں۔</p></section><div id="backup-legacy-controls"></div><p id="backup-status" class="backup-download-info" role="status"></p><details class="backup-history"><summary>پچھلی محفوظ کاپیاں</summary>    <div class="backup-actions-bar" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
       <button id="open-backup-folder-btn" type="button" class="btn-sm">📁 بیک اَپ فولڈر کھولیں</button>
       <button id="create-backup-now-btn" type="button" class="btn-sm primary">⚡ فوری خودکار بیک اَپ لیں</button>
-      <button id="dialog-setup-disk-btn" type="button" class="btn-sm" hidden>💿 نئی پی سی ڈسک فائل بنائیں</button>
-      <button id="dialog-link-disk-btn" type="button" class="btn-sm" hidden>🔗 موجودہ پی سی فائل جوڑیں</button>
-    </div>
-    <section class="external-backup-settings"><h3>بیرونی فولڈر بیک اَپ</h3><p id="external-backup-status" role="status"></p><div class="backup-actions-bar"><button id="external-backup-select" type="button">فولڈر منتخب کریں</button><button id="external-backup-retry" type="button" hidden>دوبارہ جوڑیں / بیک اَپ لیں</button><button id="external-backup-disable" type="button" hidden>بند کریں</button></div><p id="external-backup-help">منتخب USB یا synced فولڈر میں Hisaab-Backups کے اندر آخری 30 کاپیاں محفوظ ہوں گی۔ Cloud sync کی تصدیق اپنی sync app میں کریں۔</p></section><div class="summary-wrap" style="max-height:48vh;">
+    </div><div class="summary-wrap" style="max-height:48vh;">
       <table id="backup-list-table">
         <thead><tr><th>فائل / تاریخ</th><th>قسم</th><th>سائز</th><th>عمل</th></tr></thead>
         <tbody id="backup-list-rows"></tbody>
       </table>
     </div>
+    </details>
   </dialog>
 
   <dialog closedby='any' id="history-dialog" aria-labelledby="history-dialog-title">

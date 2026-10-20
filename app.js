@@ -7,7 +7,7 @@
   let autoBackupTimer=null,autoBackupHandle=null,diskWriteBusy=false,diskWritePending=false,diskSyncTimer=null,pendingDiskHandle=null,unsavedDisk=false;
   const retrySave=document.createElement('button');retrySave.type='button';retrySave.id='retry-save';retrySave.textContent='دوبارہ محفوظ کریں';retrySave.hidden=true;
   const reconnectDiskBtn=document.createElement('button');reconnectDiskBtn.type='button';reconnectDiskBtn.id='reconnect-disk-file';reconnectDiskBtn.hidden=true;
-  $('save-state').after(retrySave,reconnectDiskBtn);
+  $('save-state').after(retrySave);$('backup-legacy-controls').append(reconnectDiskBtn);
   const rowFields = ['orderType','balanceType','entryDate','sender','mobile','receiver','place','branch','balance','aed','pkr'];
   const fields = ['sender','mobile','receiver','place','branch','balance','aed','pkr'];
   const labels = ['ارسال کنندہ','موبائیل نمبر','وصول کنندہ','مقام','پارٹی','بقایا','درہم','روپیہ'];
@@ -749,7 +749,7 @@
     if($('total-pkr'))$('total-pkr').title=isAfn?'کل افغانی':'کل روپیہ';
     updatePartyTabsActive();
   }
-  function updateBackup(){const at=state.lastBackupAt;const overdue=!at||Date.now()-Date.parse(at)>7*86400000;$('backup-banner').classList.toggle('backup-due',overdue);$('backup-status').textContent=at?`آخری دستی بیک اَپ ڈاؤن لوڈ: ${new Date(at).toLocaleString('en-GB')}${overdue?' — نیا بیک اَپ لے لیں۔':''}`:'ابھی دستی بیک اَپ ڈاؤن لوڈ نہیں کیا گیا۔ چاہیں تو الگ کاپی ڈاؤن لوڈ کریں۔';}
+  function updateBackup(){const at=state.lastBackupAt;const overdue=!at||Date.now()-Date.parse(at)>7*86400000;$('backup-status').textContent=at?`آخری دستی بیک اَپ ڈاؤن لوڈ: ${new Date(at).toLocaleString('en-GB')}${overdue?' — نیا بیک اَپ لے لیں۔':''}`:'ابھی دستی بیک اَپ ڈاؤن لوڈ نہیں کیا گیا۔ چاہیں تو الگ کاپی ڈاؤن لوڈ کریں۔';}
   function updateUndo(){$('undo-bar').hidden=!state.trash.length;$('undo-message').textContent=`${state.trash.length} حذف شدہ انٹریاں واپس لائی جا سکتی ہیں۔ آخری حذف پہلے واپس ہوگا۔`;}
   const placeSuggestMenu=document.createElement('div');
   placeSuggestMenu.className='place-suggest-menu no-print';
@@ -1326,56 +1326,6 @@
   if($('close-backups'))$('close-backups').onclick=()=>$('backup-dialog').close();
   if($('open-backup-folder-btn'))$('open-backup-folder-btn').onclick=()=>window.electronAPI?.openBackupsFolder?.();
   if($('create-backup-now-btn'))$('create-backup-now-btn').onclick=async()=>{await executeAutoBackup(false);await renderBackupList();};
-  async function setupAutoBackup(){
-    if(!window.showSaveFilePicker)return;
-    try{
-      const handle=await window.showSaveFilePicker({
-        suggestedName:`hisaab-database.json`,
-        types:[{description:'Hisaab Database File (.json)',accept:{'application/json':['.json']}}]
-      });
-      autoBackupHandle=handle;
-      pendingDiskHandle=null;
-      reconnectDiskBtn.hidden=true;
-      await saveDiskHandle(handle);
-      await flushDiskFileNow();
-      scheduleAutoBackup(true);
-    }catch(e){/* cancelled by user */}
-  }
-  async function linkExistingDiskFile(){
-    if(!window.showOpenFilePicker)return;
-    try{
-      const [handle]=await window.showOpenFilePicker({
-        multiple:false,
-        types:[{description:'Hisaab Database File (.json)',accept:{'application/json':['.json']}}]
-      });
-      if(!handle)return;
-      if(handle.requestPermission){
-        const perm=await handle.requestPermission({mode:'readwrite'});
-        if(perm!=='granted')return;
-      }
-      const file=await handle.getFile();
-      if(file.size>15000000)throw Error('Large file');
-      const text=await file.text();
-      if(text.trim()){
-        const hasCurrentData=state.rows.some(populated)||state.journal?.rows?.some(r=>r.detail?.trim()||r.debit?.trim()||r.credit?.trim());
-        const parsed=migrate(JSON.parse(text));
-        if(hasCurrentData&&!confirm(`پی سی فائل "${handle.name}" سے ڈیٹا لوڈ کر کے موجودہ اسکرین سے بدل دیا جائے اور آگے کی تمام انٹریاں اسی فائل میں محفوظ کی جائیں؟`))return;
-        state=parsed;
-        storageBlocked=false;storageReadFailed=false;selectedBranch='';
-        for(const id of ['search','date-from','date-to'])$(id).value='';
-      }
-      autoBackupHandle=handle;
-      pendingDiskHandle=null;
-      reconnectDiskBtn.hidden=true;
-      await saveDiskHandle(handle);
-      persist();
-      render();
-      await flushDiskFileNow();
-      scheduleAutoBackup(true);
-    }catch{
-      alert('یہ درست حساب ڈیٹا فائل نہیں ہے یا کھل نہیں سکی۔');
-    }
-  }
   reconnectDiskBtn.onclick=async()=>{
     const handle=pendingDiskHandle||autoBackupHandle;
     if(!handle)return;
@@ -1426,15 +1376,6 @@
         $('save-state').textContent='پی سی فائل دوبارہ جوڑیں';
       }
     }catch(_){}
-  }
-  if(window.showSaveFilePicker){
-    $('auto-backup').hidden=false;
-    $('auto-backup').onclick=setupAutoBackup;
-    if(!nativeStorage&&$('dialog-setup-disk-btn')){$('dialog-setup-disk-btn').hidden=false;$('dialog-setup-disk-btn').onclick=setupAutoBackup;}
-  }
-  if(!nativeStorage&&window.showOpenFilePicker){
-    if($('link-disk-file')){$('link-disk-file').hidden=false;$('link-disk-file').onclick=linkExistingDiskFile;}
-    if($('dialog-link-disk-btn')){$('dialog-link-disk-btn').hidden=false;$('dialog-link-disk-btn').onclick=linkExistingDiskFile;}
   }
   if($('start-serial')){
     $('start-serial').addEventListener('input',()=>{
@@ -1984,7 +1925,7 @@
   }
   function download(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   function backup(){const time=new Date().toISOString();const snapshot={...state,rows:state.rows.filter(populated),lastBackupAt:time};download(new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}),`hisaab-backup-${today()}.json`);state.lastBackupAt=time;save();updateBackup();}
-  $('backup').onclick=backup;$('backup-now').onclick=backup;setInterval(updateBackup,60000);
+  $('backup').onclick=backup;setInterval(updateBackup,60000);
   $('restore').onclick=()=>$('file').click();
   $('file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>15000000)throw Error('Large file');await restoreBackupData(JSON.parse(await file.text()));}catch{alert('یہ درست حساب بیک اَپ نہیں ہے۔ موجودہ ڈیٹا تبدیل نہیں ہوا۔');}finally{e.target.value='';}};
   $('export-open').onclick=()=>{if(journalController?.isActive())journalController.exportExcel();else $('export-dialog').showModal();};$('close-export').onclick=()=>$('export-dialog').close();

@@ -269,3 +269,7 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
   .app-shell :is(button,summary.btn-nav) {transition:none!important;translate:none!important;scale:1!important}
   .app-shell :is(button,summary.btn-nav):not(.journal-delete):not(#toggle-pwd-btn) {transform:none!important}
 }
+
+.backup-menu-group{display:grid;gap:6px;border-top:1px solid #e0e7df;padding-top:8px}.backup-menu-group h3{margin:0 6px;font-size:12px;color:#617367}.backup-history{margin-top:12px;border-top:1px solid #d5e2d9;padding-top:10px}.backup-history>summary{cursor:pointer;font-size:13px;font-weight:700;padding:5px 0}.backup-history .backup-actions-bar{margin-top:10px}.backup-download-info{font-size:11px;color:#617367;line-height:2}
+
+.app-shell #backup-dialog .external-backup-banner{margin:0 0 12px}

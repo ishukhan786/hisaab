@@ -54,8 +54,8 @@
   details.textContent=[state,time,'مقام: '+folder,err?'وجہ: '+err:''].filter(Boolean).join(' — ');
   details.classList.toggle('error',!!err);
   const supported=!!native||!!window.showDirectoryPicker;
-  for(const id of ['external-backup-select','external-backup-quick-select'])$(id).disabled=!!working||!supported;
-  for(const id of ['external-backup-retry','external-backup-quick-retry']){
+  for(const id of ['external-backup-select'])$(id).disabled=!!working||!supported;
+  for(const id of ['external-backup-retry']){
    $(id).hidden=!config.folder;$(id).disabled=!!working;
    $(id).textContent=err?'دوبارہ کوشش کریں':working?'بیک اَپ بن رہا ہے…':'ابھی بیک اَپ لیں';
   }
@@ -168,8 +168,6 @@
    }
   };
 
-  $('external-backup-quick-select').onclick=()=>choose.click();
-  $('external-backup-quick-retry').onclick=()=>$('external-backup-retry').click();
   ready.then(paint);
  }};
 })();
