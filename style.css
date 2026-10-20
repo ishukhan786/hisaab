@@ -12,13 +12,13 @@
 /* Fixed print column widths (A4 landscape, 100% scale). Receiver column takes the remaining space. */
 @media print{
   col.serial,th.serial{width:1.89cm}
-  col.col-sender,th.col-sender{width:4.8cm}
+  col.col-sender,th.col-sender{width:4.5cm}
   col.mobile,th.mobile{width:3.5cm;white-space:nowrap}
   col.col-receiver,th.col-receiver{width:auto}
   col.place,th.place{width:2.2cm}
   col.col-balance,th.col-balance{width:2.5cm}
   col.col-aed,th.col-aed{width:2.5cm}
-  col.col-pkr,th.col-pkr{width:3cm}
+  col.col-pkr,th.col-pkr{width:3.5cm}
 }
 .date-print-val{display:none}
 .date-screen-badge{font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:var(--muted);direction:ltr;display:inline-block}
@@ -218,13 +218,13 @@ tfoot.register-totals .totals-row>th{font-size:calc(var(--entry-font) + 2px);fon
   .paper thead tr,.paper thead th{height:1.5cm}
   .paper thead th{line-height:2.2;padding:6px 4px;vertical-align:middle;font-size:var(--entry-font);font-weight:700;background:#edf1eb}
   .paper thead th.serial{width:1.89cm}
-  .paper thead th.col-sender{width:4.8cm}
+  .paper thead th.col-sender{width:4.5cm}
   .paper thead th.mobile{width:3.5cm;white-space:nowrap}
   .paper thead th.col-receiver{width:auto}
   .paper thead th.place{width:2.2cm}
   .paper thead th.col-balance{width:2.5cm}
   .paper thead th.col-aed{width:2.5cm}
-  .paper thead th.col-pkr{width:3cm}
+  .paper thead th.col-pkr{width:3.5cm}
   .paper-head{padding:10px 0 6px!important;align-items:center!important;overflow:visible!important}
   .paper-head #title{display:none!important}
   .title-print{display:block!important;font-size:24px;line-height:2.2;font-weight:700;text-align:center;color:#000;overflow:visible;padding:4px 12px 0;margin:0}
@@ -282,3 +282,31 @@ td.col-pkr,td input[data-field="pkr"]{text-align:left}
 .pin-lock-card p{margin:0;font-size:12.5px;color:#4f6b5c}
 #pin-unlock-input{width:100%;max-width:220px;height:48px;font-size:24px}
 .pin-lock-card .pin-actions{width:100%;margin-top:8px}
+
+/* Restore complete borders around all register print cells. */
+@media print{.paper table th,.paper table td{border:1px solid #99aa9a!important}.paper tfoot.register-totals .totals-gap>td{border:0!important}}
+
+/* Center all register print headings, values and totals. */
+@media print{
+  .paper table th,.paper table td,.paper #rows .print-value,.paper #total-balance,.paper #total-aed,.paper #total-pkr{text-align:center!important;vertical-align:middle!important}
+  .paper #rows .print-value{display:block;width:100%;padding-inline:6px!important;transform:none!important}
+  .paper #total-balance,.paper #total-aed,.paper #total-pkr{padding-inline:6px!important}
+  .paper .totals-title-wrap,.paper td.number .serial-cell{justify-content:center}
+}
+
+/* Use the Nastaliq font's full ascent/descent so names sit inside their print cells. */
+@font-face{font-family:"Noto Nastaliq Urdu Print";src:url("assets/NotoNastaliqUrdu.ttf") format("truetype");font-weight:400 700;font-display:swap}
+@media print{.paper #rows textarea[data-field="sender"]+.print-value,.paper #rows textarea[data-field="receiver"]+.print-value,.paper #rows textarea[data-field="place"]+.print-value{font-family:"Noto Nastaliq Urdu Print","Noto Nastaliq Urdu",serif;line-height:2.5;padding-block:4px;white-space:pre-wrap;overflow-wrap:anywhere}}
+
+/* Plain white register totals row with horizontal borders only. */
+tfoot.register-totals .totals-row>th,tfoot.register-totals .totals-row>td{background:#fff!important;border-left:0!important;border-right:0!important;border-inline-start:0!important;border-inline-end:0!important}
+@media print{.paper tfoot.register-totals .totals-row>th,.paper tfoot.register-totals .totals-row>td{background:#fff!important;border-left:0!important;border-right:0!important;border-inline-start:0!important;border-inline-end:0!important}}
+
+/* Center the full Nastaliq line box within printed table headings. */
+@media print{.paper thead th{font-family:"Noto Nastaliq Urdu Print","Noto Nastaliq Urdu",serif;line-height:2.5;padding-block:6px;text-align:center!important;vertical-align:middle!important}}
+
+/* Give the Urdu totals label its complete line box for optical centering. */
+@media print{.paper tfoot.register-totals .totals-row>th{font-family:"Noto Nastaliq Urdu Print","Noto Nastaliq Urdu",serif;line-height:2.5;padding-block:6px;vertical-align:middle!important}.app-shell .paper .totals-title-wrap{align-items:center}.paper .totals-title-wrap>span{text-align:center;line-height:2.5}}
+
+/* Black horizontal rules on the register totals row. */
+.paper tfoot.register-totals .totals-row>th,.paper tfoot.register-totals .totals-row>td{border-top-color:#000!important;border-bottom-color:#000!important}

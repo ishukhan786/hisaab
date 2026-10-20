@@ -13,9 +13,9 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 #journal-opening{font:700 17px Arial,sans-serif;direction:rtl}
 .journal-table-wrap{overflow:auto}.journal-table{min-width:650px;width:100%;table-layout:fixed;border-collapse:collapse}
 .journal-table col.journal-serial-col{width:9%}
-.journal-table col.journal-detail-col{width:40%}
+.journal-table col.journal-detail-col{width:36.6%}
 .journal-table col.journal-money-col{width:17%}
-.journal-table col.journal-balance-col{width:17%}
+.journal-table col.journal-balance-col{width:20.4%}
 .journal-table th{height:48.3px;line-height:2.6;padding:6px 8px;background:#edf4ed;border:1px solid #d3e0d5;position:static}
 .journal-table th.journal-serial-th{text-align:center}
 .journal-table td{border:1px solid #dfe8e1;vertical-align:middle;height:52.5px}
@@ -83,3 +83,24 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 }
 /* Nastaliq glyphs rise above their line box; compensate for visual centering. */
 @media print{.cash-summary-heading h2{transform:translateY(7px)}}
+
+.journal-date-nav{display:inline-flex;align-items:center;gap:6px;direction:ltr}.journal-date-nav button{min-width:38px;height:44px;padding:4px 8px;font-family:Arial,sans-serif}.journal-date-nav input{min-width:0}
+@media(max-width:600px){.journal-date-nav{max-width:100%}.journal-date-nav input{width:145px}}
+
+@media print{.journal-table th,.journal-table td,.journal-table .journal-print-value{text-align:center!important;vertical-align:middle!important}}
+
+/* Balance amounts align right, with Jama/Banam labels on the left. */
+.journal-table td.journal-balance,.journal-table #journal-closing{text-align:right!important;padding-left:52px!important;padding-right:10px!important}.journal-table .journal-balance .bal-tag,#journal-closing .bal-tag{left:8px;right:auto;margin:0}.journal-table .journal-balance .bal-num,#journal-closing .bal-num{max-width:100%;overflow-wrap:anywhere}
+
+/* Smaller Jama/Banam labels beside the balance amounts. */
+.journal-table .journal-balance .bal-tag,#journal-closing .bal-tag{font-size:.85em}
+
+/* Fixed money column widths for the A4 journal printout. */
+@media print{.journal-table col.journal-balance-col{width:3.6cm}.journal-table col.journal-money-col{width:3cm}.journal-table col.journal-detail-col{width:auto}}
+
+/* Center the journal title above its date controls and printed page. */
+.journal-heading>div:first-child{flex-basis:100%;width:100%;text-align:center}.journal-heading .journal-tools{margin-inline:auto}
+@media print{.journal-heading{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}.journal-heading>div:first-child{grid-column:2;grid-row:1;width:auto}.journal-heading #journal-date-print{grid-column:3;grid-row:1;justify-self:end}}
+
+/* Keep app money columns readable while giving descriptions the remaining space. */
+@media screen{.journal-table col.journal-serial-col{width:58px}.journal-table col.journal-detail-col{width:auto}.journal-table col.journal-money-col{width:clamp(112px,12vw,164px)}.journal-table col.journal-balance-col{width:clamp(150px,15vw,204px)}.journal-table .journal-money{font-variant-numeric:tabular-nums}.journal-table td.journal-balance,.journal-table #journal-closing{padding-left:42px!important;padding-right:10px!important}}

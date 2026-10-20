@@ -199,13 +199,15 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
  .app-shell #rows td input.amount{padding-inline:3px}
 }
 @media print{
- .paper thead th.col-sender,.order-print-section thead th.col-sender{width:4.8cm}
+ .paper thead th.col-sender,.order-print-section thead th.col-sender{width:4.5cm}
  .paper thead th.mobile,.order-print-section thead th.mobile{width:3.5cm;white-space:nowrap!important}
  .paper thead th.col-balance,.order-print-section thead th.col-balance{width:2.5cm}
  .paper thead th.col-aed,.order-print-section thead th.col-aed{width:2.5cm}
- .paper thead th.col-pkr,.order-print-section thead th.col-pkr{width:3cm}
+ .paper thead th.col-pkr,.order-print-section thead th.col-pkr{width:3.5cm}
  .order-print-section td.col-mobile,.order-print-section .col-mobile .print-value{white-space:nowrap!important;text-align:center;direction:ltr}
  .order-print-section .print-value{display:block!important;white-space:pre-wrap;overflow-wrap:anywhere;line-height:2.2;padding:6px}
  .print-bal-tag{display:block;font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif;font-size:7.5pt;font-weight:700;line-height:1.1;color:#000;margin-bottom:1px}
  .print-bal-num{display:block;font-family:Calibri,'Segoe UI',Arial,sans-serif;font-weight:700;line-height:1.2}
 }
+
+@media screen{.app-shell #rows tr:focus-within>td{background-color:#f0f8f4}.app-shell #rows tr.duplicate-row>td{box-shadow:inset 0 2px #deb96d,inset 0 -2px #deb96d}.app-shell #rows [data-field]:focus-visible{outline:2px solid #1b755b;outline-offset:-2px}}

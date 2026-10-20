@@ -12,7 +12,7 @@ const {pathToFileURL}=require('node:url');
     if(packaged)await browser.evaluate(({BrowserWindow},target)=>{BrowserWindow.getAllWindows()[0].webContents.session.on('will-download',(_,item)=>item.setSavePath(target));},path.resolve('scratch','performance-packaged.xlsx'));
     const rows=Array.from({length:450},(_,i)=>({id:'r'+i,entryDate:'2026-10-17',sender:'Customer '+i,mobile:'0300'+String(i).padStart(7,'0'),receiver:'Receiver',place:'Dubai',branch:'',balance:'10',aed:'100',pkr:'200',history:[]}));
     rows[449]={...rows[0],id:'r449'};
-    const seed=async rows=>require('./seed-state.cjs')(page,{version:4,title:'Performance regression',date:'2026-10-17',branches:[],rows,trash:[]});
+    const seed=async rows=>{await require('./seed-state.cjs')(page,{version:4,title:'Performance regression',date:'2026-10-17',branches:[],rows,trash:[]});await page.locator('#date').fill('2026-10-17');};
     await seed(rows);
     assert.equal(await page.locator('#rows tr:not(.draft-row)').count(),200);
     assert.equal(await page.locator('#total-aed').innerText(),'45,000');
@@ -24,6 +24,8 @@ const {pathToFileURL}=require('node:url');
     assert.equal(await page.locator('#rows .serial-num').first().innerText(),'401');
     assert.equal(await page.locator('#rows tr:not(.draft-row)').count(),50);
     await page.locator('[data-id="r449"] [data-field="sender"]').fill('Changed');
+    assert.equal(await page.locator('[data-id="r449"] .dup-badge').count(),1);
+    await page.locator('[data-id="r449"] [data-field="mobile"]').fill('03008888888');
     await page.locator('#register-page-prev').click();await page.locator('#register-page-prev').click();
     assert.equal(await page.locator('[data-id="r0"] .dup-badge').count(),0);
     await page.locator('#search').fill('Changed');
@@ -34,7 +36,7 @@ const {pathToFileURL}=require('node:url');
     await page.evaluate(()=>dispatchEvent(new Event('beforeprint')));
     await page.waitForTimeout(100);
     assert.equal(await page.locator('#rows tr:not(.empty-row)').count(),450);
-    assert.equal(await page.locator('#rows tr:not(.empty-row) .print-value').count(),450*8);
+    assert.equal(await page.locator('#rows tr:not(.empty-row) .print-value').count(),450*7);
     await page.evaluate(()=>dispatchEvent(new Event('afterprint')));
     assert.equal(await page.locator('#rows tr:not(.draft-row)').count(),200);
     assert.equal(await page.locator('#rows .serial-num').first().innerText(),'201');
@@ -55,20 +57,20 @@ const {pathToFileURL}=require('node:url');
     assert.equal(await page.locator('#count').innerText(),'451 اندراجات');
     await page.locator('#register-page-label').scrollIntoViewIfNeeded();
     await page.screenshot({path:'scratch/performance-pagination'+(packaged?'-packaged':'')+'.png'});
-    // Compare indexed warnings with the original scan for asymmetric no-phone,
-    // no-money, negative and normalized-number cases, including unseen dates.
+    // Compare indexed warnings against the date/party/phone/amount rule,
+    // including missing phones, negative amounts and normalized digits.
     const fixture=Array.from({length:100},(_,i)=>({...rows[i],sender:i%11===0?'':'Person '+i%9,mobile:i%3===0?'':i%3===1?'۰۳۰۰۱۲۳۴۵۶۷':'03009999999',balance:i%5===0?'-5':'0',aed:i%4===0?'۱۰۰':'0',pkr:i%7===0?'1,000':'0',entryDate:i<70?'2026-10-17':'2026-10-16'}));
     await seed(fixture);
     const digits=v=>v.replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776));
     const amount=v=>BigInt(digits(v).replace(/[,\s]/g,'')||'0');
     for(let i=0;i<70;i++){
-      const r=fixture[i],s=r.sender.toLowerCase(),m=digits(r.mobile).replace(/\D/g,''),money=['balance','aed','pkr'].map(k=>amount(r[k])),hasMoney=money.some(v=>v>0n);
-      const expected=fixture.findIndex((other,j)=>j!==i&&s&&other.sender.toLowerCase()===s&&(!m||digits(other.mobile).replace(/\D/g,'')===m)&&((hasMoney&&['balance','aed','pkr'].every((k,n)=>amount(other[k])===money[n]))||(!hasMoney&&m.length>=7)));
+      const r=fixture[i],s=r.sender.toLowerCase(),m=digits(r.mobile).replace(/\D/g,''),money=['balance','aed','pkr'].map(k=>amount(r[k])),hasMoney=money.some(v=>v!==0n);
+      const expected=fixture.findIndex((other,j)=>j!==i&&r.entryDate===other.entryDate&&r.branch===other.branch&&hasMoney&&(m.length>=7?digits(other.mobile).replace(/\D/g,'')===m:!m&&s&&!other.mobile&&other.sender.toLowerCase()===s)&&['balance','aed','pkr'].every((k,n)=>amount(other[k])===money[n]));
       const badge=page.locator(`[data-id="r${i}"] .dup-badge`);
       assert.equal(await badge.count(),expected<0?0:1,`duplicate row ${i}`);
       if(expected>=0)assert((await badge.getAttribute('title')).includes('#'+(expected+1)));
     }
     assert.deepEqual(errors,[]);
-    console.log('PASS: bounded rendering, paging/Tab, cross-page duplicates and edits, full totals/export/print, draft visibility, original duplicate semantics and no renderer errors.');
+    console.log('PASS: bounded rendering, paging/Tab, cross-page duplicates and edits, full totals/export/print, draft visibility, updated duplicate rules and no renderer errors.');
   }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});

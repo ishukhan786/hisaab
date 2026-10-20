@@ -365,37 +365,37 @@
     return $('all-dates').checked?'تمام تاریخیں':fmtDate(state.date);
   }
   const fieldUrduLabels={orderType:'آرڈر کی قسم',balanceType:'بقایا کی نوعیت',sender:'ارسال کنندہ',mobile:'موبائیل نمبر',receiver:'وصول کنندہ',place:'مقام',branch:'پارٹی',balance:'بقایا',aed:'درہم',pkr:'روپیہ / افغانی'};
-  // Keep the first two entries per key: enough to find the earliest other row,
-  // including the original asymmetric rule for rows with no phone or no money.
   const duplicateRecords=new WeakMap(),duplicateAccepted=new Map();
   const duplicateSignature=r=>JSON.stringify([r.entryDate,r.branch,r.sender,r.mobile,r.balance,r.aed,r.pkr]);
   let duplicatePending=[];
   function reviewDuplicates(rows,lookup){
-    duplicatePending=rows.filter(r=>lookup(r)&&duplicateAccepted.get(r.id)!==duplicateSignature(r));
+    duplicatePending=rows.filter(r=>lookup(r)&&duplicateAccepted.get(r.id)!==JSON.stringify([duplicateSignature(r),duplicateSignature(lookup(r).row)]));
     const banner=$('duplicate-warning');banner.hidden=!duplicatePending.length;
-    $('duplicate-warning-text').textContent=duplicatePending.length+' ممکنہ دہرے اندراجات: اسی تاریخ اور پارٹی میں ملتا جلتا نام، موبائل یا رقم موجود ہے۔ انٹریاں محفوظ ہیں؛ جائزہ لے کر درست کریں یا برقرار رکھیں۔';
+    $('duplicate-warning-text').textContent=duplicatePending.length+' ممکنہ دہرے اندراجات: اسی تاریخ اور پارٹی میں یکساں موبائل اور رقوم موجود ہیں (موبائل نہ ہو تو نام اور رقوم)۔ انٹریاں محفوظ ہیں؛ جائزہ لے کر درست کریں یا برقرار رکھیں۔';
   }
-  $('duplicate-keep').onclick=()=>{for(const r of duplicatePending)duplicateAccepted.set(r.id,duplicateSignature(r));applyFilter();};
+  $('duplicate-keep').onclick=()=>{const lookup=duplicateLookup();for(const r of duplicatePending){const match=lookup(r);if(match)duplicateAccepted.set(r.id,JSON.stringify([duplicateSignature(r),duplicateSignature(match.row)]));}applyFilter();};
   $('duplicate-review').onclick=()=>{const r=duplicatePending[0];if(!r)return;const rows=selectedRows();viewPage=Math.floor(rows.findIndex(x=>x.id===r.id)/pageSize);applyFilter();focusRow(r);};
   function duplicateLookup(){
-    const exact=new Map(),withoutPhone=new Map(),phoneOnly=new Map(),keys=new Map();
-    const add=(map,key,item)=>{const list=map.get(key);if(!list)map.set(key,[item]);else if(list.length<2)list.push(item);};
-    let index=0;
+    const groups=new Map(),keys=new Map(),serials=new Map(selectedRows().map((r,i)=>[r.id,activeStartSerial()+i]));
     for(const row of state.rows){
       if(!populated(row))continue;
-      const item={id:row.id,index:(Number(state.startSerial)||1)+index++};
       let record=duplicateRecords.get(row);
-      if(!record||['sender','mobile','branch','entryDate',...moneyFields].some(f=>record.raw[f]!==row[f])){
-        const sender=cleanName(row.sender).toLowerCase(),phone=englishDigits(row.mobile).replace(/\D/g,'');
-        const values=moneyFields.map(f=>integerAmount(row[f])||0n),hasMoney=values.some(v=>v>0n),amounts=values.map(String);
-        record={raw:{branch:row.branch,entryDate:row.entryDate,sender:row.sender,mobile:row.mobile,balance:row.balance,aed:row.aed,pkr:row.pkr},sender,phone,hasMoney,fullKey:JSON.stringify([row.entryDate,row.branch,sender,phone,...amounts]),amountKey:JSON.stringify([row.entryDate,row.branch,sender,...amounts]),phoneKey:JSON.stringify([row.entryDate,row.branch,sender,phone])};
-        duplicateRecords.set(row,record);
+      const signature=duplicateSignature(row);
+      if(!record||record.signature!==signature){
+        const phone=englishDigits(row.mobile).replace(/\D/g,''),sender=cleanName(row.sender).toLowerCase();
+        const values=moneyFields.map(f=>integerAmount(row[f]));
+        const hasMoney=values.every(v=>v!==null)&&values.some(v=>v!==0n);
+        const identity=phone.length>=7?['phone',phone]:!phone&&sender?['name',sender]:null;
+        const key=identity&&hasMoney?JSON.stringify([row.entryDate||state.date,row.branch,partyCurrency(row.branch),...identity,...values.map(String)]):null;
+        record={signature,key};duplicateRecords.set(row,record);
       }
-      const {sender,phone,hasMoney,fullKey,amountKey,phoneKey}=record;
-      add(exact,fullKey,item);add(withoutPhone,amountKey,item);add(phoneOnly,phoneKey,item);
-      if(sender&&(hasMoney||phone.length>=7))keys.set(row.id,{map:hasMoney?(phone?exact:withoutPhone):phoneOnly,key:hasMoney?(phone?fullKey:amountKey):phoneKey});
+      if(!record.key)continue;
+      keys.set(row.id,record.key);
+      const group=groups.get(record.key)||[];
+      if(group.length<2)group.push({id:row.id,index:serials.get(row.id),row});
+      groups.set(record.key,group);
     }
-    return row=>{const entry=keys.get(row.id);return entry?entry.map.get(entry.key)?.find(item=>item.id!==row.id):null;};
+    return row=>groups.get(keys.get(row.id))?.find(item=>item.id!==row.id)||null;
   }
   const isDayLocked=d=>!!(state.lockedDates&&state.lockedDates.includes(d||state.date));
   function updateLockBtn(){
@@ -690,7 +690,9 @@
       const currency=partyCurrency(r.branch).toUpperCase();
       if(tr._currency!==currency){const input=tr.querySelector('[data-field="pkr"]');input.parentElement.dataset.currency=currency;input.setAttribute('aria-label',currency==='AFN'?'افغانی':'روپیہ');tr._currency=currency;}
       const cell=tr.firstElementChild;const val=matched?serial:!populated(r)?'＋':'—';
-      const dup=matched&&hasData?findDuplicate(r):null;
+      const match=matched&&hasData?findDuplicate(r):null;
+      const dup=match&&duplicateAccepted.get(r.id)!==JSON.stringify([duplicateSignature(r),duplicateSignature(match.row)])?match:null;
+      tr.classList.toggle('duplicate-row',!!dup);
       const decoration=JSON.stringify([matched,val,dup?.index,r.history?.length||0,r.entryDate,day]);
       if(tr._decoration===decoration)return;
       tr._decoration=decoration;
@@ -699,7 +701,7 @@
       if(matched && populated(r)){
         if(dup){
           const badge=document.createElement('span');badge.className='dup-badge no-print';badge.textContent='⚠️';
-          badge.title=`اسی تاریخ اور پارٹی میں ممکنہ دہرائی گئی انٹری #${dup.index}`;
+          badge.title='ممکنہ دہرا آرڈر: '+(dup.index===undefined?'اسی تاریخ اور پارٹی میں دوسرا آرڈر':'نمبر شمار #'+dup.index);
           wrap.append(badge);
         }
       }
@@ -834,6 +836,18 @@
       save();
     }
   }
+  function moveEntryFocus(row,input,backward=false){
+    const controls=tr=>Array.from(tr?.querySelectorAll('[data-field]')||[]).filter(el=>!el.disabled&&el.getClientRects().length);
+    const current=controls(rowNodes.get(row.id)),index=current.indexOf(input),target=current[index+(backward?-1:1)];
+    hidePlaceSuggestions();
+    if(target){target.focus();return;}
+    const rows=state.rows.filter(r=>matches(r)||(!populated(r)&&rowNodes.has(r.id)));
+    const next=rows[rows.indexOf(row)+(backward?-1:1)];
+    if(!next){if(!backward&&populated(row))add();return;}
+    if(!rowNodes.has(next.id)){viewPage=Math.max(0,Math.floor(selectedRows().indexOf(next)/pageSize));applyFilter();}
+    const nextControls=controls(rowNodes.get(next.id));
+    (backward?nextControls.at(-1):nextControls[0])?.focus();
+  }
   function createRowElement(row){
     const tr=document.createElement('tr');tr.dataset.id=row.id;rowNodes.set(row.id,tr);
     const num=document.createElement('td');num.className='number';
@@ -910,7 +924,7 @@
         balTypeInput.addEventListener('change',acceptBalType);
         balTypeInput.addEventListener('blur',acceptBalType);
         balTypeInput.addEventListener('keydown',e=>{
-          if(e.key==='Enter'){e.preventDefault();acceptBalType();balTypeInput.blur();}
+          if((e.key==='Enter'||e.key==='Tab')&&!e.isComposing){e.preventDefault();acceptBalType();moveEntryFocus(row,balTypeInput,e.shiftKey);}
         });
         updateBalTypeVis();
       }
@@ -924,7 +938,7 @@
           else if(e.key==='Enter'&&!e.shiftKey){
             e.preventDefault();e.stopImmediatePropagation();
             const picked=placeSuggestItems[placeSuggestIndex]||placeSuggestItems[0];
-            if(picked){input.value=picked;hidePlaceSuggestions();accept();afterSuggestionPick();}
+            if(picked){input.value=picked;hidePlaceSuggestions();accept();afterSuggestionPick();moveEntryFocus(row,input);}
           }else if(e.key==='Tab'&&!e.shiftKey){
             const picked=placeSuggestItems[placeSuggestIndex]||placeSuggestItems[0];
             if(picked&&(placeSuggestIndex>0||nameKey(picked).startsWith(nameKey(input.value)))){
@@ -933,7 +947,7 @@
           }
         });
       }
-      if(isText){input.rows=1;input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();input.blur();}});}
+      if(isText)input.rows=1;
       if(field==='branch')branchOptions(input,row.branch);else input.value=moneyFields.includes(field)?wholeText(row[field]):row[field];
       function adjustHeight(el){if(typeof CSS!=='undefined'&&CSS.supports&&CSS.supports('field-sizing','content'))return;el.style.height='auto';el.style.height=el.scrollHeight+'px';}
       if(isText)adjustHeight(input);
@@ -967,7 +981,6 @@
       }
       if(moneyFields.includes(field)){
         input.addEventListener('blur',()=>{const value=wholeText(input.value);if(value!==input.value){input.value=value;row[field]=value;save();}});
-        input.addEventListener('keydown',e=>{if(e.key==='Enter')input.blur();});
       }
       input.addEventListener('paste', e => {
         const pasteData = (e.clipboardData || window.clipboardData)?.getData('text');
@@ -1043,11 +1056,11 @@
           }
           return;
         }
-        if(e.key==='Tab'&&!e.shiftKey&&i===fields.length-1){
+        if(e.isComposing||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey)return;
+        if(e.key==='Tab'||(e.key==='Enter'&&!(isText&&e.shiftKey))){
           e.preventDefault();
-          const visible=state.rows.filter(r=>matches(r)||(!populated(r)&&rowNodes.has(r.id)));
-          const next=visible[visible.indexOf(row)+1];
-          if(!next){add();}else{if(!rowNodes.has(next.id)){viewPage=Math.floor(selectedRows().indexOf(next)/pageSize);applyFilter();}focusRow(next);}
+          if(moneyFields.includes(field)&&integerAmount(input.value)===null){input.reportValidity();return;}
+          moveEntryFocus(row,input,e.shiftKey);
         }
       });
       td.append(input);
@@ -2049,4 +2062,3 @@
   initDiskPersistence();
   initMongoWebState();
 })();
-

@@ -46,9 +46,22 @@
       }
     }
     const fmtBalText=b=>b>0n?`${format(b)} جمع`:b<0n?`${format(-b)} بنام`:'0';
+    function openingBalance(){
+      const date=data().date,counts=data().cashCounts||{};
+      const last=Object.keys(counts).filter(d=>d<date&&counts[d].trim()).sort().at(-1);
+      let value=last?amount(counts[last]):0n,valid=value!==null;
+      if(value===null)value=0n;
+      for(const r of data().rows){
+        if(!hasData(r)||r.date>=date||(last&&r.date<=last))continue;
+        const debit=amount(r.debit),credit=amount(r.credit);
+        if(debit===null||credit===null)valid=false;else value+=credit-debit;
+      }
+      return {value,valid,source:last};
+    }
     function recalculate(){
-      let opening=0n,valid=true,debit=0n,credit=0n,dayValid=true,serial=1;
-      for(const r of data().rows.filter(r=>hasData(r)&&r.date<data().date)){const d=amount(r.debit),c=amount(r.credit);if(d===null||c===null)valid=false;else opening+=c-d;}
+      const prior=openingBalance(),opening=prior.value;
+      let valid=prior.valid,debit=0n,credit=0n,dayValid=true,serial=1;
+      $('journal-opening').title=prior.source?'موجودہ نقد بیلنس ('+dateLabel(prior.source)+') اور اس کے بعد کی انٹریوں سے':'پچھلی انٹریوں کے حساب سے؛ موجودہ نقد بیلنس ابھی درج نہیں ہوئی';
       const openingValid=valid;
       renderBalance($('journal-opening'),opening,valid,'رقم درست کریں');let balance=opening;
       for(const r of data().rows.filter(r=>r.date===data().date)){
@@ -76,11 +89,11 @@
       $('cash-count-print').textContent=entered?(count===null?'رقم درست کریں':format(count)):'درج نہیں کیا';
       const difference=$('cash-difference');difference.classList.remove('cash-short','cash-extra','cash-equal');
       if(!valid||count===null)difference.textContent='رقم درست کریں';
-      else if(!entered)difference.textContent='اصل نقدی درج کریں';
+      else if(!entered)difference.textContent='موجودہ نقد بیلنس درج کریں';
       else {
         const delta=count-balance;
         difference.classList.add(delta<0n?'cash-short':delta>0n?'cash-extra':'cash-equal');
-        difference.textContent=delta===0n?'حساب برابر ✓':format(delta<0n?-delta:delta)+(delta<0n?' کمی':' زیادہ');
+        difference.textContent=delta===0n?'حساب برابر ✓':format(delta<0n?-delta:delta)+(delta<0n?' کم ہے':' زیادہ ہے');
       }
       $('journal-count').textContent=selected().length+' اندراجات';$('journal-date-print').textContent=dateLabel(data().date);
       $('journal-undo').hidden=!undo;
@@ -138,6 +151,15 @@
     });
     $('view-register').onclick=()=>setPage(false);$('view-journal').onclick=()=>setPage(true);
     $('journal-date').onchange=()=>{if(!validDate($('journal-date').value)){$('journal-date').value=data().date;return;}data().date=$('journal-date').value;refresh();save();};
+    function shiftDate(days){
+      const current=data().date,date=new Date(current+'T12:00:00Z');
+      date.setUTCDate(date.getUTCDate()+days);
+      const next=date.toISOString().slice(0,10),input=$('journal-date');
+      if(!validDate(next)||(input.min&&next<input.min)||(input.max&&next>input.max))return;
+      input.value=next;input.dispatchEvent(new Event('change'));
+    }
+    $('journal-date-prev').onclick=()=>shiftDate(-1);
+    $('journal-date-next').onclick=()=>shiftDate(1);
     function add(){const row=ensureDraft();if(!nodes.has(row.id))addNode(row);nodes.get(row.id).querySelector('textarea').focus();}
     $('journal-add').onclick=add;
     $('journal-undo').onclick=()=>{if(!undo)return;data().rows.splice(Math.min(undo.index,data().rows.length),0,undo.row);data().date=undo.row.date;undo=null;refresh();save();};
@@ -145,14 +167,13 @@
     async function output(pdf=false){if(!selected().length&&!data().cashCounts?.[data().date]?.trim()){alert('اس تاریخ پر کوئی انٹری موجود نہیں ہے۔');return;}if(!recalculate()){alert('پرنٹ سے پہلے روزنامچے کی رقم درست کریں۔');return;}await document.fonts.ready;preparePrint();if(!window.electronAPI?.previewPDF){window.print();return;}if(document.body.inert)return;document.body.inert=true;try{const result=pdf?await window.electronAPI.savePDF('روزنامچہ_'+data().date+'.pdf'):await window.electronAPI.previewPDF();if(result.status==='error')alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');return result;}catch{alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');}finally{document.body.inert=false;}}
     function exportExcel(){
       if((!selected().length&&!data().cashCounts?.[data().date]?.trim())||!recalculate()){alert('ایکسپورٹ کے لیے درست انٹریاں منتخب کریں۔');return;}
-      let bal=0n,totD=0n,totC=0n;
-      for(const r of data().rows.filter(r=>hasData(r)&&r.date<data().date))bal+=amount(r.credit)-amount(r.debit);
+      let bal=openingBalance().value,totD=0n,totC=0n;
       const openText=fmtBalText(bal);
       const entryRows=selected().map((r,i)=>{const d=amount(r.debit),c=amount(r.credit);bal+=c-d;totD+=d;totC+=c;return [i+1,r.detail,{number:String(d)},{number:String(c)},fmtBalText(bal)];});
       const rows=[['نمبر شمار','تفصیل','بنام','جمع','بقایا'],['','پچھلا بقایا','','',openText],...entryRows,['','کل حساب / آخری بقایا',{number:String(totD)},{number:String(totC)},fmtBalText(bal)]];
-      rows.push([],['','روزانہ کیش خلاصہ'],['','ابتدائی بیلنس','','',openText],['','آج کی جمع','','',{number:String(totC)}],['','آج کی بنام','','',{number:String(totD)}],['','حساب کے مطابق موجود ہونا چاہیے','','',{number:String(bal)}]);
+      rows.push([],['','روزانہ کیش خلاصہ'],['','سابقہ کیش','','',openText],['','ٹوٹل جمع','','',{number:String(totC)}],['','ٹوٹل بنام','','',{number:String(totD)}],['','حساب کے مطابق موجود ہونا چاہیے','','',{number:String(bal)}]);
       const raw=data().cashCounts?.[data().date]||'',count=amount(raw);
-      rows.push(['','اصل موجود نقدی','','',raw.trim()?{number:String(count)}:'درج نہیں کیا']);
+      rows.push(['','موجودہ نقد بیلنس','','',raw.trim()?{number:String(count)}:'درج نہیں کیا']);
       rows.push(['','فرق — کمی / زیادتی','','',$('cash-difference').textContent]);
       exportSheet(rows,'روزنامچہ_'+data().date+'.xlsx');
     }
