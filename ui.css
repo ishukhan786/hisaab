@@ -175,19 +175,12 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 @media screen{
  .app-shell .paper .table-wrap{border-top:1px solid #d7e4db}
  .app-shell .paper th.col-place{width:11%}
- .app-shell .paper th.col-order-type{width:8%;text-align:center}
  .app-shell .paper th.col-branch{width:8%}
  .app-shell .paper th.serial{width:5.5%}
  .app-shell .paper thead th{border-inline-color:#dce7df}
  .app-shell #rows>tr>td{border-bottom-color:#d5e2d9;height:auto;min-height:44px}
  .app-shell #rows td.col-place{padding:4px 6px;vertical-align:middle}
  .app-shell #rows td.col-place textarea{line-height:2.1;padding:4px 6px;transform:none}
- .app-shell #rows td.col-order-type select,.app-shell #rows .order-type-select{width:100%;max-width:115px;height:32px;min-height:32px;padding:0 4px;border:1px solid #d5e3da;border-radius:6px;background:#f1f6f2;color:#284a39;font-size:11px;line-height:2;cursor:pointer;text-align:center;text-align-last:center;transition:background .15s,color .15s,border-color .15s}
- .app-shell #rows td.col-order-type select[data-value="bank"],.app-shell #rows .order-type-select[data-value="bank"]{background:#edf5fb;color:#154a6f;border-color:#b9d7ea;font-weight:700}
- .app-shell #rows td.col-order-type select[data-value="city"],.app-shell #rows .order-type-select[data-value="city"]{background:#edf6ef;color:#17634c;border-color:#c8ded0;font-weight:700}
- .app-shell #rows td.col-order-type select:focus-visible,.app-shell #rows .order-type-select:focus-visible{outline:2px solid #1b755b;outline-offset:1px;background:#fff}
- .app-shell #rows td.col-order-type select:disabled,.app-shell #rows .order-type-select:disabled{cursor:default;opacity:.65}
- .app-shell #rows tr.order-type-bank + tr.order-type-city td{border-top:2px solid #8ebba0}
  .app-shell #rows td.col-balance{position:relative}
  .app-shell #rows .bal-type-input{display:none;position:absolute;top:2px;right:3px;height:18px;min-height:0;width:auto;max-width:84px;padding:0 4px;border-radius:9px;font-size:9.5px;font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',Calibri,Arial,sans-serif;line-height:1.1;border:1px dashed #b5cdbe;background:#f4f8f5;color:#3b5c49;cursor:text;text-align:center;text-overflow:ellipsis;white-space:nowrap;overflow:hidden;z-index:2;box-sizing:border-box;transition:all .15s ease}
  .app-shell #rows .bal-type-input::placeholder{color:#6c8b77;font-size:8.5px}

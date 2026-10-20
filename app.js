@@ -322,20 +322,14 @@
     });
   }
   function updateBranches(){ensureActiveParty();branchOptions($('branch-filter'),selectedBranch,true);state.rows.forEach(row=>{const select=rowNodes.get(row.id)?.querySelector('[data-field="branch"]');if(select)branchOptions(select,row.branch);});renderPartyTabs();}
-  function orderTypeRank(type){
-    if(type==='bank')return 0;
-    if(type==='city')return 1;
-    return 2;
-  }
-  function groupRows(rows){
+  function draftRowsLast(rows){
     const populatedRows=rows.filter(populated);
     const draftRows=rows.filter(r=>!populated(r));
-    populatedRows.sort((a,b)=>orderTypeRank(a.orderType||'')-orderTypeRank(b.orderType||''));
     return [...populatedRows,...draftRows];
   }
   function ensureDraft(){
-    // Keep rows grouped by order type, unpopulated draft row at the bottom
-    state.rows=groupRows(state.rows);
+    // Keep entry order unchanged, with unpopulated draft rows at the bottom
+    state.rows=draftRowsLast(state.rows);
     for(const r of state.rows.filter(r=>!populated(r))){
       const node=rowNodes.get(r.id);
       if(node && node!==$('rows').lastElementChild && !node.contains(document.activeElement)){
@@ -675,10 +669,6 @@
       if(!(pageIds.has(r.id)||draft||(tr&&tr===active))){if(tr){tr.remove();rowNodes.delete(r.id);}return;}
       if(!tr)tr=createRowElement(r);
       visibleNodes.push(tr);tr.hidden=false;tr.classList.toggle('draft-row',!hasData);
-      tr.classList.toggle('order-type-bank',(r.orderType||'')==='bank');
-      tr.classList.toggle('order-type-city',(r.orderType||'')==='city');
-      const orderSelect=tr.querySelector('.order-type-select');
-      if(orderSelect){orderSelect.value=r.orderType||'';orderSelect.dataset.value=r.orderType||'';}
       const balInput=tr.querySelector('.bal-type-input');
       if(balInput){const bAmt=integerAmount(r.balance);balInput.value=r.balanceType||'';balInput.classList.toggle('visible',bAmt!==null&&bAmt!==0n);balInput.classList.toggle('has-value',!!(r.balanceType&&r.balanceType.trim()));}
       const rLocked=isDayLocked(r.entryDate||state.date);
@@ -1061,31 +1051,7 @@
       td.append(input);
       if(balTypeInput)td.append(balTypeInput);
       tr.append(td);
-      if(field==='place'){
-        const tdType=document.createElement('td');tdType.className='col-order-type no-print';
-        const type=document.createElement('select');type.dataset.field='orderType';type.className='order-type-select no-print';type.setAttribute('aria-label','آرڈر کی قسم');type.append(makeOption('','قسم منتخب کریں'),makeOption('bank','بینک / والٹ'),makeOption('city','شہر'));type.value=row.orderType||'';type.dataset.value=row.orderType||'';type.disabled=rLocked;
-        type.onchange=()=>{
-          recordHistory(row,'orderType',row.orderType,type.value);
-          row.orderType=type.value;
-          type.dataset.value=type.value;
-          state.rows=groupRows(state.rows);
-          save();
-          applyFilter(true);
-        };
-        type.addEventListener('keydown',e=>{
-          if((e.ctrlKey||e.metaKey)&&(e.key==='d'||e.key==='D')&&!e.shiftKey&&!e.altKey){
-            e.preventDefault();
-            const visible=state.rows.filter(r=>matches(r)||(!populated(r)&&rowNodes.has(r.id)));
-            const curIdx=visible.indexOf(row);
-            const prevRow=curIdx>0?visible[curIdx-1]:null;
-            if(prevRow&&prevRow.orderType!==undefined){
-              type.value=prevRow.orderType;
-              type.onchange();
-            }
-          }
-        });
-        tdType.append(type);tr.append(tdType);
-      }
+
     });
     tr.addEventListener('focusout',()=>setTimeout(()=>{if(!tr.contains(document.activeElement))applyFilter(true);},0));
     const tdReceipt=document.createElement('td');tdReceipt.className='col-receipt no-print';tr.append(tdReceipt);
@@ -1097,7 +1063,7 @@
   function appendRow(row){$('rows').append(createRowElement(row));}
   function prependRow(row){$('rows').prepend(createRowElement(row));}
   function applyFont(){document.documentElement.style.setProperty('--entry-font',state.fontSize+'px');$('font-size').textContent=state.fontSize;$('font-smaller').disabled=state.fontSize<=10;$('font-larger').disabled=state.fontSize>=22;}
-  function render(){ensureActiveParty();state.rows=groupRows(state.rows);rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;if($('title-print'))$('title-print').textContent=state.title||'اندراج رجسٹر';$('date').value=state.date;if($('start-serial'))$('start-serial').value=activeStartSerial();const currPage=activePageNumber();if($('page-no-input'))$('page-no-input').value=currPage;if($('page-no-val'))$('page-no-val').textContent=currPage;applyFont();updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
+  function render(){ensureActiveParty();state.rows=draftRowsLast(state.rows);rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;if($('title-print'))$('title-print').textContent=state.title||'اندراج رجسٹر';$('date').value=state.date;if($('start-serial'))$('start-serial').value=activeStartSerial();const currPage=activePageNumber();if($('page-no-input'))$('page-no-input').value=currPage;if($('page-no-val'))$('page-no-val').textContent=currPage;applyFont();updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
   function focusRow(row){
     const tr=rowNodes.get(row.id);
     const el=tr?.querySelector('[data-field="sender"]');
@@ -1922,149 +1888,8 @@
     finally{document.body.inert=false;clearReceiptOutput();}
   }
   $('receipt-preview').onclick=()=>outputReceipt();$('receipt-save').onclick=()=>outputReceipt(true);
-  const groupedPrint=document.createElement('div');groupedPrint.id='grouped-register-print';document.body.append(groupedPrint);
-  function clearGroupedPrint(){document.body.classList.remove('grouped-register-output');groupedPrint.replaceChildren();}
-  function prepareGroupedPrint(){
-    clearGroupedPrint();
-    const all=selectedRows();
-    if(!all.length)return;
-
-    const orderCategories=[{type:'bank',name:'بینک / والٹ آرڈرز'},{type:'city',name:'شہر آرڈرز'},{type:'',name:'دیگر آرڈرز'}];
-    const activeCategories=orderCategories
-      .map(cat=>({...cat,rows:all.filter(r=>(r.orderType||'')===cat.type)}))
-      .filter(cat=>cat.rows.length>0);
-
-    let totalBalance=0n,totalAed=0n,invalidAny=false;
-    for(const r of all){
-      const b=integerAmount(r.balance),a=integerAmount(r.aed);
-      if(b===null||a===null)invalidAny=true;
-      if(b!==null)totalBalance+=b;
-      if(a!==null)totalAed+=a;
-    }
-    const netAed=totalAed-totalBalance;
-    const allPkrText=currencyText(all).split('\n').map(s=>`(${s})`).join('\n');
-    const startPage=activePageNumber();
-
-    let currentSerial=activeStartSerial();
-    activeCategories.forEach((cat,idx)=>{
-      const isLast=idx===activeCategories.length-1;
-      const section=document.createElement('section');section.className='order-print-section';
-      const head=document.querySelector('.paper-head').cloneNode(true);
-      const pageVal=head.querySelector('.page-no-val');
-      if(pageVal)pageVal.textContent=String(startPage+idx);
-      if(cat.type){
-        const bHead=head.querySelector('#branch-heading')||head.querySelector('.head-party strong');
-        if(bHead){
-          const catTag=document.createElement('span');
-          catTag.className='order-type-print-badge';
-          catTag.textContent=` (${cat.name})`;
-          bHead.append(catTag);
-        }
-      }
-      section.append(head);
-
-      const table=document.createElement('table');
-      const thead=document.querySelector('.table-wrap table thead').cloneNode(true);
-      thead.querySelectorAll('.no-print').forEach(el=>el.remove());
-      table.append(thead);
-
-      const body=document.createElement('tbody');
-      for(const row of cat.rows){
-        const tr=document.createElement('tr');
-
-        const tdNum=document.createElement('td');tdNum.className='number';
-        tdNum.textContent=String(currentSerial++);
-        tr.append(tdNum);
-
-        const tdSender=document.createElement('td');tdSender.className='person col-sender';
-        const spanSender=document.createElement('span');spanSender.className='print-value';
-        spanSender.textContent=row.sender||'';
-        tdSender.append(spanSender);
-        tr.append(tdSender);
-
-        const tdMobile=document.createElement('td');tdMobile.className='mobile col-mobile';
-        const spanMobile=document.createElement('span');spanMobile.className='print-value';
-        spanMobile.dir='ltr';
-        spanMobile.textContent=row.mobile||'';
-        tdMobile.append(spanMobile);
-        tr.append(tdMobile);
-
-        const tdReceiver=document.createElement('td');tdReceiver.className='person col-receiver';
-        const spanReceiver=document.createElement('span');spanReceiver.className='print-value';
-        spanReceiver.textContent=row.receiver||'';
-        tdReceiver.append(spanReceiver);
-        tr.append(tdReceiver);
-
-        const tdPlace=document.createElement('td');tdPlace.className='place col-place';
-        const spanPlace=document.createElement('span');spanPlace.className='print-value';
-        spanPlace.textContent=row.place||'';
-        tdPlace.append(spanPlace);
-        tr.append(tdPlace);
-
-        const tdBal=document.createElement('td');tdBal.className='money col-balance';
-        const spanBal=document.createElement('span');spanBal.className='print-value';spanBal.dir='ltr';
-        const bAmt=integerAmount(row.balance);
-        const balText=wholeText(row.balance);
-        if(row.balanceType&&row.balanceType.trim()&&(bAmt!==null&&bAmt!==0n)){
-          const tag=document.createElement('small');tag.className='print-bal-tag';
-          tag.textContent=`(${row.balanceType.trim()})`;
-          const numSpan=document.createElement('span');numSpan.className='print-bal-num';
-          numSpan.textContent=balText;
-          spanBal.replaceChildren(tag,numSpan);
-        }else{
-          spanBal.textContent=balText;
-        }
-        tdBal.append(spanBal);
-        tr.append(tdBal);
-
-        const tdAed=document.createElement('td');tdAed.className='money col-aed';
-        const spanAed=document.createElement('span');spanAed.className='print-value';spanAed.dir='ltr';
-        spanAed.textContent=wholeText(row.aed);
-        tdAed.append(spanAed);
-        tr.append(tdAed);
-
-        const tdPkr=document.createElement('td');tdPkr.className='money col-pkr';
-        const spanPkr=document.createElement('span');spanPkr.className='print-value';spanPkr.dir='ltr';
-        spanPkr.textContent=wholeText(row.pkr);
-        tdPkr.append(spanPkr);
-        tr.append(tdPkr);
-
-        body.append(tr);
-      }
-      table.append(body);
-
-      if(isLast){
-        const foot=document.createElement('tfoot');
-        foot.className='register-totals';
-
-        const gapTr=document.createElement('tr');gapTr.className='totals-gap';gapTr.setAttribute('aria-hidden','true');
-        const gapTd=document.createElement('td');gapTd.colSpan=8;gapTr.append(gapTd);
-        foot.append(gapTr);
-
-        const grandTr=document.createElement('tr');grandTr.className='totals-row grand-total-row';
-        const grandTh=document.createElement('th');grandTh.colSpan=5;grandTh.scope='row';
-        const titleWrap=document.createElement('div');titleWrap.className='totals-title-wrap';
-        const titleSpan=document.createElement('span');titleSpan.textContent='کل مجموعہ حساب';
-        const countSpan=document.createElement('span');countSpan.className='orders-count-badge';countSpan.textContent=`آرڈرز تعداد: ${all.length}`;
-        const netSpan=document.createElement('span');netSpan.className='net-aed-badge';netSpan.textContent=invalidAny?'موجودہ درہم: رقم درست کریں':`موجودہ درہم: ${formatted(netAed)}`;
-        titleWrap.append(titleSpan,countSpan,netSpan);grandTh.append(titleWrap);grandTr.append(grandTh);
-
-        const balTd=document.createElement('td');balTd.id='total-balance';balTd.className='amount';balTd.textContent=formatted(totalBalance);
-        const aedTd=document.createElement('td');aedTd.id='total-aed';aedTd.className='amount';aedTd.textContent=formatted(totalAed);
-        const pkrTd=document.createElement('td');pkrTd.id='total-pkr';pkrTd.className='amount';pkrTd.textContent=allPkrText;
-        grandTr.append(balTd,aedTd,pkrTd);
-        foot.append(grandTr);
-        table.append(foot);
-      }
-      section.append(table);
-      groupedPrint.append(section);
-    });
-
-    groupedPrint.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
-    document.body.classList.add('grouped-register-output');
-  }
-  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output')||document.body.classList.contains('summary-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());const titlePrint=$('title-print');if(titlePrint)titlePrint.textContent=$('title').value||state.title||'اندراج رجسٹر';const currPage=activePageNumber();if($('page-no-val'))$('page-no-val').textContent=currPage;const resetVal=Math.max(0,currPage-1);document.documentElement.style.setProperty('--print-start-page',String(resetVal));document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{if(input.classList.contains('no-print')||input.closest('.no-print')||input.dataset.field==='balanceType')return;const span=document.createElement('span');span.className='print-value';const isAmt=input.classList.contains('amount');const valText=isAmt?wholeText(input.value):input.value;const bAmt=integerAmount(row.balance);if(input.dataset.field==='balance'&&row.balanceType&&row.balanceType.trim()&&(bAmt!==null&&bAmt!==0n)){const small=document.createElement('small');small.className='print-bal-tag';small.textContent=`(${row.balanceType.trim()})`;const numSpan=document.createElement('span');numSpan.className='print-bal-num';numSpan.textContent=valText;span.replaceChildren(small,numSpan);}else{span.textContent=valText;}if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});prepareGroupedPrint();}
-  window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else if($('summary-dialog').open)prepareSummaryOutput();else preparePrint();});window.addEventListener('afterprint',()=>{registerPrintActive=false;clearGroupedPrint();document.documentElement.style.removeProperty('--print-start-page');clearReceiptOutput();applyFilter();});
+  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output')||document.body.classList.contains('summary-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());const titlePrint=$('title-print');if(titlePrint)titlePrint.textContent=$('title').value||state.title||'اندراج رجسٹر';const currPage=activePageNumber();if($('page-no-val'))$('page-no-val').textContent=currPage;const resetVal=Math.max(0,currPage-1);document.documentElement.style.setProperty('--print-start-page',String(resetVal));document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{if(input.classList.contains('no-print')||input.closest('.no-print')||input.dataset.field==='balanceType')return;const span=document.createElement('span');span.className='print-value';const isAmt=input.classList.contains('amount');const valText=isAmt?wholeText(input.value):input.value;const bAmt=integerAmount(row.balance);if(input.dataset.field==='balance'&&row.balanceType&&row.balanceType.trim()&&(bAmt!==null&&bAmt!==0n)){const small=document.createElement('small');small.className='print-bal-tag';small.textContent=`(${row.balanceType.trim()})`;const numSpan=document.createElement('span');numSpan.className='print-bal-num';numSpan.textContent=valText;span.replaceChildren(small,numSpan);}else{span.textContent=valText;}if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
+  window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else if($('summary-dialog').open)prepareSummaryOutput();else preparePrint();});window.addEventListener('afterprint',()=>{registerPrintActive=false;document.documentElement.style.removeProperty('--print-start-page');clearReceiptOutput();applyFilter();});
   function canOutput(rows,filtered=true){if(filtered&&!rangeValid()){alert('تاریخ کا دورانیہ درست کریں۔');return false;}if(!rows.length){alert('کوئی انٹری منتخب نہیں ہے۔');return false;}if(rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null))){alert('رقم کے خانے درست کریں۔ صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم خود تبدیل نہیں کی گئی۔');return false;}return true;}
   if(!window.electronAPI?.savePDF){
     $('save-pdf').hidden=false;$('save-pdf').title='براؤزر پرنٹ میں Save as PDF منتخب کریں';
@@ -2087,7 +1912,7 @@
         if(result.status==='saved'){button.textContent='✓ PDF محفوظ ہو گئی';if(result.filePath)recordSavedPdf(result.filePath);}
         else if(result.status==='error')alert('PDF محفوظ نہیں ہو سکی۔ دوسری جگہ منتخب کریں یا کھلی ہوئی فائل بند کریں۔');
       }catch{alert('PDF محفوظ نہیں ہو سکی۔ دوبارہ کوشش کریں۔');}
-      finally{registerPrintActive=false;clearGroupedPrint();document.documentElement.style.removeProperty('--print-start-page');document.body.inert=false;button.disabled=false;applyFilter();setTimeout(()=>{button.replaceChildren(...label);},2500);}
+      finally{registerPrintActive=false;document.documentElement.style.removeProperty('--print-start-page');document.body.inert=false;button.disabled=false;applyFilter();setTimeout(()=>{button.replaceChildren(...label);},2500);}
     };
   }
   $('print').onclick=async()=>{
@@ -2098,7 +1923,7 @@
     document.body.inert=true;
     try{preparePrint();const result=await window.electronAPI.previewPDF();if(result.status==='error')alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');}
     catch{alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');}
-    finally{registerPrintActive=false;clearGroupedPrint();document.documentElement.style.removeProperty('--print-start-page');document.body.inert=false;applyFilter();}
+    finally{registerPrintActive=false;document.documentElement.style.removeProperty('--print-start-page');document.body.inert=false;applyFilter();}
   };
   const topNavEl=document.querySelector('.top-nav');
   if(topNavEl&&typeof ResizeObserver!=='undefined'){
