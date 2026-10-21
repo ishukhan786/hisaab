@@ -268,20 +268,20 @@ td.col-pkr,td input[data-field="pkr"]{text-align:left}
 .place-suggest-menu{position:fixed;z-index:100;background:#fff;border:1px solid #b8d0c0;border-radius:10px;box-shadow:0 8px 24px rgba(18,63,46,0.16);padding:4px;display:flex;flex-direction:column;gap:2px;max-height:220px;overflow-y:auto;direction:rtl}
 .place-suggest-item{border:0;background:transparent;color:var(--ink);font-family:inherit;font-size:var(--entry-font);line-height:1.9;padding:4px 12px;border-radius:7px;text-align:center;cursor:pointer;white-space:nowrap}
 .place-suggest-item:hover,.place-suggest-item.active{background:#e7f3ec;color:var(--green);font-weight:700}
-#pin-dialog{max-width:440px}
+#pin-dialog{max-width:460px}
 .pin-form{display:flex;flex-direction:column;gap:12px;margin-top:8px}
 .pin-field{display:flex;flex-direction:column;gap:4px}
-.pin-field input,#pin-unlock-input{direction:ltr;text-align:center;font:bold 20px Arial,sans-serif;letter-spacing:6px;padding:8px 12px;border:1px solid #b8d0c0;border-radius:10px;background:#f8fbf9}
-.pin-msg,.pin-error{color:#b91c1c;font-size:12px;font-weight:600;margin:0;min-height:20px;text-align:center}
+.pin-field input{direction:ltr;text-align:center;font:bold 20px 'Consolas',Arial,sans-serif;letter-spacing:6px;padding:8px 12px;border:1px solid #b8d0c0;border-radius:10px;background:#f8fbf9}
+.pin-msg,.pin-error{color:#b91c1c;font-size:12.5px;font-weight:600;margin:0;min-height:20px;text-align:center}
 .pin-actions{display:flex;gap:10px;justify-content:center;margin-top:4px}
 .pin-actions button{flex:1}
-.pin-lock-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,43,33,0.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;place-items:center;padding:20px}
-.pin-lock-card{background:#fff;border:1px solid #cfe0d5;border-radius:20px;padding:28px 26px;width:100%;max-width:380px;box-shadow:0 24px 60px rgba(10,35,26,0.35);display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
-.pin-logo{width:52px;height:52px;font-size:28px;border-radius:15px;margin-bottom:4px}
+.pin-lock-overlay{position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 50% 36%, rgba(18,62,47,0.92) 0%, rgba(7,24,18,0.97) 100%);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:grid;place-items:center;padding:20px;overflow-y:auto}
+.pin-lock-card{background:linear-gradient(180deg,#ffffff 0%,#f6faf7 100%);border:1px solid rgba(180,215,196,0.9);border-radius:26px;padding:32px 28px 26px;width:100%;max-width:370px;box-shadow:0 25px 60px -10px rgba(5,26,18,0.45),0 0 0 1px rgba(255,255,255,0.85) inset;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;box-sizing:border-box;position:relative;overflow:hidden}
+.pin-logo{width:56px;height:56px;font-size:30px;border-radius:17px;margin-bottom:2px}
 .pin-lock-card h2{margin:0;font-size:22px;color:var(--green)}
-.pin-lock-card p{margin:0;font-size:12.5px;color:#4f6b5c}
-#pin-unlock-input{width:100%;max-width:220px;height:48px;font-size:24px}
-.pin-lock-card .pin-actions{width:100%;margin-top:8px}
+.pin-lock-card p{margin:0;font-size:13px;color:#537566}
+#pin-unlock-input{width:100%;max-width:280px;height:52px;font:bold 26px 'Consolas',monospace;letter-spacing:9px;direction:ltr;text-align:center}
+.pin-lock-card .pin-actions{width:100%;max-width:280px;margin-top:8px}
 
 /* Restore complete borders around all register print cells. */
 @media print{.paper table th,.paper table td{border:1px solid #99aa9a!important}.paper tfoot.register-totals .totals-gap>td{border:0!important}}

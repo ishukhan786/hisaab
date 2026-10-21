@@ -420,3 +420,651 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 .ba-navigation{display:flex;justify-content:center;align-items:center;gap:12px}.ba-navigation span{font-size:11px;color:#85948b}
 .ba-empty{text-align:center;padding:26px;color:#7a8b81}
 @media(max-width:650px){.branch-admin-dialog{width:96vw;max-height:94vh;border-radius:16px}.ba-header{padding:22px 18px;gap:10px}.branch-admin-dialog h2{font-size:22px}.ba-body{padding:18px 15px}.ba-forms{grid-template-columns:1fr}.ba-stats{gap:9px}.ba-stats>div{padding:12px;gap:9px}.ba-stats strong{font-size:23px}.ba-stats span{font-size:11px}.branch-admin-user{padding:15px;gap:13px}.ba-user-controls{grid-template-columns:1fr 1fr;gap:12px}.ba-user-controls>.ba-field{grid-column:1/-1}.ba-save{align-self:center}.ba-owner-note{padding-left:0}.ba-section-heading{align-items:flex-start}}
+
+/* ==========================================================================
+   ENHANCED PIN CODE UI & UNLOCK SYSTEM (ELECTRON DESKTOP & WEB)
+   ========================================================================== */
+
+@keyframes pin-fade-in {
+  from { opacity: 0; backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+}
+
+@keyframes pin-card-pop {
+  0% { opacity: 0; transform: scale(0.92) translateY(12px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes pin-shake {
+  0%, 100% { transform: translateX(0); }
+  15%, 55% { transform: translateX(-8px); }
+  35%, 75% { transform: translateX(8px); }
+  90% { transform: translateX(-3px); }
+}
+
+@keyframes pin-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); }
+  70% { box-shadow: 0 0 0 9px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* 1. PIN Lock Overlay */
+.pin-lock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: radial-gradient(circle at 50% 36%, rgba(18, 62, 47, 0.90) 0%, rgba(7, 24, 18, 0.97) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+  animation: pin-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 2. PIN Unlock Form Card */
+.pin-lock-card {
+  position: relative;
+  background: linear-gradient(180deg, #ffffff 0%, #f6faf7 100%);
+  border: 1px solid rgba(180, 215, 196, 0.9);
+  border-radius: 26px;
+  padding: 32px 28px 26px;
+  width: 100%;
+  max-width: 370px;
+  box-shadow: 0 25px 60px -10px rgba(5, 26, 18, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.85) inset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  box-sizing: border-box;
+  animation: pin-card-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.pin-lock-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #10b981 0%, #059669 50%, #047857 100%);
+}
+
+.pin-lock-card.shake {
+  animation: pin-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Badge Wrap with Logo & Lock */
+.pin-lock-badge-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.pin-lock-badge-wrap .pin-logo {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  background: linear-gradient(135deg, #10b981 0%, #059669 55%, #047857 100%);
+  box-shadow: 0 10px 24px -4px rgba(5, 150, 105, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.22s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+.pin-lock-badge-wrap .pin-logo:hover {
+  transform: scale(1.08) rotate(4deg);
+}
+
+.pin-lock-shield-icon {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #dcece2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* Card Heading & Reason */
+.pin-lock-card h2#pin-unlock-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0d3b2c;
+  letter-spacing: -0.3px;
+}
+
+.pin-lock-card p#pin-unlock-reason {
+  margin: 0;
+  font-size: 13px;
+  color: #557767;
+  line-height: 1.5;
+  max-width: 310px;
+}
+
+/* Account dropdown wrapper if displayed */
+#login-account-wrap {
+  width: 100%;
+  max-width: 280px;
+  margin: 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: start;
+  font-size: 12px;
+  font-weight: 600;
+  color: #275241;
+}
+
+#login-account-wrap select {
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid #c9ded2;
+  background: #ffffff;
+  padding: 0 10px;
+  color: #124031;
+  font-size: 13px;
+}
+
+/* Unified PIN Input Box with Eye Button */
+.pin-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 280px;
+  margin: 8px auto 4px;
+  box-sizing: border-box;
+}
+
+.pin-input-container input#pin-unlock-input,
+.pin-input-container input[type="password"],
+.pin-input-container input[type="text"] {
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
+  border: 2px solid #c4ded0;
+  background: #ffffff;
+  font: bold 26px 'Consolas', 'Courier New', monospace;
+  letter-spacing: 9px;
+  text-align: center;
+  color: #0c3e2e;
+  padding: 0 44px 0 18px;
+  direction: ltr;
+  box-shadow: inset 0 2px 4px rgba(15, 52, 38, 0.04);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  box-sizing: border-box;
+}
+
+.pin-input-container input#pin-unlock-input:focus,
+.pin-input-container input:focus {
+  border-color: #059669;
+  background: #ffffff;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.18), inset 0 1px 2px rgba(15, 52, 38, 0.03);
+}
+
+.pin-input-container input::placeholder {
+  color: #b0c9bc;
+  letter-spacing: 7px;
+  opacity: 0.6;
+}
+
+/* Eye Toggle Button */
+.pin-eye-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  min-width: 34px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #638876;
+  border-radius: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  transition: all 0.16s ease;
+  z-index: 2;
+}
+
+.pin-eye-btn:hover {
+  color: #059669;
+  background: #ebf6f0;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.pin-eye-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.pin-eye-icon {
+  display: block;
+  stroke: currentColor;
+  fill: none;
+  transition: stroke 0.15s ease;
+}
+
+/* 3. Tactile Virtual Keypad */
+.pin-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 280px;
+  margin: 8px auto 4px;
+  box-sizing: border-box;
+}
+
+.pin-key {
+  height: 48px;
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid #cfe0d5;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8f5 100%);
+  font: 700 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #174a38;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(16, 56, 41, 0.06), inset 0 1px 0 #ffffff;
+  transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+  outline: none;
+}
+
+.pin-key:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #e6f4ed 100%);
+  border-color: #6fb597;
+  color: #093c2c;
+  transform: translateY(-1.5px);
+  box-shadow: 0 5px 12px rgba(16, 56, 41, 0.12), inset 0 1px 0 #ffffff;
+}
+
+.pin-key:active {
+  transform: translateY(1px) scale(0.95);
+  background: #d8eee1;
+  border-color: #52a784;
+  box-shadow: inset 0 2px 4px rgba(16, 56, 41, 0.15);
+}
+
+.pin-key-fn {
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(180deg, #f8faf8 0%, #ebf2ee 100%);
+  color: #4f7363;
+  border-color: #d7e4dc;
+}
+
+.pin-key[data-key="clear"]:hover {
+  color: #dc2626;
+  border-color: #fca5a5;
+  background: linear-gradient(180deg, #ffffff 0%, #fee2e2 100%);
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.15);
+}
+
+.pin-key[data-key="backspace"]:hover {
+  color: #d97706;
+  border-color: #fde68a;
+  background: linear-gradient(180deg, #ffffff 0%, #fef3c7 100%);
+  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.15);
+}
+
+/* Error Message */
+.pin-error,
+#pin-unlock-error {
+  min-height: 22px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 4px 0;
+  text-align: center;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+}
+
+.pin-error:not(:empty),
+#pin-unlock-error:not(:empty) {
+  padding: 4px 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 280px;
+  box-sizing: border-box;
+}
+
+/* Actions in Unlock Card */
+.pin-lock-card .pin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 280px;
+  margin: 6px auto 0;
+}
+
+.pin-submit-btn {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 13px;
+  font-size: 14px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%);
+  color: #ffffff;
+  border: 1px solid #047857;
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.2, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pin-submit-btn:hover {
+  background: linear-gradient(135deg, #18c58c 0%, #08a374 60%, #058863 100%);
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 22px rgba(5, 150, 105, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.pin-submit-btn:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+}
+
+.pin-cancel-btn {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid #d0dfd6;
+  color: #4c6f5f;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-cancel-btn:hover {
+  background: #f1f7f4;
+  border-color: #9cbfae;
+  color: #144937;
+}
+
+/* Default PIN Hint Banner */
+.pin-hint-badge {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 11px;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  color: #166534;
+  margin: 8px auto 0;
+  width: 100%;
+  max-width: 280px;
+  text-align: center;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   4. PIN SETTINGS DIALOG (.pin-settings-dialog)
+   ========================================================================== */
+
+dialog.pin-settings-dialog {
+  width: 100%;
+  max-width: 460px;
+  border-radius: 24px;
+  border: 1px solid #d3e2d8;
+  padding: 0 24px 24px;
+  background: #ffffff;
+  box-shadow: 0 25px 70px rgba(10, 36, 26, 0.32);
+  box-sizing: border-box;
+}
+
+dialog.pin-settings-dialog .dialog-head {
+  padding: 20px 0 14px;
+  border-bottom: 1px solid #e5eee8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.pin-dialog-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pin-dialog-badge-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #eaf6ef;
+  border: 1px solid #bfe3cf;
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(16, 56, 41, 0.06);
+}
+
+.pin-dialog-title-wrap h2#pin-dialog-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: #114232;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Status Banner */
+.pin-status-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: 14px;
+  background: #f3f6f4;
+  border: 1px solid #dbe6e0;
+  margin: 4px 0 16px;
+  transition: all 0.25s ease;
+}
+
+.pin-status-banner.active {
+  background: linear-gradient(135deg, #ecfdf5 0%, #e6f9f0 100%);
+  border-color: #a7f3d0;
+}
+
+.pin-status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #94a3b8;
+  flex-shrink: 0;
+  margin-top: 5px;
+  box-shadow: 0 0 0 2px #cbd5e1;
+  transition: all 0.25s ease;
+}
+
+.pin-status-banner.active .pin-status-indicator {
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+  animation: pin-pulse 2s infinite;
+}
+
+.pin-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  text-align: start;
+}
+
+#pin-status-badge {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.pin-status-banner.active #pin-status-badge {
+  color: #065f46;
+}
+
+#pin-status-text {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.pin-status-banner.active #pin-status-text {
+  color: #047857;
+}
+
+/* Form Fields */
+.pin-field-enhanced {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  text-align: start;
+}
+
+.pin-field-enhanced label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1e4b3a;
+}
+
+.pin-field-enhanced .pin-input-container {
+  max-width: 100%;
+  margin: 0;
+}
+
+.pin-field-enhanced input {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  border: 1.5px solid #c9ded2;
+  background: #fbfdfc;
+  font: bold 20px 'Consolas', monospace;
+  letter-spacing: 6px;
+  text-align: center;
+  color: #154535;
+  padding: 0 44px 0 16px;
+  direction: ltr;
+  box-shadow: inset 0 1px 3px rgba(16, 56, 41, 0.04);
+  transition: all 0.18s ease;
+  box-sizing: border-box;
+}
+
+.pin-field-enhanced input:focus {
+  background: #ffffff;
+  border-color: #059669;
+  box-shadow: 0 0 0 3.5px rgba(5, 150, 105, 0.16);
+  outline: none;
+}
+
+.pin-field-hint {
+  font-size: 11px;
+  color: #648072;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+/* Feedback message in Settings */
+.pin-msg,
+#pin-form-msg {
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 20px;
+  text-align: center;
+  margin: 4px 0;
+  color: #b91c1c;
+  line-height: 1.4;
+}
+
+.pin-form .pin-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.pin-save-btn {
+  flex: 1;
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: 1px solid #047857;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-save-btn:hover {
+  background: linear-gradient(135deg, #17c68e 0%, #06a575 100%);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.4);
+}
+
+.pin-remove-btn {
+  flex: 1;
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  background: linear-gradient(180deg, #fff5f5 0%, #fee2e2 100%);
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-remove-btn:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.18);
+  transform: translateY(-1.5px);
+}
+

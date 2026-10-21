@@ -1,22 +1,9 @@
 (() => {
   'use strict';
-  const offices={mussafah:'Mussafah Branch',satwa:'Satwa Branch',city:'City Branch'};
-  let office=sessionStorage.getItem('hisaab-office')||'mussafah';
-  if(!Object.hasOwn(offices,office)&&(!location.protocol.startsWith('http')||window.electronAPI||!/^office_[a-f0-9]{24}$/.test(office)))office='mussafah';
   const nativeStorage=window.electronAPI?.storage;
   const isWebMode = !nativeStorage && window.location.protocol.startsWith('http');
-  const KEY=nativeStorage?'hisaab-register-v1':office==='mussafah'?'hisaab-register-v1':'hisaab-register-v1-'+office;
+  const KEY='hisaab-register-v1';
   const $ = id => document.getElementById(id);
-  const fetch=async(url,options={})=>{
-    await window.HisaabAuth?.ready;
-    if(window.HisaabAuth?.provider==='clerk'){
-      const token=await window.HisaabAuth.getToken();
-      const headers=new Headers(options.headers||{});headers.delete('Authorization');
-      if(token)headers.set('Authorization','Bearer '+token);
-      return window.fetch(url,{...options,headers});
-    }
-    return window.fetch(url,options);
-  };
   let storageRevision=0,nativeNeedsInit=false,legacySource=null,storageReadFailed=false,unsavedNative=false;
   let autoBackupTimer=null,autoBackupHandle=null,diskWriteBusy=false,diskWritePending=false,diskSyncTimer=null,pendingDiskHandle=null,unsavedDisk=false;
   const retrySave=document.createElement('button');retrySave.type='button';retrySave.id='retry-save';retrySave.textContent='دوبارہ محفوظ کریں';retrySave.hidden=true;
@@ -104,36 +91,11 @@
     }
     const partyCurrencies=Object.create(null);for(const name of registry){const raw=source.partyCurrencies;if(raw&&Object.hasOwn(raw,name)){if(!['pkr','afn'].includes(raw[name]))throw Error('Invalid currency');partyCurrencies[name]=raw[name];}}
     const lockedDates=Array.isArray(source.lockedDates)?source.lockedDates.filter(d=>typeof d==='string'&&dateValid(d)):[];
-    const pinCode=typeof source.pinCode==='string'&&/^\d{4,8}$/.test(source.pinCode)?source.pinCode:'';
-    return {...(nativeStorage?{}:{officeId:office}),journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:titleVal,date:source.date||today(),pageNumber:Number.isInteger(source.pageNumber)&&source.pageNumber>0?source.pageNumber:1,startSerial,partySerials,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates,pinCode};
+    let pinCode=typeof source.pinCode==='string'&&/^\d{4,8}$/.test(source.pinCode)?source.pinCode:'';
+    if(isWebMode && !pinCode) pinCode='1234';
+    return {journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:titleVal,date:source.date||today(),pageNumber:Number.isInteger(source.pageNumber)&&source.pageNumber>0?source.pageNumber:1,startSerial,partySerials,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates,pinCode};
   }
-  let cloudReady = !isWebMode, currentRole = nativeStorage ? 'owner' : null;
-  const AUTH_KEY = 'hisaab-auth-token-v1';
-  const getAuthToken = () => {
-    if(window.HisaabAuth?.provider==='clerk')return window.HisaabAuth.isSignedIn?'clerk-session':'';
-    try {
-      const localToken = localStorage.getItem(AUTH_KEY);
-      if (localToken) return localToken;
-      return sessionStorage.getItem(AUTH_KEY) || '';
-    } catch (_) {
-      try { return sessionStorage.getItem(AUTH_KEY) || ''; } catch (_) { return ''; }
-    }
-  };
-  const setAuthToken = token => {
-    try {
-      if (token) {
-        localStorage.setItem(AUTH_KEY, token);
-        sessionStorage.setItem(AUTH_KEY, token);
-      } else {
-        localStorage.removeItem(AUTH_KEY);
-        sessionStorage.removeItem(AUTH_KEY);
-      }
-    } catch (_) {}
-    updateLogoutBtn();
-  };
-  function updateLogoutBtn() {
-    if ($('logout-btn')) $('logout-btn').hidden = !isWebMode || !getAuthToken();
-  }
+  let cloudReady = !isWebMode;
   let mongoSaveTimer = null, pendingMongoSave = null;
 
   let mongoChain=Promise.resolve();
@@ -145,21 +107,13 @@
     if (!isWebMode || !cloudReady) return;
     try {
       $('save-state').textContent = 'کلاؤڈ پر محفوظ ہو رہا ہے...';
-      const token = getAuthToken();
-      const res = await fetch('/api/save', {
+      const res = await window.fetch('/api/save', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'X-Hisaab-Branch': office,
-          ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ state: cleanState, revision: storageRevision, force })
       });
-      if (res.status === 401) {
-        setAuthToken('');
-        requestWebLogin('لاگ ان کی مدت ختم ہو گئی۔ براہ کرم دوبارہ لاگ ان کریں۔');
-        return;
-      }
       if (res.status === 409) {
         const conflictData = await res.json();
         console.warn('Concurrent edit conflict detected:', conflictData);
@@ -233,7 +187,6 @@
   }catch{storageBlocked=true;storageReadFailed=true;alert('محفوظ ڈیٹا نہیں کھل سکا۔ اصل ڈیٹا محفوظ رکھا گیا ہے؛ دوبارہ کھولیں یا درست بیک اَپ بحال کریں۔');}
   function writeState(data,restore=false){
     if(isWebMode&&!cloudReady)throw Error('Cloud is not ready');
-    if(!nativeStorage)data={...data,officeId:office};
     if(!nativeStorage){
       if(!isWebMode)localStorage.setItem(KEY,JSON.stringify(data));
       if(isWebMode){
@@ -246,60 +199,7 @@
     if(result?.status!=='saved')throw Error(result?.message||'Database save failed');
     storageRevision=result.revision;nativeNeedsInit=false;unsavedNative=false;
   }
-  function updateOfficeUI(){
-    const switcher=$('office-switcher');
-    if(nativeStorage){
-      if(switcher)switcher.hidden=true;
-      if($('office-staff-open'))$('office-staff-open').hidden=true;
-      if($('login-account-wrap'))$('login-account-wrap').hidden=true;
-      document.querySelectorAll('.office-print-name').forEach(el=>el.textContent='');
-      return;
-    }
-    if(switcher)switcher.hidden=true;
-    $('office-select').value=office;
-    $('office-select').disabled=isWebMode;
-    $('office-staff-open').hidden=!isWebMode||currentRole!=='owner';
-    $('office-mode').textContent=currentRole==='staff'?'Branch staff':'Online branches';
-    if($('pin-settings-btn'))$('pin-settings-btn').hidden=isWebMode&&(currentRole==='staff'||window.HisaabAuth?.provider==='clerk');
-    if(isWebMode&&window.HisaabAuth?.provider==='clerk')$('lock-app-now-btn').hidden=true;
-    $('login-account-wrap').hidden=!isWebMode;
-    document.querySelectorAll('.office-print-name').forEach(el=>el.textContent=offices[office]||office);
-  }
-  $('office-select').onchange=async()=>{
-    if(nativeStorage)return;
-    const next=$('office-select').value;
-    $('office-select').disabled=true;
-    try{
-      if(!save())throw Error('Pehle data save karein.');
-      clearTimeout(mongoSaveTimer);
-      if(autoBackupHandle){clearTimeout(diskSyncTimer);await flushDiskFileNow();}
-      if(pendingMongoSave){const data=pendingMongoSave;pendingMongoSave=null;await pushToMongo(data);}
-      await mongoChain;
-      if(unsavedNative||unsavedDisk)throw Error('Data save nahi hua. Dobara save karke branch badlein.');
-      sessionStorage.setItem('hisaab-office',next);location.reload();
-    }catch(err){alert(err.message);$('office-select').value=office;$('office-select').disabled=false;}
-  };
-  $('office-staff-open').onclick=async()=>{
-    if(window.HisaabAuth?.provider==='clerk'){await window.HisaabBranchAdmin.open(fetch,office);return;}
-    $('office-staff-dialog').showModal();$('office-staff-msg').textContent='Loading…';
-    try{
-      const res=await fetch('/api/branches',{headers:{Authorization:'Bearer '+getAuthToken(),'X-Hisaab-Branch':office}});
-      const data=await res.json();if(!res.ok)throw Error(data.message);
-      $('office-staff-status').textContent=data.branches.map(b=>b.name+': '+(b.staffEnabled?'Enabled':'Disabled')).join(' | ');
-      $('office-staff-msg').textContent='';
-    }catch(err){$('office-staff-msg').textContent=err.message;}
-  };
-  $('office-staff-close').onclick=()=>$('office-staff-dialog').close();
-  async function setStaff(disable){
-    const button=$(disable?'office-staff-disable':'office-staff-save');button.disabled=true;
-    try{
-      const res=await fetch('/api/branches/staff',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+getAuthToken(),'X-Hisaab-Branch':office},body:JSON.stringify({branch:$('office-staff-branch').value,password:$('office-staff-password').value,disable})});
-      const data=await res.json();if(!res.ok)throw Error(data.message||'Could not save');
-      $('office-staff-password').value='';$('office-staff-msg').textContent=disable?'Staff login disabled.':'Staff password saved. Previous staff sessions are now invalid.';
-    }catch(err){$('office-staff-msg').textContent=err.message;}finally{button.disabled=false;}
-  }
-  $('office-staff-form').onsubmit=e=>{e.preventDefault();setStaff(false);};
-  $('office-staff-disable').onclick=()=>setStaff(true);
+  function updateOfficeUI(){}
   function savedStatus(){
     retrySave.hidden=true;
     retrySave.textContent='دوبارہ محفوظ کریں';
@@ -310,7 +210,6 @@
   }
   function persist(){
     if(isWebMode&&!cloudReady)return false;
-    if(!nativeStorage)state.officeId=office;
     if(storageBlocked){$('save-state').textContent='محفوظ نہیں ہو رہا — دوبارہ کھولیں یا بیک اَپ بحال کریں';retrySave.hidden=false;return false;}
     try{writeState({...state,rows:state.rows.filter(populated)});if(!isWebMode)savedStatus();return true;}
     catch{unsavedNative=!!nativeStorage;retrySave.hidden=false;$('save-state').textContent='محفوظ نہیں ہو سکا — دوبارہ کوشش کریں یا بیک اَپ لیں';return false;}
@@ -492,36 +391,58 @@
   }
   let pinUnlockResolve=null;
   function updatePinUI(){
-    const hasPin=!!state.pinCode;
+    const hasPin=isWebMode?true:!!state.pinCode;
     if($('lock-app-now-btn'))$('lock-app-now-btn').hidden=!hasPin;
-    updateLogoutBtn();
   }
-  let webLoginResolve = null;
-  let isWebSetupMode = false;
-  function requestWebLogin(reasonText='جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں', setupMode=false) {
-    if(window.HisaabAuth?.provider==='clerk')return window.HisaabAuth.login(reasonText);
-    isWebSetupMode = !!setupMode;
-    const overlay=$('pin-lock-overlay');
-    if(!overlay)return Promise.resolve(false);
-    $('pin-unlock-title').textContent=isWebSetupMode?'حساب — نیا پن سیٹ کریں':'حساب — لاگ ان';
-    $('pin-unlock-reason').textContent=reasonText;
-    $('pin-unlock-error').textContent='';
-    const input=$('pin-unlock-input');
-    input.value='';
-    const cancelBtn=$('pin-unlock-cancel');
-    if(cancelBtn)cancelBtn.hidden=true;
-    overlay.hidden=false;
-    document.querySelectorAll('body > :not(#pin-lock-overlay)').forEach(el=>{el.inert=true;});
-    setTimeout(()=>input.focus(),30);
-    return new Promise(resolve=>{webLoginResolve=resolve;});
+
+  const PIN_EYE_OPEN_SVG = '<svg class="pin-eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const PIN_EYE_CLOSED_SVG = '<svg class="pin-eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+  function setupPinEyeToggle(btnId, inputId) {
+    const btn = $(btnId);
+    const input = $(inputId);
+    if (!btn || !input) return;
+    btn.onclick = () => {
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.innerHTML = show ? PIN_EYE_CLOSED_SVG : PIN_EYE_OPEN_SVG;
+      btn.title = show ? 'پاس ورڈ چھپائیں' : 'پاس ورڈ دکھائیں';
+      btn.setAttribute('aria-label', btn.title);
+      input.focus();
+    };
   }
+
+  function resetPinEyeToggle(btnId, inputId) {
+    const btn = $(btnId);
+    const input = $(inputId);
+    if (input) input.type = 'password';
+    if (btn) {
+      btn.innerHTML = PIN_EYE_OPEN_SVG;
+      btn.title = 'پاس ورڈ دکھائیں';
+      btn.setAttribute('aria-label', btn.title);
+    }
+  }
+
+  function triggerPinShake() {
+    const card = $('pin-unlock-form');
+    if (!card) return;
+    card.classList.remove('shake');
+    void card.offsetWidth;
+    card.classList.add('shake');
+  }
+
   function requestPinUnlock(reasonText='جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں',allowCancel=false){
-    if(!state.pinCode)return Promise.resolve(true);
+    const effectivePin=state.pinCode||(isWebMode?'1234':'');
+    if(!effectivePin)return Promise.resolve(true);
     const overlay=$('pin-lock-overlay');
     if(!overlay)return Promise.resolve(true);
     $('pin-unlock-title').textContent='حساب لاک ہے';
     $('pin-unlock-reason').textContent=reasonText;
     $('pin-unlock-error').textContent='';
+    const card=$('pin-unlock-form');
+    if(card)card.classList.remove('shake');
+    resetPinEyeToggle('toggle-pwd-btn', 'pin-unlock-input');
+    if($('pin-default-hint'))$('pin-default-hint').hidden=effectivePin!=='1234';
     const input=$('pin-unlock-input');
     input.value='';
     const cancelBtn=$('pin-unlock-cancel');
@@ -534,6 +455,8 @@
   function finishPinUnlock(unlocked){
     const overlay=$('pin-lock-overlay');
     if(overlay)overlay.hidden=true;
+    const card=$('pin-unlock-form');
+    if(card)card.classList.remove('shake');
     document.querySelectorAll('body > :not(#pin-lock-overlay)').forEach(el=>{el.inert=false;});
     if(pinUnlockResolve){const fn=pinUnlockResolve;pinUnlockResolve=null;fn(unlocked);}
   }
@@ -542,150 +465,91 @@
       $('pin-unlock-error').textContent='';
     });
   }
-  if($('toggle-pwd-btn')){
-    $('toggle-pwd-btn').onclick=()=>{
+  setupPinEyeToggle('toggle-pwd-btn', 'pin-unlock-input');
+  setupPinEyeToggle('toggle-pin-current-btn', 'pin-current');
+  setupPinEyeToggle('toggle-pin-new-btn', 'pin-new');
+
+  if($('pin-keypad')){
+    $('pin-keypad').addEventListener('click',e=>{
+      const btn=e.target.closest('.pin-key');
+      if(!btn)return;
+      const key=btn.dataset.key;
       const input=$('pin-unlock-input');
-      const isPwd=input.type==='password';
-      input.type=isPwd?'text':'password';
-      $('toggle-pwd-btn').textContent=isPwd?'🔒':'👁';
-    };
+      if(!input||!key)return;
+      if(key==='clear'){
+        input.value='';
+      }else if(key==='backspace'){
+        input.value=input.value.slice(0,-1);
+      }else if(/^[0-9]$/.test(key)){
+        if(input.value.length<128){
+          input.value+=key;
+        }
+      }
+      $('pin-unlock-error').textContent='';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      input.focus();
+    });
   }
+
   if($('pin-unlock-form')){
-    $('pin-unlock-form').onsubmit=async e=>{
+    $('pin-unlock-form').onsubmit=e=>{
       e.preventDefault();
       const val=englishDigits($('pin-unlock-input').value).trim();
       if(!val)return;
 
-      if(isWebMode&&webLoginResolve){
-        $('pin-unlock-error').textContent=isWebSetupMode?'نیا پن محفوظ ہو رہا ہے...':'لاگ ان ہو رہا ہے...';
-        try{
-          if(isWebSetupMode){
-            if(val.length < 4){
-              $('pin-unlock-error').textContent='نیا پن کم از کم 4 ہندسوں یا حروف کا ہونا چاہیے۔';
-              return;
-            }
-            const res=await fetch('/api/auth/setup',{
-              method:'POST',
-              headers:{'Content-Type':'application/json'},
-              body:JSON.stringify({newPassword:val})
-            });
-            const data=await res.json();
-            if(res.ok&&data.status==='ok'&&data.token){
-              setAuthToken(data.token);
-              isWebSetupMode=false;
-              finishPinUnlock(true);
-              if(webLoginResolve){
-                const fn=webLoginResolve;
-                webLoginResolve=null;
-                fn(true);
-              }
-              initMongoWebState();
-              return;
-            }
-            $('pin-unlock-error').textContent=data.message||'پن محفوظ نہیں ہو سکا!';
-            $('pin-unlock-input').select();
-            return;
-          }
-
-          const res=await fetch('/api/auth/login',{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({password:val,account:$('login-account').value})
-          });
-          const data=await res.json();
-          if(res.ok&&data.status==='ok'&&data.token){
-            setAuthToken(data.token);
-            sessionStorage.setItem('hisaab-office',data.branch||office);
-            location.reload();
-            return;
-          }
-          if(data.needsSetup){
-            isWebSetupMode=true;
-            $('pin-unlock-title').textContent='حساب — نیا پن سیٹ کریں';
-            $('pin-unlock-reason').textContent='پہلی بار کے استعمال کے لیے نیا پن کوڈ سیٹ کریں (کم از کم 4 ہندسے)';
-            $('pin-unlock-error').textContent=data.message||'';
-            $('pin-unlock-input').value='';
-            $('pin-unlock-input').focus();
-            return;
-          }
-          $('pin-unlock-error').textContent=data.message||'غلط پن کوڈ یا پاس ورڈ!';
-          $('pin-unlock-input').select();
-        }catch(_){
-          $('pin-unlock-error').textContent='کنکشن کا مسئلہ! انٹرنیٹ چیک کریں۔';
-        }
-        return;
+      const effectivePin=state.pinCode||(isWebMode?'1234':'');
+      if(val===effectivePin){
+        finishPinUnlock(true);
+      }else{
+        $('pin-unlock-error').textContent='غلط پن کوڈ! دوبارہ کوشش کریں۔';
+        triggerPinShake();
+        $('pin-unlock-input').select();
       }
-
-      if(val===state.pinCode)finishPinUnlock(true);
-      else{$('pin-unlock-error').textContent='غلط پن کوڈ! دوبارہ کوشش کریں۔';$('pin-unlock-input').select();}
     };
   }
   if($('pin-unlock-cancel'))$('pin-unlock-cancel').onclick=()=>finishPinUnlock(false);
   if($('lock-app-now-btn'))$('lock-app-now-btn').onclick=()=>{
-    if(isWebMode)requestWebLogin('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔');
-    else if(state.pinCode)requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔',false);
-  };
-  if($('logout-btn'))$('logout-btn').onclick=async()=>{
-    if(window.HisaabAuth?.provider==='clerk'){
-      clearTimeout(mongoSaveTimer);
-      if(pendingMongoSave){const data=pendingMongoSave;pendingMongoSave=null;await pushToMongo(data);}
-      await mongoChain;if(unsavedNative){alert('پہلے غیر محفوظ تبدیلیاں محفوظ کریں۔');return;}
-      await window.HisaabAuth.signOut();return;
-    }
-    setAuthToken('');
-    $('save-state').textContent='لاگ آؤٹ ہو چکا';
-    requestWebLogin('آپ لاگ آؤٹ ہو چکے ہیں۔ دوبارہ لاگ ان کریں۔');
+    if(isWebMode||state.pinCode)requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔',false);
   };
   function openPinSettings(){
     const d=$('pin-dialog');if(!d)return;
     const hasPin=isWebMode?true:!!state.pinCode;
     $('pin-current-wrap').hidden=!hasPin;
-    $('pin-remove-btn').hidden=isWebMode||!hasPin;
+    $('pin-remove-btn').hidden=isWebMode||!state.pinCode;
     $('pin-current').value='';
     $('pin-new').value='';
+    resetPinEyeToggle('toggle-pin-current-btn', 'pin-current');
+    resetPinEyeToggle('toggle-pin-new-btn', 'pin-new');
     $('pin-form-msg').textContent='';
-    $('pin-status-text').textContent=isWebMode?'لاگ ان پاس ورڈ / پن کوڈ تبدیل کریں۔ کم از کم 4 ہندسے یا حروف لکھیں۔':hasPin?'✓ حفاظتی پن لاک فعال ہے۔ تبدیل کرنے یا ختم کرنے کے لیے موجودہ پن لکھیں۔':'ابھی کوئی پن لاک نہیں لگا۔ نیا 4 سے 8 ہندسوں کا پن کوڈ مقرر کریں۔';
+    const banner=$('pin-status-banner');
+    if(banner)banner.classList.toggle('active',hasPin);
+    if($('pin-status-badge')){
+      $('pin-status-badge').textContent=hasPin?'حفاظتی پن لاک فعال ہے':'پن لاک غیر فعال ہے';
+    }
+    const currentPin=state.pinCode||(isWebMode?'1234':'');
+    $('pin-status-text').textContent=hasPin
+      ?(currentPin==='1234'
+        ?'ابھی ڈیفالٹ پن کوڈ (1234) فعال ہے۔ تبدیل کرنے کے لیے موجودہ پن 1234 لکھ کر نیا 4 سے 8 ہندسوں کا پن مقرر کریں۔'
+        :'حفاظتی پن لاک آن ہے۔ پن تبدیل کرنے کے لیے پہلے موجودہ پن کوڈ درج کریں۔')
+      :'ابھی کوئی پن لاک فعال نہیں ہے۔ پہلی بار 4 سے 8 ہندسوں کا نیا پن مقرر کریں۔';
     d.showModal();
     setTimeout(()=>$(hasPin?'pin-current':'pin-new').focus(),20);
   }
   if($('pin-settings-btn'))$('pin-settings-btn').onclick=openPinSettings;
   if($('close-pin-dialog'))$('close-pin-dialog').onclick=()=>$('pin-dialog').close();
   if($('pin-form')){
-    $('pin-form').onsubmit=async e=>{
+    $('pin-form').onsubmit=e=>{
       e.preventDefault();
       const cur=englishDigits($('pin-current').value).trim();
       const next=englishDigits($('pin-new').value).trim();
-      if(!next||next.length<4){$('pin-form-msg').textContent='نیا پن کم از کم 4 ہندسوں یا حروف کا ہونا چاہیے۔';return;}
-
-      if(isWebMode){
-        $('pin-form-msg').textContent='سرور پر تبدیل ہو رہا ہے...';
-        try{
-          const res=await fetch('/api/auth/change-pin',{
-            method:'POST',
-            headers:{
-              'Content-Type':'application/json',
-              'Authorization':'Bearer '+getAuthToken()
-            },
-            body:JSON.stringify({currentPassword:cur,newPassword:next})
-          });
-          const result=await res.json();
-          if(res.ok&&result.status==='ok'){
-            setAuthToken(result.token);
-            state.pinCode='';
-            updatePinUI();
-            alert('✓ پن کوڈ کامیابی سے تبدیل ہو گیا!');
-            $('pin-dialog').close();
-            return;
-          }
-          $('pin-form-msg').textContent=result.message||'پن تبدیل نہیں ہو سکا۔';
-        }catch(_){
-          $('pin-form-msg').textContent='سرور سے رابطہ نہیں ہو سکا۔ انٹرنیٹ چیک کریں۔';
-        }
+      if(!next||next.length<4||next.length>8||!/^\d{4,8}$/.test(next)){
+        $('pin-form-msg').textContent='نیا پن صرف 4 سے 8 ہندسوں کا ہونا چاہیے۔';
         return;
       }
 
-      const hasPin=!!state.pinCode;
-      if(hasPin&&cur!==state.pinCode){$('pin-form-msg').textContent='موجودہ پن کوڈ درست نہیں ہے۔';return;}
+      const activePin=state.pinCode||(isWebMode?'1234':'');
+      const hasPin=isWebMode?true:!!state.pinCode;
+      if(hasPin&&cur!==activePin){$('pin-form-msg').textContent='موجودہ پن کوڈ درست نہیں ہے۔';return;}
       state.pinCode=next;
       save();updatePinUI();
       $('pin-dialog').close();
@@ -704,7 +568,8 @@
     const d=state.date||today();
     if(!Array.isArray(state.lockedDates))state.lockedDates=[];
     if(state.lockedDates.includes(d)){
-      if(state.pinCode){
+      const hasPin=isWebMode||!!state.pinCode;
+      if(hasPin){
         const ok=await requestPinUnlock(`${fmtDate(d)} کا لاک کھولنے کے لیے اپنا پن کوڈ (PIN) درج کریں`,true);
         if(!ok)return;
       }
@@ -1288,14 +1153,14 @@
       }catch(_){}
     }else if(isWebMode){
       try{
-        const res=await fetch('/api/backup',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+getAuthToken(),'X-Hisaab-Branch':office},body:JSON.stringify({state:clean,tag:isSafety?'safety-pre-restore':'auto'})});
+        const res=await window.fetch('/api/backup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:clean,tag:isSafety?'safety-pre-restore':'auto'})});
         if(!res.ok)throw Error('Cloud backup failed');
         $('cloud-backup-status').hidden=false;$('cloud-backup-status').textContent='کلاؤڈ بیک اَپ محفوظ ہے ✓';
         return {status:'saved'};
       }catch{$('cloud-backup-status').hidden=false;$('cloud-backup-status').textContent='کلاؤڈ بیک اَپ نہیں بن سکا۔ دوبارہ کوشش کریں۔';return {status:'error'};}
     }else{
       try{
-        const key=('hisaab-auto-backups-v1-'+office);
+        const key='hisaab-auto-backups-v1';
         const list=JSON.parse(localStorage.getItem(key)||'[]');
         list.unshift({time:new Date().toISOString(),isSafety,data:clean});
         if(!isWebMode)localStorage.setItem(key,JSON.stringify(list.slice(0,30)));
@@ -1313,7 +1178,7 @@
     try{
       const snapshot=storageBlocked?localStorage.getItem(KEY):JSON.stringify({...state,rows:state.rows.filter(populated)});
       if(isWebMode)return backup?.status==='saved';
-      localStorage.setItem(('hisaab-safety-pre-restore-'+office),snapshot);
+      localStorage.setItem('hisaab-safety-pre-restore',snapshot);
       return true;
     }catch(_){return !storageBlocked&&backup?.status==='saved';}
   }
@@ -1321,7 +1186,6 @@
   let restoreBusy=false;
   async function restoreBackupData(rawObj){
     if(restoreBusy)return false;
-    if(!nativeStorage && (rawObj.officeId||'mussafah')!==office){alert('یہ بیک اَپ دوسری برانچ کا ہے۔ پہلے متعلقہ برانچ منتخب کریں۔');return false;}
     const data=migrate(rawObj);
     const entries=data.rows.filter(populated),journal=data.journal.rows.filter(r=>r.detail.trim()||r.debit.trim()||r.credit.trim());
     const dates=[...entries.map(r=>r.entryDate),...journal.map(r=>r.date)].sort();
@@ -1377,16 +1241,16 @@
       }catch(_){}
     }else if(isWebMode){
       try{
-        const res=await fetch('/api/backups',{headers:{Authorization:'Bearer '+getAuthToken(),'X-Hisaab-Branch':office}});
+        const res=await window.fetch('/api/backups');
         const data=await res.json();if(!res.ok)throw Error('Could not load cloud backups');
         items=data.backups.map(b=>({label:new Date(b.createdAt).toLocaleString('en-GB'),isSafety:b.tag==='safety-pre-restore',sizeKB:'Cloud',load:async()=>{
-          const res=await fetch('/api/backup/'+encodeURIComponent(b._id),{headers:{Authorization:'Bearer '+getAuthToken(),'X-Hisaab-Branch':office}});
+          const res=await window.fetch('/api/backup/'+encodeURIComponent(b._id));
           const data=await res.json();if(!res.ok)throw Error('Could not read backup');return data.state;
         }}));
       }catch(_){$('cloud-backup-status').hidden=false;$('cloud-backup-status').textContent='کلاؤڈ بیک اَپ فہرست نہیں کھل سکی۔ دوبارہ کھول کر کوشش کریں۔';}
     }else{
       try{
-        const list=JSON.parse(localStorage.getItem(('hisaab-auto-backups-v1-'+office))||'[]');
+        const list=JSON.parse(localStorage.getItem('hisaab-auto-backups-v1')||'[]');
         items=list.map(b=>{
           const raw=JSON.stringify(b.data||{});
           return {
@@ -1992,7 +1856,7 @@
   window.addEventListener('keydown',e=>{
     if(!$('pin-lock-overlay')?.hidden)return;
     if((e.ctrlKey||e.metaKey)&&(e.key==='p'||e.key==='P')){e.preventDefault();$('print').click();}
-    if((e.ctrlKey||e.metaKey)&&(e.key==='l'||e.key==='L')&&!e.shiftKey&&state.pinCode){
+    if((e.ctrlKey||e.metaKey)&&(e.key==='l'||e.key==='L')&&!e.shiftKey&&(isWebMode||state.pinCode)){
       e.preventDefault();
       requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔',false);
       return;
@@ -2034,7 +1898,7 @@
     });
   }
   function download(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  function backup(){const time=new Date().toISOString();const snapshot={...state,rows:state.rows.filter(populated),lastBackupAt:time};download(new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}),nativeStorage?`hisaab-backup-${today()}.json`:`hisaab-${office}-backup-${today()}.json`);state.lastBackupAt=time;save();updateBackup();}
+  function backup(){const time=new Date().toISOString();const snapshot={...state,rows:state.rows.filter(populated),lastBackupAt:time};download(new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}),`hisaab-backup-${today()}.json`);state.lastBackupAt=time;save();updateBackup();}
   $('backup').onclick=backup;setInterval(updateBackup,60000);
   $('restore').onclick=()=>$('file').click();
   $('file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>15000000)throw Error('Large file');await restoreBackupData(JSON.parse(await file.text()));}catch{alert('یہ درست حساب بیک اَپ نہیں ہے۔ موجودہ ڈیٹا تبدیل نہیں ہوا۔');}finally{e.target.value='';}};
@@ -2053,74 +1917,37 @@
   async function initMongoWebState() {
     if (!isWebMode) return;
     try {
-      await window.HisaabAuth?.ready;
-      updateLogoutBtn();
-      const token = getAuthToken();
-      const statusRes = await fetch('/api/auth/status', {
-        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
-      });
-      if(!statusRes.ok)throw Error('Login verification failed. Reload to retry.');
-      if (statusRes.ok) {
-        const authInfo = await statusRes.json();
-        if(authInfo.isAuthenticated){
-          currentRole=authInfo.role||'owner';
-          if(authInfo.branch&&authInfo.branch!==office){sessionStorage.setItem('hisaab-office',authInfo.branch);location.reload();return;}
-          if(window.HisaabAuth?.provider==='clerk'){
-            const response=await fetch('/api/branches',{headers:{'X-Hisaab-Branch':office}});
-            if(!response.ok)throw Error('Could not load branch access.');
-            const {branches}=await response.json();
-            for(const branch of branches)offices[branch.id]=branch.name;
-            $('office-select').replaceChildren(...branches.map(branch=>new Option(branch.name,branch.id)));
-          }
-          updateOfficeUI();
-        }
-        if ($('pin-default-hint')) $('pin-default-hint').hidden = !authInfo.isDefaultPin||currentRole==='staff';
-        if (authInfo.needsSetup) {
-          const ok = await requestWebLogin('پہلی بار استعمال کے لیے نیا سیکیورٹی پن (PIN) کوڈ سیٹ کریں', true);
-          if (!ok) return;
-        } else if (!authInfo.isAuthenticated) {
-          const ok = await requestWebLogin('اپنے یوزر نیم اور پاس ورڈ سے لاگ ان کریں۔', false);
-          if (!ok) return;
-        }
-      }
-
-      const res = await fetch('/api/state', {
-        headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'X-Hisaab-Branch':office }
-      });
-      if (res.status === 401) {
-        setAuthToken('');
-        requestWebLogin('لاگ ان کی مدت ختم ہو گئی۔ دوبارہ پاس ورڈ لکھیں۔');
-        return;
-      }
+      const res = await window.fetch('/api/state');
       if (!res.ok) throw Error('Cloud load failed');
       const data = await res.json();
       if (data.status === 'ok' && data.state) {
         storageRevision = data.revision || 0;
         state = migrate(data.state);
         state.date = today();
-        if(!isWebMode)localStorage.setItem(KEY, JSON.stringify(state));
         render();
         savedStatus();
+        updatePinUI();
+        if ($('pin-default-hint')) {
+          $('pin-default-hint').hidden = (state.pinCode || (isWebMode ? '1234' : '')) !== '1234';
+        }
       } else if (data.status === 'empty') {
         state=migrate(emptyOfficeState);state.date=today();render();savedStatus();
-      }else throw Error('Invalid cloud response');
+      } else throw Error('Invalid cloud response');
       cloudReady=true;
-      finishPinUnlock(true);
       const help = $('storage-help');
       if (help) help.textContent = 'ڈیٹا براہِ راست کلاؤڈ MongoDB Atlas میں محفوظ ہو رہا ہے۔';
     } catch (e) {
       cloudReady=false;
-      if(window.HisaabAuth?.provider==='clerk')window.HisaabAuth.showError('اکاؤنٹ یا کلاؤڈ ڈیٹا لوڈ نہیں ہو سکا۔ دوبارہ کوشش کریں۔ '+e.message);
-      $('pin-unlock-error').textContent='Cloud data could not load. Reload to retry.';
+      const help = $('storage-help');
+      if (help) help.textContent = 'کلاؤڈ سے رابطہ نہیں ہو سکا۔ لوکل میموری میں کام جاری ہے۔';
       console.warn('Could not sync MongoDB on startup:', e);
     }
   }
 
   const emptyOfficeState=JSON.parse(JSON.stringify({version:4,title:'Hisaab Register',date:today(),rows:[],branches:[],journal:{date:today(),rows:[]}}));
-  updateOfficeUI();
   render();
   updatePinUI();
-  if (!isWebMode && state.pinCode) {
+  if (isWebMode || state.pinCode) {
     requestPinUnlock('جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں', false);
   }
   journalController=window.HisaabJournal.mount({getState:()=>state,save,today,exportSheet:(rows,name)=>download(window.HisaabExcel.create(rows),name)});

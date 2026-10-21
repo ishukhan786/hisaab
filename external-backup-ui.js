@@ -1,7 +1,6 @@
 /* Optional external snapshots. Primary storage remains independent. */
 (()=>{
  'use strict';
- const office=sessionStorage.getItem('hisaab-office')||'mussafah';
  const native=window.electronAPI?.externalBackup;
  let config={folder:null,lastSuccess:null},handle=null,chain=Promise.resolve(),snapshot,working=0;
  const $=id=>document.getElementById(id);
@@ -9,7 +8,7 @@
 
  async function record(value){
   const db=await new Promise((resolve,reject)=>{
-   const r=indexedDB.open(office==='mussafah'?'hisaab-external-backup':'hisaab-external-backup-'+office,1);
+   const r=indexedDB.open('hisaab-external-backup',1);
    r.onupgradeneeded=()=>r.result.createObjectStore('config');
    r.onsuccess=()=>resolve(r.result);
    r.onerror=()=>reject(r.error);
@@ -41,7 +40,7 @@
   const err=config.error?cleanErrorMessage(config.error):'';
   const at=config.lastSuccess?new Date(config.lastSuccess):null;
   const last=at&&Number.isFinite(at.getTime())?at.toLocaleString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):null;
-  const folder=config.folder?(native?config.folder.replace(/[\\/]+$/,'')+'\\Hisaab-Backups':config.folder+'/Hisaab-Backups'+(office==='mussafah'?'':'/'+office)):'فولڈر منتخب نہیں کیا گیا';
+  const folder=config.folder?(native?config.folder.replace(/[\\/]+$/,'')+'\\Hisaab-Backups':config.folder+'/Hisaab-Backups'):'فولڈر منتخب نہیں کیا گیا';
   const state=working?'بیک اَپ پر کام ہو رہا ہے…':err?'بیک اَپ ناکام — دوبارہ کوشش کریں':config.folder?(last?'بیرونی بیک اَپ محفوظ ہے ✓':'بیک اَپ ابھی نہیں بنا'):'بیرونی بیک اَپ بند ہے';
   const banner=$('external-backup-banner');banner.classList.toggle('error',!!err);banner.classList.toggle('backup-working',working>0);
   $('external-backup-state').textContent=state;
@@ -88,7 +87,7 @@
     }
     if(!handle||await handle.queryPermission({mode:'readwrite'})!=='granted')throw Error('Permission required');
     const root=await handle.getDirectoryHandle('Hisaab-Backups',{create:true});
-    const dir=office==='mussafah'?root:await root.getDirectoryHandle(office,{create:true}),stamp=new Date().toISOString(),name='hisaab-auto-'+stamp.replace(/[:.]/g,'-')+'-'+crypto.randomUUID()+'.json';
+    const dir=root,stamp=new Date().toISOString(),name='hisaab-auto-'+stamp.replace(/[:.]/g,'-')+'-'+crypto.randomUUID()+'.json';
     const file=await dir.getFileHandle(name,{create:true});let writer;try{writer=await file.createWritable();await writer.write(JSON.stringify(data,null,2));await writer.close();}catch(e){if(writer)await writer.abort().catch(()=>{});await dir.removeEntry(name).catch(()=>{});throw e;}
     config={...config,lastSuccess:stamp,error:null};await persist();
     const files=[];for await(const [name,item] of dir.entries())if(item.kind==='file'&&/^hisaab-auto-\d{4}-\d{2}-\d{2}T[\dTZ-]+-[0-9a-f-]{36}\.json$/.test(name))files.push(name);
