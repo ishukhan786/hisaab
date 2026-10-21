@@ -41,8 +41,7 @@
   const err=config.error?cleanErrorMessage(config.error):'';
   const at=config.lastSuccess?new Date(config.lastSuccess):null;
   const last=at&&Number.isFinite(at.getTime())?at.toLocaleString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):null;
-  const time=last?'آخری کامیاب بیک اَپ: '+last:'آخری کامیاب بیک اَپ: ابھی کوئی نہیں';
-  const folder=config.folder?(native?config.folder.replace(/[\\/]+$/,'')+'\\Hisaab-Backups'+(office==='mussafah'?'':'\\'+office):config.folder+'/Hisaab-Backups'+(office==='mussafah'?'':'/'+office)):'فولڈر منتخب نہیں کیا گیا';
+  const folder=config.folder?(native?config.folder.replace(/[\\/]+$/,'')+'\\Hisaab-Backups':config.folder+'/Hisaab-Backups'+(office==='mussafah'?'':'/'+office)):'فولڈر منتخب نہیں کیا گیا';
   const state=working?'بیک اَپ پر کام ہو رہا ہے…':err?'بیک اَپ ناکام — دوبارہ کوشش کریں':config.folder?(last?'بیرونی بیک اَپ محفوظ ہے ✓':'بیک اَپ ابھی نہیں بنا'):'بیرونی بیک اَپ بند ہے';
   const banner=$('external-backup-banner');banner.classList.toggle('error',!!err);banner.classList.toggle('backup-working',working>0);
   $('external-backup-state').textContent=state;
@@ -52,7 +51,7 @@
   location.title=native?folder:'براؤزر مکمل ڈسک path فراہم نہیں کرتا؛ منتخب فولڈر کا نام دکھایا گیا ہے۔';
   const error=$('external-backup-error');error.hidden=!err;error.textContent=err?'وجہ: '+err+' — فولڈر یا USB جوڑ کر دوبارہ کوشش کریں۔':'';
   const details=$('external-backup-status');
-  details.textContent=[state,time,'مقام: '+folder,err?'وجہ: '+err:''].filter(Boolean).join(' — ');
+  details.textContent=[state,last?'آخری کامیاب بیک اَپ: '+last:'','مقام: '+folder,err?'وجہ: '+err:''].filter(Boolean).join(' — ');
   details.classList.toggle('error',!!err);
   const supported=!!native||!!window.showDirectoryPicker;
   for(const id of ['external-backup-select'])$(id).disabled=!!working||!supported;

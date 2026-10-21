@@ -2,11 +2,21 @@
   'use strict';
   const offices={mussafah:'Mussafah Branch',satwa:'Satwa Branch',city:'City Branch'};
   let office=sessionStorage.getItem('hisaab-office')||'mussafah';
-  if(!Object.hasOwn(offices,office))office='mussafah';
-  const KEY=office==='mussafah'?'hisaab-register-v1':'hisaab-register-v1-'+office;
-  const $ = id => document.getElementById(id);
+  if(!Object.hasOwn(offices,office)&&(!location.protocol.startsWith('http')||window.electronAPI||!/^office_[a-f0-9]{24}$/.test(office)))office='mussafah';
   const nativeStorage=window.electronAPI?.storage;
-  nativeStorage?.setOffice(office);
+  const isWebMode = !nativeStorage && window.location.protocol.startsWith('http');
+  const KEY=nativeStorage?'hisaab-register-v1':office==='mussafah'?'hisaab-register-v1':'hisaab-register-v1-'+office;
+  const $ = id => document.getElementById(id);
+  const fetch=async(url,options={})=>{
+    await window.HisaabAuth?.ready;
+    if(window.HisaabAuth?.provider==='clerk'){
+      const token=await window.HisaabAuth.getToken();
+      const headers=new Headers(options.headers||{});headers.delete('Authorization');
+      if(token)headers.set('Authorization','Bearer '+token);
+      return window.fetch(url,{...options,headers});
+    }
+    return window.fetch(url,options);
+  };
   let storageRevision=0,nativeNeedsInit=false,legacySource=null,storageReadFailed=false,unsavedNative=false;
   let autoBackupTimer=null,autoBackupHandle=null,diskWriteBusy=false,diskWritePending=false,diskSyncTimer=null,pendingDiskHandle=null,unsavedDisk=false;
   const retrySave=document.createElement('button');retrySave.type='button';retrySave.id='retry-save';retrySave.textContent='دوبارہ محفوظ کریں';retrySave.hidden=true;
@@ -64,6 +74,7 @@
   pageNext.onclick=()=>{viewPage++;applyFilter();};
   function migrate(source){
     if(!source || ![1,2,3,4].includes(source.version) || typeof source.title!=='string' || source.title.length>100 || typeof source.date!=='string' || (source.date && !dateValid(source.date)) || !Array.isArray(source.rows) || source.rows.length>10000)throw Error('Invalid backup');
+    const titleVal=formatAllah(source.title);
     const registry=[];
     function register(name){if(typeof name!=='string'||name.length>300)throw Error('Invalid party');const cleaned=cleanName(name);if(!cleaned)return '';const existing=registry.find(n=>nameKey(n)===nameKey(cleaned));if(existing)return existing;registry.push(cleaned);return cleaned;}
     if(source.branches!==undefined && (!Array.isArray(source.branches)||source.branches.length>10000))throw Error('Invalid parties');
@@ -94,13 +105,12 @@
     const partyCurrencies=Object.create(null);for(const name of registry){const raw=source.partyCurrencies;if(raw&&Object.hasOwn(raw,name)){if(!['pkr','afn'].includes(raw[name]))throw Error('Invalid currency');partyCurrencies[name]=raw[name];}}
     const lockedDates=Array.isArray(source.lockedDates)?source.lockedDates.filter(d=>typeof d==='string'&&dateValid(d)):[];
     const pinCode=typeof source.pinCode==='string'&&/^\d{4,8}$/.test(source.pinCode)?source.pinCode:'';
-    const titleVal = (!source.title || source.title === 'اندراج رجسٹر') ? 'Hisaab Register' : formatAllah(source.title);
-    return {officeId:office,journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:titleVal,date:source.date||today(),pageNumber:Number.isInteger(source.pageNumber)&&source.pageNumber>0?source.pageNumber:1,startSerial,partySerials,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates,pinCode};
+    return {...(nativeStorage?{}:{officeId:office}),journal:window.HisaabJournal.normalize(source.journal,source.date||today()),version:4,title:titleVal,date:source.date||today(),pageNumber:Number.isInteger(source.pageNumber)&&source.pageNumber>0?source.pageNumber:1,startSerial,partySerials,fontSize:Number.isInteger(source.fontSize)?Math.max(10,Math.min(22,source.fontSize)):13,branches:registry,partyCurrencies,rows,trash,lastBackupAt:typeof source.lastBackupAt==='string'&&Number.isFinite(Date.parse(source.lastBackupAt))?source.lastBackupAt:null,lockedDates,pinCode};
   }
-  const isWebMode = !nativeStorage && window.location.protocol.startsWith('http');
   let cloudReady = !isWebMode, currentRole = nativeStorage ? 'owner' : null;
   const AUTH_KEY = 'hisaab-auth-token-v1';
   const getAuthToken = () => {
+    if(window.HisaabAuth?.provider==='clerk')return window.HisaabAuth.isSignedIn?'clerk-session':'';
     try {
       const localToken = localStorage.getItem(AUTH_KEY);
       if (localToken) return localToken;
@@ -147,7 +157,7 @@
       });
       if (res.status === 401) {
         setAuthToken('');
-        requestWebLogin('لاگ ان کی مدت ختم ہو گئی۔ براہ کرم دوبارہ پن درج کریں۔');
+        requestWebLogin('لاگ ان کی مدت ختم ہو گئی۔ براہ کرم دوبارہ لاگ ان کریں۔');
         return;
       }
       if (res.status === 409) {
@@ -209,7 +219,7 @@
       if(loaded?.status!=='ok')throw Error(loaded?.message||'Database unavailable');
       storageRevision=loaded.revision;nativeNeedsInit=loaded.state===null;
       $('save-state').title=loaded.filePath;
-      if(nativeNeedsInit){legacySource=office==='mussafah'?localStorage.getItem(KEY):null;if(legacySource)state=migrate(JSON.parse(legacySource));}
+      if(nativeNeedsInit){legacySource=localStorage.getItem(KEY);if(legacySource)state=migrate(JSON.parse(legacySource));}
       else state=migrate(loaded.state);
       state.date=today();
       const help=$('storage-help');if(help)help.textContent='ڈیٹا اسی کمپیوٹر کی SQLite فائل میں محفوظ ہے؛ دوسرے کمپیوٹر کے لیے بیک اَپ لے کر بحال کریں۔';
@@ -223,7 +233,7 @@
   }catch{storageBlocked=true;storageReadFailed=true;alert('محفوظ ڈیٹا نہیں کھل سکا۔ اصل ڈیٹا محفوظ رکھا گیا ہے؛ دوبارہ کھولیں یا درست بیک اَپ بحال کریں۔');}
   function writeState(data,restore=false){
     if(isWebMode&&!cloudReady)throw Error('Cloud is not ready');
-    data={...data,officeId:office};
+    if(!nativeStorage)data={...data,officeId:office};
     if(!nativeStorage){
       if(!isWebMode)localStorage.setItem(KEY,JSON.stringify(data));
       if(isWebMode){
@@ -237,15 +247,26 @@
     storageRevision=result.revision;nativeNeedsInit=false;unsavedNative=false;
   }
   function updateOfficeUI(){
+    const switcher=$('office-switcher');
+    if(nativeStorage){
+      if(switcher)switcher.hidden=true;
+      if($('office-staff-open'))$('office-staff-open').hidden=true;
+      if($('login-account-wrap'))$('login-account-wrap').hidden=true;
+      document.querySelectorAll('.office-print-name').forEach(el=>el.textContent='');
+      return;
+    }
+    if(switcher)switcher.hidden=true;
     $('office-select').value=office;
-    $('office-select').disabled=isWebMode&&currentRole!=='owner';
+    $('office-select').disabled=isWebMode;
     $('office-staff-open').hidden=!isWebMode||currentRole!=='owner';
-    $('office-mode').textContent=nativeStorage?'Local branches':currentRole==='staff'?'Branch staff':'Online branches';
-    if($('pin-settings-btn'))$('pin-settings-btn').hidden=isWebMode&&currentRole==='staff';
+    $('office-mode').textContent=currentRole==='staff'?'Branch staff':'Online branches';
+    if($('pin-settings-btn'))$('pin-settings-btn').hidden=isWebMode&&(currentRole==='staff'||window.HisaabAuth?.provider==='clerk');
+    if(isWebMode&&window.HisaabAuth?.provider==='clerk')$('lock-app-now-btn').hidden=true;
     $('login-account-wrap').hidden=!isWebMode;
-    document.querySelectorAll('.office-print-name').forEach(el=>el.textContent=offices[office]);
+    document.querySelectorAll('.office-print-name').forEach(el=>el.textContent=offices[office]||office);
   }
   $('office-select').onchange=async()=>{
+    if(nativeStorage)return;
     const next=$('office-select').value;
     $('office-select').disabled=true;
     try{
@@ -259,6 +280,7 @@
     }catch(err){alert(err.message);$('office-select').value=office;$('office-select').disabled=false;}
   };
   $('office-staff-open').onclick=async()=>{
+    if(window.HisaabAuth?.provider==='clerk'){await window.HisaabBranchAdmin.open(fetch,office);return;}
     $('office-staff-dialog').showModal();$('office-staff-msg').textContent='Loading…';
     try{
       const res=await fetch('/api/branches',{headers:{Authorization:'Bearer '+getAuthToken(),'X-Hisaab-Branch':office}});
@@ -288,7 +310,7 @@
   }
   function persist(){
     if(isWebMode&&!cloudReady)return false;
-    state.officeId=office;
+    if(!nativeStorage)state.officeId=office;
     if(storageBlocked){$('save-state').textContent='محفوظ نہیں ہو رہا — دوبارہ کھولیں یا بیک اَپ بحال کریں';retrySave.hidden=false;return false;}
     try{writeState({...state,rows:state.rows.filter(populated)});if(!isWebMode)savedStatus();return true;}
     catch{unsavedNative=!!nativeStorage;retrySave.hidden=false;$('save-state').textContent='محفوظ نہیں ہو سکا — دوبارہ کوشش کریں یا بیک اَپ لیں';return false;}
@@ -477,6 +499,7 @@
   let webLoginResolve = null;
   let isWebSetupMode = false;
   function requestWebLogin(reasonText='جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں', setupMode=false) {
+    if(window.HisaabAuth?.provider==='clerk')return window.HisaabAuth.login(reasonText);
     isWebSetupMode = !!setupMode;
     const overlay=$('pin-lock-overlay');
     if(!overlay)return Promise.resolve(false);
@@ -602,7 +625,13 @@
     if(isWebMode)requestWebLogin('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔');
     else if(state.pinCode)requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔',false);
   };
-  if($('logout-btn'))$('logout-btn').onclick=()=>{
+  if($('logout-btn'))$('logout-btn').onclick=async()=>{
+    if(window.HisaabAuth?.provider==='clerk'){
+      clearTimeout(mongoSaveTimer);
+      if(pendingMongoSave){const data=pendingMongoSave;pendingMongoSave=null;await pushToMongo(data);}
+      await mongoChain;if(unsavedNative){alert('پہلے غیر محفوظ تبدیلیاں محفوظ کریں۔');return;}
+      await window.HisaabAuth.signOut();return;
+    }
     setAuthToken('');
     $('save-state').textContent='لاگ آؤٹ ہو چکا';
     requestWebLogin('آپ لاگ آؤٹ ہو چکے ہیں۔ دوبارہ لاگ ان کریں۔');
@@ -1135,7 +1164,7 @@
   function appendRow(row){$('rows').append(createRowElement(row));}
   function prependRow(row){$('rows').prepend(createRowElement(row));}
   function applyFont(){document.documentElement.style.setProperty('--entry-font',state.fontSize+'px');$('font-size').textContent=state.fontSize;$('font-smaller').disabled=state.fontSize<=10;$('font-larger').disabled=state.fontSize>=22;}
-  function render(){state.officeId=office;ensureActiveParty();state.rows=draftRowsLast(state.rows);rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;if($('title-print'))$('title-print').textContent=(state.title||'اندراج رجسٹر')+' — '+offices[office];$('date').value=state.date;if($('start-serial'))$('start-serial').value=activeStartSerial();const currPage=activePageNumber();if($('page-no-input'))$('page-no-input').value=currPage;if($('page-no-val'))$('page-no-val').textContent=currPage;applyFont();updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
+  function render(){if(!nativeStorage)state.officeId=office;ensureActiveParty();state.rows=draftRowsLast(state.rows);rowNodes.clear();$('rows').replaceChildren();$('title').value=state.title;if($('title-print'))$('title-print').textContent=nativeStorage?(state.title||'اندراج رجسٹر'):((state.title||'اندراج رجسٹر')+' — '+offices[office]);$('date').value=state.date;if($('start-serial'))$('start-serial').value=activeStartSerial();const currPage=activePageNumber();if($('page-no-input'))$('page-no-input').value=currPage;if($('page-no-val'))$('page-no-val').textContent=currPage;applyFont();updateBranches();applyFilter();updateUndo();updateBackup();journalController?.reset();}
   function focusRow(row){
     const tr=rowNodes.get(row.id);
     const el=tr?.querySelector('[data-field="sender"]');
@@ -1164,7 +1193,7 @@
     focusRow(row);
   }
   $('undo').onclick=()=>{const item=state.trash.pop();if(!item)return;if(item.row.branch&&!state.branches.includes(item.row.branch))state.branches.push(item.row.branch);state.rows.splice(Math.min(item.index,state.rows.length),0,item.row);render();save();if(!rowNodes.has(item.row.id)||rowNodes.get(item.row.id).hidden)$('filter-message').textContent='انٹری واپس آ گئی ہے۔ اسے دیکھنے کے لیے فلٹر صاف کریں۔';};
-  const DISK_DB_NAME='hisaab-disk-db-v1',DISK_STORE='handles',DISK_KEY=office==='mussafah'?'primary':office;
+  const DISK_DB_NAME='hisaab-disk-db-v1',DISK_STORE='handles',DISK_KEY=nativeStorage||office==='mussafah'?'primary':office;
   function openHandleDB(){
     return new Promise((resolve,reject)=>{
       if(typeof indexedDB==='undefined')return reject(Error('No IndexedDB'));
@@ -1292,7 +1321,7 @@
   let restoreBusy=false;
   async function restoreBackupData(rawObj){
     if(restoreBusy)return false;
-    if((rawObj.officeId||'mussafah')!==office){alert('یہ بیک اَپ دوسری برانچ کا ہے۔ پہلے متعلقہ برانچ منتخب کریں۔');return false;}
+    if(!nativeStorage && (rawObj.officeId||'mussafah')!==office){alert('یہ بیک اَپ دوسری برانچ کا ہے۔ پہلے متعلقہ برانچ منتخب کریں۔');return false;}
     const data=migrate(rawObj);
     const entries=data.rows.filter(populated),journal=data.journal.rows.filter(r=>r.detail.trim()||r.debit.trim()||r.credit.trim());
     const dates=[...entries.map(r=>r.entryDate),...journal.map(r=>r.date)].sort();
@@ -1492,7 +1521,7 @@
   function resetFilters(){ensureActiveParty();if($('branch-filter'))$('branch-filter').value=selectedBranch;$('all-dates').checked=false;for(const id of ['search','date-from','date-to'])$(id).value='';if($('range-drawer'))$('range-drawer').hidden=true;if($('toggle-range'))$('toggle-range').classList.remove('active');applyFilter();renderPartyTabs();}
   $('reset-filters').onclick=resetFilters;
   $('font-smaller').onclick=()=>{state.fontSize=Math.max(10,state.fontSize-1);applyFont();save();};$('font-larger').onclick=()=>{state.fontSize=Math.min(22,state.fontSize+1);applyFont();save();};
-  $('title').addEventListener('input',()=>{state.title=$('title').value;if($('title-print'))$('title-print').textContent=($('title').value||'اندراج رجسٹر')+' — '+offices[office];save();});
+  $('title').addEventListener('input',()=>{state.title=$('title').value;if($('title-print'))$('title-print').textContent=nativeStorage?($('title').value||'اندراج رجسٹر'):(($('title').value||'اندراج رجسٹر')+' — '+offices[office]);save();});
   function shiftDate(dateStr, days) {
     if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) dateStr = today();
     const [y, m, d] = dateStr.split('-').map(Number);
@@ -1917,7 +1946,7 @@
     finally{document.body.inert=false;clearReceiptOutput();}
   }
   $('receipt-preview').onclick=()=>outputReceipt();$('receipt-save').onclick=()=>outputReceipt(true);
-  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output')||document.body.classList.contains('summary-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());const titlePrint=$('title-print');if(titlePrint)titlePrint.textContent=($('title').value||state.title||'اندراج رجسٹر')+' — '+offices[office];const currPage=activePageNumber();if($('page-no-val'))$('page-no-val').textContent=currPage;const resetVal=Math.max(0,currPage-1);document.documentElement.style.setProperty('--print-start-page',String(resetVal));document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{if(input.classList.contains('no-print')||input.closest('.no-print')||input.dataset.field==='balanceType')return;const span=document.createElement('span');span.className='print-value';const isAmt=input.classList.contains('amount');const valText=isAmt?wholeText(input.value):input.value;const bAmt=integerAmount(row.balance);if(input.dataset.field==='balance'&&row.balanceType&&row.balanceType.trim()&&(bAmt!==null&&bAmt!==0n)){const small=document.createElement('small');small.className='print-bal-tag';small.textContent=`(${row.balanceType.trim()})`;const numSpan=document.createElement('span');numSpan.className='print-bal-num';numSpan.textContent=valText;span.replaceChildren(small,numSpan);}else{span.textContent=valText;}if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
+  function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output')||document.body.classList.contains('summary-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());const titlePrint=$('title-print');if(titlePrint)titlePrint.textContent=nativeStorage?($('title').value||state.title||'اندراج رجسٹر'):(($('title').value||state.title||'اندراج رجسٹر')+' — '+offices[office]);const currPage=activePageNumber();if($('page-no-val'))$('page-no-val').textContent=currPage;const resetVal=Math.max(0,currPage-1);document.documentElement.style.setProperty('--print-start-page',String(resetVal));document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{if(input.classList.contains('no-print')||input.closest('.no-print')||input.dataset.field==='balanceType')return;const span=document.createElement('span');span.className='print-value';const isAmt=input.classList.contains('amount');const valText=isAmt?wholeText(input.value):input.value;const bAmt=integerAmount(row.balance);if(input.dataset.field==='balance'&&row.balanceType&&row.balanceType.trim()&&(bAmt!==null&&bAmt!==0n)){const small=document.createElement('small');small.className='print-bal-tag';small.textContent=`(${row.balanceType.trim()})`;const numSpan=document.createElement('span');numSpan.className='print-bal-num';numSpan.textContent=valText;span.replaceChildren(small,numSpan);}else{span.textContent=valText;}if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
   window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else if($('summary-dialog').open)prepareSummaryOutput();else preparePrint();});window.addEventListener('afterprint',()=>{registerPrintActive=false;document.documentElement.style.removeProperty('--print-start-page');clearReceiptOutput();applyFilter();});
   function canOutput(rows,filtered=true){if(filtered&&!rangeValid()){alert('تاریخ کا دورانیہ درست کریں۔');return false;}if(!rows.length){alert('کوئی انٹری منتخب نہیں ہے۔');return false;}if(rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null))){alert('رقم کے خانے درست کریں۔ صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم خود تبدیل نہیں کی گئی۔');return false;}return true;}
   if(!window.electronAPI?.savePDF){
@@ -2005,7 +2034,7 @@
     });
   }
   function download(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  function backup(){const time=new Date().toISOString();const snapshot={...state,rows:state.rows.filter(populated),lastBackupAt:time};download(new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}),`hisaab-${office}-backup-${today()}.json`);state.lastBackupAt=time;save();updateBackup();}
+  function backup(){const time=new Date().toISOString();const snapshot={...state,rows:state.rows.filter(populated),lastBackupAt:time};download(new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}),nativeStorage?`hisaab-backup-${today()}.json`:`hisaab-${office}-backup-${today()}.json`);state.lastBackupAt=time;save();updateBackup();}
   $('backup').onclick=backup;setInterval(updateBackup,60000);
   $('restore').onclick=()=>$('file').click();
   $('file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>15000000)throw Error('Large file');await restoreBackupData(JSON.parse(await file.text()));}catch{alert('یہ درست حساب بیک اَپ نہیں ہے۔ موجودہ ڈیٹا تبدیل نہیں ہوا۔');}finally{e.target.value='';}};
@@ -2023,17 +2052,26 @@
   $('export-filtered').onclick=()=>exportExcel(false);$('export-all').onclick=()=>exportExcel(true);
   async function initMongoWebState() {
     if (!isWebMode) return;
-    updateLogoutBtn();
     try {
+      await window.HisaabAuth?.ready;
+      updateLogoutBtn();
       const token = getAuthToken();
       const statusRes = await fetch('/api/auth/status', {
         headers: token ? { 'Authorization': 'Bearer ' + token } : {}
       });
+      if(!statusRes.ok)throw Error('Login verification failed. Reload to retry.');
       if (statusRes.ok) {
         const authInfo = await statusRes.json();
         if(authInfo.isAuthenticated){
           currentRole=authInfo.role||'owner';
           if(authInfo.branch&&authInfo.branch!==office){sessionStorage.setItem('hisaab-office',authInfo.branch);location.reload();return;}
+          if(window.HisaabAuth?.provider==='clerk'){
+            const response=await fetch('/api/branches',{headers:{'X-Hisaab-Branch':office}});
+            if(!response.ok)throw Error('Could not load branch access.');
+            const {branches}=await response.json();
+            for(const branch of branches)offices[branch.id]=branch.name;
+            $('office-select').replaceChildren(...branches.map(branch=>new Option(branch.name,branch.id)));
+          }
           updateOfficeUI();
         }
         if ($('pin-default-hint')) $('pin-default-hint').hidden = !authInfo.isDefaultPin||currentRole==='staff';
@@ -2041,7 +2079,7 @@
           const ok = await requestWebLogin('پہلی بار استعمال کے لیے نیا سیکیورٹی پن (PIN) کوڈ سیٹ کریں', true);
           if (!ok) return;
         } else if (!authInfo.isAuthenticated) {
-          const ok = await requestWebLogin('جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں', false);
+          const ok = await requestWebLogin('اپنے یوزر نیم اور پاس ورڈ سے لاگ ان کریں۔', false);
           if (!ok) return;
         }
       }
@@ -2072,6 +2110,7 @@
       if (help) help.textContent = 'ڈیٹا براہِ راست کلاؤڈ MongoDB Atlas میں محفوظ ہو رہا ہے۔';
     } catch (e) {
       cloudReady=false;
+      if(window.HisaabAuth?.provider==='clerk')window.HisaabAuth.showError('اکاؤنٹ یا کلاؤڈ ڈیٹا لوڈ نہیں ہو سکا۔ دوبارہ کوشش کریں۔ '+e.message);
       $('pin-unlock-error').textContent='Cloud data could not load. Reload to retry.';
       console.warn('Could not sync MongoDB on startup:', e);
     }
@@ -2081,9 +2120,7 @@
   updateOfficeUI();
   render();
   updatePinUI();
-  if (isWebMode && !getAuthToken()) {
-    requestWebLogin('جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں', false);
-  } else if (!isWebMode && state.pinCode) {
+  if (!isWebMode && state.pinCode) {
     requestPinUnlock('جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں', false);
   }
   journalController=window.HisaabJournal.mount({getState:()=>state,save,today,exportSheet:(rows,name)=>download(window.HisaabExcel.create(rows),name)});

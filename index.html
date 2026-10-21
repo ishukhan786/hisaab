@@ -19,7 +19,7 @@
     <div class="top-nav-start">
       <div class="brand-mini">
         <img class="hisaab-logo" src="assets/hisaab-logo.svg" width="44" height="44" alt="">
-        <strong class="brand-title">Hisaab</strong>
+        <strong class="brand-title">Hisaab</strong><div id="clerk-user-button" hidden></div>
       </div>
       <div class="top-date-wrap">
         <button id="prev-day-btn" type="button" class="btn-date-nav" title="پچھلا دن (1 دن پیچھے)" aria-label="پچھلا دن">◀</button>
@@ -51,7 +51,7 @@
         <button id="view-journal" type="button" aria-pressed="false">روزنامچہ</button>
       </nav>
 
-      <div class="office-switcher"><label for="office-select">برانچ</label><select id="office-select" dir="ltr" aria-label="Branch"><option value="mussafah">Mussafah Branch</option><option value="satwa">Satwa Branch</option><option value="city">City Branch</option></select><small id="office-mode"></small></div>
+      <div id="office-switcher" class="office-switcher" hidden><label for="office-select">برانچ</label><select id="office-select" dir="ltr" aria-label="Branch"><option value="mussafah">Mussafah Branch</option><option value="satwa">Satwa Branch</option><option value="city">City Branch</option></select><small id="office-mode"></small></div>
       <div class="top-serial-field" title="شروع نمبر شمار">
         <label for="start-serial">نمبر شمار:</label>
         <input id="start-serial" type="text" inputmode="numeric" placeholder="1" value="1" maxlength="6" autocomplete="off">
@@ -87,7 +87,7 @@
           </div>
           <button id="manage-branches" type="button">🏢 پارٹیاں سنبھالیں</button>
           <button id="reset-filters" type="button">🔄 فلٹر صاف کریں</button>
-          <button id="office-staff-open" type="button" hidden>🏢 Branch staff logins</button>
+          <button id="office-staff-open" type="button" hidden>🏢 Branches &amp; users</button>
           <button id="pin-settings-btn" type="button">🔐 پن لاک (PIN سیٹنگز)</button>
           <button id="lock-app-now-btn" type="button" hidden>🔒 ابھی ایپ لاک کریں (Ctrl+L)</button>
           <button id="logout-btn" type="button" hidden>🚪 لاگ آؤٹ (Logout)</button>
@@ -233,6 +233,7 @@
   </dialog>
   <dialog id="office-staff-dialog"><form id="office-staff-form"><h2>Branch staff logins</h2><p>ہر برانچ کا الگ پاس ورڈ مقرر کریں۔ اسٹاف صرف اپنی برانچ کھول سکے گا۔</p><p id="office-staff-status" dir="ltr"></p><label>Branch<select id="office-staff-branch" dir="ltr"><option value="mussafah">Mussafah Branch</option><option value="satwa">Satwa Branch</option><option value="city">City Branch</option></select></label><label>New password<input id="office-staff-password" type="password" autocomplete="new-password" minlength="6" maxlength="128" required></label><p id="office-staff-msg" role="status"></p><div class="dialog-actions"><button id="office-staff-save" type="submit">Save password</button><button id="office-staff-disable" type="button">Disable staff login</button><button id="office-staff-close" type="button">Close</button></div></form></dialog>
   <div id="pin-lock-overlay" class="pin-lock-overlay no-print" hidden>
+    <section id="clerk-login-panel" class="clerk-login-panel" hidden dir="ltr"><h2>Hisaab App</h2><p id="clerk-login-message" dir="rtl">اپنے یوزر نیم اور پاس ورڈ سے لاگ ان کریں</p><p id="clerk-login-error" role="alert"></p><button id="clerk-retry" type="button" hidden>دوبارہ کوشش کریں</button><div id="clerk-sign-in"></div><div id="clerk-signed-in" hidden><p id="clerk-access-message" dir="rtl"></p><div id="clerk-org-picker"></div><button id="clerk-sign-out" type="button">Sign out</button></div></section>
     <form id="pin-unlock-form" class="pin-lock-card">
       <div class="logo-mini pin-logo">ح</div>
       <h2 id="pin-unlock-title">حساب — لاگ ان</h2>
@@ -274,6 +275,8 @@
   <script src="assets/html2canvas.min.js"></script>
   <script src="receipt-png.js"></script>
   <script src="external-backup-ui.js"></script>
+  <script src="branch-admin-ui.js"></script>
+  <script src="clerk-web.js"></script>
   <script src="app.js"></script>
   <script src="ui.js"></script>
 </body>

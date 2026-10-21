@@ -1,5 +1,6 @@
 'use strict';
 require('dotenv').config();
+require('./scripts/local-clerk-config.cjs').loadLocalClerkConfig();
 
 // DNS fix for Windows SRV queries
 if (process.platform === 'win32') {
@@ -14,6 +15,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const clerkAuth=require('./clerk-auth.cjs');
+const {clerkMiddleware}=require('@clerk/express');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -174,12 +177,25 @@ const ALLOWED_ROOT_FILES = new Set([
   'journal.js',
   'excel-export.js',
   'receipt-png.js',
-  'external-backup-ui.js'
+  'external-backup-ui.js',
+  'clerk-web.js',
+  'branch-admin-ui.js'
 ]);
 
 // Serve allowed frontend files
+function sendIndex(res){
+  if(clerkAuth.config().provider!=='clerk')return res.sendFile(path.join(__dirname,'index.html'));
+  const c=clerkAuth.config();
+  const policy=`default-src 'self'; script-src 'self' 'unsafe-inline' ${c.issuer} https://challenges.cloudflare.com https://*.protect.clerk.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://img.clerk.com; font-src 'self' data:; connect-src 'self' https: http:; frame-src 'self' https://challenges.cloudflare.com https://*.protect.clerk.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self';`;
+  require('node:fs').readFile(path.join(__dirname,'index.html'),'utf8',(err,html)=>{
+    if(err)return res.status(500).send('Unable to load app');
+    html=html.replace('<form id="pin-unlock-form"','<form hidden id="pin-unlock-form"');
+    res.set('Cache-Control','no-store');res.type('html').send(html.replace(/(<meta http-equiv="Content-Security-Policy" content=")[^"]*(">)/,(_,start,end)=>start+policy+end));
+  });
+}
 app.get('/:filename', (req, res, next) => {
   const filename = req.params.filename;
+  if(filename==='index.html')return sendIndex(res);
   if (ALLOWED_ROOT_FILES.has(filename)) {
     return res.sendFile(path.join(__dirname, filename));
   }
@@ -188,7 +204,7 @@ app.get('/:filename', (req, res, next) => {
 
 // Serve index.html on root
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  sendIndex(res);
 });
 
 // App Setting Schema (for persistent settings like PIN, JWT secret)
@@ -223,6 +239,20 @@ async function connectDb() {
 
   return cachedDb;
 }
+
+app.get('/api/auth/config',(req,res)=>{res.set('Cache-Control','no-store');res.json(clerkAuth.publicConfig());});
+let clerkSessionMiddleware;
+app.use('/api',(req,res,next)=>{
+  if(clerkAuth.config().provider!=='clerk')return next();
+  const c=clerkAuth.config();
+  if(!c.ready)return res.status(503).json({status:'error',message:'Clerk development configuration is incomplete.'});
+  clerkSessionMiddleware??=clerkMiddleware({publishableKey:c.publishableKey,secretKey:c.secretKey||undefined,jwtKey:c.jwtKey||undefined,authorizedParties:c.origins});
+  return clerkSessionMiddleware(req,res,next);
+});
+app.use('/api/auth',(req,res,next)=>{
+  if(clerkAuth.config().provider==='clerk'&&['/login','/setup','/change-pin'].includes(req.path))return res.status(410).json({status:'error',message:'Use Clerk sign-in. Legacy PIN login is disabled.'});
+  next();
+});
 
 // Database auto-connection middleware for all /api calls
 app.use(async (req, res, next) => {
@@ -342,6 +372,8 @@ function verifyToken(token, storedValue) {
 
 const publicState = state => state ? {...state,pinCode:''} : state;
 const OFFICES = { mussafah: 'Mussafah Branch', satwa: 'Satwa Branch', city: 'City Branch' };
+const branchAccess=require('./branch-access.cjs').createAccess(AppSetting);
+const clerkClient=()=>require('@clerk/backend').createClerkClient({secretKey:clerkAuth.config().secretKey});
 function tokenAccount(token) {
   try { const sub = JSON.parse(Buffer.from(token.split('.')[0], 'base64').toString()).sub; return sub === 'admin' ? 'owner' : sub; } catch { return null; }
 }
@@ -352,6 +384,7 @@ async function accountPin(account) {
   return doc?.value || null;
 }
 async function sessionFor(req) {
+  if(clerkAuth.config().provider==='clerk')return clerkAuth.sessionFor(req,process.env,async id=>(await branchAccess.read()).data.users[id]);
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : req.headers['x-auth-token'];
   const account = tokenAccount(token || '');
@@ -363,7 +396,8 @@ async function requireAuth(req, res, next) {
     req.session = await sessionFor(req);
     if (!req.session) return res.status(401).json({ status: 'unauthorized', message: 'Please log in again.' });
     const office = req.headers['x-hisaab-branch'] || req.session.branch || 'mussafah';
-    if (!Object.hasOwn(OFFICES, office) || (req.session.role === 'staff' && office !== req.session.branch)) return res.status(403).json({ status: 'error', message: 'Branch access denied' });
+    const valid=clerkAuth.config().provider==='clerk'?(await branchAccess.read()).data.branches.some(b=>b.id===office):Object.hasOwn(OFFICES,office);
+    if (!valid || (req.session.role === 'staff' && office !== req.session.branch)) return res.status(403).json({ status: 'error', message: 'Branch access denied' });
     req.office = office;
     // Retain the existing document for Mussafah; no copy or destructive migration.
     req.stateKey = office === 'mussafah' ? 'primary' : 'branch:' + office;
@@ -484,6 +518,10 @@ app.post('/api/auth/login', async (req, res) => {
 // 3. Auth Check / Status (Public)
 app.get('/api/auth/status', async (req, res) => {
   try {
+    if(clerkAuth.config().provider==='clerk'){
+      const session=await sessionFor(req);
+      return res.json({status:'ok',provider:'clerk',requiresAuth:true,isAuthenticated:!!session,needsSetup:false,isDefaultPin:false,role:session?.role||null,branch:session?.branch||null});
+    }
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : req.headers['x-auth-token'];
     const currentPin = await getStoredPin();
@@ -572,8 +610,56 @@ app.post('/api/auth/change-pin', requireAuth, async (req, res) => {
   }
 });
 
+function requireBranchAdmin(req,res,next){
+  if(clerkAuth.config().provider!=='clerk'||req.session.role!=='owner')return res.status(403).json({status:'error',message:'Owner access required.'});
+  next();
+}
+function adminError(res,error){
+  const status=error.status&&error.status<500?error.status:502;
+  const message=error.errors?.[0]?.longMessage||error.errors?.[0]?.message||(status<500?error.message:'Account service unavailable. Refresh and retry.');
+  res.status(status).json({status:'error',message});
+}
+app.get('/api/admin/access',requireAuth,requireBranchAdmin,async(req,res)=>{
+  try{
+    const offset=Math.max(0,Math.min(100000,Number(req.query.offset)||0));
+    const [{data},users]=await Promise.all([branchAccess.read(),clerkClient().users.getUserList({limit:50,offset})]);
+    res.set('Cache-Control','no-store');
+    res.json({status:'ok',revision:data.revision,branches:data.branches,total:users.totalCount,offset,users:users.data.map(u=>({id:u.id,username:u.username||u.id,owner:clerkAuth.config().ownerIds.includes(u.id),assignment:data.users[u.id]||null}))});
+  }catch(error){adminError(res,error);}
+});
+app.post('/api/admin/branches',requireAuth,requireBranchAdmin,async(req,res)=>{
+  try{res.json({status:'ok',...await branchAccess.addBranch(req.body.name,req.body.revision)});}catch(error){adminError(res,error);}
+});
+app.post('/api/admin/users',requireAuth,requireBranchAdmin,async(req,res)=>{
+  let created;
+  try{
+    const {username,password,branch,revision}=req.body;
+    if(typeof username!=='string'||!/^\w{4,64}$/.test(username)||typeof password!=='string'||password.length<8||password.length>128)return res.status(400).json({status:'error',message:'Use a username of 4–64 letters, digits or underscores and a password of 8–128 characters.'});
+    const {data}=await branchAccess.read();
+    if(data.revision!==revision)return res.status(409).json({status:'error',message:'Settings changed. Refresh and try again.'});
+    if(!data.branches.some(b=>b.id===branch))return res.status(400).json({status:'error',message:'Select a valid branch.'});
+    created=await clerkClient().users.createUser({username,password});
+    res.json({status:'ok',...await branchAccess.assign(created.id,branch,true,revision),username:created.username});
+  }catch(error){
+    if(created)return res.status(409).json({status:'error',message:'Account created, but branch assignment did not save. Refresh the user list and assign its branch.',createdUserId:created.id});
+    adminError(res,error);
+  }
+});
+app.post('/api/admin/users/:id/assignment',requireAuth,requireBranchAdmin,async(req,res)=>{
+  try{
+    if(!/^user_[a-zA-Z0-9]+$/.test(req.params.id))return res.status(400).json({status:'error',message:'Invalid user ID.'});
+    if(clerkAuth.config().ownerIds.includes(req.params.id))return res.status(403).json({status:'error',message:'Owner access cannot be changed here.'});
+    await clerkClient().users.getUser(req.params.id);
+    res.json({status:'ok',...await branchAccess.assign(req.params.id,req.body.branch,req.body.enabled,req.body.revision)});
+  }catch(error){adminError(res,error);}
+});
+
 app.get('/api/branches', requireAuth, async (req, res) => {
   try {
+    if(clerkAuth.config().provider==='clerk'){
+      const {data}=await branchAccess.read();
+      return res.json({status:'ok',role:req.session.role,branches:data.branches.filter(b=>req.session.role==='owner'||b.id===req.session.branch)});
+    }
     const branches = [];
     for (const [id,name] of Object.entries(OFFICES)) {
       if(req.session.role === 'staff' && id !== req.session.branch) continue;
@@ -583,6 +669,7 @@ app.get('/api/branches', requireAuth, async (req, res) => {
   } catch { res.status(500).json({status:'error',message:'Could not load branches'}); }
 });
 app.post('/api/branches/staff', requireAuth, async (req,res) => {
+  if(clerkAuth.config().provider==='clerk')return res.status(410).json({status:'error',message:'Manage staff through Clerk organization memberships.'});
   if(req.session.role !== 'owner') return res.status(403).json({status:'error',message:'Owner access required'});
   const {branch,password,disable} = req.body;
   if(!Object.hasOwn(OFFICES,branch) || (disable !== true && (typeof password !== 'string' || password.trim().length < 6 || password.length > 128))) return res.status(400).json({status:'error',message:'Select a branch and use a password of 6 to 128 characters.'});
@@ -766,7 +853,7 @@ app.use((req, res) => {
     return res.status(404).json({ status: 'error', message: 'API endpoint not found' });
   }
   if (req.method === 'GET' && !path.extname(req.path) && (req.accepts('html') || req.path === '/')) {
-    return res.sendFile(path.join(__dirname, 'index.html'));
+    return sendIndex(res);
   }
   res.status(404).send('Not Found');
 });
@@ -777,13 +864,11 @@ if (!process.env.VERCEL && require.main === module) {
   connectDb()
     .then(async () => {
       console.log('✓ Successfully connected to MongoDB Atlas!');
-      const currentPin = await getStoredPin();
       app.listen(PORT, () => {
         console.log(`\n==================================================`);
         console.log(`🚀 Hisaab Web App is running at: http://localhost:${PORT}`);
         console.log(`📦 Database: MongoDB Atlas (Connected)`);
-        console.log(`🔑 Login Security: ${currentPin ? (verifyPin('1234', currentPin) ? 'Dev Default PIN (1234)' : 'Custom Salted Hash Active') : 'Setup Required (Production)'}`);
-        console.log(`🛡️ JWT Protection: ${process.env.JWT_SECRET ? 'Production Secret' : 'Ephemeral Random Key'}`);
+        console.log('🔑 Login Security: Clerk username and password');
         console.log(`==================================================\n`);
       });
     })

@@ -1,0 +1,52 @@
+'use strict';
+const assert=require('node:assert/strict'),crypto=require('node:crypto'),mongoose=require('mongoose');
+const {privateKey,publicKey}=crypto.generateKeyPairSync('rsa',{modulusLength:2048});
+Object.assign(process.env,{HISAAB_AUTH_PROVIDER:'clerk',CLERK_PUBLISHABLE_KEY:'pk_test_'+Buffer.from('hisaab-test.clerk.accounts.dev$').toString('base64'),CLERK_SECRET_KEY:'sk_test_offline_fixture_only',CLERK_JWT_KEY:publicKey.export({type:'spki',format:'pem'}),CLERK_AUTHORIZED_PARTIES:'https://allowed.example',CLERK_OWNER_USER_IDS:'user_owner',CLERK_ORG_SATWA:'org_satwa',JWT_SECRET:'offline-fixture-secret-with-at-least-32-characters',MONGODB_URI:'mongodb://unused/test'});
+mongoose.connect=async()=>{Object.defineProperty(mongoose.connection,'readyState',{value:1,configurable:true});return mongoose;};
+const app=require('../server');let reads=[];
+let settings;
+mongoose.model('AppSetting').findOne=async()=>settings===undefined?null:{value:settings};
+mongoose.model('AppSetting').findOneAndUpdate=async(q,u)=>{
+ if(u.$setOnInsert){if(settings===undefined)settings=u.$setOnInsert.value;return {value:settings};}
+ if(q.value!==settings)return null;settings=u.$set.value;return {value:settings};
+};
+const sdkPath=require.resolve('@clerk/backend'),sdk=require(sdkPath);
+const users=[{id:'user_owner',username:'admin'},{id:'user_staff',username:'staff'},{id:'user_new',username:'newstaff'}];
+require.cache[sdkPath].exports={...sdk,createClerkClient:()=>({users:{getUserList:async()=>({data:users,totalCount:users.length}),getUser:async id=>{const u=users.find(u=>u.id===id);if(!u)throw Error('Missing user');return u;},createUser:async body=>({id:'user_created',username:body.username})}})};
+mongoose.model('HisaabState').findOne=async q=>{reads.push(q.key);return {state:{rows:[],pinCode:'must-not-leak'},revision:1};};
+function token(changes={}){const t=Math.floor(Date.now()/1000);const a=Buffer.from(JSON.stringify({alg:'RS256',typ:'JWT',kid:'offline-fixture'})).toString('base64url');const b=Buffer.from(JSON.stringify({sub:'user_staff',sid:'sess_fixture',iss:'https://hisaab-test.clerk.accounts.dev',azp:'https://allowed.example',iat:t,nbf:t-1,exp:t+60,v:2,o:{id:'org_satwa',rol:'member'},...changes})).toString('base64url');const body=a+'.'+b;return body+'.'+crypto.sign('RSA-SHA256',Buffer.from(body),privateKey).toString('base64url');}
+(async()=>{const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port;
+const call=async(url,jwt,branch,body)=>{const res=await fetch(base+url,{method:body?'POST':'GET',headers:{Accept:'application/json','Content-Type':'application/json',...(jwt?{Authorization:'Bearer '+jwt}:{}),...(branch?{'X-Hisaab-Branch':branch}:{})},...(body?{body:JSON.stringify(body)}:{})});const text=await res.text();return {code:res.status,data:text?JSON.parse(text):{}};};
+try{
+ const c=await call('/api/auth/config');assert.equal(c.data.provider,'clerk');assert(!JSON.stringify(c.data).includes('offline_fixture_only'));
+ const staff=token(),owner=token({sub:'user_owner',o:undefined});
+ assert.equal((await call('/api/auth/status',staff)).data.role,'staff');
+ assert.equal((await call('/api/state',staff)).code,200);assert.equal(reads.at(-1),'branch:satwa');
+ for(const route of ['/api/state','/api/backups'])assert.equal((await call(route,staff,'city')).code,403);
+ assert.equal((await call('/api/save',staff,'mussafah',{state:{}})).code,403);
+ assert.equal((await call('/api/state',owner,'mussafah')).data.state.pinCode,'');assert.equal(reads.at(-1),'primary');
+ assert.equal((await call('/api/auth/login',null,null,{password:'1234'})).code,410);
+ assert.equal((await call('/api/auth/change-pin',owner,null,{currentPassword:'1234',newPassword:'new-password'})).code,410);
+ assert.equal((await call('/api/branches/staff',owner,null,{branch:'satwa',password:'legacy'})).code,410);
+ assert.equal((await call('/api/state',token({o:{id:'org_unknown',rol:'admin'}}))).code,401);
+ assert.equal((await call('/api/state','old-pin-token')).code,401);
+ assert.equal((await call('/api/admin/access',staff)).code,403);
+ assert.equal((await call('/api/admin/branches',staff,null,{name:'Forbidden',revision:0})).code,403);
+ const access=await call('/api/admin/access',owner);assert.equal(access.data.users[0].owner,true);assert.equal(access.data.revision,0);
+ const added=await call('/api/admin/branches',owner,null,{name:'Test Branch',revision:0});assert.equal(added.code,200);const branch=added.data.branch.id;
+ assert.equal((await call('/api/admin/branches',owner,null,{name:'Stale Branch',revision:0})).code,409);
+ assert.equal((await call('/api/state',owner,branch)).code,200);assert.equal(reads.at(-1),'branch:'+branch);
+ assert.equal((await call('/api/admin/users/user_owner/assignment',owner,null,{branch,enabled:true,revision:1})).code,403);
+ assert.equal((await call('/api/admin/users/user_staff/assignment',owner,null,{branch,enabled:true,revision:1})).code,200);
+ assert.equal((await call('/api/state',staff,'satwa')).code,403);
+ assert.equal((await call('/api/state',staff,branch)).code,200);
+ assert.equal((await call('/api/admin/users/user_staff/assignment',owner,null,{branch,enabled:false,revision:2})).code,200);
+ assert.equal((await call('/api/state',staff,branch)).code,401);
+ assert.equal((await call('/api/admin/users',owner,null,{username:'branchstaff',password:'short6',branch,revision:3})).code,400);
+ assert.equal((await call('/api/admin/users',owner,null,{username:'branchstaff',password:'testpass',branch,revision:3})).code,200);
+ const createdToken=token({sub:'user_created',o:undefined});
+ assert.equal((await call('/api/state',createdToken,branch)).code,200);
+ assert.equal((await call('/api/state',createdToken,'city')).code,403);
+ const html=await(await fetch(base)).text();assert(html.includes('https://hisaab-test.clerk.accounts.dev'));assert(html.includes('clerk-web.js'));
+ console.log('PASS real Express Clerk middleware: owner/staff HTTP scope, state isolation, PIN cutover, unassigned users, redacted config and web-only CSP.');
+}finally{await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});

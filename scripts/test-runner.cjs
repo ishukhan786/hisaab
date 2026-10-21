@@ -8,8 +8,13 @@ console.log('==================================================\n');
 
 const testSuites = [
   { name: 'External Backup Engine', script: 'tests/external-backup.cjs' },
-  { name: 'Security, Auth, OCC & Asset Shield', script: 'tests/security-suite.cjs' },
-  { name: 'Branch API isolation and staff permissions', script: 'tests/branches-web.cjs', env: {HISAAB_BRANCH_API_ONLY:'1'} }
+  { name: 'Clerk signature and branch authorization', script: 'tests/clerk-auth.cjs' },
+  { name: 'Local Clerk startup mappings', script: 'tests/local-clerk-config.cjs' },
+  { name: 'Login-only browser configuration', script: 'tests/clerk-web.cjs' },
+  { name: 'Branch assignments and concurrent admin changes', script: 'tests/branch-access.cjs' },
+  { name: 'Clerk API middleware and legacy auth cutover', script: 'tests/clerk-api.cjs' },
+  { name: 'Security, Auth, OCC & Asset Shield', script: 'tests/security-suite.cjs', env: {HISAAB_AUTH_PROVIDER:'pin'} },
+  { name: 'Branch API isolation and staff permissions', script: 'tests/branches-web.cjs', env: {HISAAB_BRANCH_API_ONLY:'1',HISAAB_AUTH_PROVIDER:'pin'} }
 ];
 
 let failed = false;

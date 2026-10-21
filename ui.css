@@ -1,4 +1,5 @@
 /* App controls only: exported receipts and printed pages keep their own layout. */
+#office-switcher[hidden]{display:none!important}
 @media screen {
 body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f1 100%);color:#203d35;min-height:100vh}
 .app-shell button,.app-shell summary.btn-nav{min-height:44px;border-radius:12px;font-size:12px;font-weight:600;line-height:2.3;background:linear-gradient(180deg,#ffffff 0%,#f3f8f5 100%);border:1px solid #c6dcd0;color:#1b4334;box-shadow:0 1px 3px rgba(16,56,41,0.06),0 1px 2px rgba(16,56,41,0.04),inset 0 1px 0 rgba(255,255,255,0.92);transition:background .2s cubic-bezier(.22,1,.36,1),border-color .2s,box-shadow .2s,transform .15s cubic-bezier(.22,1,.36,1),color .15s}
@@ -366,3 +367,56 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 .office-print-name { font:12px Arial,sans-serif; display:block; text-align:center; margin:4px 0; }
 
 @media screen { .office-switcher small {display:none} .office-switcher {padding:2px 8px;flex-wrap:nowrap} @media(max-width:600px){ .app-shell .office-switcher {grid-column:1/-1;justify-content:center} } }
+
+@media screen{.clerk-login-panel{max-width:min(460px,96vw);max-height:92vh;overflow:auto;background:white;border-radius:20px;padding:22px;box-shadow:0 16px 60px #102e3540;text-align:center}.clerk-login-panel h2{font-family:Arial,sans-serif;color:#145a46;margin:0 0 10px}.clerk-login-panel>p{line-height:2.2}.clerk-login-panel [role=alert]{color:#a02638;font-family:Arial,sans-serif;line-height:1.6}#clerk-org-picker{margin:14px auto}}
+/* Owner-only branch and individual user management. */
+.branch-admin-dialog{box-sizing:border-box;width:min(1000px,95vw);max-width:1000px;max-height:91vh;overflow:auto;padding:0;border:1px solid #d7e4dd;border-radius:22px;color:#203d35;background:#f5f8f6;font:14px/1.5 Arial,sans-serif;box-shadow:0 30px 100px #102d3545;text-align:left}
+.branch-admin-dialog *{box-sizing:border-box}
+.branch-admin-dialog::backdrop{background:#122b396e;backdrop-filter:blur(5px)}
+.branch-admin-dialog h2,.branch-admin-dialog h3,.branch-admin-dialog p{margin:0}
+.branch-admin-dialog h2{font:700 27px/1.3 Arial,sans-serif;letter-spacing:-.7px;margin:6px 0 8px;color:#fff}
+.branch-admin-dialog h3{font:700 17px/1.4 Arial,sans-serif;color:#193e33}
+.ba-header{position:sticky;top:0;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:28px 30px;background:linear-gradient(115deg,#124d3e,#1a7060);color:#deeee7}
+.ba-eyebrow{font-size:10px;font-weight:700;letter-spacing:1.7px;color:#42836e}
+.ba-header .ba-eyebrow{color:#a8d7c6}
+.ba-header p{font-size:13px;line-height:1.6}
+.ba-body{padding:24px 30px 26px}
+.ba-stats{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.ba-stats>div{display:flex;align-items:center;gap:13px;padding:15px 20px;border:1px solid #dce7e0;border-radius:13px;background:white}
+.ba-stats strong{font-size:27px;letter-spacing:-1px;color:#176950}.ba-stats span{font-size:12px;color:#61796f}
+.ba-branches{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0 24px}
+.ba-branch-card{display:flex;align-items:center;gap:9px;padding:9px 13px;border:1px solid #d2e4da;background:#edf6f0;border-radius:10px;max-width:100%;font-size:12px;overflow-wrap:anywhere}
+.ba-branch-icon{color:#278267;font-size:20px;line-height:1}
+.ba-forms{display:grid;grid-template-columns:.85fr 1.25fr;gap:16px}
+.ba-form-card{padding:21px;background:white;border:1px solid #dce7e0;border-radius:15px;min-width:0}
+.ba-form-card h3{margin:6px 0}.ba-form-card>p,.ba-section-heading p{font-size:12px;color:#6b8077;margin-top:4px;line-height:1.6}
+.branch-admin-form{display:grid;gap:15px;margin:20px 0 0}
+.ba-field{display:grid;gap:7px;min-width:0;font-size:12px;font-weight:600;color:#36594c}
+.ba-field small{font-size:11px;font-weight:400;color:#819087;line-height:1.5}
+.branch-admin-dialog input:not([type=checkbox]),.branch-admin-dialog select{width:100%;min-width:0;height:43px;padding:9px 11px;border:1px solid #d2dfd7;border-radius:9px;background:#fbfdfc;color:#244538;font:13px Arial,sans-serif;transition:border-color .15s,box-shadow .15s}
+.branch-admin-dialog input:focus-visible,.branch-admin-dialog select:focus-visible{outline:2px solid #32987b;outline-offset:2px;box-shadow:0 0 0 4px #32987b15}
+.branch-admin-dialog button{min-height:39px;padding:9px 15px;border:1px solid #d0dfd6;border-radius:9px;background:#fff;color:#345c4b;cursor:pointer;font:600 12px/1.5 Arial,sans-serif;transition:background .15s,box-shadow .15s,transform .15s}
+.branch-admin-dialog button:hover{background:#eaf4ee;transform:translateY(-1px);box-shadow:0 4px 10px #153b3510}
+.branch-admin-dialog button:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+.branch-admin-dialog .ba-close{background:#ffffff15;color:#fff;border-color:#ffffff40;min-height:34px}
+.branch-admin-dialog .ba-close:hover{background:#ffffff28}
+.branch-admin-dialog .ba-add{background:#eaf4ee;color:#1c6b4e;border-color:#bddbc9}
+.branch-admin-dialog .ba-create{background:#176a51;color:white;border-color:#176a51}
+.branch-admin-dialog .ba-create:hover{background:#11543f}
+.ba-message:empty{display:none}.ba-message{padding:12px 15px;margin-top:18px!important;background:#eaf0f8;color:#3c638b;border-radius:9px;font-size:13px}
+.ba-message[data-tone=success]{background:#e5f4eb;color:#247145}.ba-message[data-tone=error]{background:#fcecef;color:#a43447}
+.ba-section-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:27px 0 14px}
+.branch-admin-users{display:grid;gap:12px;margin-bottom:18px}
+.branch-admin-user{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;padding:19px;background:white;border:1px solid #dce7e0;border-radius:14px}
+.ba-identity{display:flex;align-items:center;gap:12px;min-width:0}.ba-identity>div{display:grid;gap:4px;min-width:0}
+.ba-identity strong{font-size:14px;overflow-wrap:anywhere}.ba-identity small{font-size:10px;color:#87978e;font-family:Consolas,monospace;overflow-wrap:anywhere}
+.ba-avatar{display:grid;place-items:center;width:39px;height:39px;flex-shrink:0;border-radius:12px;background:#eaf0f8;color:#506f9b;font-size:12px;font-weight:700}
+.ba-owner .ba-avatar{background:#e8f3ed;color:#26744e}.ba-badge{align-self:start;padding:4px 9px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.2px;background:#f0f2f4;color:#77817b}
+.ba-badge.owner{background:#f6efdc;color:#97701c}.ba-badge.enabled{background:#e7f5ec;color:#247346}.ba-badge.disabled{background:#fcecee;color:#ae4555}.ba-badge.unassigned{background:#fff3e4;color:#a96c22}
+.ba-user-controls{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:end;gap:18px;border-top:1px solid #eef2ef;padding-top:15px}
+.ba-access{display:flex;align-items:center;gap:8px;min-height:43px;font-size:12px;white-space:nowrap}.ba-access input{accent-color:#23785c;width:17px;height:17px;margin:0}
+.ba-owner-note,.ba-assignment-hint{grid-column:1/-1;color:#70877b;font-size:12px}.ba-owner-note{padding-left:51px}.ba-assignment-hint{color:#a17c38}
+.branch-admin-dialog .ba-save{min-height:43px;background:#edf2fa;color:#466b9b;border-color:#d4dfef}
+.ba-navigation{display:flex;justify-content:center;align-items:center;gap:12px}.ba-navigation span{font-size:11px;color:#85948b}
+.ba-empty{text-align:center;padding:26px;color:#7a8b81}
+@media(max-width:650px){.branch-admin-dialog{width:96vw;max-height:94vh;border-radius:16px}.ba-header{padding:22px 18px;gap:10px}.branch-admin-dialog h2{font-size:22px}.ba-body{padding:18px 15px}.ba-forms{grid-template-columns:1fr}.ba-stats{gap:9px}.ba-stats>div{padding:12px;gap:9px}.ba-stats strong{font-size:23px}.ba-stats span{font-size:11px}.branch-admin-user{padding:15px;gap:13px}.ba-user-controls{grid-template-columns:1fr 1fr;gap:12px}.ba-user-controls>.ba-field{grid-column:1/-1}.ba-save{align-self:center}.ba-owner-note{padding-left:0}.ba-section-heading{align-items:flex-start}}
