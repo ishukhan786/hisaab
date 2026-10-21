@@ -59,10 +59,10 @@ function validateState(input) {
 }
 
 class HisaabDatabase {
-  constructor(filename) {
+  constructor(filename, {backupDir} = {}) {
     fs.mkdirSync(path.dirname(filename),{recursive:true});
     this.filename = filename;
-    this.backupDir = path.join(path.dirname(filename),'backups');
+    this.backupDir = backupDir || path.join(path.dirname(filename),'backups');
     this.db = new Database(filename,{timeout:2000});
     try {
       const version = this.db.pragma('user_version',{simple:true});

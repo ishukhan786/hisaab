@@ -34,7 +34,8 @@ class ExternalBackup{
   try{
    // Never recreate a missing selected USB/sync root at a different location.
    if(!(await fs.stat(config.folder)).isDirectory())throw Error('Folder unavailable');
-   const dir=path.join(config.folder,'Hisaab-Backups');
+   const office=['satwa','city'].includes(data?.officeId)?data.officeId:null;
+   const dir=path.join(config.folder,'Hisaab-Backups',...(office?[office]:[]));
    await fs.mkdir(dir,{recursive:true});
    const stamp=new Date().toISOString(),name='hisaab-auto-'+stamp.replace(/[:.]/g,'-')+'-'+randomUUID()+'.json';
    temp=path.join(dir,'.tmp-'+randomUUID());

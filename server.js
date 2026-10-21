@@ -289,9 +289,9 @@ function getPinFingerprint(storedValue) {
   return crypto.createHmac('sha256', getJwtSecretSync()).update(String(storedValue).trim()).digest('hex').slice(0, 16);
 }
 
-function generateToken(storedValue) {
+function generateToken(storedValue, account = 'owner') {
   const payload = JSON.stringify({
-    sub: 'admin',
+    sub: account,
     fp: getPinFingerprint(storedValue),
     iat: Date.now(),
     exp: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7-day expiration
@@ -340,19 +340,35 @@ function verifyToken(token, storedValue) {
   }
 }
 
-// Auth Protection Middleware for data routes
+const publicState = state => state ? {...state,pinCode:''} : state;
+const OFFICES = { mussafah: 'Mussafah Branch', satwa: 'Satwa Branch', city: 'City Branch' };
+function tokenAccount(token) {
+  try { const sub = JSON.parse(Buffer.from(token.split('.')[0], 'base64').toString()).sub; return sub === 'admin' ? 'owner' : sub; } catch { return null; }
+}
+async function accountPin(account) {
+  if (account === 'owner') return getStoredPin();
+  if (!Object.hasOwn(OFFICES, account)) return null;
+  const doc = await AppSetting.findOne({ key: 'staff_pin_' + account });
+  return doc?.value || null;
+}
+async function sessionFor(req) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : req.headers['x-auth-token'];
+  const account = tokenAccount(token || '');
+  const pin = await accountPin(account);
+  return pin && verifyToken(token, pin) ? { account, role: account === 'owner' ? 'owner' : 'staff', branch: account === 'owner' ? null : account } : null;
+}
 async function requireAuth(req, res, next) {
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : req.headers['x-auth-token'];
-  const expectedPin = await getStoredPin();
-
-  if (!expectedPin || !verifyToken(token, expectedPin)) {
-    return res.status(401).json({
-      status: 'unauthorized',
-      message: 'براہ کرم پہلے پن کوڈ / پاس ورڈ سے لاگ ان کریں۔'
-    });
-  }
-  next();
+  try {
+    req.session = await sessionFor(req);
+    if (!req.session) return res.status(401).json({ status: 'unauthorized', message: 'Please log in again.' });
+    const office = req.headers['x-hisaab-branch'] || req.session.branch || 'mussafah';
+    if (!Object.hasOwn(OFFICES, office) || (req.session.role === 'staff' && office !== req.session.branch)) return res.status(403).json({ status: 'error', message: 'Branch access denied' });
+    req.office = office;
+    // Retain the existing document for Mussafah; no copy or destructive migration.
+    req.stateKey = office === 'mussafah' ? 'primary' : 'branch:' + office;
+    next();
+  } catch (err) { res.status(500).json({ status:'error', message:'Authentication unavailable' }); }
 }
 
 // MongoDB Schema for Hisaab state
@@ -371,6 +387,7 @@ const HisaabState = mongoose.models.HisaabState || mongoose.model('HisaabState',
 // Backup Schema
 const backupSchema = new mongoose.Schema(
   {
+    branch: { type: String, default: 'mussafah' },
     tag: { type: String, default: 'manual' },
     state: { type: mongoose.Schema.Types.Mixed, required: true },
     createdAt: { type: Date, default: Date.now }
@@ -407,16 +424,17 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     const { password } = req.body;
-    if (!password) {
+    const account = req.body.account || 'owner';
+    if (typeof password !== 'string' || !password.trim() || password.length>128) {
       return res.status(400).json({ status: 'error', message: 'پن کوڈ درج کریں' });
     }
 
-    const currentPin = await getStoredPin();
-    if (currentPin === null) {
+    const currentPin = await accountPin(account);
+    if (!currentPin) {
       return res.status(400).json({
         status: 'error',
-        needsSetup: true,
-        message: 'پہلی بار کے استعمال کے لیے نیا پن کوڈ سیٹ کریں۔'
+        needsSetup: false,
+        message: 'اس برانچ کا اسٹاف لاگ ان فعال نہیں ہے۔ مالک سے پاس ورڈ مقرر کروائیں۔'
       });
     }
 
@@ -427,17 +445,19 @@ app.post('/api/auth/login', async (req, res) => {
       if (!currentPin.startsWith('scrypt:')) {
         const hashed = hashPin(password);
         await AppSetting.findOneAndUpdate(
-          { key: 'auth_pin' },
-          { key: 'auth_pin', value: hashed },
+          { key: account === 'owner' ? 'auth_pin' : 'staff_pin_' + account },
+          { key: account === 'owner' ? 'auth_pin' : 'staff_pin_' + account, value: hashed },
           { upsert: true }
         ).catch(() => {});
       }
 
-      const updatedPin = await getStoredPin();
-      const token = generateToken(updatedPin);
+      const updatedPin = await accountPin(account);
+      const token = generateToken(updatedPin, account);
       return res.json({
         status: 'ok',
         token,
+        role: account === 'owner' ? 'owner' : 'staff',
+        branch: account === 'owner' ? null : account,
         isDefault: verifyPin('1234', currentPin)
       });
     }
@@ -468,11 +488,14 @@ app.get('/api/auth/status', async (req, res) => {
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : req.headers['x-auth-token'];
     const currentPin = await getStoredPin();
     const needsSetup = currentPin === null;
-    const isAuthenticated = !needsSetup && verifyToken(token, currentPin);
+    const session = await sessionFor(req);
+    const isAuthenticated = !!session;
 
     res.json({
       status: 'ok',
       requiresAuth: true,
+      role: session?.role || null,
+      branch: session?.branch || null,
       isAuthenticated,
       needsSetup,
       isDefaultPin: !needsSetup && verifyPin('1234', currentPin)
@@ -521,8 +544,9 @@ app.post('/api/auth/setup', async (req, res) => {
 });
 
 // 5. Change PIN (Verified with currentPassword)
-app.post('/api/auth/change-pin', async (req, res) => {
+app.post('/api/auth/change-pin', requireAuth, async (req, res) => {
   try {
+    if (req.session.role !== 'owner') return res.status(403).json({status:'error',message:'Owner access required'});
     const { currentPassword, newPassword } = req.body;
     const currentPin = await getStoredPin();
 
@@ -548,17 +572,37 @@ app.post('/api/auth/change-pin', async (req, res) => {
   }
 });
 
+app.get('/api/branches', requireAuth, async (req, res) => {
+  try {
+    const branches = [];
+    for (const [id,name] of Object.entries(OFFICES)) {
+      if(req.session.role === 'staff' && id !== req.session.branch) continue;
+      branches.push({id,name,staffEnabled: !!(await AppSetting.findOne({key:'staff_pin_'+id}))?.value});
+    }
+    res.json({status:'ok',role:req.session.role,branches});
+  } catch { res.status(500).json({status:'error',message:'Could not load branches'}); }
+});
+app.post('/api/branches/staff', requireAuth, async (req,res) => {
+  if(req.session.role !== 'owner') return res.status(403).json({status:'error',message:'Owner access required'});
+  const {branch,password,disable} = req.body;
+  if(!Object.hasOwn(OFFICES,branch) || (disable !== true && (typeof password !== 'string' || password.trim().length < 6 || password.length > 128))) return res.status(400).json({status:'error',message:'Select a branch and use a password of 6 to 128 characters.'});
+  try {
+    await AppSetting.findOneAndUpdate({key:'staff_pin_'+branch},{key:'staff_pin_'+branch,value:disable === true ? '' : hashPin(password)},{upsert:true});
+    res.json({status:'ok'});
+  } catch { res.status(500).json({status:'error',message:'Could not update staff login'}); }
+});
+
 // 5. Load state (Protected)
 app.get('/api/state', requireAuth, async (req, res) => {
   try {
-    const doc = await HisaabState.findOne({ key: 'primary' });
+    const doc = await HisaabState.findOne({ key: req.stateKey });
     if (!doc || !doc.state) {
       return res.json({ status: 'empty', message: 'No saved state found yet' });
     }
     res.json({
       status: 'ok',
       revision: doc.revision || 0,
-      state: doc.state,
+      state: publicState(doc.state),
       updatedAt: doc.updatedAt
     });
   } catch (error) {
@@ -570,20 +614,26 @@ app.get('/api/state', requireAuth, async (req, res) => {
 // 6. Save state (Protected with Compare-And-Set / OCC)
 app.post('/api/save', requireAuth, async (req, res) => {
   try {
-    const { state, revision, force } = req.body;
+    const { revision, force } = req.body;
+    let state;
+    try { state=require('./database').validateState(req.body.state); } catch { return res.status(400).json({status:'error',message:'Invalid state'}); }
+    if(state.officeId && state.officeId !== req.office) return res.status(400).json({status:'error',message:'Backup belongs to another branch'});
+    if(force === true && req.session.role !== 'owner') return res.status(403).json({status:'error',message:'Owner access required'});
+    state.officeId = req.office;
+    state.pinCode='';
     if (!state) {
       return res.status(400).json({ status: 'error', message: 'Missing state data' });
     }
 
-    const doc = await HisaabState.findOne({ key: 'primary' });
+    const doc = await HisaabState.findOne({ key: req.stateKey });
 
     // Explicit force overwrite if user confirmed override
     if (force === true) {
       const nextRevision = (doc ? (doc.revision || 0) : 0) + 1;
       const forced = await HisaabState.findOneAndUpdate(
-        { key: 'primary' },
+        { key: req.stateKey },
         {
-          key: 'primary',
+          key: req.stateKey,
           revision: nextRevision,
           state,
           updatedAt: new Date()
@@ -601,7 +651,7 @@ app.post('/api/save', requireAuth, async (req, res) => {
     if (!doc) {
       try {
         const created = await HisaabState.create({
-          key: 'primary',
+          key: req.stateKey,
           revision: 1,
           state,
           updatedAt: new Date()
@@ -618,7 +668,7 @@ app.post('/api/save', requireAuth, async (req, res) => {
     }
 
     // Case 2: Document exists. Enforce compare-and-set revision semantics.
-    const currentDoc = doc || (await HisaabState.findOne({ key: 'primary' }));
+    const currentDoc = doc || (await HisaabState.findOne({ key: req.stateKey }));
     const currentRevision = currentDoc ? (currentDoc.revision || 0) : 0;
     const clientRevision = Number.isSafeInteger(revision) ? Number(revision) : (revision !== undefined && !isNaN(Number(revision)) ? Number(revision) : null);
 
@@ -628,14 +678,14 @@ app.post('/api/save', requireAuth, async (req, res) => {
         message: 'STALE_STATE: سرور پر موجود ڈیٹا کسی اور سیشن میں تبدیل ہو چکا ہے۔',
         serverRevision: currentRevision,
         clientRevision,
-        serverState: currentDoc ? currentDoc.state : null,
+        serverState: currentDoc ? publicState(currentDoc.state) : null,
         updatedAt: currentDoc ? currentDoc.updatedAt : new Date()
       });
     }
 
     // Atomic Compare-And-Set: Only update if revision still matches clientRevision
     const updated = await HisaabState.findOneAndUpdate(
-      { key: 'primary', revision: currentRevision },
+      { key: req.stateKey, revision: currentRevision },
       {
         $set: {
           state,
@@ -648,13 +698,13 @@ app.post('/api/save', requireAuth, async (req, res) => {
 
     if (!updated) {
       // Race condition detected: Another write succeeded between findOne and findOneAndUpdate
-      const latest = await HisaabState.findOne({ key: 'primary' });
+      const latest = await HisaabState.findOne({ key: req.stateKey });
       return res.status(409).json({
         status: 'conflict',
         message: 'STALE_STATE: سرور پر موجود ڈیٹا کسی اور سیشن میں تبدیل ہو چکا ہے۔',
         serverRevision: latest ? (latest.revision || 0) : 0,
         clientRevision,
-        serverState: latest ? latest.state : null,
+        serverState: latest ? publicState(latest.state) : null,
         updatedAt: latest ? latest.updatedAt : new Date()
       });
     }
@@ -673,9 +723,14 @@ app.post('/api/save', requireAuth, async (req, res) => {
 // 7. Create backup in MongoDB (Protected)
 app.post('/api/backup', requireAuth, async (req, res) => {
   try {
-    const { state, tag } = req.body;
+    const { tag } = req.body;
+    let state;try{state=require('./database').validateState(req.body.state);}catch{return res.status(400).json({status:'error',message:'Invalid backup'});}
+    if(state.officeId&&state.officeId!==req.office)return res.status(400).json({status:'error',message:'Backup belongs to another branch'});
+    state.officeId=req.office;state.pinCode='';
     if (!state) return res.status(400).json({ status: 'error', message: 'Missing state' });
-    const backup = await HisaabBackup.create({ state, tag: tag || 'auto' });
+    const backup = await HisaabBackup.create({ branch: req.office, state, tag: tag || 'auto' });
+    const keep = await HisaabBackup.find({branch:req.office}, '_id').sort({_id:-1}).limit(30);
+    if(keep.length===30)await HisaabBackup.deleteMany({branch:req.office,_id:{$lt:keep.at(-1)._id}});
     res.json({ status: 'ok', backupId: backup._id });
   } catch (error) {
     console.error('Failed to create backup:', error);
@@ -686,13 +741,23 @@ app.post('/api/backup', requireAuth, async (req, res) => {
 // 8. List backups (Protected)
 app.get('/api/backups', requireAuth, async (req, res) => {
   try {
-    const backups = await HisaabBackup.find({}, 'tag createdAt _id')
+    const backups = await HisaabBackup.find(req.office === 'mussafah' ? { $or: [{ branch:'mussafah' }, { branch: { $exists:false } }] } : { branch:req.office }, 'tag createdAt _id')
       .sort({ createdAt: -1 })
       .limit(30);
     res.json({ status: 'ok', backups });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
   }
+});
+
+app.get('/api/backup/:id', requireAuth, async(req,res)=>{
+  if(!mongoose.isValidObjectId(req.params.id))return res.status(400).json({status:'error',message:'Invalid backup'});
+  try{
+    const branchFilter=req.office==='mussafah'?{$or:[{branch:'mussafah'},{branch:{$exists:false}}]}:{branch:req.office};
+    const backup=await HisaabBackup.findOne({_id:req.params.id,...branchFilter});
+    if(!backup)return res.status(404).json({status:'error',message:'Backup not found'});
+    res.json({status:'ok',state:publicState(backup.state)});
+  }catch{res.status(500).json({status:'error',message:'Could not read backup'});}
 });
 
 // Fallback to index.html for SPA routes (only for HTML GET requests without file extensions)

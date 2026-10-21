@@ -51,6 +51,7 @@
         <button id="view-journal" type="button" aria-pressed="false">روزنامچہ</button>
       </nav>
 
+      <div class="office-switcher"><label for="office-select">برانچ</label><select id="office-select" dir="ltr" aria-label="Branch"><option value="mussafah">Mussafah Branch</option><option value="satwa">Satwa Branch</option><option value="city">City Branch</option></select><small id="office-mode"></small></div>
       <div class="top-serial-field" title="شروع نمبر شمار">
         <label for="start-serial">نمبر شمار:</label>
         <input id="start-serial" type="text" inputmode="numeric" placeholder="1" value="1" maxlength="6" autocomplete="off">
@@ -86,6 +87,7 @@
           </div>
           <button id="manage-branches" type="button">🏢 پارٹیاں سنبھالیں</button>
           <button id="reset-filters" type="button">🔄 فلٹر صاف کریں</button>
+          <button id="office-staff-open" type="button" hidden>🏢 Branch staff logins</button>
           <button id="pin-settings-btn" type="button">🔐 پن لاک (PIN سیٹنگز)</button>
           <button id="lock-app-now-btn" type="button" hidden>🔒 ابھی ایپ لاک کریں (Ctrl+L)</button>
           <button id="logout-btn" type="button" hidden>🚪 لاگ آؤٹ (Logout)</button>
@@ -137,7 +139,7 @@
   </main>
   <main id="journal-page" hidden>
     <section class="journal-card" aria-label="روزنامچہ">
-      <header class="journal-heading"><div><h1>روزنامچہ</h1><p id="journal-message" role="status">بقایا = پچھلا بقایا + جمع − بنام</p></div><div class="journal-tools no-print"><label for="journal-date">تاریخ</label><div class="journal-date-nav"><button id="journal-date-prev" type="button" title="پچھلا دن" aria-label="پچھلا دن">◀</button><input id="journal-date" type="date" min="0001-01-01" max="9999-12-31"><button id="journal-date-next" type="button" title="اگلا دن" aria-label="اگلا دن">▶</button></div><button id="journal-undo" type="button" hidden>حذف شدہ واپس لائیں</button></div><span id="journal-date-print"></span></header>
+      <header class="journal-heading"><div><h1>روزنامچہ</h1><span class="office-print-name" dir="ltr"></span><p id="journal-message" role="status">بقایا = پچھلا بقایا + جمع − بنام</p></div><div class="journal-tools no-print"><label for="journal-date">تاریخ</label><div class="journal-date-nav"><button id="journal-date-prev" type="button" title="پچھلا دن" aria-label="پچھلا دن">◀</button><input id="journal-date" type="date" min="0001-01-01" max="9999-12-31"><button id="journal-date-next" type="button" title="اگلا دن" aria-label="اگلا دن">▶</button></div><button id="journal-undo" type="button" hidden>حذف شدہ واپس لائیں</button></div><span id="journal-date-print"></span></header>
       <div class="journal-opening-line">سابقہ کیش <strong id="journal-opening">0</strong></div>
       <p class="table-scroll-hint no-print">↔ مزید کالم دیکھنے کے لیے جدول دائیں یا بائیں کھسکائیں</p>
       <div class="journal-table-wrap"><table class="journal-table"><colgroup><col class="journal-serial-col"><col class="journal-detail-col"><col class="journal-money-col"><col class="journal-money-col"><col class="journal-balance-col"></colgroup><thead><tr><th class="journal-serial-th">نمبر شمار</th><th>تفصیل</th><th>بنام</th><th>جمع</th><th>بقایا</th></tr></thead><tbody id="journal-rows"></tbody><tfoot><tr><th colspan="2" scope="row">کل حساب / آخری بقایا</th><td id="journal-total-debit">0</td><td id="journal-total-credit">0</td><td id="journal-closing">0</td></tr></tfoot></table></div>
@@ -167,6 +169,7 @@
 
   <dialog closedby='any' id="backup-dialog" aria-labelledby="backup-dialog-title">
     <div class="dialog-head"><h2 id="backup-dialog-title">خودکار بیک اَپ</h2><button id="close-backups" aria-label="بند کریں">×</button></div>
+    <p id="cloud-backup-status" role="status" hidden></p>
     <p>تبدیلی کے تقریباً 2.5 سیکنڈ بعد خودکار بیک اَپ بنتا ہے۔ آخری 30 کاپیاں محفوظ رہتی ہیں، ضروری نہیں کہ یہ 30 دن کی ہوں۔ ری سٹور کرنے سے پہلے موجودہ ڈیٹا کا سیفٹی بیک اَپ بھی خود بن جاتا ہے۔</p>
 
   <section id="external-backup-banner" class="external-backup-banner no-print" aria-label="بیرونی بیک اَپ کی حالت">
@@ -228,13 +231,15 @@
       </div>
     </form>
   </dialog>
+  <dialog id="office-staff-dialog"><form id="office-staff-form"><h2>Branch staff logins</h2><p>ہر برانچ کا الگ پاس ورڈ مقرر کریں۔ اسٹاف صرف اپنی برانچ کھول سکے گا۔</p><p id="office-staff-status" dir="ltr"></p><label>Branch<select id="office-staff-branch" dir="ltr"><option value="mussafah">Mussafah Branch</option><option value="satwa">Satwa Branch</option><option value="city">City Branch</option></select></label><label>New password<input id="office-staff-password" type="password" autocomplete="new-password" minlength="6" maxlength="128" required></label><p id="office-staff-msg" role="status"></p><div class="dialog-actions"><button id="office-staff-save" type="submit">Save password</button><button id="office-staff-disable" type="button">Disable staff login</button><button id="office-staff-close" type="button">Close</button></div></form></dialog>
   <div id="pin-lock-overlay" class="pin-lock-overlay no-print" hidden>
     <form id="pin-unlock-form" class="pin-lock-card">
       <div class="logo-mini pin-logo">ح</div>
       <h2 id="pin-unlock-title">حساب — لاگ ان</h2>
       <p id="pin-unlock-reason">جاری رکھنے کے لیے اپنا پاس ورڈ / پن کوڈ درج کریں</p>
+      <label id="login-account-wrap" hidden>اکاؤنٹ<select id="login-account" dir="ltr"><option value="owner">Owner — All branches</option><option value="mussafah">Mussafah Branch — Staff</option><option value="satwa">Satwa Branch — Staff</option><option value="city">City Branch — Staff</option></select></label>
       <div style="position:relative;width:100%;max-width:260px;">
-        <input id="pin-unlock-input" type="password" maxlength="40" autocomplete="current-password" placeholder="پن کوڈ یا پاس ورڈ" style="padding-left:36px;width:100%;">
+        <input id="pin-unlock-input" type="password" maxlength="128" autocomplete="current-password" placeholder="پن کوڈ یا پاس ورڈ" style="padding-left:36px;width:100%;">
         <button id="toggle-pwd-btn" type="button" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;padding:4px;color:#4f6b5c;" title="پاس ورڈ دکھائیں">👁</button>
       </div>
       <p id="pin-unlock-error" role="status" class="pin-error"></p>
@@ -250,7 +255,8 @@
       if (!window.electronAPI && window.location.protocol.startsWith('http')) {
         try {
           localStorage.removeItem('hisaab-auth-token-v1');
-          if (!sessionStorage.getItem('hisaab-auth-token-v1')) {
+          // Keep data hidden until the server verifies this session.
+          {
             var ov = document.getElementById('pin-lock-overlay');
             if (ov) {
               ov.hidden = false;

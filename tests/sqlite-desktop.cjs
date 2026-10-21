@@ -5,16 +5,17 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
   const profile=path.join(base,'profile'),sourceExe=path.resolve('node_modules/electron/dist/electron.exe');
   const packaged=process.env.HISAAB_TEST_PACKAGED==='1';
   const index=packaged?path.resolve('dist/win-unpacked/resources/app.asar/index.html'):path.resolve('index.html');
-  const legacy={version:4,title:'Migration test',date:'2026-10-17',startSerial:9,partySerials:{Alpha:25},branches:['Alpha'],partyCurrencies:{Alpha:'afn'},rows:[{id:'old-row',entryDate:'2026-10-17',sender:'Legacy customer',mobile:'03001234567',receiver:'Receiver',place:'Dubai',branch:'Alpha',balance:'10',aed:'100',pkr:'200',history:[{at:'2026-10-17T10:00:00Z',field:'sender',from:'',to:'Legacy customer'}]}],trash:[],lockedDates:['2026-10-16'],journal:{date:'2026-10-17',rows:[{id:'old-journal',date:'2026-10-17',detail:'Opening',debit:'',credit:'1000'}]}};
+  const now=new Date(),testDate=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const legacy={version:4,title:'Migration test',date:testDate,startSerial:9,partySerials:{Alpha:25},branches:['Alpha'],partyCurrencies:{Alpha:'afn'},rows:[{id:'old-row',entryDate:testDate,sender:'Legacy customer',mobile:'03001234567',receiver:'Receiver',place:'Dubai',branch:'Alpha',balance:'10',aed:'100',pkr:'200',history:[{at:'2026-10-17T10:00:00Z',field:'sender',from:'',to:'Legacy customer'}]}],trash:[],lockedDates:['2026-10-16'],journal:{date:testDate,rows:[{id:'old-journal',date:testDate,detail:'Opening',debit:'',credit:'1000'}]}};
   // Seed the old browser origin without the new preload/database bridge.
   const seedMain=path.join(base,'seed.cjs');
   fs.writeFileSync(seedMain,`const {app,BrowserWindow}=require('electron');app.setPath('userData',${JSON.stringify(profile)});app.whenReady().then(()=>{const w=new BrowserWindow({show:true});w.loadFile(${JSON.stringify(index)});});app.on('window-all-closed',()=>app.quit());`);
   let app;
   try{
-    app=await electron.launch({executablePath:sourceExe,args:[seedMain]});let page=await app.firstWindow();await page.locator('#rows').waitFor({state:'attached'});
+    app=await electron.launch({executablePath:sourceExe,args:[seedMain]});let page=await app.firstWindow();await page.waitForFunction(()=>document.querySelector('#rows').children.length && (window.electronAPI?document.querySelector('#save-state').textContent.includes('SQLite'):!!document.querySelector('#office-select').onchange));
     await page.evaluate(data=>localStorage.setItem('hisaab-register-v1',JSON.stringify(data)),legacy);await app.close();app=null;
     const launch=()=>electron.launch({executablePath:packaged?path.resolve('dist/win-unpacked/حساب.exe'):sourceExe,args:[...(!packaged?[path.resolve('.')]:[]),'--user-data-dir='+profile],timeout:30000});
-    app=await launch();page=await app.firstWindow();page.setDefaultTimeout(15000);await page.locator('#rows').waitFor({state:'attached'});
+    app=await launch();page=await app.firstWindow();page.setDefaultTimeout(15000);await page.waitForFunction(()=>document.querySelector('#rows').children.length && (window.electronAPI?document.querySelector('#save-state').textContent.includes('SQLite'):!!document.querySelector('#office-select').onchange));
     const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
     assert.equal(await page.locator('[data-field="sender"]').first().inputValue(),'Legacy customer');
     assert.match(await page.locator('#save-state').innerText(),/SQLite/);
@@ -26,7 +27,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
     assert.equal(await page.locator('[data-field="sender"]').first().inputValue(),'Legacy customer');
     await page.locator('[data-field="sender"]').first().fill('SQLite customer');await page.locator('[data-field="sender"]').first().blur();
     await page.locator('#view-journal').click();await page.locator('[data-journal="credit"]').first().fill('2500');await page.locator('[data-journal="credit"]').first().blur();
-    await app.close();app=await launch();page=await app.firstWindow();page.setDefaultTimeout(15000);page.on('dialog',d=>d.accept());await page.locator('#rows').waitFor({state:'attached'});
+    await app.close();app=await launch();page=await app.firstWindow();page.setDefaultTimeout(15000);page.on('dialog',d=>d.accept());await page.waitForFunction(()=>document.querySelector('#rows').children.length && (window.electronAPI?document.querySelector('#save-state').textContent.includes('SQLite'):!!document.querySelector('#office-select').onchange));
     await page.locator('#view-register').click();assert.equal(await page.locator('[data-field="sender"]').first().inputValue(),'SQLite customer');
     db=await saved();assert.equal(db.state.journal.rows[0].credit,'2,500');assert(db.state.rows[0].history.some(h=>h.to==='SQLite customer'));
     // Inject a real SQLite transaction failure without modifying user files.

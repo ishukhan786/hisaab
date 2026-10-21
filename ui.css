@@ -349,3 +349,20 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 @media screen and (max-width:600px){.app-shell .top-nav-end .workspace-nav{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;margin-inline:0}.app-shell .top-nav-end .workspace-nav button{min-height:44px;white-space:nowrap;line-height:2.5;font-size:12px}}
 
 @media screen and (max-width:600px){.app-shell .duplicate-warning{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px}.app-shell .duplicate-warning>span{grid-column:1/-1;min-width:0;font-size:11px;line-height:2.2}.app-shell .duplicate-warning>button{width:100%;min-height:44px;padding:4px 7px;white-space:normal}}
+
+@media screen {
+  .office-switcher { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:5px 9px; border:1px solid #c8ddd4; border-radius:12px; background:#f1f8f4; }
+  .office-switcher select { max-width:175px; padding:7px; border-radius:8px; background:white; color:#164d3c; font:600 13px Arial,sans-serif; }
+  .office-switcher small { color:#597568; font:11px Arial,sans-serif; }
+  #login-account-wrap { display:grid; gap:6px; width:100%; max-width:260px; }
+  #login-account { width:100%; padding:10px; font:14px Arial,sans-serif; }
+  #office-staff-dialog { max-width:540px; }
+  #office-staff-form { display:grid; gap:14px; }
+  #office-staff-form label { display:grid; gap:6px; }
+  #office-staff-form input,#office-staff-form select { padding:10px; font:14px Arial,sans-serif; }
+  #office-staff-status,#office-staff-msg { line-height:1.7; font-family:Arial,sans-serif; }
+  @media(max-width:800px) { .office-switcher { flex:1 1 100%; justify-content:center; } }
+}
+.office-print-name { font:12px Arial,sans-serif; display:block; text-align:center; margin:4px 0; }
+
+@media screen { .office-switcher small {display:none} .office-switcher {padding:2px 8px;flex-wrap:nowrap} @media(max-width:600px){ .app-shell .office-switcher {grid-column:1/-1;justify-content:center} } }

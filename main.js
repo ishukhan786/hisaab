@@ -6,13 +6,15 @@ const { randomUUID } = require('crypto');
 app.setAppUserModelId('com.ishukhan.hisaab');
 
 let mainWindow = null;
-let database = null;
-function getDatabase() {
-  if (!database) {
+const officeDatabases = new Map();
+function getDatabase(office = 'mussafah') {
+  if (!['mussafah','satwa','city'].includes(office)) throw Error('Invalid office branch');
+  if (!officeDatabases.has(office)) {
     const { HisaabDatabase } = require('./database');
-    database = new HisaabDatabase(path.join(app.getPath('userData'),'hisaab.sqlite'));
+    const filename = office === 'mussafah' ? 'hisaab.sqlite' : `hisaab-${office}.sqlite`;
+    officeDatabases.set(office, new HisaabDatabase(path.join(app.getPath('userData'),filename),{backupDir:path.join(officeDirectory(office),'backups')}));
   }
-  return database;
+  return officeDatabases.get(office);
 }
 
 // Only the trusted top-level application frame can read or mutate local data.
@@ -21,9 +23,10 @@ for (const action of ['load','initialize','save','restore']) {
     try {
       const expectedURL=require('url').pathToFileURL(path.join(__dirname,'index.html')).href;
       if (!gotTheLock || !mainWindow || event.sender!==mainWindow.webContents || event.senderFrame!==mainWindow.webContents.mainFrame || event.senderFrame.url!==expectedURL) throw new Error('Unauthorized database request');
-      const store=getDatabase();
+      const store=getDatabase(payload.office || 'mussafah');
       if(action==='load')event.returnValue={status:'ok',...store.load(),filePath:store.filename};
       else {
+        if(payload.state?.officeId && payload.state.officeId !== (payload.office||'mussafah'))throw Error('Backup belongs to another branch');
         const options=action==='initialize'?{initialize:true,legacyRaw:payload.legacyRaw??null}:action==='restore'?{restore:true,current:payload.current}:{};
         event.returnValue={status:'saved',...store.commit(payload.state,payload.revision,options)};
       }
@@ -44,29 +47,37 @@ function isSameFrameUrl(frameUrl, targetUrl) {
   }
 }
 
-let externalBackup;
-function getExternalBackup(){return externalBackup??=new (require('./external-backup.cjs').ExternalBackup)(app.getPath('userData'));}
+function officeDirectory(office='mussafah') {
+  if(!['mussafah','satwa','city'].includes(office))throw Error('Invalid office branch');
+  return office==='mussafah'?app.getPath('userData'):path.join(app.getPath('userData'),'offices',office);
+}
+const externalBackups=new Map();
+function getExternalBackup(office='mussafah'){
+  const dir=officeDirectory(office);
+  if(!externalBackups.has(office))externalBackups.set(office,new (require('./external-backup.cjs').ExternalBackup)(dir));
+  return externalBackups.get(office);
+}
 function trustedBackupFrame(event){const url=require('url').pathToFileURL(path.join(__dirname,'index.html')).href;if(!gotTheLock||!mainWindow||event.sender!==mainWindow.webContents||event.senderFrame!==mainWindow.webContents.mainFrame||!isSameFrameUrl(event.senderFrame.url,url))throw Error('Unauthorized backup request');}
-ipcMain.handle('external-backup-status',async event=>{trustedBackupFrame(event);return getExternalBackup().status();});
-ipcMain.handle('external-backup-select',async event=>{
+ipcMain.handle('external-backup-status',async (event,office)=>{trustedBackupFrame(event);return getExternalBackup(office).status();});
+ipcMain.handle('external-backup-select',async(event,office)=>{
   trustedBackupFrame(event);
   const result=await dialog.showOpenDialog(mainWindow,{title:'بیک اَپ کے لیے USB یا synced فولڈر منتخب کریں',properties:['openDirectory','createDirectory']});
   if(result.canceled || !result.filePaths || !result.filePaths.length || !result.filePaths[0])return {cancelled:true};
-  return getExternalBackup().configure(result.filePaths[0]);
+  return getExternalBackup(office).configure(result.filePaths[0]);
 });
-ipcMain.handle('external-backup-disable',async event=>{trustedBackupFrame(event);return getExternalBackup().configure(null);});
-ipcMain.handle('external-backup-save',async(event,data)=>{
+ipcMain.handle('external-backup-disable',async(event,office)=>{trustedBackupFrame(event);return getExternalBackup(office).configure(null);});
+ipcMain.handle('external-backup-save',async(event,data,office)=>{
   trustedBackupFrame(event);
   try {
     const validated = require('./database').validateState(data);
-    return await getExternalBackup().save(validated);
+    return await getExternalBackup(office).save(validated);
   } catch (err) {
-    const config = await getExternalBackup().status();
+    const config = await getExternalBackup(office).status();
     return { status: 'error', ...config, error: err.message };
   }
 });
 
-app.on('will-quit',()=>{database?.close();});
+app.on('will-quit',()=>{for(const store of officeDatabases.values())store.close();});
 
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -82,8 +93,8 @@ if (!gotTheLock) {
   app.whenReady().then(createWindow);
 }
 
-async function getBackupsDir() {
-  const dir = path.join(app.getPath('userData'), 'backups');
+async function getBackupsDir(office='mussafah') {
+  const dir = path.join(officeDirectory(office), 'backups');
   await fs.mkdir(dir, { recursive: true });
   return dir;
 }
@@ -214,11 +225,11 @@ ipcMain.handle('save-pdf', async (event, suggestedName) => {
   }
 });
 
-ipcMain.handle('save-auto-backup', async (event, data, isSafety = false) => {
+ipcMain.handle('save-auto-backup', async (event, data, isSafety = false,office='mussafah') => {
   if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Unauthorized');
   if (!data || typeof data !== 'object') throw new Error('Invalid backup payload');
   try {
-    const dir = await getBackupsDir();
+    const dir = await getBackupsDir(office);
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
     const dateStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
@@ -256,10 +267,10 @@ ipcMain.handle('save-auto-backup', async (event, data, isSafety = false) => {
   }
 });
 
-ipcMain.handle('get-auto-backups', async (event) => {
+ipcMain.handle('get-auto-backups', async (event,office='mussafah') => {
   if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Unauthorized');
   try {
-    const dir = await getBackupsDir();
+    const dir = await getBackupsDir(office);
     const files = await fs.readdir(dir);
     const jsonFiles = files.filter(f => f.endsWith('.json') && (f.startsWith('auto-backup_') || f.startsWith('safety-pre-restore_') || f.startsWith('migration-localstorage_')));
     const list = [];
@@ -282,20 +293,20 @@ ipcMain.handle('get-auto-backups', async (event) => {
   }
 });
 
-ipcMain.handle('read-auto-backup', async (event, filename) => {
+ipcMain.handle('read-auto-backup', async (event, filename,office='mussafah') => {
   if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Unauthorized');
   if (typeof filename !== 'string' || !/^(auto-backup_|safety-pre-restore_|migration-localstorage_)[a-zA-Z0-9_\-\.]+\.json$/.test(filename)) {
     throw new Error('Invalid filename');
   }
-  const dir = await getBackupsDir();
+  const dir = await getBackupsDir(office);
   const filePath = path.join(dir, filename);
   const content = await fs.readFile(filePath, 'utf-8');
   return { status: 'ok', content };
 });
 
-ipcMain.handle('open-backups-folder', async (event) => {
+ipcMain.handle('open-backups-folder', async (event,office='mussafah') => {
   if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Unauthorized');
-  const dir = await getBackupsDir();
+  const dir = await getBackupsDir(office);
   await shell.openPath(dir);
   return { status: 'ok' };
 });
@@ -336,7 +347,10 @@ function createWindow() {
 
   mainWindow.maximize();
   mainWindow.webContents.setWindowOpenHandler(()=>({action:'deny'}));
-  mainWindow.webContents.on('will-navigate',event=>event.preventDefault());
+  mainWindow.webContents.on('will-navigate',(event,url)=>{
+    const expected=require('url').pathToFileURL(path.join(__dirname,'index.html')).href;
+    if(!isSameFrameUrl(url,expected))event.preventDefault();
+  });
   mainWindow.webContents.on('will-prevent-unload',event=>{
     const choice=dialog.showMessageBoxSync(mainWindow,{type:'warning',title:'غیر محفوظ تبدیلیاں',message:'کچھ تبدیلیاں محفوظ نہیں ہو سکیں۔ واپس جا کر دوبارہ محفوظ کریں یا بیک اَپ لیں۔',buttons:['واپس جائیں','بغیر محفوظ کیے بند کریں'],defaultId:0,cancelId:0});
     if(choice===1)event.preventDefault();

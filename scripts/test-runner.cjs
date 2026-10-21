@@ -8,7 +8,8 @@ console.log('==================================================\n');
 
 const testSuites = [
   { name: 'External Backup Engine', script: 'tests/external-backup.cjs' },
-  { name: 'Security, Auth, OCC & Asset Shield', script: 'tests/security-suite.cjs' }
+  { name: 'Security, Auth, OCC & Asset Shield', script: 'tests/security-suite.cjs' },
+  { name: 'Branch API isolation and staff permissions', script: 'tests/branches-web.cjs', env: {HISAAB_BRANCH_API_ONLY:'1'} }
 ];
 
 let failed = false;
@@ -18,7 +19,7 @@ for (const suite of testSuites) {
   const result = spawnSync(process.execPath, [path.resolve(suite.script)], {
     stdio: 'inherit',
     cwd: path.resolve(__dirname, '..'),
-    env: { ...process.env, NODE_ENV: 'test' }
+    env: { ...process.env, NODE_ENV: 'test', ...suite.env }
   });
 
   if (result.status !== 0) {
