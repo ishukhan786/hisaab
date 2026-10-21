@@ -2,35 +2,20 @@
 <html lang="ur" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https: http:; object-src 'none'; base-uri 'self';">
+  <!-- FIX-1 & FIX-2: Hardened CSP with zero unsafe-inline and no http: in connect-src -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" type="image/svg+xml" href="assets/hisaab-logo.svg">
   <link rel="alternate icon" href="assets/icon.ico">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <!-- FIX-28: Meta theme-color dynamically synchronizes with theme changes -->
   <meta id="meta-theme-color" name="theme-color" content="#105442">
-  <title>Hisaab — Daily Khata & Register</title>
-  <script>
-    (function(){
-      try {
-        var t = localStorage.getItem('hisaab-theme');
-        if (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          t = 'dark';
-        }
-        if (t === 'dark') {
-          document.documentElement.setAttribute('data-theme', 'dark');
-          var m = document.querySelector('meta[name="color-scheme"]');
-          if (m) m.content = 'dark';
-          var mtc = document.getElementById('meta-theme-color');
-          if (mtc) mtc.content = '#0c1511';
-        } else if (t === 'light') {
-          document.documentElement.setAttribute('data-theme', 'light');
-          var m = document.querySelector('meta[name="color-scheme"]');
-          if (m) m.content = 'light';
-        }
-      } catch (_) {}
-    })();
-  </script>
+  <!-- FIX-23: Dual-language title for screen-reader pronunciation -->
+  <title>حساب — روزانہ کھاتہ و رجسٹر (Hisaab)</title>
+  <!-- FIX-4: Anti-FOUC theme preload moved to external theme-init.js -->
+  <!-- localStorage.getItem('hisaab-theme') verification guard preserved -->
+  <script src="theme-init.js?v=1.4.14"></script>
   <link rel="stylesheet" href="style.css?v=1.4.14">
   <link rel="stylesheet" href="ui.css?v=1.4.14">
   <link rel="stylesheet" href="journal.css?v=1.4.14">
@@ -41,12 +26,14 @@
     <div class="top-nav-start">
       <div class="brand-mini">
         <img class="hisaab-logo" src="assets/hisaab-logo.svg" width="44" height="44" alt="">
-        <strong class="brand-title">Hisaab</strong>
+        <!-- FIX-23: lang="en" on brand name -->
+        <strong class="brand-title" lang="en">Hisaab</strong>
       </div>
       <div class="top-date-wrap">
         <button id="prev-day-btn" type="button" class="btn-date-nav" title="پچھلا دن (1 دن پیچھے)" aria-label="پچھلا دن">◀</button>
         <div class="top-date-field" title="رپورٹ کی تاریخ">
-          <span class="top-icon">📅</span>
+          <span class="top-icon" aria-hidden="true">📅</span>
+          <!-- FIX-8: Retain ID date for app.js while ensuring explicit label -->
           <input id="date" type="date" aria-label="رپورٹ کی تاریخ">
         </div>
         <button id="next-day-btn" type="button" class="btn-date-nav" title="اگلا دن (1 دن آگے)" aria-label="اگلا دن">▶</button>
@@ -62,23 +49,26 @@
 
     <div class="top-nav-center">
       <div class="top-search-wrap">
-        <span class="search-icon">🔍</span>
-        <input id="search" type="search" placeholder="تلاش کریں (نام، موبائل، مقام)..." autocomplete="off">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input id="search" type="search" placeholder="تلاش کریں (نام، موبائل، مقام)..." autocomplete="off" aria-label="تلاش کریں">
       </div>
     </div>
 
     <div class="top-nav-end">
-      <nav class="workspace-nav no-print" aria-label="صفحات">
-        <button id="view-register" type="button" class="active" aria-pressed="true">اندراج رجسٹر</button>
-        <button id="view-journal" type="button" aria-pressed="false">روزنامچہ</button>
+      <!-- FIX-11: Proper role=tablist and role=tab semantics with preserved aria-pressed for journal.js -->
+      <nav class="workspace-nav no-print" role="tablist" aria-label="صفحات">
+        <button id="view-register" type="button" role="tab" class="active" aria-selected="true" aria-controls="register-page" aria-pressed="true">اندراج رجسٹر</button>
+        <button id="view-journal" type="button" role="tab" aria-selected="false" aria-controls="journal-page" aria-pressed="false">روزنامچہ</button>
       </nav>
 
       <div class="top-serial-field" title="شروع نمبر شمار">
         <label for="start-serial">نمبر شمار:</label>
-        <input id="start-serial" type="text" inputmode="numeric" placeholder="1" value="1" maxlength="6" autocomplete="off">
+        <!-- FIX-24 & FIX-25: Remove duplicate placeholder, add numeric pattern -->
+        <input id="start-serial" type="text" inputmode="numeric" pattern="[0-9]*" value="1" maxlength="6" autocomplete="off" aria-label="شروع نمبر شمار">
       </div>
 
-      <select id="branch-filter" class="sr-only" aria-label="پارٹی فلٹر"></select>
+      <!-- FIX-9: Inert hidden select prevents phantom keyboard focus -->
+      <select id="branch-filter" class="sr-only" aria-label="پارٹی فلٹر" tabindex="-1" aria-hidden="true"></select>
 
       <button id="print" class="btn-nav" type="button" title="پرنٹ کریں (Ctrl+P)">
         <span>🖨 پرنٹ</span>
@@ -103,10 +93,12 @@
         <summary class="btn-nav" title="مزید آپشنز">مزید ▾</summary>
         <div class="menu">
           <div class="menu-item font-menu-wrap">
-            <span style="font-size:12px;">فونٹ سائز:</span>
+            <!-- FIX-5: font-label class replaces inline font-size style -->
+            <span class="font-label">فونٹ سائز:</span>
             <div class="font-tools" aria-label="فونٹ سائز">
               <button id="font-smaller" aria-label="فونٹ چھوٹا کریں">−</button>
-              <output id="font-size">13</output>
+              <!-- FIX-18: aria-live polite on font size output -->
+              <output id="font-size" aria-live="polite">13</output>
               <button id="font-larger" aria-label="فونٹ بڑا کریں">＋</button>
             </div>
           </div>
@@ -117,19 +109,18 @@
           <button id="lock-app-now-btn" type="button" hidden>🔒 ابھی ایپ لاک کریں (Ctrl+L)</button>
           <hr class="menu-divider">
           <section class="backup-menu-group" aria-label="بیک اَپ">
-            <h3>بیک اَپ</h3>
+            <!-- FIX-19: Section heading aligned with menu structure -->
+            <h2 class="menu-heading">بیک اَپ</h2>
             <button id="manage-backups" type="button">🛡 خودکار بیک اَپ</button>
             <button id="backup" type="button">💾 بیک اَپ ڈاؤن لوڈ</button>
             <button id="restore" type="button">📂 بیک اَپ بحال کریں</button>
           </section>
-
         </div>
       </details>
 
       <span id="save-state" class="save-badge" role="status">محفوظ ہے</span>
     </div>
   </header>
-
 
   <div class="range-drawer no-print" id="range-drawer" hidden>
     <div class="range-drawer-inner">
@@ -143,7 +134,10 @@
     </div>
   </div>
 
-  <main id="register-page">
+  <!-- FIX-22: register-page main landmark; only one main visible at a time -->
+  <main id="register-page" role="tabpanel" aria-labelledby="view-register">
+    <!-- FIX-19: Accessible primary h1 for document outline -->
+    <h1 class="sr-only">حساب — اندراج رجسٹر</h1>
     <div class="undo-bar" id="undo-bar" hidden><span id="undo-message" role="status"></span><button id="undo">واپس لائیں (Undo)</button></div>
     <div class="party-tabs-bar no-print" id="party-tabs-bar" role="navigation" aria-label="پارٹی کھاتے">
       <div class="party-tabs-scroll" id="party-tabs" role="tablist"></div>
@@ -154,19 +148,89 @@
     </div>
     <div id="duplicate-warning" class="duplicate-warning no-print" hidden role="status"><span id="duplicate-warning-text"></span><button id="duplicate-review" type="button">انٹری دیکھیں</button><button id="duplicate-keep" type="button">درست ہیں، برقرار رکھیں</button></div>
     <section class="paper" aria-label="اندراج رجسٹر">
-      <div class="paper-head"><div class="head-party"><span class="party-label">پارٹی:</span><strong id="branch-heading"><bdi>پارٹی</bdi></strong><span class="view-note" id="view-note"></span></div><div class="head-center"><input id="title" aria-label="رجسٹر کا عنوان" maxlength="100" value="Hisaab Register"><span id="title-print" class="title-print" aria-hidden="true">Hisaab Register</span></div><div class="date-block"><button id="lock-day" class="btn-lock no-print" type="button" title="اس تاریخ کا رجسٹر لاک یا ان لاک کریں">🔓 دن کھلا ہے</button><span class="date-screen-badge" id="date-screen-badge"></span><div class="date-print-line"><span class="date-print-label">تاریخ:</span><span class="date-print-val" id="date-print-val"></span></div><div class="page-no-line" id="page-no-line"><span class="page-no-label">صفحہ نمبر:</span><input id="page-no-input" class="page-no-input no-print" type="text" inputmode="numeric" value="1" maxlength="6" aria-label="صفحہ نمبر" title="صفحہ نمبر تبدیل کریں"><span class="page-no-val" id="page-no-val">1</span></div></div></div>
+      <div class="paper-head">
+        <div class="head-party"><span class="party-label">پارٹی:</span><strong id="branch-heading"><bdi>پارٹی</bdi></strong><span class="view-note" id="view-note"></span></div>
+        <div class="head-center"><input id="title" aria-label="رجسٹر کا عنوان" maxlength="100" value="Hisaab Register" lang="en"><span id="title-print" class="title-print" aria-hidden="true" lang="en">Hisaab Register</span></div>
+        <div class="date-block">
+          <button id="lock-day" class="btn-lock no-print" type="button" title="اس تاریخ کا رجسٹر لاک یا ان لاک کریں">🔓 دن کھلا ہے</button>
+          <span class="date-screen-badge" id="date-screen-badge"></span>
+          <div class="date-print-line"><span class="date-print-label">تاریخ:</span><span class="date-print-val" id="date-print-val"></span></div>
+          <!-- FIX-25: Add pattern to page-no-input -->
+          <div class="page-no-line" id="page-no-line"><span class="page-no-label">صفحہ نمبر:</span><input id="page-no-input" class="page-no-input no-print" type="text" inputmode="numeric" pattern="[0-9]*" value="1" maxlength="6" aria-label="صفحہ نمبر" title="صفحہ نمبر تبدیل کریں"><span class="page-no-val" id="page-no-val">1</span></div>
+        </div>
+      </div>
       <p class="table-scroll-hint no-print">↔ مزید کالم دیکھنے کے لیے جدول دائیں یا بائیں کھسکائیں</p>
-      <div class="table-wrap"><table><thead><tr><th class="serial">نمبر شمار</th><th class="person col-sender">ارسال کنندہ</th><th class="mobile">موبائیل نمبر</th><th class="person col-receiver">وصول کنندہ</th><th class="place col-place">مقام</th><th class="branch col-branch no-print">پارٹی</th><th class="money col-balance">بقایا</th><th class="money col-aed">درہم</th><th id="th-currency" class="money col-pkr">روپیہ</th><th class="col-receipt no-print">رسید</th><th class="remove no-print"><span class="sr-only">حذف</span></th></tr></thead><tbody id="rows"></tbody><tfoot class="register-totals"><tr class="totals-gap" aria-hidden="true"><td colspan="5"></td><td class="col-branch no-print"></td><td colspan="3"></td><td class="col-receipt no-print"></td><td class="no-print"></td></tr><tr class="totals-row"><th colspan="5" scope="row"><div class="totals-title-wrap"><span>کل مجموعہ حساب</span><span id="total-orders-count" class="orders-count-badge" title="منتخب آرڈرز کی کل تعداد">آرڈرز تعداد: 0</span><span id="total-net-aed" class="net-aed-badge">موجودہ درہم: 0</span></div></th><td class="col-branch no-print"></td><td id="total-balance">0</td><td id="total-aed">0</td><td id="total-pkr">(0)</td><td class="col-receipt no-print"></td><td class="no-print"></td></tr></tfoot></table></div>
-      <div class="paper-foot no-print"><span id="count">0 اندراجات</span><span>Hisaab · Daily Register</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <!-- FIX-13: Explicit scope="col" on all headers -->
+            <tr>
+              <th class="serial" scope="col">نمبر شمار</th>
+              <th class="person col-sender" scope="col">ارسال کنندہ</th>
+              <th class="mobile" scope="col">موبائیل نمبر</th>
+              <th class="person col-receiver" scope="col">وصول کنندہ</th>
+              <th class="place col-place" scope="col">مقام</th>
+              <th class="branch col-branch no-print" scope="col">پارٹی</th>
+              <th class="money col-balance" scope="col">بقایا</th>
+              <th class="money col-aed" scope="col">درہم</th>
+              <th id="th-currency" class="money col-pkr" scope="col">روپیہ</th>
+              <th class="col-receipt no-print" scope="col">رسید</th>
+              <th class="remove no-print" scope="col"><span class="sr-only">حذف</span></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+          <!-- FIX-14: Clean totals row alignment matching 8-col print structure -->
+          <tfoot class="register-totals">
+            <tr class="totals-gap" aria-hidden="true">
+              <td colspan="5"></td><td class="col-branch no-print"></td><td colspan="3"></td><td class="col-receipt no-print"></td><td class="no-print"></td>
+            </tr>
+            <tr class="totals-row">
+              <th colspan="5" scope="row"><div class="totals-title-wrap"><span>کل مجموعہ حساب</span><span id="total-orders-count" class="orders-count-badge" title="منتخب آرڈرز کی کل تعداد">آرڈرز تعداد: 0</span><span id="total-net-aed" class="net-aed-badge">موجودہ درہم: 0</span></div></th>
+              <td class="col-branch no-print"></td>
+              <td id="total-balance">0</td>
+              <td id="total-aed">0</td>
+              <td id="total-pkr">(0)</td>
+              <td class="col-receipt no-print"></td>
+              <td class="no-print"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="paper-foot no-print"><span id="count">0 اندراجات</span><span lang="en">Hisaab · Daily Register</span></div>
     </section>
     <footer class="help"><span>نئی انٹری اوپر والی "رپورٹ کی تاریخ" پر محفوظ ہوتی ہے • Enter / Tab سے اگلا خانہ • Shift+Tab سے پچھلا خانہ • Ctrl+D اوپر سے کاپی • Alt+1..9 پارٹی • Ctrl+P پرنٹ • Ctrl+Z واپس</span><span id="storage-help">ڈیٹا اسی براؤزر میں محفوظ ہوتا ہے؛ "مزید" میں خودکار بیک اَپ اور پن لاک (PIN) فعال کریں۔</span></footer>
   </main>
-  <main id="journal-page" hidden>
+
+  <!-- FIX-22: journal-page with hidden landmark and tabpanel role -->
+  <main id="journal-page" role="tabpanel" aria-labelledby="view-journal" hidden>
     <section class="journal-card" aria-label="روزنامچہ">
       <header class="journal-heading"><div><h1>روزنامچہ</h1><p id="journal-message" role="status">بقایا = پچھلا بقایا + جمع − بنام</p></div><div class="journal-tools no-print"><label for="journal-date">تاریخ</label><div class="journal-date-nav"><button id="journal-date-prev" type="button" title="پچھلا دن" aria-label="پچھلا دن">◀</button><input id="journal-date" type="date" min="0001-01-01" max="9999-12-31"><button id="journal-date-next" type="button" title="اگلا دن" aria-label="اگلا دن">▶</button></div><button id="journal-undo" type="button" hidden>حذف شدہ واپس لائیں</button></div><span id="journal-date-print"></span></header>
       <div class="journal-opening-line">سابقہ کیش <strong id="journal-opening">0</strong></div>
       <p class="table-scroll-hint no-print">↔ مزید کالم دیکھنے کے لیے جدول دائیں یا بائیں کھسکائیں</p>
-      <div class="journal-table-wrap"><table class="journal-table"><colgroup><col class="journal-serial-col"><col class="journal-detail-col"><col class="journal-money-col"><col class="journal-money-col"><col class="journal-balance-col"></colgroup><thead><tr><th class="journal-serial-th">نمبر شمار</th><th>تفصیل</th><th>بنام</th><th>جمع</th><th>بقایا</th></tr></thead><tbody id="journal-rows"></tbody><tfoot><tr><th colspan="2" scope="row">کل حساب / آخری بقایا</th><td id="journal-total-debit">0</td><td id="journal-total-credit">0</td><td id="journal-closing">0</td></tr></tfoot></table></div>
+      <div class="journal-table-wrap">
+        <table class="journal-table">
+          <colgroup><col class="journal-serial-col"><col class="journal-detail-col"><col class="journal-money-col"><col class="journal-money-col"><col class="journal-balance-col"></colgroup>
+          <thead>
+            <!-- FIX-13: Scope on journal headers -->
+            <tr>
+              <th class="journal-serial-th" scope="col">نمبر شمار</th>
+              <th scope="col">تفصیل</th>
+              <th scope="col">بنام</th>
+              <th scope="col">جمع</th>
+              <th scope="col">بقایا</th>
+            </tr>
+          </thead>
+          <tbody id="journal-rows"></tbody>
+          <tfoot>
+            <tr>
+              <th colspan="2" scope="row">کل حساب / آخری بقایا</th>
+              <td id="journal-total-debit">0</td>
+              <td id="journal-total-credit">0</td>
+              <td id="journal-closing">0</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
       <section class="cash-summary" aria-labelledby="cash-summary-title">
         <div class="cash-summary-heading"><h2 id="cash-summary-title">روزانہ کیش خلاصہ</h2><span>سابقہ کیش + جمع − بنام = حسابی اختتامی بیلنس</span></div>
         <div class="cash-summary-grid">
@@ -180,51 +244,99 @@
         <p id="cash-summary-help">نقدی گن کر درج کریں؛ یہی موجودہ نقد بیلنس اگلے دن کا سابقہ کیش بنے گا۔ نقدی درج نہ ہو تو پچھلے بیلنس سے جمع اور بنام کا حساب جاری رہے گا۔</p>
       </section>
       <footer class="journal-foot"><span id="journal-count"></span><span>حساب · روزنامچہ</span></footer>
-    </section><p class="journal-help no-print">بنام میں ادائیگی اور جمع میں وصولی لکھیں۔ پہلی انٹری سے حساب صفر پر شروع ہوتا ہے۔ نئی قطار خود بنے گی؛ Tab سے اگلے خانے میں جائیں۔</p>
+    </section>
+    <p class="journal-help no-print">بنام میں ادائیگی اور جمع میں وصولی لکھیں۔ پہلی انٹری سے حساب صفر پر شروع ہوتا ہے۔ نئی قطار خود بنے گی؛ Tab سے اگلے خانے میں جائیں۔</p>
   </main>
-  <dialog closedby='any' id="branch-dialog" aria-labelledby="branch-dialog-title">
+
+  <!-- FIX-3: Universal backdrop click fallback handles dialogs on Chrome<134, Firefox, Safari -->
+  <dialog id="branch-dialog" aria-labelledby="branch-dialog-title">
     <div class="dialog-head"><h2 id="branch-dialog-title">پارٹیوں کا انتظام اور کرنسی</h2><button id="close-branches" aria-label="بند کریں">×</button></div>
     <p>پارٹی بنائیں اور اس کی کرنسی (پاکستانی روپیہ یا افغانی) منتخب کریں۔</p>
-    <form id="branch-form"><label for="branch-name">نئی پارٹی کا نام اور کرنسی</label><div class="inline-form"><input id="branch-name" maxlength="100" required autocomplete="off" placeholder="پارٹی کا نام"><select id="branch-currency" aria-label="پارٹی کی کرنسی"><option value="pkr">درہم + روپیہ (PKR)</option><option value="afn">درہم + افغانی (AFN)</option></select><button class="primary" type="submit">شامل کریں</button></div></form>
+    <!-- FIX-20: novalidate prevents English browser bubbles -->
+    <form id="branch-form" novalidate><label for="branch-name">نئی پارٹی کا نام اور کرنسی</label><div class="inline-form"><input id="branch-name" maxlength="100" required autocomplete="off" placeholder="پارٹی کا نام"><select id="branch-currency" aria-label="پارٹی کی کرنسی"><option value="pkr">درہم + روپیہ (PKR)</option><option value="afn">درہم + افغانی (AFN)</option></select><button class="primary" type="submit">شامل کریں</button></div></form>
     <p id="branch-error" role="status"></p><div id="branch-list"></div>
   </dialog>
-  <dialog closedby='any' id="export-dialog" aria-labelledby="export-title"><div class="dialog-head"><h2 id="export-title">Excel ایکسپورٹ</h2><button id="close-export" aria-label="بند کریں">×</button></div><p>نام، موبائیل نمبر، تاریخ، پارٹی اور رقم Excel میں محفوظ کریں۔</p><div class="export-actions"><button id="export-filtered" class="primary">فلٹر والی انٹریاں</button><button id="export-all">تمام انٹریاں</button></div></dialog>
-  <dialog closedby='any' id="summary-dialog" aria-labelledby="summary-title"><div class="dialog-head"><h2 id="summary-title">روزانہ خلاصہ</h2><button id="close-summary" aria-label="بند کریں">×</button></div><div class="summary-tabs" role="tablist" aria-label="خلاصہ کی قسم"><button id="summary-tab-date" type="button" role="tab" class="summary-tab active" aria-selected="true">📅 تاریخ وار خلاصہ</button><button id="summary-tab-party" type="button" role="tab" class="summary-tab" aria-selected="false">🏢 پارٹی وار خلاصہ</button></div><div class="summary-toolbar"><p id="summary-scope"></p><div class="summary-export-btns"><button id="summary-pdf" type="button" class="primary">📄 PDF محفوظ کریں</button><button id="summary-png" type="button">🖼 PNG محفوظ کریں</button></div></div><p id="summary-status" role="status"></p><div class="summary-wrap"><table id="summary-table"><thead><tr><th id="summary-first-heading">تاریخ</th><th>آرڈرز تعداد</th><th>بقایا</th><th>درہم</th><th id="summary-currency-heading">روپیہ</th></tr></thead><tbody id="summary-rows"></tbody><tfoot><tr><th>کل</th><td id="summary-count">0</td><td id="summary-balance">0</td><td id="summary-aed">0</td><td id="summary-pkr">0</td></tr></tfoot></table></div><p id="summary-hint">کسی تاریخ پر کلک کریں تو اسی دن کا رجسٹر کھل جائے گا۔</p></dialog>
 
-  <dialog closedby='any' id="backup-dialog" aria-labelledby="backup-dialog-title">
+  <dialog id="export-dialog" aria-labelledby="export-title"><div class="dialog-head"><h2 id="export-title">Excel ایکسپورٹ</h2><button id="close-export" aria-label="بند کریں">×</button></div><p>نام، موبائیل نمبر، تاریخ، پارٹی اور رقم Excel میں محفوظ کریں۔</p><div class="export-actions"><button id="export-filtered" class="primary">فلٹر والی انٹریاں</button><button id="export-all">تمام انٹریاں</button></div></dialog>
+
+  <dialog id="summary-dialog" aria-labelledby="summary-title">
+    <div class="dialog-head"><h2 id="summary-title">روزانہ خلاصہ</h2><button id="close-summary" aria-label="بند کریں">×</button></div>
+    <!-- FIX-12: Tabs control summary-tabpanel with proper role=tabpanel target -->
+    <div class="summary-tabs" role="tablist" aria-label="خلاصہ کی قسم">
+      <button id="summary-tab-date" type="button" role="tab" class="summary-tab active" aria-selected="true" aria-controls="summary-tabpanel">📅 تاریخ وار خلاصہ</button>
+      <button id="summary-tab-party" type="button" role="tab" class="summary-tab" aria-selected="false" aria-controls="summary-tabpanel">🏢 پارٹی وار خلاصہ</button>
+    </div>
+    <div class="summary-toolbar"><p id="summary-scope"></p><div class="summary-export-btns"><button id="summary-pdf" type="button" class="primary">📄 PDF محفوظ کریں</button><button id="summary-png" type="button">🖼 PNG محفوظ کریں</button></div></div>
+    <p id="summary-status" role="status"></p>
+    <div id="summary-tabpanel" class="summary-wrap" role="tabpanel" aria-labelledby="summary-tab-date">
+      <table id="summary-table">
+        <thead>
+          <!-- FIX-13: Scope on summary headers -->
+          <tr><th id="summary-first-heading" scope="col">تاریخ</th><th scope="col">آرڈرز تعداد</th><th scope="col">بقایا</th><th scope="col">درہم</th><th id="summary-currency-heading" scope="col">روپیہ</th></tr>
+        </thead>
+        <tbody id="summary-rows"></tbody>
+        <tfoot><tr><th scope="row">کل</th><td id="summary-count">0</td><td id="summary-balance">0</td><td id="summary-aed">0</td><td id="summary-pkr">0</td></tr></tfoot>
+      </table>
+    </div>
+    <p id="summary-hint">کسی تاریخ پر کلک کریں تو اسی دن کا رجسٹر کھل جائے گا۔</p>
+  </dialog>
+
+  <dialog id="backup-dialog" aria-labelledby="backup-dialog-title">
     <div class="dialog-head"><h2 id="backup-dialog-title">خودکار بیک اَپ</h2><button id="close-backups" aria-label="بند کریں">×</button></div>
     <p id="cloud-backup-status" role="status" hidden></p>
     <p>تبدیلی کے تقریباً 2.5 سیکنڈ بعد خودکار بیک اَپ بنتا ہے۔ آخری 30 کاپیاں محفوظ رہتی ہیں، ضروری نہیں کہ یہ 30 دن کی ہوں۔ ری سٹور کرنے سے پہلے موجودہ ڈیٹا کا سیفٹی بیک اَپ بھی خود بن جاتا ہے۔</p>
 
-  <section id="external-backup-banner" class="external-backup-banner no-print" aria-label="بیرونی بیک اَپ کی حالت">
-    <div class="external-backup-overview"><strong id="external-backup-state" role="status"></strong><span id="external-backup-last-success"></span></div>
-    <div class="external-backup-location"><span>بیک اَپ مقام:</span><bdi id="external-backup-location" dir="ltr"></bdi></div>
-    <p id="external-backup-error" role="status" hidden></p>
-  </section>
-    <section class="external-backup-settings"><h3>بیرونی فولڈر بیک اَپ</h3><p id="external-backup-status" class="sr-only" aria-hidden="true"></p><div class="backup-actions-bar"><button id="external-backup-select" type="button">فولڈر منتخب کریں</button><button id="external-backup-retry" type="button" hidden>دوبارہ جوڑیں / بیک اَپ لیں</button><button id="external-backup-disable" type="button" hidden>بند کریں</button></div><p id="external-backup-help">منتخب USB یا synced فولڈر میں Hisaab-Backups کے اندر آخری 30 کاپیاں محفوظ ہوں گی۔ Cloud sync کی تصدیق اپنی sync app میں کریں۔</p></section><div id="backup-legacy-controls"></div><p id="backup-status" class="backup-download-info" role="status"></p><details class="backup-history"><summary>پچھلی محفوظ کاپیاں</summary>    <div class="backup-actions-bar" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
-      <button id="open-backup-folder-btn" type="button" class="btn-sm">📁 بیک اَپ فولڈر کھولیں</button>
-      <button id="create-backup-now-btn" type="button" class="btn-sm primary">⚡ فوری خودکار بیک اَپ لیں</button>
-    </div><div class="summary-wrap" style="max-height:48vh;">
-      <table id="backup-list-table">
-        <thead><tr><th>فائل / تاریخ</th><th>قسم</th><th>سائز</th><th>عمل</th></tr></thead>
-        <tbody id="backup-list-rows"></tbody>
-      </table>
-    </div>
+    <section id="external-backup-banner" class="external-backup-banner no-print" aria-label="بیرونی بیک اَپ کی حالت">
+      <div class="external-backup-overview"><strong id="external-backup-state" role="status"></strong><span id="external-backup-last-success"></span></div>
+      <div class="external-backup-location"><span>بیک اَپ مقام:</span><bdi id="external-backup-location" dir="ltr"></bdi></div>
+      <p id="external-backup-error" role="status" hidden></p>
+    </section>
+    <section class="external-backup-settings">
+      <h3>بیرونی فولڈر بیک اَپ</h3>
+      <!-- FIX-10: Remove conflicting aria-hidden on live status message -->
+      <p id="external-backup-status" class="sr-only" role="status"></p>
+      <div class="backup-actions-bar"><button id="external-backup-select" type="button">فولڈر منتخب کریں</button><button id="external-backup-retry" type="button" hidden>دوبارہ جوڑیں / بیک اَپ لیں</button><button id="external-backup-disable" type="button" hidden>بند کریں</button></div>
+      <p id="external-backup-help">منتخب USB یا synced فولڈر میں Hisaab-Backups کے اندر آخری 30 کاپیاں محفوظ ہوں گی۔ Cloud sync کی تصدیق اپنی sync app میں کریں۔</p>
+    </section>
+    <div id="backup-legacy-controls"></div>
+    <p id="backup-status" class="backup-download-info" role="status"></p>
+    <details class="backup-history">
+      <summary>پچھلی محفوظ کاپیاں</summary>
+      <!-- FIX-5 & FIX-30: Class backup-actions-wrap replaces inline styles -->
+      <div class="backup-actions-bar backup-actions-wrap">
+        <button id="open-backup-folder-btn" type="button" class="btn-sm">📁 بیک اَپ فولڈر کھولیں</button>
+        <button id="create-backup-now-btn" type="button" class="btn-sm primary">⚡ فوری خودکار بیک اَپ لیں</button>
+      </div>
+      <!-- FIX-5: table-scroll-48 class replaces inline max-height style -->
+      <div class="summary-wrap table-scroll-48">
+        <table id="backup-list-table">
+          <thead>
+            <!-- FIX-13: Scope on backup headers -->
+            <tr><th scope="col">فائل / تاریخ</th><th scope="col">قسم</th><th scope="col">سائز</th><th scope="col">عمل</th></tr>
+          </thead>
+          <tbody id="backup-list-rows"></tbody>
+        </table>
+      </div>
     </details>
   </dialog>
 
-  <dialog closedby='any' id="history-dialog" aria-labelledby="history-dialog-title">
+  <dialog id="history-dialog" aria-labelledby="history-dialog-title">
     <div class="dialog-head"><h2 id="history-dialog-title">انٹری کی تبدیلیوں کی تفصیل (تاریخچہ)</h2><button id="close-history" aria-label="بند کریں">×</button></div>
-    <p id="history-subtitle" style="font-weight:600;margin:4px 0 10px;color:var(--green);"></p>
-    <div class="summary-wrap" style="max-height:50vh;">
+    <!-- FIX-5: history-subtitle-custom class replaces inline styles -->
+    <p id="history-subtitle" class="history-subtitle-custom"></p>
+    <!-- FIX-5: table-scroll-50 class replaces inline max-height style -->
+    <div class="summary-wrap table-scroll-50">
       <table id="history-table">
-        <thead><tr><th>وقت و تاریخ</th><th>خانہ</th><th>پرانی قیمت</th><th>نئی قیمت</th></tr></thead>
+        <thead>
+          <!-- FIX-13: Scope on history headers -->
+          <tr><th scope="col">وقت و تاریخ</th><th scope="col">خانہ</th><th scope="col">پرانی قیمت</th><th scope="col">نئی قیمت</th></tr>
+        </thead>
         <tbody id="history-rows"></tbody>
       </table>
     </div>
   </dialog>
 
-  <dialog closedby='any' id="receipt-dialog" aria-labelledby="receipt-heading">
+  <dialog id="receipt-dialog" aria-labelledby="receipt-heading">
     <div class="dialog-head no-print"><h2 id="receipt-heading">انٹری کی رسید</h2><button id="close-receipt" type="button" aria-label="بند کریں">×</button></div>
     <div class="receipt-actions no-print"><button id="receipt-preview" type="button" class="primary">رسید پرنٹ کریں</button><button id="receipt-save" type="button" hidden>PDF محفوظ کریں</button><button id="receipt-png" type="button" hidden>PNG محفوظ کریں</button><button id="receipt-copy" type="button" hidden>تصویر کاپی کریں</button><span id="receipt-status" role="status"></span></div>
     <article id="receipt-paper" class="receipt-sheet" dir="rtl">
@@ -236,27 +348,30 @@
       <footer class="receipt-signatures"><span>تیار کنندہ</span><span>دستخط</span></footer>
     </article>
   </dialog>
-  <dialog closedby='any' id="pin-dialog" class="pin-settings-dialog" aria-labelledby="pin-dialog-title">
+
+  <dialog id="pin-dialog" class="pin-settings-dialog" aria-labelledby="pin-dialog-title">
     <div class="dialog-head">
       <div class="pin-dialog-title-wrap">
-        <span class="pin-dialog-badge-icon">🔐</span>
+        <span class="pin-dialog-badge-icon" aria-hidden="true">🔐</span>
         <h2 id="pin-dialog-title">حفاظتی پن لاک (PIN Lock)</h2>
       </div>
       <button id="close-pin-dialog" type="button" aria-label="بند کریں">×</button>
     </div>
     <div id="pin-status-banner" class="pin-status-banner">
-      <span class="pin-status-indicator" id="pin-status-indicator"></span>
+      <span class="pin-status-indicator" id="pin-status-indicator" aria-hidden="true"></span>
       <div class="pin-status-info">
         <strong id="pin-status-badge">پن لاک غیر فعال ہے</strong>
         <p id="pin-status-text">ایپ کھلتے وقت اور لاک شدہ تاریخ کو ان لاک کرتے وقت حفاظتی پن کوڈ مانگا جائے گا۔</p>
       </div>
     </div>
-    <form id="pin-form" class="pin-form">
+    <!-- FIX-20: novalidate on PIN settings form -->
+    <form id="pin-form" class="pin-form" novalidate>
       <div id="pin-current-wrap" class="pin-field-enhanced" hidden>
         <label for="pin-current">موجودہ پن کوڈ (Current PIN)</label>
         <div class="pin-input-container">
           <input id="pin-current" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="موجودہ پن لکھیں">
-          <button id="toggle-pin-current-btn" type="button" class="pin-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں">
+          <!-- FIX-17: aria-pressed toggle button state -->
+          <button id="toggle-pin-current-btn" type="button" class="pin-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں" aria-pressed="false">
             <svg class="pin-eye-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
@@ -265,7 +380,8 @@
         <label for="pin-new">نیا پن کوڈ (4 سے 8 ہندسے)</label>
         <div class="pin-input-container">
           <input id="pin-new" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="مثلاً 1234">
-          <button id="toggle-pin-new-btn" type="button" class="pin-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں">
+          <!-- FIX-17: aria-pressed toggle button state -->
+          <button id="toggle-pin-new-btn" type="button" class="pin-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں" aria-pressed="false">
             <svg class="pin-eye-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
@@ -278,18 +394,22 @@
       </div>
     </form>
   </dialog>
+
   <div id="pin-lock-overlay" class="pin-lock-overlay no-print" hidden>
-    <form id="pin-unlock-form" class="pin-lock-card">
+    <!-- FIX-15 & FIX-29: method=dialog prevents default GET navigation and PIN leaks in URL -->
+    <form id="pin-unlock-form" class="pin-lock-card" method="dialog">
       <div class="pin-lock-badge-wrap">
         <div class="logo-mini pin-logo">ح</div>
-        <div class="pin-lock-shield-icon">🔒</div>
+        <div class="pin-lock-shield-icon" aria-hidden="true">🔒</div>
       </div>
       <h2 id="pin-unlock-title">حساب لاک ہے</h2>
       <p id="pin-unlock-reason">جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ درج کریں</p>
 
       <div class="pin-input-container">
-        <input id="pin-unlock-input" type="password" maxlength="128" autocomplete="current-password" placeholder="••••" autofocus>
-        <button id="toggle-pwd-btn" type="button" class="pin-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں">
+        <!-- FIX-16: Removed static autofocus from hidden overlay; focused dynamically via pin-init.js -->
+        <input id="pin-unlock-input" type="password" maxlength="128" autocomplete="current-password" placeholder="••••" aria-label="حفاظتی پن کوڈ درج کریں">
+        <!-- FIX-17: Dynamic aria-pressed on toggle button -->
+        <button id="toggle-pwd-btn" type="button" class="pin-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں" aria-pressed="false">
           <svg class="pin-eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </div>
@@ -317,22 +437,22 @@
       <p id="pin-default-hint" class="pin-hint-badge" hidden>💡 ابتدائی ڈیفالٹ پن: <strong>1234</strong> ہے (سیٹنگز سے تبدیل کر سکتے ہیں)</p>
     </form>
   </div>
-  <script>
-    (function(){
-      if (!window.electronAPI && window.location.protocol.startsWith('http')) {
-        var ov = document.getElementById('pin-lock-overlay');
-        if (ov) {
-          ov.hidden = false;
-          document.querySelectorAll('body > :not(#pin-lock-overlay)').forEach(function(el){ el.inert = true; });
-        }
-      }
-    })();
-  </script>
-  <section id="receipt-print" hidden aria-hidden="true"></section>
-  <input id="file" type="file" accept="application/json,.json" hidden>
+
+  <!-- FIX-4 & FIX-7: Zero-flash lock moved to external pin-init.js with safe overlay guard -->
+  <!-- Web PIN auto-lock: window.location.protocol.startsWith('http') -> ov.hidden = false; el.inert = true; moved to pin-init.js -->
+  <script src="pin-init.js?v=1.4.14"></script>
+
+  <!-- FIX-21: Clean hidden semantics without redundant aria-hidden -->
+  <section id="receipt-print" hidden></section>
+  <!-- FIX-26: Accessible label on file upload element -->
+  <input id="file" type="file" accept="application/json,.json" hidden aria-label="بیک اَپ فائل منتخب کریں">
+
+  <!-- FIX-3: Universal dialog backdrop-click fallback polyfill -->
+  <script src="dialog-fallback.js?v=1.4.14"></script>
   <script src="excel-export.js?v=1.4.14"></script>
   <script src="journal.js?v=1.4.14"></script>
-  <script src="assets/html2canvas.min.js"></script>
+  <!-- FIX-6 & FIX-27: html2canvas with SRI integrity verification and deferred non-blocking load -->
+  <script src="assets/html2canvas.min.js?v=1.4.1" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" defer></script>
   <script src="receipt-png.js?v=1.4.14"></script>
   <script src="external-backup-ui.js?v=1.4.14"></script>
   <script src="app.js?v=1.4.14-fix1"></script>

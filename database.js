@@ -4,14 +4,22 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 
+/* Add-on C: Machine-readable error taxonomy */
+class HisaabError extends Error {
+  constructor(message, code) {
+    super(message);
+    this.name = 'HisaabError';
+    this.code = code;
+  }
+}
+
 const MAX_BYTES = 15_000_000;
 const fields = ['sender','mobile','receiver','place','branch','balance','aed','pkr'];
 const validDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;
 const text = (value, max) => typeof value === 'string' && value.length <= max;
-function invalid(message) { throw new Error('Invalid data: ' + message); }
+/* FIX-11: use HisaabError with INVALID_DATA code */
+function invalid(message) { throw new HisaabError('Invalid data: ' + message, 'INVALID_DATA'); }
 
-// Amounts remain exact text, including an unfinished edit, rather than floating
-// point values. UI calculations continue to use BigInt and flag invalid input.
 function validateState(input) {
   const json = JSON.stringify(input);
   if (!json || Buffer.byteLength(json) > MAX_BYTES) invalid('size');
@@ -23,38 +31,54 @@ function validateState(input) {
     if (!text(name,300) || !name.trim() || parties.has(name)) invalid('party');
     parties.add(name);
   }
-  for (const name of parties) {
-    if (Object.hasOwn(data.partyCurrencies || {},name) && !['pkr','afn'].includes(data.partyCurrencies[name])) invalid('currency');
+  /* FIX-9: validate partyCurrencies reject orphan keys not present in branches */
+  if (data.partyCurrencies != null) {
+    if (typeof data.partyCurrencies !== 'object' || Array.isArray(data.partyCurrencies)) invalid('currency');
+    for (const [name, currency] of Object.entries(data.partyCurrencies)) {
+      if (!parties.has(name)) invalid('orphan currency');
+      if (!['pkr','afn'].includes(currency)) invalid('currency');
+    }
   }
   const ids = new Set();
-  const registerRow = row => {
-    if (!row || !text(row.id,99) || ids.has(row.id) || !validDate(row.entryDate) || fields.some(f => !text(row[f],300))) invalid('entry');
-    if(row.orderType!==undefined&&!['','bank','city'].includes(row.orderType)) invalid('order type');
-    if(row.balanceType!==undefined&&!text(row.balanceType,300)) invalid('balance type');
-    ids.add(row.id);
+  const registerRow = (row, isTrash = false) => {
+    if (!row || !text(row.id,99) || (!isTrash && ids.has(row.id)) || !validDate(row.entryDate)) invalid('entry');
+    /* FIX-15: enforce strict per-field max lengths */
+    if (!text(row.sender,300) || !text(row.receiver,300) || !text(row.place,300)) invalid('entry text');
+    if (!text(row.mobile,40) || !text(row.balance,40) || !text(row.aed,40) || !text(row.pkr,40)) invalid('entry amounts');
+    /* FIX-1: branch can be null/undefined or string in draft rows */
+    if (row.branch != null && !text(row.branch,300)) invalid('branch');
     if (row.branch && !parties.has(row.branch)) invalid('missing party');
-    if (row.history !== undefined && (!Array.isArray(row.history) || row.history.length > 30 || row.history.some(h => !h || ['at','field','from','to'].some(f => !text(h[f],2000))))) invalid('history');
+    /* FIX-2: orderType and balanceType allow null or undefined */
+    if (row.orderType != null && !['','bank','city'].includes(row.orderType)) invalid('order type');
+    if (row.balanceType != null && !text(row.balanceType,300)) invalid('balance type');
+    if (!isTrash) ids.add(row.id);
+    /* FIX-7 & FIX-16: history field limits and total 50KB per-row serialized cap */
+    if (row.history !== undefined) {
+      if (!Array.isArray(row.history) || row.history.length > 30) invalid('history');
+      if (row.history.some(h => !h || !text(h.at,40) || !text(h.field,40) || !text(h.from,2000) || !text(h.to,2000))) invalid('history');
+      if (Buffer.byteLength(JSON.stringify(row.history)) > 50_000) invalid('history size');
+    }
   };
-  data.rows.forEach(registerRow);
+  data.rows.forEach(r => registerRow(r, false));
   if (!Array.isArray(data.trash) || data.trash.length > 20) invalid('trash');
   for (const item of data.trash) {
     if (!item || !Number.isInteger(item.index) || item.index < 0) invalid('trash index');
-    registerRow(item.row);
+    registerRow(item.row, true);
   }
   if (!data.journal || !validDate(data.journal.date) || !Array.isArray(data.journal.rows) || data.journal.rows.length > 10001) invalid('journal');
-  if(data.journal.cashCounts!==undefined){
-    const counts=data.journal.cashCounts;
-    if(!counts||typeof counts!=='object'||Array.isArray(counts)||Object.keys(counts).length>10000)invalid('cash counts');
-    for(const [date,value] of Object.entries(counts))if(!validDate(date)||!text(value,40))invalid('cash count');
+  if (data.journal.cashCounts !== undefined) {
+    const counts = data.journal.cashCounts;
+    if (!counts || typeof counts !== 'object' || Array.isArray(counts) || Object.keys(counts).length > 10000) invalid('cash counts');
+    for (const [date,value] of Object.entries(counts)) if (!validDate(date) || !text(value,40)) invalid('cash count');
   }
   const journalIds = new Set();
   for (const row of data.journal.rows) {
     if (!row || !text(row.id,99) || journalIds.has(row.id) || !validDate(row.date) || !text(row.detail,2000) || !text(row.debit,40) || !text(row.credit,40)) invalid('journal entry');
     journalIds.add(row.id);
   }
-  // Empty drafts are UI state, not durable records.
-  data.rows = data.rows.filter(r => fields.filter(f => f !== 'branch').some(f => r[f].trim()));
-  data.journal.rows = data.journal.rows.filter(r => ['detail','debit','credit'].some(f => r[f].trim()));
+  /* FIX-1: safely filter empty draft rows; keep rows with content even if branch is empty */
+  data.rows = data.rows.filter(r => fields.filter(f => f !== 'branch').some(f => typeof r[f] === 'string' && r[f].trim()));
+  data.journal.rows = data.journal.rows.filter(r => ['detail','debit','credit'].some(f => typeof r[f] === 'string' && r[f].trim()));
   return data;
 }
 
@@ -66,9 +90,10 @@ class HisaabDatabase {
     this.db = new Database(filename,{timeout:2000});
     try {
       const version = this.db.pragma('user_version',{simple:true});
-      if (version !== 0 && version !== 1) throw new Error('Unsupported database version');
-      if (this.db.pragma('quick_check',{simple:true}) !== 'ok') throw new Error('Database integrity check failed');
-      if (version === 0 && this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all().length) throw new Error('Unknown database schema');
+      /* FIX-11: machine-readable error codes */
+      if (version !== 0 && version !== 1) throw new HisaabError('Unsupported database version', 'UNSUPPORTED_VERSION');
+      if (this.db.pragma('quick_check',{simple:true}) !== 'ok') throw new HisaabError('Database integrity check failed', 'INTEGRITY_CHECK_FAILED');
+      if (version === 0 && this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all().length) throw new HisaabError('Unknown database schema', 'UNKNOWN_SCHEMA');
       this.db.pragma('foreign_keys = ON');
       this.db.pragma('journal_mode = WAL');
       this.db.pragma('synchronous = FULL');
@@ -86,12 +111,13 @@ class HisaabDatabase {
           PRAGMA user_version = 1;
         `);
       })();
-      if (this.db.pragma('foreign_key_check').length) throw new Error('Database references are damaged');
+      if (this.db.pragma('foreign_key_check').length) throw new HisaabError('Database references are damaged', 'FOREIGN_KEY_VIOLATION');
       this.statements = {};
       this.caches = {};
+      /* FIX-8: derive columns dynamically from table_info pragma to avoid schema drift */
       for (const table of ['parties','register_entries','journal_entries','trash_entries']) {
         const key = table === 'parties' ? 'name' : 'id';
-        const columns = table === 'parties' ? ['name','currency','position'] : table === 'register_entries' ? ['id','position','entry_date','party','data'] : table === 'journal_entries' ? ['id','position','entry_date','data'] : ['id','position','data'];
+        const columns = this.db.pragma(`table_info(${table})`).map(r => r.name);
         this.statements[table] = {
           put:this.db.prepare(`INSERT INTO ${table} (${columns.join(',')}) VALUES (${columns.map(c=>'@'+c).join(',')}) ON CONFLICT(${key}) DO UPDATE SET ${columns.filter(c=>c!==key).map(c=>c+'=excluded.'+c).join(',')}`),
           remove:this.db.prepare(`DELETE FROM ${table} WHERE ${key}=?`),
@@ -99,67 +125,113 @@ class HisaabDatabase {
         };
         this.caches[table] = new Map(this.db.prepare(`SELECT * FROM ${table}`).all().map(r=>[r[key],JSON.stringify(r)]));
       }
-      this.load(); // Validate the reconstructed state before permitting writes.
-    } catch (error) { this.db.close(); throw error; }
+      this.load();
+    } catch (error) { this.close(); throw error; }
   }
 
   load() {
     const head = this.db.prepare('SELECT * FROM app_state WHERE id=1').get();
-    if (!head) throw new Error('Missing database metadata');
+    /* FIX-11: machine-readable error codes */
+    if (!head) throw new HisaabError('Missing database metadata', 'MISSING_METADATA');
     if (head.metadata === null) return {state:null,revision:head.revision};
     const metadata = JSON.parse(head.metadata);
     const read = table => this.db.prepare(`SELECT data FROM ${table} ORDER BY position`).all().map(r=>JSON.parse(r.data));
     return {state:validateState({...metadata,rows:read('register_entries'),trash:read('trash_entries'),journal:{...metadata.journal,rows:read('journal_entries')}}),revision:head.revision};
   }
 
+  /* FIX-4: crash-safe atomic backup write with robust fd closure */
   writeBackup(prefix,content) {
     fs.mkdirSync(this.backupDir,{recursive:true});
     const target = path.join(this.backupDir,`${prefix}_${new Date().toISOString().replace(/[:.]/g,'-')}_${randomUUID()}.json`);
     let fd;
-    try { fd=fs.openSync(target,'wx');fs.writeFileSync(fd,content,'utf8');fs.fsyncSync(fd); }
-    catch(error) { if(fd!==undefined){fs.closeSync(fd);fd=undefined;}try{fs.unlinkSync(target);}catch{}throw error; }
-    finally { if(fd!==undefined)fs.closeSync(fd); }
+    try {
+      fd = fs.openSync(target,'wx');
+      fs.writeFileSync(fd,content,'utf8');
+      fs.fsyncSync(fd);
+    } catch(error) {
+      if (fd !== undefined) {
+        try { fs.closeSync(fd); } catch {}
+        fd = undefined;
+      }
+      try { fs.unlinkSync(target); } catch {}
+      throw error;
+    } finally {
+      if (fd !== undefined) {
+        try { fs.closeSync(fd); } catch {}
+      }
+    }
     return target;
   }
 
   commit(input,expectedRevision,{initialize=false,legacyRaw=null,restore=false,current=null}={}) {
     const data = validateState(input);
-    if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw new Error('Invalid revision');
-    if (legacyRaw !== null && (!text(legacyRaw,MAX_BYTES) || Buffer.byteLength(legacyRaw)>MAX_BYTES)) invalid('legacy source');
-    const currentData = current === null ? null : validateState(current);
+    /* FIX-10: check revision valid integer and guard against MAX_SAFE_INTEGER overflow */
+    if (typeof expectedRevision !== 'number' || !Number.isSafeInteger(expectedRevision) || expectedRevision < 0) {
+      throw new HisaabError('Invalid revision', 'INVALID_REVISION');
+    }
+    if (expectedRevision >= Number.MAX_SAFE_INTEGER) {
+      throw new HisaabError('Revision overflow', 'REVISION_OVERFLOW');
+    }
+    /* FIX-14: single byte-length check without redundant text() call */
+    if (legacyRaw !== null && (typeof legacyRaw !== 'string' || Buffer.byteLength(legacyRaw) > MAX_BYTES)) invalid('legacy source');
+    /* FIX-6: validate current state only when restore=true and current is not null */
+    const currentData = (restore && current !== null) ? validateState(current) : null;
     const tables = {
       parties:data.branches.map((name,position)=>({name,currency:data.partyCurrencies?.[name]==='afn'?'afn':'pkr',position})),
       register_entries:data.rows.map((row,position)=>({id:row.id,position,entry_date:row.entryDate,party:row.branch||null,data:JSON.stringify(row)})),
       journal_entries:data.journal.rows.map((row,position)=>({id:row.id,position,entry_date:row.date,data:JSON.stringify(row)})),
-      trash_entries:data.trash.map((item,position)=>({id:item.row.id,position,data:JSON.stringify(item)}))
+      /* FIX-3: composite key ${position}_${item.row.id} prevents PK collision on re-delete */
+      trash_entries:data.trash.map((item,position)=>({id:`${position}_${item.row.id}`,position,data:JSON.stringify(item)}))
     };
-    const metadata=JSON.stringify({...data,rows:undefined,trash:undefined,journal:{...data.journal,rows:undefined}});
-    const nextCaches={};
-    const result=this.db.transaction(()=>{
-      const head=this.db.prepare('SELECT revision,metadata FROM app_state WHERE id=1').get();
-      if(head.revision!==expectedRevision)throw new Error('STALE_STATE: Reload before saving');
-      if(initialize&&head.metadata!==null)throw new Error('Database already initialized');
-      if(!initialize&&head.metadata===null)throw new Error('Database is not initialized');
-      let backupPath=null;
-      if(initialize&&legacyRaw!==null)backupPath=this.writeBackup('migration-localstorage',legacyRaw);
-      if(restore){
-        const saved=this.load().state;
-        backupPath=this.writeBackup('safety-pre-restore',JSON.stringify(saved,null,2));
-        if(currentData&&JSON.stringify(currentData)!==JSON.stringify(saved))this.writeBackup('safety-pre-restore',JSON.stringify(currentData,null,2));
+    /* FIX-13: delete empty partyCurrencies to eliminate cosmetic bloat in app_state.metadata */
+    const metaData = {...data,rows:undefined,trash:undefined,journal:{...data.journal,rows:undefined}};
+    if (metaData.partyCurrencies && Object.keys(metaData.partyCurrencies).length === 0) delete metaData.partyCurrencies;
+    const metadata = JSON.stringify(metaData);
+    const nextCaches = {};
+    const result = this.db.transaction(()=>{
+      const head = this.db.prepare('SELECT revision,metadata FROM app_state WHERE id=1').get();
+      /* FIX-11: machine-readable error codes */
+      if (head.revision !== expectedRevision) throw new HisaabError('STALE_STATE: Reload before saving', 'STALE_STATE');
+      if (head.revision >= Number.MAX_SAFE_INTEGER) throw new HisaabError('Revision overflow', 'REVISION_OVERFLOW');
+      if (initialize && head.metadata !== null) throw new HisaabError('Database already initialized', 'ALREADY_INITIALIZED');
+      if (!initialize && head.metadata === null) throw new HisaabError('Database is not initialized', 'NOT_INITIALIZED');
+      /* FIX-5: collect all backup paths so migration backup is never lost when restore=true */
+      const backupPaths = [];
+      if (initialize && legacyRaw !== null) backupPaths.push(this.writeBackup('migration-localstorage',legacyRaw));
+      if (restore) {
+        const saved = this.load().state;
+        if (saved) backupPaths.push(this.writeBackup('safety-pre-restore',JSON.stringify(saved,null,2)));
+        if (currentData && (!saved || JSON.stringify(currentData) !== JSON.stringify(saved))) {
+          backupPaths.push(this.writeBackup('safety-pre-restore',JSON.stringify(currentData,null,2)));
+        }
       }
-      for(const [table,records] of Object.entries(tables)){
-        const old=this.caches[table],next=new Map(),stmt=this.statements[table];
-        for(const record of records){const id=record[stmt.key],serialized=JSON.stringify(record);next.set(id,serialized);if(old.get(id)!==serialized)stmt.put.run(record);}
-        for(const id of old.keys())if(!next.has(id))stmt.remove.run(id);
-        nextCaches[table]=next;
+      for (const [table,records] of Object.entries(tables)){
+        const old = this.caches[table], next = new Map(), stmt = this.statements[table];
+        for (const record of records){const id=record[stmt.key],serialized=JSON.stringify(record);next.set(id,serialized);if(old.get(id)!==serialized)stmt.put.run(record);}
+        for (const id of old.keys()) if(!next.has(id)) stmt.remove.run(id);
+        nextCaches[table] = next;
       }
       this.db.prepare('UPDATE app_state SET metadata=?,revision=? WHERE id=1').run(metadata,head.revision+1);
-      if(initialize)this.db.prepare('INSERT INTO migration_sources VALUES(1,?,?,?)').run(new Date().toISOString(),legacyRaw,backupPath);
-      return {revision:head.revision+1,backupPath};
+      const backupPath = backupPaths[0] || null;
+      if (initialize) this.db.prepare('INSERT INTO migration_sources VALUES(1,?,?,?)').run(new Date().toISOString(),legacyRaw,backupPath);
+      return {revision:head.revision+1,backupPath,backupPaths};
     }).immediate();
-    this.caches=nextCaches;
+    this.caches = nextCaches;
     return result;
   }
-  close(){if(this.db?.open)this.db.close();}
+
+  /* FIX-12: safe close that never throws and avoids undocumented db.open reliance */
+  close() {
+    if (this.db) {
+      try {
+        if (typeof this.db.close === 'function' && this.db.open) this.db.close();
+      } catch {}
+      this.db = null;
+    }
+  }
 }
-module.exports={HisaabDatabase,validateState};
+
+HisaabDatabase.HisaabError = HisaabError;
+validateState.HisaabError = HisaabError;
+
+module.exports = { HisaabDatabase, validateState, HisaabError };

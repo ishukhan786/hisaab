@@ -2267,5 +2267,9 @@ html[data-theme="dark"] .external-backup-banner {
   }
 }
 
-
-
+/* CSP compliance utilities: extracted from inline styles */
+.font-label { font-size: 12px; }
+.backup-actions-wrap { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.table-scroll-48 { max-height: 48vh; }
+.table-scroll-50 { max-height: 50vh; }
+.history-subtitle-custom { font-weight: 600; margin: 4px 0 10px; color: var(--green); }
