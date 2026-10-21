@@ -1551,13 +1551,25 @@
     $('receipt-print').replaceChildren(sheet);
     document.body.classList.add('summary-output');
   }
+  function prepareForPrintTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    if (current === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      return () => {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      };
+    }
+    return () => {};
+  }
+  window.prepareForPrintTheme = prepareForPrintTheme;
   async function outputSummaryPDF(){
     if(document.body.inert)return;
     if($('summary-status'))$('summary-status').textContent='';
     await document.fonts.ready;
     prepareSummaryOutput();
+    const restoreTheme=prepareForPrintTheme();
     if(!window.electronAPI?.savePDF){
-      window.print();
+      try{window.print();}finally{restoreTheme();}
       return;
     }
     document.body.inert=true;
@@ -1569,6 +1581,7 @@
     }catch{
       if($('summary-status'))$('summary-status').textContent='PDF محفوظ نہیں ہو سکی؛ دوبارہ کوشش کریں۔';
     }finally{
+      restoreTheme();
       document.body.inert=false;
       clearReceiptOutput();
     }
@@ -1800,18 +1813,41 @@
     $('receipt-status').textContent='';
     await document.fonts.ready;
     prepareReceiptOutput();
-    if(!window.electronAPI?.previewPDF){window.print();return;}
+    const restoreTheme=prepareForPrintTheme();
+    if(!window.electronAPI?.previewPDF){
+      try{window.print();}finally{restoreTheme();}
+      return;
+    }
     document.body.inert=true;
     try{
       const result=savePDF?await window.electronAPI.savePDF(selection.branch+'_'+selection.date+'_رسید-'+selection.serial+'.pdf'):await window.electronAPI.previewPDF();
       if(result?.status==='saved'&&result.filePath)recordSavedPdf(result.filePath);
       $('receipt-status').textContent=result.status==='saved'?'✓ رسید محفوظ ہو گئی':result.status==='busy'?'پہلی PDF مکمل ہونے دیں۔':result.status==='error'?'رسید نہیں بن سکی؛ دوبارہ کوشش کریں۔':'';
     }catch{$('receipt-status').textContent='رسید نہیں بن سکی؛ دوبارہ کوشش کریں۔';}
-    finally{document.body.inert=false;clearReceiptOutput();}
+    finally{restoreTheme();document.body.inert=false;clearReceiptOutput();}
   }
   $('receipt-preview').onclick=()=>outputReceipt();$('receipt-save').onclick=()=>outputReceipt(true);
   function preparePrint(){if(journalController?.isActive()){journalController.preparePrint();return;}if(document.body.classList.contains('receipt-output')||document.body.classList.contains('summary-output'))return;registerPrintActive=true;applyFilter(false,true);const datePrint=$('date-print-val');if(datePrint)datePrint.textContent=fmtDate($('date').value||today());const titlePrint=$('title-print');if(titlePrint)titlePrint.textContent=($('title').value||state.title||'اندراج رجسٹر');const currPage=activePageNumber();if($('page-no-val'))$('page-no-val').textContent=currPage;const resetVal=Math.max(0,currPage-1);document.documentElement.style.setProperty('--print-start-page',String(resetVal));document.querySelectorAll('.print-value').forEach(e=>e.remove());state.rows.forEach(row=>{const tr=rowNodes.get(row.id);if(!tr)return;tr.classList.toggle('empty-row',!matches(row));tr.querySelectorAll('input,select,textarea').forEach(input=>{if(input.classList.contains('no-print')||input.closest('.no-print')||input.dataset.field==='balanceType')return;const span=document.createElement('span');span.className='print-value';const isAmt=input.classList.contains('amount');const valText=isAmt?wholeText(input.value):input.value;const bAmt=integerAmount(row.balance);if(input.dataset.field==='balance'&&row.balanceType&&row.balanceType.trim()&&(bAmt!==null&&bAmt!==0n)){const small=document.createElement('small');small.className='print-bal-tag';small.textContent=`(${row.balanceType.trim()})`;const numSpan=document.createElement('span');numSpan.className='print-bal-num';numSpan.textContent=valText;span.replaceChildren(small,numSpan);}else{span.textContent=valText;}if(['amount','phone'].some(c=>input.classList.contains(c))){span.dir='ltr';span.style.textAlign=input.dataset.field==='pkr'?'left':'center';}if(input.dataset.field==='place'){span.style.textAlign='center';}input.after(span);});});}
-  window.addEventListener('beforeprint',()=>{if($('receipt-dialog').open)prepareReceiptOutput();else if($('summary-dialog').open)prepareSummaryOutput();else preparePrint();});window.addEventListener('afterprint',()=>{registerPrintActive=false;document.documentElement.style.removeProperty('--print-start-page');clearReceiptOutput();applyFilter();});
+  let printThemeRestore=null;
+  window.addEventListener('beforeprint',()=>{
+    if(document.documentElement.getAttribute('data-theme')==='dark'){
+      printThemeRestore='dark';
+      document.documentElement.setAttribute('data-theme','light');
+    }
+    if($('receipt-dialog').open)prepareReceiptOutput();
+    else if($('summary-dialog').open)prepareSummaryOutput();
+    else preparePrint();
+  });
+  window.addEventListener('afterprint',()=>{
+    if(printThemeRestore){
+      document.documentElement.setAttribute('data-theme',printThemeRestore);
+      printThemeRestore=null;
+    }
+    registerPrintActive=false;
+    document.documentElement.style.removeProperty('--print-start-page');
+    clearReceiptOutput();
+    applyFilter();
+  });
   function canOutput(rows,filtered=true){if(filtered&&!rangeValid()){alert('تاریخ کا دورانیہ درست کریں۔');return false;}if(!rows.length){alert('کوئی انٹری منتخب نہیں ہے۔');return false;}if(rows.some(r=>moneyFields.some(f=>integerAmount(r[f])===null))){alert('رقم کے خانے درست کریں۔ صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم خود تبدیل نہیں کی گئی۔');return false;}return true;}
   if(!window.electronAPI?.savePDF){
     $('save-pdf').hidden=false;$('save-pdf').title='براؤزر پرنٹ میں Save as PDF منتخب کریں';
@@ -1828,24 +1864,29 @@
       const dates=rows.map(r=>r.entryDate||state.date).filter(Boolean).sort();
       const date=dayMode()?state.date:dates[0]===dates[dates.length-1]?dates[0]:dates[0]+'_'+dates[dates.length-1];
       const label=Array.from(button.childNodes,node=>node.cloneNode(true));button.disabled=true;document.body.inert=true;
+      const restoreTheme=prepareForPrintTheme();
       try{
         await document.fonts.ready;preparePrint();
         const result=await window.electronAPI.savePDF(party+'_'+date+'.pdf');
         if(result.status==='saved'){button.textContent='✓ PDF محفوظ ہو گئی';if(result.filePath)recordSavedPdf(result.filePath);}
         else if(result.status==='error')alert('PDF محفوظ نہیں ہو سکی۔ دوسری جگہ منتخب کریں یا کھلی ہوئی فائل بند کریں۔');
       }catch{alert('PDF محفوظ نہیں ہو سکی۔ دوبارہ کوشش کریں۔');}
-      finally{registerPrintActive=false;document.documentElement.style.removeProperty('--print-start-page');document.body.inert=false;button.disabled=false;applyFilter();setTimeout(()=>{button.replaceChildren(...label);},2500);}
+      finally{restoreTheme();registerPrintActive=false;document.documentElement.style.removeProperty('--print-start-page');document.body.inert=false;button.disabled=false;applyFilter();setTimeout(()=>{button.replaceChildren(...label);},2500);}
     };
   }
   $('print').onclick=async()=>{
     if(journalController?.isActive()){await journalController.output();return;}
     if(!canOutput(selectedRows()))return;
     await document.fonts.ready;
-    if(!window.electronAPI?.previewPDF){window.print();return;}
+    const restoreTheme=prepareForPrintTheme();
+    if(!window.electronAPI?.previewPDF){
+      try{window.print();}finally{restoreTheme();}
+      return;
+    }
     document.body.inert=true;
     try{preparePrint();const result=await window.electronAPI.previewPDF();if(result.status==='error')alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');}
     catch{alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');}
-    finally{registerPrintActive=false;document.documentElement.style.removeProperty('--print-start-page');document.body.inert=false;applyFilter();}
+    finally{restoreTheme();registerPrintActive=false;document.documentElement.style.removeProperty('--print-start-page');document.body.inert=false;applyFilter();}
   };
   const topNavEl=document.querySelector('.top-nav');
   if(topNavEl&&typeof ResizeObserver!=='undefined'){

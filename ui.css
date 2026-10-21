@@ -1068,3 +1068,1204 @@ dialog.pin-settings-dialog .dialog-head {
   transform: translateY(-1.5px);
 }
 
+/* ==========================================================================
+   Hisaab Premium Dark Mode (Night Theme) System
+   Tailored deep emerald obsidian theme with high contrast and eye comfort
+   ========================================================================== */
+
+:root {
+  color-scheme: light dark;
+}
+
+:root:has(> head > meta[name="color-scheme"][content="dark"]) {
+  color-scheme: dark;
+}
+
+:root:has(> head > meta[name="color-scheme"][content="light"]) {
+  color-scheme: light;
+}
+
+html[data-theme="dark"],
+:root:has(> head > meta[name="color-scheme"][content="dark"]) {
+  --entry-font: 13px;
+  --ink: #e5efe8;
+  --muted: #8caaa9;
+  --green: #34d399;
+  --line: #244033;
+}
+
+/* Smooth theme transition */
+body.app-shell,
+.top-nav,
+.paper,
+.party-tabs-bar,
+.journal-card,
+dialog,
+.pin-lock-card {
+  transition: background 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease, box-shadow 0.25s ease;
+}
+
+/* Theme Toggle Button */
+.btn-theme-toggle {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 5px 14px !important;
+  border-radius: 12px !important;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-theme-toggle .ui-icon {
+  width: 17px;
+  height: 17px;
+  margin-inline-end: 4px;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-theme-toggle:hover .ui-icon {
+  transform: rotate(25deg) scale(1.15);
+}
+
+/* ================== DARK MODE SPECIFIC STYLES ================== */
+html[data-theme="dark"] body.app-shell {
+  background: linear-gradient(180deg, #09120e 0%, #0d1713 400px, #0b1410 100%) !important;
+  color: #e5efe8 !important;
+}
+
+/* Top Navigation in Dark Mode */
+html[data-theme="dark"] .app-shell .top-nav {
+  background: rgba(16, 27, 21, 0.94) !important;
+  border-bottom: 1px solid #233e31 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+html[data-theme="dark"] .app-shell .brand-title {
+  color: #eaf5ee !important;
+}
+
+html[data-theme="dark"] .app-shell .brand-mini {
+  border-inline-end-color: #243f33 !important;
+}
+
+html[data-theme="dark"] .app-shell .top-nav-end {
+  border-top-color: #21382c !important;
+}
+
+html[data-theme="dark"] .app-shell .top-search-wrap,
+html[data-theme="dark"] .app-shell .top-date-field,
+html[data-theme="dark"] .app-shell .top-serial-field {
+  background: #111d17 !important;
+  border-color: #254032 !important;
+  color: #e5efe8 !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+html[data-theme="dark"] .app-shell .top-search-wrap:focus-within {
+  background: #15251e !important;
+  border-color: #34d399 !important;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.22) !important;
+}
+
+html[data-theme="dark"] .app-shell .top-search-wrap input,
+html[data-theme="dark"] .top-date-field input[type="date"],
+html[data-theme="dark"] .top-serial-field input {
+  color: #e5efe8 !important;
+  background: transparent !important;
+}
+
+html[data-theme="dark"] .app-shell .top-serial-field label {
+  color: #8daea0 !important;
+}
+
+html[data-theme="dark"] .app-shell .btn-date-nav {
+  background: #172a21 !important;
+  border-color: #284738 !important;
+  color: #34d399 !important;
+}
+
+html[data-theme="dark"] .app-shell .btn-date-nav:hover {
+  background: #203c2e !important;
+  border-color: #34d399 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .app-shell .btn-date-today {
+  background: #172a21 !important;
+  border-color: #284738 !important;
+  color: #34d399 !important;
+}
+
+html[data-theme="dark"] .app-shell .btn-date-today:hover {
+  background: #1f916a !important;
+  border-color: #1f916a !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .app-shell .all-dates-toggle {
+  background: linear-gradient(180deg, #1b2e24 0%, #14231b 100%) !important;
+  border-color: #274536 !important;
+  color: #9ec2b1 !important;
+}
+
+html[data-theme="dark"] .app-shell .all-dates-toggle:hover {
+  border-color: #34d399 !important;
+  color: #e5efe8 !important;
+}
+
+/* Buttons in Dark Mode */
+html[data-theme="dark"] .app-shell :is(button, summary.btn-nav) {
+  background: linear-gradient(180deg, #1b2e24 0%, #14231b 100%) !important;
+  border-color: #274536 !important;
+  color: #dceae2 !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+html[data-theme="dark"] .app-shell :is(button, summary.btn-nav):hover:not(:disabled) {
+  background: linear-gradient(180deg, #243e31 0%, #1a2e24 100%) !important;
+  border-color: #34d399 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Primary actions */
+html[data-theme="dark"] .app-shell :is(#add, #journal-add, #add-party-tab, .workspace-nav button.active, .summary-tab.active, .party-tab.active, .primary, .pin-save-btn) {
+  background: linear-gradient(135deg, #1f916a 0%, #136649 100%) !important;
+  border-color: #147252 !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 12px rgba(25, 120, 87, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+html[data-theme="dark"] .app-shell :is(#add, #journal-add, #add-party-tab, .primary, .pin-save-btn):hover {
+  background: linear-gradient(135deg, #25a87b 0%, #167755 100%) !important;
+  border-color: #19946a !important;
+  box-shadow: 0 6px 18px rgba(25, 120, 87, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+html[data-theme="dark"] .app-shell #print {
+  background: linear-gradient(180deg, #183345 0%, #122330 100%) !important;
+  border-color: #244b67 !important;
+  color: #7dd3fc !important;
+}
+
+html[data-theme="dark"] .app-shell #print:hover {
+  background: linear-gradient(180deg, #1f425b 0%, #162f40 100%) !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .app-shell #export-open {
+  background: linear-gradient(180deg, #183d27 0%, #11281a 100%) !important;
+  border-color: #27603c !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .app-shell #export-open:hover {
+  background: linear-gradient(180deg, #1e4f32 0%, #143522 100%) !important;
+  border-color: #34d399 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .app-shell #summary-open {
+  background: linear-gradient(180deg, #2e2042 0%, #1e152c 100%) !important;
+  border-color: #4b346d !important;
+  color: #c084fc !important;
+}
+
+html[data-theme="dark"] .app-shell #summary-open:hover {
+  background: linear-gradient(180deg, #3d2959 0%, #291c3d 100%) !important;
+  border-color: #a855f7 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .app-shell :is(#theme-toggle, #menu-theme-toggle) {
+  color: #fde047 !important;
+  border-color: #4b6653 !important;
+}
+
+html[data-theme="dark"] .app-shell #save-state {
+  background: linear-gradient(180deg, #153022 0%, #112319 100%) !important;
+  border-color: #244f37 !important;
+  color: #5ae4b5 !important;
+}
+
+/* Workspace Navigation */
+html[data-theme="dark"] .app-shell .workspace-nav {
+  background: #111e18 !important;
+  border-color: #233c30 !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+html[data-theme="dark"] .app-shell .workspace-nav button {
+  color: #8daea0 !important;
+}
+
+html[data-theme="dark"] .app-shell .workspace-nav button:hover {
+  background: #1a2f25 !important;
+  color: #34d399 !important;
+}
+
+/* Party Tabs Bar */
+html[data-theme="dark"] .app-shell .party-tabs-bar {
+  background: rgba(15, 26, 20, 0.94) !important;
+  border-color: #233e31 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+}
+
+html[data-theme="dark"] .app-shell .party-tab {
+  background: #14241c !important;
+  border-color: #233c2f !important;
+  color: #94b5a6 !important;
+}
+
+html[data-theme="dark"] .app-shell .party-tab:hover {
+  background: #1b3226 !important;
+  border-color: #315743 !important;
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .app-shell .party-tab.active {
+  background: linear-gradient(180deg, #1d362a 0%, #162a21 100%) !important;
+  border-color: #335e49 !important;
+  color: #4eedb7 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 -3px 0 #34d399 !important;
+}
+
+html[data-theme="dark"] .party-tab .tab-badge {
+  background: #1a3528 !important;
+  color: #5ae4b5 !important;
+}
+
+html[data-theme="dark"] .tab-curr-tag {
+  background: #332712 !important;
+  color: #fde047 !important;
+  border-color: #5c441c !important;
+}
+
+/* Register Paper & Head */
+html[data-theme="dark"] .app-shell .paper {
+  background: #122019 !important;
+  border-color: #233d30 !important;
+  box-shadow: 0 8px 35px rgba(0, 0, 0, 0.6) !important;
+}
+
+html[data-theme="dark"] .app-shell .paper-head {
+  background: linear-gradient(180deg, #162720 0%, #122019 100%) !important;
+  border-bottom: 1px solid #233c2f !important;
+}
+
+html[data-theme="dark"] .app-shell .paper-head #title {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .app-shell .paper-head #title:hover {
+  background: #182c22 !important;
+  border-color: #2e5541 !important;
+}
+
+html[data-theme="dark"] .app-shell .head-party #branch-heading {
+  color: #4eedb7 !important;
+}
+
+html[data-theme="dark"] .app-shell .party-label {
+  color: #8daea0 !important;
+}
+
+html[data-theme="dark"] .app-shell .btn-lock {
+  background: linear-gradient(180deg, #193326 0%, #12241b 100%) !important;
+  border-color: #284f3a !important;
+  color: #4eedb7 !important;
+}
+
+html[data-theme="dark"] .page-no-input {
+  background: #111d17 !important;
+  border-color: #254032 !important;
+  color: #4eedb7 !important;
+}
+
+/* Register Table */
+html[data-theme="dark"] .app-shell .paper thead th {
+  background: #172a21 !important;
+  color: #9bc5b0 !important;
+  border-bottom: 2px solid #264334 !important;
+  border-inline-end: 1px solid #1e3529 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows > tr,
+html[data-theme="dark"] .app-shell #rows > tr > td,
+html[data-theme="dark"] .app-shell #rows tr.draft-row > td,
+html[data-theme="dark"] .draft-row td {
+  background: #122019 !important;
+  background-color: #122019 !important;
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows > tr:nth-child(even),
+html[data-theme="dark"] .app-shell #rows > tr:nth-child(even) > td {
+  background: #14231b !important;
+  background-color: #14231b !important;
+}
+
+html[data-theme="dark"] .app-shell #rows > tr:hover,
+html[data-theme="dark"] .app-shell #rows > tr:hover > td {
+  background: #1a3026 !important;
+  background-color: #1a3026 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows tr:focus-within,
+html[data-theme="dark"] .app-shell #rows tr:focus-within > td,
+html[data-theme="dark"] .app-shell #rows tr.draft-row:focus-within > td {
+  background: #162c22 !important;
+  background-color: #162c22 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows tr:focus-within {
+  box-shadow: inset -4px 0 #34d399 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows > tr > td {
+  border-color: #1e3428 !important;
+  border-inline-end-color: #1b3025 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows tr.duplicate-row > td {
+  box-shadow: inset 0 2px #d97706, inset 0 -2px #d97706 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows tr.row-locked > td,
+html[data-theme="dark"] .row-locked td {
+  background: #0f1a14 !important;
+  background-color: #0f1a14 !important;
+  opacity: 0.85 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows td input,
+html[data-theme="dark"] .app-shell #rows td textarea,
+html[data-theme="dark"] .app-shell #rows td select {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #e5efe8 !important;
+  caret-color: #34d399;
+}
+
+html[data-theme="dark"] .app-shell #rows td input::placeholder,
+html[data-theme="dark"] .app-shell #rows td textarea::placeholder {
+  color: #4f6e5e !important;
+}
+
+html[data-theme="dark"] .app-shell #rows td input:focus,
+html[data-theme="dark"] .app-shell #rows td textarea:focus,
+html[data-theme="dark"] .app-shell #rows td select:focus,
+html[data-theme="dark"] .app-shell #rows td :is(input, textarea):focus {
+  background: #1d3a2e !important;
+  background-color: #1d3a2e !important;
+  color: #ffffff !important;
+  outline: none !important;
+  box-shadow: inset 0 0 0 2px #34d399 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows td.number {
+  background: #15251e !important;
+  background-color: #15251e !important;
+  color: #729683 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows tr:hover td.number,
+html[data-theme="dark"] .app-shell #rows tr:focus-within td.number {
+  background: #182e24 !important;
+  background-color: #182e24 !important;
+  color: #4eedb7 !important;
+}
+
+html[data-theme="dark"] .app-shell .serial-num {
+  color: #729683 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows td.col-receipt {
+  background: inherit !important;
+}
+
+html[data-theme="dark"] .app-shell .receipt-btn {
+  background: linear-gradient(180deg, #193527 0%, #12261c 100%) !important;
+  border-color: #27523c !important;
+  color: #5ae4b5 !important;
+}
+
+html[data-theme="dark"] .app-shell .history-btn {
+  background: linear-gradient(180deg, #172820 0%, #121f19 100%) !important;
+  border-color: #233d30 !important;
+  color: #8daea0 !important;
+}
+
+html[data-theme="dark"] .app-shell .delete {
+  color: #9c5c5c !important;
+}
+
+html[data-theme="dark"] .app-shell .delete:hover {
+  background: #391818 !important;
+  border-color: #7f2d2d !important;
+  color: #f87171 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows .bal-type-input {
+  background: #14281f !important;
+  border: 1px dashed #2b543f !important;
+  color: #4eedb7 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows .bal-type-input::placeholder {
+  color: #5d826e !important;
+}
+
+html[data-theme="dark"] .app-shell #rows .bal-type-input.has-value {
+  background: #153326 !important;
+  border: 1px solid #34d399 !important;
+  color: #a7f3d0 !important;
+}
+
+html[data-theme="dark"] .app-shell #rows .bal-type-input:focus {
+  background: #1c3d2e !important;
+  border: 1px solid #34d399 !important;
+  color: #ffffff !important;
+  outline: 2px solid #34d399 !important;
+}
+
+html[data-theme="dark"] .register-totals .totals-row,
+html[data-theme="dark"] tfoot.register-totals .totals-row > th,
+html[data-theme="dark"] tfoot.register-totals .totals-row > td,
+html[data-theme="dark"] .register-totals .totals-row > th,
+html[data-theme="dark"] .register-totals .totals-row > td {
+  background: linear-gradient(180deg, #182e24 0%, #13241c 100%) !important;
+  background-color: #14261e !important;
+  border-top: 2px solid #2d5541 !important;
+  border-bottom: 2px solid #2d5541 !important;
+}
+
+html[data-theme="dark"] .register-totals .totals-row > th,
+html[data-theme="dark"] .register-totals .totals-row > td,
+html[data-theme="dark"] #total-balance,
+html[data-theme="dark"] #total-aed,
+html[data-theme="dark"] #total-pkr {
+  color: #4eedb7 !important;
+}
+
+html[data-theme="dark"] .orders-count-badge {
+  background: #1a3629 !important;
+  border: 1px solid #2c543f !important;
+  color: #7be8bc !important;
+}
+
+html[data-theme="dark"] .net-aed-badge {
+  background: #1d3e2f !important;
+  border: 1px solid #2f5d46 !important;
+  color: #8cf2cb !important;
+}
+
+html[data-theme="dark"] .place-suggest-menu {
+  background: #14241d !important;
+  border: 1px solid #274837 !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6) !important;
+}
+
+html[data-theme="dark"] .place-suggest-item {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .place-suggest-item:hover,
+html[data-theme="dark"] .place-suggest-item.active {
+  background: #1e3a2e !important;
+  color: #4eedb7 !important;
+}
+
+html[data-theme="dark"] .app-shell .paper-foot {
+  background: #101c16 !important;
+  border-top: 1px solid #1e3328 !important;
+  color: #6e8c7c !important;
+}
+
+html[data-theme="dark"] #count {
+  background: #182d23 !important;
+  color: #4eedb7 !important;
+}
+
+/* Roznamcha (Journal) in Dark Mode */
+html[data-theme="dark"] .journal-card {
+  background: #111f18 !important;
+  border: 1px solid #233e30 !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
+}
+
+html[data-theme="dark"] .journal-heading {
+  background: linear-gradient(180deg, #162720 0%, #111f18 100%) !important;
+  border-bottom: 1px solid #233c2f !important;
+}
+
+html[data-theme="dark"] .journal-heading h1 {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .journal-heading p {
+  color: #8daea0 !important;
+}
+
+html[data-theme="dark"] .journal-tools label {
+  color: #8daea0 !important;
+}
+
+html[data-theme="dark"] .journal-date-nav {
+  background: #0f1c16 !important;
+  border: 1px solid #244133 !important;
+}
+
+html[data-theme="dark"] .journal-date-nav button {
+  background: #172a21 !important;
+  border: 1px solid #284c3b !important;
+  color: #4eedb7 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+html[data-theme="dark"] .journal-date-nav button:hover {
+  background: #1f3a2d !important;
+  border-color: #34d399 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .journal-date-nav input {
+  background: transparent !important;
+  border: 0 !important;
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .journal-opening-line {
+  background: linear-gradient(90deg, #182e23 0%, #12221b 100%) !important;
+  border-bottom: 1px solid #233e30 !important;
+  color: #a4c9b6 !important;
+}
+
+html[data-theme="dark"] #journal-opening {
+  color: #4eedb7 !important;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  background: rgba(52, 211, 153, 0.12) !important;
+  padding: 3px 16px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(52, 211, 153, 0.28) !important;
+  display: inline-block !important;
+}
+
+/* Journal Table Headings */
+html[data-theme="dark"] .journal-table thead th {
+  background: #172a21 !important;
+  border-color: #264334 !important;
+  border-bottom: 2px solid #2d5541 !important;
+  color: #9bc5b0 !important;
+  font-family: "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
+}
+
+html[data-theme="dark"] .journal-table thead th:nth-child(3) {
+  border-bottom: 2px solid #ef4444 !important;
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] .journal-table thead th:nth-child(4) {
+  border-bottom: 2px solid #10b981 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .journal-table thead th:nth-child(5) {
+  border-bottom: 2px solid #06b6d4 !important;
+  color: #7dd3fc !important;
+}
+
+/* Journal Table Rows & Cells (Overriding ANY white light-theme striping) */
+html[data-theme="dark"] #journal-rows > tr,
+html[data-theme="dark"] #journal-rows > tr > td,
+html[data-theme="dark"] .journal-table tbody tr,
+html[data-theme="dark"] .journal-table tbody td {
+  background: #111f18 !important;
+  background-color: #111f18 !important;
+  border-color: #1d3327 !important;
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] #journal-rows > tr:nth-child(even),
+html[data-theme="dark"] #journal-rows > tr:nth-child(even) > td,
+html[data-theme="dark"] .journal-table tbody tr:nth-child(even),
+html[data-theme="dark"] .journal-table tbody tr:nth-child(even) > td {
+  background: #14251e !important;
+  background-color: #14251e !important;
+}
+
+html[data-theme="dark"] #journal-rows > tr:hover,
+html[data-theme="dark"] #journal-rows > tr:hover > td,
+html[data-theme="dark"] .journal-table tbody tr:hover,
+html[data-theme="dark"] .journal-table tbody tr:hover > td {
+  background: #193427 !important;
+  background-color: #193427 !important;
+}
+
+html[data-theme="dark"] #journal-rows > tr:focus-within,
+html[data-theme="dark"] #journal-rows > tr:focus-within > td,
+html[data-theme="dark"] .journal-table tbody tr:focus-within,
+html[data-theme="dark"] .journal-table tbody tr:focus-within > td {
+  background: #162f23 !important;
+  background-color: #162f23 !important;
+}
+
+html[data-theme="dark"] #journal-rows > tr:focus-within,
+html[data-theme="dark"] .journal-table tbody tr:focus-within {
+  box-shadow: inset -4px 0 #34d399 !important;
+}
+
+html[data-theme="dark"] .journal-table .journal-draft,
+html[data-theme="dark"] .journal-table .journal-draft td {
+  background: #0f1c15 !important;
+  background-color: #0f1c15 !important;
+  border-bottom-style: dashed !important;
+}
+
+html[data-theme="dark"] .journal-table td.journal-serial {
+  background: #13221a !important;
+  background-color: #13221a !important;
+  color: #729683 !important;
+}
+
+html[data-theme="dark"] .journal-table tr:hover td.journal-serial,
+html[data-theme="dark"] .journal-table tr:focus-within td.journal-serial {
+  background: #182e24 !important;
+  background-color: #182e24 !important;
+  color: #4eedb7 !important;
+}
+
+html[data-theme="dark"] .journal-table td input,
+html[data-theme="dark"] .journal-table td textarea {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #e5efe8 !important;
+  caret-color: #34d399;
+}
+
+html[data-theme="dark"] .journal-table td textarea {
+  font-family: "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
+}
+
+html[data-theme="dark"] .journal-table td input[data-journal="debit"] {
+  color: #fca5a5 !important;
+  font-weight: 700 !important;
+}
+
+html[data-theme="dark"] .journal-table td input[data-journal="credit"] {
+  color: #6ee7b7 !important;
+  font-weight: 700 !important;
+}
+
+html[data-theme="dark"] .journal-table td input::placeholder,
+html[data-theme="dark"] .journal-table td textarea::placeholder {
+  color: #4f6e5e !important;
+}
+
+html[data-theme="dark"] .journal-table td input:focus,
+html[data-theme="dark"] .journal-table td textarea:focus {
+  background: #1d3a2e !important;
+  background-color: #1d3a2e !important;
+  color: #ffffff !important;
+  outline: none !important;
+  box-shadow: inset 0 0 0 2px #34d399 !important;
+}
+
+/* Journal Delete Button */
+html[data-theme="dark"] .app-shell button.journal-delete {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  color: #8daea0 !important;
+  opacity: 0.35;
+}
+
+html[data-theme="dark"] .journal-table tr:hover button.journal-delete,
+html[data-theme="dark"] .journal-table tr:focus-within button.journal-delete {
+  opacity: 0.85;
+}
+
+html[data-theme="dark"] .app-shell button.journal-delete:hover {
+  opacity: 1 !important;
+  color: #f87171 !important;
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+/* Journal Table Footer */
+html[data-theme="dark"] .journal-table tfoot th,
+html[data-theme="dark"] .journal-table tfoot td {
+  background: linear-gradient(180deg, #182e24 0%, #13241c 100%) !important;
+  background-color: #15271f !important;
+  border-top: 2px solid #2d5541 !important;
+  border-bottom: 2px solid #2d5541 !important;
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] #journal-total-debit {
+  color: #fca5a5 !important;
+  font-weight: 700 !important;
+}
+
+html[data-theme="dark"] #journal-total-credit {
+  color: #6ee7b7 !important;
+  font-weight: 700 !important;
+}
+
+html[data-theme="dark"] #journal-closing {
+  font-weight: 700 !important;
+}
+
+/* Journal Balance Jamaican / Banami Pills */
+html[data-theme="dark"] .is-jama,
+html[data-theme="dark"] .journal-table td.is-jama,
+html[data-theme="dark"] .journal-table tfoot td.is-jama {
+  color: #34d399 !important;
+}
+
+html[data-theme="dark"] .is-jama .bal-tag {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .is-banam,
+html[data-theme="dark"] .journal-table td.is-banam,
+html[data-theme="dark"] .journal-table tfoot td.is-banam {
+  color: #f87171 !important;
+}
+
+html[data-theme="dark"] .is-banam .bal-tag {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border: 1px solid rgba(248, 113, 113, 0.35) !important;
+  color: #fca5a5 !important;
+}
+
+/* Cash Summary Cards */
+html[data-theme="dark"] .cash-summary {
+  background: #111d17 !important;
+  border: 1px solid #233c2f !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45) !important;
+}
+
+html[data-theme="dark"] .cash-summary-heading h2 {
+  color: #4eedb7 !important;
+}
+
+html[data-theme="dark"] .cash-summary-heading > span {
+  color: #8daea0 !important;
+}
+
+html[data-theme="dark"] .cash-item {
+  background: #162720 !important;
+  border: 1px solid #244234 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+  transition: transform 0.15s ease, border-color 0.15s ease !important;
+}
+
+html[data-theme="dark"] .cash-item:hover {
+  transform: translateY(-2px) !important;
+  border-color: #34d399 !important;
+}
+
+html[data-theme="dark"] .cash-item > span,
+html[data-theme="dark"] .cash-item > label {
+  color: #8daea0 !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="dark"] .cash-item > strong {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .cash-item:nth-child(2) > strong {
+  color: #34d399 !important;
+}
+
+html[data-theme="dark"] .cash-item:nth-child(3) > strong {
+  color: #f87171 !important;
+}
+
+html[data-theme="dark"] .cash-expected {
+  background: linear-gradient(180deg, #132633 0%, #101d26 100%) !important;
+  border-color: #234c6b !important;
+}
+
+html[data-theme="dark"] .cash-expected > strong {
+  color: #38bdf8 !important;
+}
+
+html[data-theme="dark"] .cash-count {
+  background: linear-gradient(180deg, #183328 0%, #12241c 100%) !important;
+  border: 1.5px solid #34d399 !important;
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.12) !important;
+}
+
+html[data-theme="dark"] #journal-cash-count {
+  background: #0d1712 !important;
+  border: 1px solid #28553e !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+html[data-theme="dark"] #journal-cash-count:focus {
+  border-color: #34d399 !important;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25) !important;
+  outline: none !important;
+}
+
+html[data-theme="dark"] .cash-result {
+  background: #17241d !important;
+  border-color: #274737 !important;
+}
+
+html[data-theme="dark"] #cash-difference.cash-equal {
+  color: #34d399 !important;
+}
+
+html[data-theme="dark"] #cash-difference.cash-short {
+  color: #f87171 !important;
+}
+
+html[data-theme="dark"] #cash-difference.cash-extra {
+  color: #38bdf8 !important;
+}
+
+html[data-theme="dark"] #cash-summary-help {
+  color: #729683 !important;
+}
+
+html[data-theme="dark"] .journal-foot {
+  background: #0f1a14 !important;
+  border-top: 1px solid #1c3226 !important;
+  color: #6e8c7c !important;
+}
+
+/* Dialogs in Dark Mode */
+html[data-theme="dark"] .app-shell dialog {
+  background: #13221b !important;
+  border-color: #274536 !important;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7) !important;
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .app-shell dialog::backdrop {
+  background: rgba(5, 12, 9, 0.78) !important;
+}
+
+html[data-theme="dark"] .app-shell .dialog-head {
+  background: #13221b !important;
+  border-bottom: 1px solid #233c2f !important;
+}
+
+html[data-theme="dark"] .app-shell .dialog-head h2 {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .app-shell dialog p,
+html[data-theme="dark"] .app-shell dialog label {
+  color: #8daea0 !important;
+}
+
+html[data-theme="dark"] .app-shell dialog input,
+html[data-theme="dark"] .app-shell dialog select {
+  background: #101c16 !important;
+  border-color: #254032 !important;
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .app-shell .summary-tabs {
+  background: #101c16 !important;
+  border-color: #233c2f !important;
+}
+
+html[data-theme="dark"] .app-shell .summary-tab {
+  color: #8daea0 !important;
+}
+
+html[data-theme="dark"] .app-shell .summary-tab.active {
+  background: linear-gradient(135deg, #1f916a 0%, #136649 100%) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .app-shell .summary-wrap {
+  border-color: #233c2f !important;
+}
+
+html[data-theme="dark"] .app-shell :is(#summary-table, #history-table, #backup-list-table) th {
+  background: #172a21 !important;
+  color: #9bc5b0 !important;
+  border-color: #233c2f !important;
+}
+
+html[data-theme="dark"] .app-shell :is(#summary-table, #history-table, #backup-list-table) td {
+  border-color: #1e3428 !important;
+  color: #dceae2 !important;
+}
+
+html[data-theme="dark"] #summary-table tbody tr:hover {
+  background: #1a3026 !important;
+}
+
+/* Receipt Dialog */
+html[data-theme="dark"] .app-shell #receipt-dialog {
+  background: #122019 !important;
+  border-color: #264334 !important;
+}
+
+html[data-theme="dark"] .app-shell #receipt-dialog .dialog-head {
+  background: #122019 !important;
+}
+
+html[data-theme="dark"] .app-shell .receipt-actions {
+  background: #122019 !important;
+  border-color: #233c2f !important;
+}
+
+/* PIN Lock Overlay & Keypad in Dark Mode */
+html[data-theme="dark"] .pin-lock-overlay {
+  background: rgba(5, 12, 9, 0.88) !important;
+}
+
+html[data-theme="dark"] .pin-lock-card {
+  background: linear-gradient(180deg, #14241d 0%, #101c16 100%) !important;
+  border-color: #274536 !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85) !important;
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] #pin-unlock-title {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] #pin-unlock-reason {
+  color: #8daea0 !important;
+}
+
+html[data-theme="dark"] .pin-key {
+  background: #182d23 !important;
+  border-color: #284738 !important;
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .pin-key:hover {
+  background: #223f31 !important;
+  border-color: #34d399 !important;
+}
+
+html[data-theme="dark"] .pin-key-fn {
+  background: #1f3429 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .pin-input-container input {
+  background: #0f1a14 !important;
+  border-color: #284738 !important;
+  color: #e5efe8 !important;
+}
+
+/* More Menu in Dark Mode */
+html[data-theme="dark"] .app-shell .more-menu .menu {
+  background: rgba(18, 30, 24, 0.98) !important;
+  border-color: #274435 !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65) !important;
+}
+
+html[data-theme="dark"] .app-shell .more-menu .menu button {
+  background: #15251e !important;
+  border-color: #213a2d !important;
+  color: #dceae2 !important;
+}
+
+html[data-theme="dark"] .app-shell .more-menu .menu button:hover {
+  background: #1c3529 !important;
+  border-color: #34d399 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .font-tools {
+  background: #14241c !important;
+  border-color: #244032 !important;
+}
+
+html[data-theme="dark"] .font-tools button {
+  background: #1a2f24 !important;
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .font-tools output {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .menu-divider {
+  border-color: #223c2f !important;
+}
+
+/* Range Drawer */
+html[data-theme="dark"] .app-shell .range-drawer {
+  background: #13221b !important;
+  border-color: #233c2f !important;
+}
+
+html[data-theme="dark"] .range-drawer input {
+  background: #101c16 !important;
+  border-color: #254032 !important;
+  color: #e5efe8 !important;
+}
+
+/* Undo & Warning Banners */
+html[data-theme="dark"] .undo-bar {
+  background: #172d22 !important;
+  border-color: #274d3a !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .duplicate-warning {
+  background: #2a2211 !important;
+  border-color: #52401c !important;
+  color: #fde047 !important;
+}
+
+html[data-theme="dark"] .external-backup-banner {
+  background: #14241d !important;
+  border-color: #244032 !important;
+}
+
+/* CRITICAL: Print & PDF Styles MUST remain 100% light, crisp, and ink-saving regardless of active theme */
+@media print {
+  html,
+  html[data-theme="dark"],
+  body,
+  html[data-theme="dark"] body.app-shell {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    color-scheme: light !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Reset all containers, cards, tables, rows, cells to clean white paper */
+  html[data-theme="dark"] .app-shell .paper,
+  html[data-theme="dark"] .paper,
+  html[data-theme="dark"] .app-shell .paper-head,
+  html[data-theme="dark"] .paper-head,
+  html[data-theme="dark"] .journal-card,
+  html[data-theme="dark"] .journal-opening-line,
+  html[data-theme="dark"] .cash-summary,
+  html[data-theme="dark"] .cash-item,
+  html[data-theme="dark"] .table-wrap,
+  html[data-theme="dark"] table,
+  html[data-theme="dark"] thead,
+  html[data-theme="dark"] tbody,
+  html[data-theme="dark"] tfoot,
+  html[data-theme="dark"] tr,
+  html[data-theme="dark"] th,
+  html[data-theme="dark"] td,
+  html[data-theme="dark"] .app-shell #rows > tr,
+  html[data-theme="dark"] .app-shell #rows > tr > td,
+  html[data-theme="dark"] .app-shell #rows > tr:nth-child(even),
+  html[data-theme="dark"] .app-shell #rows > tr:nth-child(even) > td,
+  html[data-theme="dark"] .app-shell #rows tr.draft-row > td,
+  html[data-theme="dark"] .draft-row td,
+  html[data-theme="dark"] .app-shell #rows td.number,
+  html[data-theme="dark"] .app-shell #rows td.col-serial,
+  html[data-theme="dark"] td.number,
+  html[data-theme="dark"] .app-shell #rows td textarea,
+  html[data-theme="dark"] .app-shell #rows td input,
+  html[data-theme="dark"] .app-shell .paper tfoot.register-totals,
+  html[data-theme="dark"] .app-shell .paper tfoot.register-totals th,
+  html[data-theme="dark"] .app-shell .paper tfoot.register-totals td,
+  html[data-theme="dark"] .paper tfoot.register-totals .totals-row > th,
+  html[data-theme="dark"] .paper tfoot.register-totals .totals-row > td,
+  html[data-theme="dark"] .journal-table,
+  html[data-theme="dark"] .journal-table thead,
+  html[data-theme="dark"] .journal-table tbody,
+  html[data-theme="dark"] .journal-table tfoot,
+  html[data-theme="dark"] .journal-table tr,
+  html[data-theme="dark"] .journal-table th,
+  html[data-theme="dark"] .journal-table td,
+  html[data-theme="dark"] .journal-table tbody td,
+  html[data-theme="dark"] .journal-table td.journal-serial,
+  html[data-theme="dark"] .journal-table tfoot th,
+  html[data-theme="dark"] .journal-table tfoot td,
+  html[data-theme="dark"] .journal-table td input,
+  html[data-theme="dark"] .journal-table td textarea,
+  html[data-theme="dark"] .summary-print-table,
+  html[data-theme="dark"] .summary-print-table th,
+  html[data-theme="dark"] .summary-print-table td,
+  html[data-theme="dark"] .summary-table th,
+  html[data-theme="dark"] .summary-table td,
+  html[data-theme="dark"] #receipt-print,
+  html[data-theme="dark"] .receipt-sheet,
+  html[data-theme="dark"] .receipt-export {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #000000 !important;
+    border-color: #99aa9a !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Table headers with subtle standard light grey */
+  html[data-theme="dark"] thead th,
+  html[data-theme="dark"] .app-shell .paper thead th,
+  html[data-theme="dark"] .journal-table thead th,
+  html[data-theme="dark"] .summary-print-table th,
+  html[data-theme="dark"] .summary-table th {
+    background: #edf1eb !important;
+    background-color: #edf1eb !important;
+    color: #000000 !important;
+    border-color: #99aa9a !important;
+  }
+
+  /* Totals row styling */
+  html[data-theme="dark"] .paper tfoot.register-totals .totals-row > th,
+  html[data-theme="dark"] .paper tfoot.register-totals .totals-row > td,
+  html[data-theme="dark"] .app-shell .paper tfoot.register-totals th,
+  html[data-theme="dark"] .app-shell .paper tfoot.register-totals td,
+  html[data-theme="dark"] .journal-table tfoot th,
+  html[data-theme="dark"] .journal-table tfoot td {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #99aa9a !important;
+  }
+
+  /* Force all printed text, labels, numbers, titles to pure black */
+  html[data-theme="dark"] :is(
+    .print-value,
+    .print-bal-tag,
+    .print-bal-num,
+    .title-print,
+    .date-print-label,
+    .date-print-val,
+    .head-party #branch-heading,
+    .party-label,
+    .totals-title-wrap > span,
+    #total-pkr,
+    #total-aed,
+    #total-balance,
+    .journal-money,
+    .journal-print-value,
+    .journal-opening-line strong,
+    .cash-item-name,
+    .cash-item-val,
+    .summary-print-meta,
+    #page-no-val,
+    .page-no-label
+  ) {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    text-shadow: none !important;
+  }
+}
+
+
+

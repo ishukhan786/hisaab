@@ -4,11 +4,33 @@
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https: http:; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <link rel="icon" type="image/svg+xml" href="assets/hisaab-logo.svg">
   <link rel="alternate icon" href="assets/icon.ico">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <meta name="theme-color" content="#105442">
+  <meta id="meta-theme-color" name="theme-color" content="#105442">
   <title>Hisaab — Daily Khata & Register</title>
+  <script>
+    (function(){
+      try {
+        var t = localStorage.getItem('hisaab-theme');
+        if (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          t = 'dark';
+        }
+        if (t === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          var m = document.querySelector('meta[name="color-scheme"]');
+          if (m) m.content = 'dark';
+          var mtc = document.getElementById('meta-theme-color');
+          if (mtc) mtc.content = '#0c1511';
+        } else if (t === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+          var m = document.querySelector('meta[name="color-scheme"]');
+          if (m) m.content = 'light';
+        }
+      } catch (_) {}
+    })();
+  </script>
   <link rel="stylesheet" href="style.css?v=1.4.14">
   <link rel="stylesheet" href="ui.css?v=1.4.14">
   <link rel="stylesheet" href="journal.css?v=1.4.14">
@@ -73,6 +95,10 @@
         <span>📋 خلاصہ</span>
       </button>
 
+      <button id="theme-toggle" class="btn-nav btn-theme-toggle" type="button" title="نائٹ موڈ تبدیل کریں (Alt+T)" aria-label="نائٹ موڈ تبدیل کریں">
+        <span>🌙 نائٹ موڈ</span>
+      </button>
+
       <details class="more-menu">
         <summary class="btn-nav" title="مزید آپشنز">مزید ▾</summary>
         <div class="menu">
@@ -84,6 +110,7 @@
               <button id="font-larger" aria-label="فونٹ بڑا کریں">＋</button>
             </div>
           </div>
+          <button id="menu-theme-toggle" type="button">🌓 نائٹ موڈ (ڈارک تھیم)</button>
           <button id="manage-branches" type="button">🏢 پارٹیاں سنبھالیں</button>
           <button id="reset-filters" type="button">🔄 فلٹر صاف کریں</button>
           <button id="pin-settings-btn" type="button">🔐 پن لاک (PIN سیٹنگز)</button>

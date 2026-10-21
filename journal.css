@@ -30,14 +30,18 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 .journal-table .journal-balance,.journal-table tfoot td{font:700 14px Calibri,'Segoe UI',Arial,sans-serif;direction:ltr;text-align:center;overflow-wrap:anywhere;padding:6px 10px}
 .journal-table .journal-balance,#journal-closing{direction:rtl;position:relative}
 .bal-num{font-family:Calibri,'Segoe UI',Arial,sans-serif;font-weight:700;direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums;display:inline-block}
-.bal-tag{font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif;font-size:inherit;font-weight:700;line-height:1.9;padding:0;border:0;border-radius:0;background:transparent;color:#000!important;display:inline-block;vertical-align:middle;margin-inline-start:6px}
+.bal-tag{font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif;font-size:11px;font-weight:700;line-height:1.4;padding:2px 8px;border-radius:999px;display:inline-block;vertical-align:middle;margin-inline-start:6px}
 .journal-table .journal-balance .bal-tag,#journal-closing .bal-tag{position:absolute;left:10px;top:50%;transform:translateY(-50%);margin:0}
-.is-jama,.journal-table td.is-jama,.journal-table tfoot td.is-jama{color:#146c43!important}
-.is-jama .bal-tag,.is-banam .bal-tag{background:transparent;color:#000!important;border:0}
-.is-banam,.journal-table td.is-banam,.journal-table tfoot td.is-banam{color:#c92a2a!important}
-.journal-table tfoot th{height:50.4px;line-height:2}
-.journal-description{position:relative}.journal-delete{position:absolute;left:7px;top:50%;transform:translateY(-50%);font:20px Arial,sans-serif!important;width:30px;min-height:30px!important;padding:0!important;background:transparent;border-color:transparent;color:#b77a72}
-.journal-draft{background:#f7faf4}.journal-draft .journal-delete{visibility:hidden}
+.is-jama,.journal-table td.is-jama,.journal-table tfoot td.is-jama{color:#15803d!important}
+.is-jama .bal-tag{background:#dcfce7;color:#166534!important;border:1px solid #86efac}
+.is-banam,.journal-table td.is-banam,.journal-table tfoot td.is-banam{color:#dc2626!important}
+.is-banam .bal-tag{background:#fee2e2;color:#991b1b!important;border:1px solid #fca5a5}
+.journal-table tfoot th{height:52px;line-height:2.2}
+.journal-description{position:relative}
+.journal-delete{position:absolute;left:8px;top:50%;transform:translateY(-50%);font:18px Arial,sans-serif!important;width:26px!important;min-width:26px!important;height:26px!important;min-height:26px!important;padding:0!important;background:transparent!important;border:1px solid transparent!important;border-radius:7px!important;color:#9ca3af!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;cursor:pointer;opacity:0.35;transition:all .16s ease!important;box-shadow:none!important}
+.journal-table tr:hover .journal-delete,.journal-table tr:focus-within .journal-delete{opacity:0.85}
+.journal-delete:hover{opacity:1!important;color:#ef4444!important;background:rgba(239,68,68,0.12)!important;border-color:rgba(239,68,68,0.3)!important;transform:translateY(-50%) scale(1.1)!important}
+.journal-draft{background:#f7faf4}.journal-draft .journal-delete{visibility:hidden;display:none!important}
 .journal-foot{display:flex;justify-content:space-between;padding:10px 22px;font-size:10px;color:#6d8372}.journal-help{font-size:11px;color:#627d69;line-height:2.5}.journal-print-value{display:none}
 @media screen and (max-width:700px){.workspace-nav{padding:8px 12px}.workspace-nav button{flex:1;min-width:0}.journal-heading{padding:14px;gap:10px}.journal-tools{gap:8px}.journal-heading h1{font-size:23px}body.journal-view .top-nav{grid-template-columns:1fr}body.journal-view .top-nav-end{grid-row:2;grid-column:1;display:flex}.journal-opening-line{padding:10px 14px}}
 @page journal{size:A4 portrait;margin:.5cm}
@@ -107,36 +111,56 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 
 /* Journal workspace hierarchy and readable cash closing cards. */
 @media screen {
-  .app-shell .journal-card {border-radius:15px;box-shadow:0 3px 18px #183c2d06}
-  .app-shell .journal-heading {padding:12px 20px;gap:8px;background:#fbfdfc}
-  .app-shell .journal-heading h1 {font-size:25px;line-height:1.9}
-  .app-shell .journal-heading p {margin:0;font-size:11px;line-height:2}
-  .app-shell .journal-tools {gap:8px;justify-content:center}
-  .app-shell .journal-tools input {height:40px;padding:7px 10px}
-  .app-shell .journal-date-nav button {height:40px;min-height:40px}
-  .app-shell .journal-opening-line {padding:9px 18px;background:#f1f6fc;border-color:#dce5ef}
-  .app-shell .journal-table th {font-family:"Noto Nastaliq Urdu Print","Noto Nastaliq Urdu",serif;line-height:2.5;padding:6px 5px;background:#eef4f1}
-  .app-shell .journal-table td {min-height:54px;vertical-align:middle}
+  .app-shell .journal-card {border-radius:16px;box-shadow:0 4px 24px rgba(18,63,46,0.08);border:1px solid #cce0d3}
+  .app-shell .journal-heading {padding:14px 24px;gap:12px;background:linear-gradient(180deg,#fbfdfc 0%,#f4f8f5 100%);border-bottom:1px solid #dce8e0}
+  .app-shell .journal-heading h1 {font-size:26px;font-weight:700;color:#134d38;line-height:1.9}
+  .app-shell .journal-heading p {margin:2px 0 0;font-size:11.5px;color:#5a7667;line-height:2}
+  .app-shell .journal-tools {gap:10px;justify-content:center;align-items:center}
+  .app-shell .journal-tools label {font-size:12.5px;font-weight:700;color:#3d5a4a}
+  .app-shell .journal-date-nav {display:inline-flex;align-items:center;gap:4px;direction:ltr;background:#ebf4ee;border:1px solid #c2d8cb;border-radius:12px;padding:3px}
+  .app-shell .journal-date-nav button {height:36px;min-height:36px;width:36px;min-width:36px;padding:0;border-radius:9px;background:#ffffff!important;border:1px solid #b8d2c2!important;color:#12523c!important;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all .15s ease}
+  .app-shell .journal-date-nav button:hover {background:#dff0e6!important;border-color:#34d399!important;color:#0a3f2d!important;transform:scale(1.05)}
+  .app-shell .journal-date-nav input {height:36px;border:0;background:transparent;font:700 14px Arial,sans-serif;color:#134834;padding:2px 10px;outline:none;direction:ltr;text-align:center}
+  .app-shell .journal-opening-line {padding:12px 24px;background:linear-gradient(90deg,#eef7f2 0%,#f7fbf8 100%);border-bottom:1px solid #d3e5da;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;color:#16513d}
+  .app-shell #journal-opening {color:#0d5f44;font-size:18px;font-family:Calibri,'Segoe UI',Arial,sans-serif;font-weight:700;background:#dcf2e6;padding:3px 16px;border-radius:999px;border:1px solid #a4d7bc;display:inline-block}
+  .app-shell .journal-table th {font-family:"Noto Nastaliq Urdu Print","Noto Nastaliq Urdu",serif;line-height:2.5;padding:8px 6px;background:#edf5ef;border-bottom:2px solid #bcd7c6;color:#1e4938;font-size:13.5px}
+  .app-shell .journal-table th:nth-child(3) {border-bottom:3px solid #dc2626;color:#991b1b}
+  .app-shell .journal-table th:nth-child(4) {border-bottom:3px solid #059669;color:#065f46}
+  .app-shell .journal-table th:nth-child(5) {border-bottom:3px solid #0284c7;color:#075985}
+  .app-shell .journal-table tbody tr {background:#fff;transition:background-color .12s ease}
+  .app-shell .journal-table tbody tr:nth-child(even) {background:#fbfdfc}
+  .app-shell .journal-table tbody tr:hover {background:#f0f8f3!important}
+  .app-shell .journal-table tbody tr:focus-within {background:#edf7f2!important}
+  .app-shell .journal-table td {min-height:54px;vertical-align:middle;border-color:#e0ece3}
   .app-shell .journal-table textarea {font-family:"Noto Nastaliq Urdu Print","Noto Nastaliq Urdu",serif;line-height:2.5;min-height:54px;height:auto;padding-block:8px;padding-inline-start:10px;field-sizing:content}
-  .app-shell .journal-table td:focus-within {background:#edf7f2}
   .app-shell .journal-table :is(input,textarea):focus {box-shadow:inset 0 0 0 2px #176b55;background:#fff}
-  .app-shell .journal-table .journal-draft td {background:#f7fbf8;border-bottom-style:dashed}
-  .app-shell .journal-table .journal-serial {background:#f2f7f4}
-  .app-shell .cash-summary {margin:14px 16px;padding:14px;border-color:#d8e4dd;border-radius:13px;background:#f7faf8}
-  .app-shell .cash-summary-heading {margin-bottom:12px;gap:0}
-  .app-shell .cash-summary-heading h2 {font-size:19px}
-  .app-shell .cash-summary-heading>span {font-size:10px;color:#73877b}
-  .app-shell .cash-summary-grid {gap:9px}
-  .app-shell .cash-item {padding:10px 8px;gap:8px;min-height:96px;border-radius:10px;justify-content:center}
-  .app-shell .cash-item>strong {font-size:23px;font-variant-numeric:tabular-nums}
-  .app-shell .cash-item>span,.app-shell .cash-item>label {font-size:11px}
-  .app-shell .cash-expected {background:#eff5ff;border-color:#c4d8ee}
-  .app-shell .cash-count {background:#effaf4;border:1.5px solid #9bc6ad}
-  .app-shell .cash-result {background:#fff9ed;border-color:#e6d6b3}
-  .app-shell #journal-cash-count {height:42px;font-size:23px;border-radius:8px}
-  .app-shell #cash-difference {font-size:18px}
-  .app-shell #cash-summary-help {margin-top:9px;line-height:2.4}
-  .app-shell .journal-foot {padding:10px 18px;border-top:1px solid #e2ebe6}
+  .app-shell .journal-table td input[data-journal="debit"] {color:#b91c1c;font-weight:700}
+  .app-shell .journal-table td input[data-journal="credit"] {color:#047857;font-weight:700}
+  .app-shell .journal-table .journal-draft td {background:#f8fbf6;border-bottom-style:dashed}
+  .app-shell .journal-table .journal-serial {background:#f3f7f4;font-family:Arial,sans-serif;font-weight:700;color:#496b56}
+  .app-shell .journal-table tr:hover .journal-serial,.app-shell .journal-table tr:focus-within .journal-serial {background:#e6f3eb;color:#0e523b}
+  .app-shell .cash-summary {margin:16px 20px;padding:16px;border:1px solid #d4e3da;border-radius:15px;background:#f8fbf9;box-shadow:0 2px 10px rgba(18,63,46,0.04)}
+  .app-shell .cash-summary-heading {margin-bottom:14px;gap:2px}
+  .app-shell .cash-summary-heading h2 {font-size:20px;font-weight:700;color:#124c38}
+  .app-shell .cash-summary-heading>span {font-size:11px;color:#5a7668}
+  .app-shell .cash-summary-grid {gap:10px}
+  .app-shell .cash-item {padding:12px 10px;gap:8px;min-height:100px;border-radius:12px;border:1px solid #dbe7df;background:#ffffff;justify-content:center;transition:transform .15s ease,box-shadow .15s ease}
+  .app-shell .cash-item:hover {transform:translateY(-2px);box-shadow:0 6px 14px rgba(18,63,46,0.08)}
+  .app-shell .cash-item>strong {font-size:24px;font-variant-numeric:tabular-nums;color:#124835}
+  .app-shell .cash-item>span,.app-shell .cash-item>label {font-size:11.5px;font-weight:600;color:#4f6c5c}
+  .app-shell .cash-item:nth-child(2) {background:linear-gradient(180deg,#f2fbf6 0%,#e7f6ee 100%);border-color:#b8dfca}
+  .app-shell .cash-item:nth-child(2)>strong {color:#047857}
+  .app-shell .cash-item:nth-child(3) {background:linear-gradient(180deg,#fff7f7 0%,#fdeadc 100%);border-color:#f8c5c5}
+  .app-shell .cash-item:nth-child(3)>strong {color:#b91c1c}
+  .app-shell .cash-expected {background:linear-gradient(180deg,#f3f8ff 0%,#e7f1fe 100%);border-color:#c2dcf8}
+  .app-shell .cash-expected>strong {color:#0369a1}
+  .app-shell .cash-count {background:linear-gradient(180deg,#f0fbf5 0%,#e1f5eb 100%);border:2px solid #228d6b;box-shadow:0 0 10px rgba(34,141,107,0.12)}
+  .app-shell .cash-result {background:linear-gradient(180deg,#fffdf5 0%,#fef7e2 100%);border-color:#eadab1}
+  .app-shell #journal-cash-count {height:44px;font-size:24px;border-radius:9px;background:#ffffff;border:1px solid #8abfa5;font-weight:700;color:#0e4e37}
+  .app-shell #journal-cash-count:focus {border-color:#166a4f;box-shadow:0 0 0 3px rgba(22,106,79,0.18);background:#fff}
+  .app-shell #cash-difference {font-size:19px;font-weight:700}
+  .app-shell #cash-summary-help {margin-top:10px;line-height:2.4;color:#5a7667;font-size:10.5px}
+  .app-shell .journal-foot {padding:12px 24px;border-top:1px solid #e0ece3;background:#fafcfb;font-size:11px;color:#5a7566}
 }
 @media screen and (max-width:600px) {
   .app-shell .journal-heading {padding:10px 12px;gap:7px}

@@ -3,73 +3,12 @@ const path = require('path');
 const fs = require('fs/promises');
 const { randomUUID } = require('crypto');
 
-app.setAppUserModelId('com.ishukhan.hisaab');
-
-let mainWindow = null;
-let database;
-function getDatabase() {
-  if (!database) {
-    const { HisaabDatabase } = require('./database');
-    database = new HisaabDatabase(path.join(app.getPath('userData'), 'hisaab.sqlite'), {
-      backupDir: path.join(app.getPath('userData'), 'backups')
-    });
-  }
-  return database;
+// P6: Only set App User Model ID on Windows platform
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.ishukhan.hisaab');
 }
 
-// Only the trusted top-level application frame can read or mutate local data.
-for (const action of ['load','initialize','save','restore']) {
-  ipcMain.on('database-'+action,(event,payload={})=>{
-    try {
-      const expectedURL=require('url').pathToFileURL(path.join(__dirname,'index.html')).href;
-      if (!gotTheLock || !mainWindow || event.sender!==mainWindow.webContents || event.senderFrame!==mainWindow.webContents.mainFrame || event.senderFrame.url!==expectedURL) throw new Error('Unauthorized database request');
-      const store=getDatabase();
-      if(action==='load')event.returnValue={status:'ok',...store.load(),filePath:store.filename};
-      else {
-        const options=action==='initialize'?{initialize:true,legacyRaw:payload.legacyRaw??null}:action==='restore'?{restore:true,current:payload.current}:{};
-        event.returnValue={status:'saved',...store.commit(payload.state,payload.revision,options)};
-      }
-    } catch(error) {
-      console.error('Database '+action+' failed:',error.message);
-      event.returnValue={status:'error',message:error.message};
-    }
-  });
-}
-
-function isSameFrameUrl(frameUrl, targetUrl) {
-  if (frameUrl === targetUrl) return true;
-  if (!frameUrl || !targetUrl) return false;
-  try {
-    return decodeURI(frameUrl).toLowerCase() === decodeURI(targetUrl).toLowerCase();
-  } catch (_) {
-    return frameUrl.toLowerCase() === targetUrl.toLowerCase();
-  }
-}
-
-let externalBackup;
-function getExternalBackup(){return externalBackup??=new (require('./external-backup.cjs').ExternalBackup)(app.getPath('userData'));}
-function trustedBackupFrame(event){const url=require('url').pathToFileURL(path.join(__dirname,'index.html')).href;if(!gotTheLock||!mainWindow||event.sender!==mainWindow.webContents||event.senderFrame!==mainWindow.webContents.mainFrame||!isSameFrameUrl(event.senderFrame.url,url))throw Error('Unauthorized backup request');}
-ipcMain.handle('external-backup-status',async event=>{trustedBackupFrame(event);return getExternalBackup().status();});
-ipcMain.handle('external-backup-select',async event=>{
-  trustedBackupFrame(event);
-  const result=await dialog.showOpenDialog(mainWindow,{title:'بیک اَپ کے لیے USB یا synced فولڈر منتخب کریں',properties:['openDirectory','createDirectory']});
-  if(result.canceled || !result.filePaths || !result.filePaths.length || !result.filePaths[0])return {cancelled:true};
-  return getExternalBackup().configure(result.filePaths[0]);
-});
-ipcMain.handle('external-backup-disable',async event=>{trustedBackupFrame(event);return getExternalBackup().configure(null);});
-ipcMain.handle('external-backup-save',async(event,data)=>{
-  trustedBackupFrame(event);
-  try {
-    const validated = require('./database').validateState(data);
-    return await getExternalBackup().save(validated);
-  } catch (err) {
-    const config = await getExternalBackup().status();
-    return { status: 'error', ...config, error: err.message };
-  }
-});
-
-app.on('will-quit',()=>{database?.close();});
-
+// Single instance lock enforcement
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.quit();
@@ -84,26 +23,165 @@ if (!gotTheLock) {
   app.whenReady().then(createWindow);
 }
 
+let mainWindow = null;
+let database;
+function getDatabase() {
+  if (!database) {
+    const { HisaabDatabase } = require('./database');
+    database = new HisaabDatabase(path.join(app.getPath('userData'), 'hisaab.sqlite'), {
+      backupDir: path.join(app.getPath('userData'), 'backups')
+    });
+  }
+  return database;
+}
+
+function isSameFrameUrl(frameUrl, targetUrl) {
+  if (frameUrl === targetUrl) return true;
+  if (!frameUrl || !targetUrl) return false;
+  try {
+    return decodeURI(frameUrl).toLowerCase() === decodeURI(targetUrl).toLowerCase();
+  } catch (_) {
+    return frameUrl.toLowerCase() === targetUrl.toLowerCase();
+  }
+}
+
+// P2: Unified trusted frame validation helper
+function trustedFrame(event) {
+  const url = require('url').pathToFileURL(
+    path.join(__dirname, 'index.html')
+  ).href;
+  if (
+    !gotTheLock ||
+    !mainWindow ||
+    event.sender !== mainWindow.webContents ||
+    event.senderFrame !== mainWindow.webContents.mainFrame ||
+    !isSameFrameUrl(event.senderFrame.url, url)
+  ) {
+    throw new Error('Unauthorized request');
+  }
+}
+
+// P3: Whitelist helper to restrict file opening / showing to allowed directories
+function isPathAllowed(targetPath) {
+  if (typeof targetPath !== 'string' || !targetPath) return false;
+  const resolved = path.resolve(targetPath);
+  const allowedRoots = [
+    app.getPath('userData'),     // includes backups dir and hisaab.sqlite
+    app.getPath('documents'),
+    app.getPath('temp'),
+  ].map(p => path.resolve(p) + path.sep);
+  return allowedRoots.some(root => resolved.startsWith(root) || (resolved + path.sep) === root);
+}
+
+// P6: Cached backups directory path to avoid redundant mkdir calls
+let backupsDirCache;
 async function getBackupsDir() {
+  if (backupsDirCache) return backupsDirCache;
   const dir = path.join(app.getPath('userData'), 'backups');
   await fs.mkdir(dir, { recursive: true });
+  backupsDirCache = dir;
   return dir;
 }
 
+// P2: Refactored trustedBackupFrame delegating to trustedFrame
+let externalBackup;
+function getExternalBackup() {
+  return externalBackup ??= new (require('./external-backup.cjs').ExternalBackup)(app.getPath('userData'));
+}
+function trustedBackupFrame(event) {
+  trustedFrame(event);
+}
+
+// Trusted renderer frame only
+// P2: Refactored database actions to use trustedFrame
+for (const action of ['load', 'initialize', 'save', 'restore']) {
+  ipcMain.on('database-' + action, (event, payload = {}) => {
+    try {
+      trustedFrame(event);
+      const store = getDatabase();
+      if (action === 'load') {
+        event.returnValue = { status: 'ok', ...store.load(), filePath: store.filename };
+      } else {
+        const options = action === 'initialize'
+          ? { initialize: true, legacyRaw: payload.legacyRaw ?? null }
+          : action === 'restore'
+            ? { restore: true, current: payload.current }
+            : {};
+        event.returnValue = { status: 'saved', ...store.commit(payload.state, payload.revision, options) };
+      }
+    } catch (error) {
+      console.error('Database ' + action + ' failed:', error.message);
+      event.returnValue = { status: 'error', message: error.message };
+    }
+  });
+}
+
+// Trusted renderer frame only
+ipcMain.handle('external-backup-status', async (event) => {
+  trustedFrame(event);
+  return getExternalBackup().status();
+});
+
+// Trusted renderer frame only
+ipcMain.handle('external-backup-select', async (event) => {
+  trustedFrame(event);
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'بیک اَپ کے لیے USB یا synced فولڈر منتخب کریں',
+    properties: ['openDirectory', 'createDirectory']
+  });
+  if (result.canceled || !result.filePaths || !result.filePaths.length || !result.filePaths[0]) return { cancelled: true };
+  return getExternalBackup().configure(result.filePaths[0]);
+});
+
+// Trusted renderer frame only
+ipcMain.handle('external-backup-disable', async (event) => {
+  trustedFrame(event);
+  return getExternalBackup().configure(null);
+});
+
+// Trusted renderer frame only
+ipcMain.handle('external-backup-save', async (event, data) => {
+  trustedFrame(event);
+  try {
+    const validated = require('./database').validateState(data);
+    return await getExternalBackup().save(validated);
+  } catch (err) {
+    const config = await getExternalBackup().status();
+    return { status: 'error', ...config, error: err.message };
+  }
+});
+
+app.on('will-quit', () => {
+  database?.close();
+});
+
 let pdfBusy = false;
 let receiptPNGBusy = false;
-const receiptFields = ['title','serial','date','branch','sender','mobile','receiver','place','balance','aed','pkr','currency'];
+const receiptFields = ['title', 'serial', 'date', 'branch', 'sender', 'mobile', 'receiver', 'place', 'balance', 'aed', 'pkr', 'currency'];
 
+// P5: Robust off-screen receipt rendering without arbitrary setTimeout
 async function renderReceiptImage(values) {
   let renderer;
   try {
-    renderer = new BrowserWindow({width:560,height:794,useContentSize:true,show:false,webPreferences:{offscreen:true,contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
+    renderer = new BrowserWindow({
+      width: 560,
+      height: 794,
+      useContentSize: true,
+      show: false,
+      webPreferences: {
+        offscreen: true,
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+        backgroundThrottling: false
+      }
+    });
     // Windows clamps the initial window to the display; explicitly size the render surface.
-    renderer.setContentSize(560,794);
-    renderer.webContents.setWindowOpenHandler(()=>({action:'deny'}));
-    await renderer.loadFile(path.join(__dirname,'receipt-image.html'));
-    const data = Object.fromEntries(receiptFields.map(key=>[key,values[key]]));
-    const receiptSize=await renderer.webContents.executeJavaScript(`(async()=>{
+    renderer.setContentSize(560, 794);
+    renderer.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    await renderer.loadFile(path.join(__dirname, 'receipt-image.html'));
+    const data = Object.fromEntries(receiptFields.map(key => [key, values[key]]));
+    const receiptSize = await renderer.webContents.executeJavaScript(`(async()=>{
       const values=${JSON.stringify(data)};
       document.querySelectorAll('[data-receipt]').forEach(el=>{el.textContent=values[el.dataset.receipt];});
       await document.fonts.ready;
@@ -112,112 +190,171 @@ async function renderReceiptImage(values) {
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       return {width:560,height:Math.max(794,Math.ceil(sheet.scrollHeight+76))};
     })()`);
-    renderer.setContentSize(receiptSize.width,receiptSize.height);
-    // Wait for the compositor to paint the populated receipt, not the initial blank template.
-    await new Promise(resolve=>setTimeout(resolve,300));
-    const captured = await new Promise((resolve,reject)=>{
-      const timer=setTimeout(()=>{renderer.webContents.removeListener('paint',painted);reject(new Error('Receipt paint timeout'));},5000);
-      function painted(_event,_dirty,image){clearTimeout(timer);resolve(image);}
-      renderer.webContents.once('paint',painted);
+    renderer.setContentSize(receiptSize.width, receiptSize.height);
+
+    // Wait until the compositor produces the first non-empty paint frame
+    const captured = await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        renderer.webContents.removeListener('paint', painted);
+        reject(new Error('Receipt paint timeout'));
+      }, 5000);
+
+      function painted(_event, _dirty, image) {
+        if (image.isEmpty()) return; // ignore blank first frame
+        clearTimeout(timer);
+        renderer.webContents.removeListener('paint', painted);
+        resolve(image);
+      }
+      renderer.webContents.on('paint', painted);
       renderer.webContents.invalidate();
     });
-    if (captured.isEmpty()) throw new Error('Empty receipt image');
-    return captured.resize({width:1600,quality:'best'});
+    return captured.resize({ width: 1600, quality: 'best' });
   } finally {
     if (renderer && !renderer.isDestroyed()) renderer.destroy();
   }
 }
 
+// Trusted renderer frame only
 ipcMain.handle('save-receipt-png', async (event, values, suggestedName) => {
-  if (!mainWindow || event.sender !== mainWindow.webContents || event.senderFrame !== mainWindow.webContents.mainFrame) throw new Error('Unauthorized PNG request');
+  trustedFrame(event);
   if (!values || typeof values !== 'object' || receiptFields.some(key => typeof values[key] !== 'string' || values[key].length > 2000) || typeof suggestedName !== 'string') throw new Error('Invalid receipt');
-  if (receiptPNGBusy) return {status:'busy'};
+  if (receiptPNGBusy) return { status: 'busy' };
   receiptPNGBusy = true;
   let temporary;
   try {
-    let name = suggestedName.replace(/\.png$/i,'').replace(/[<>:"/\\|?*\x00-\x1f]/g,'-').replace(/[. ]+$/g,'').trim().slice(0,160) || 'Hisaab-Receipt';
+    let name = suggestedName.replace(/\.png$/i, '').replace(/[<>:"/\\|?*\x00-\x1f]/g, '-').replace(/[. ]+$/g, '').trim().slice(0, 160) || 'Hisaab-Receipt';
     if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name)) name = 'Hisaab-' + name;
-    const result = await dialog.showSaveDialog(mainWindow,{title:'رسید کی تصویر محفوظ کریں',defaultPath:path.join(app.getPath('documents'),name+'.png'),filters:[{name:'PNG Image',extensions:['png']}],properties:['showOverwriteConfirmation','createDirectory']});
-    if (result.canceled || !result.filePath) return {status:'cancelled'};
-    const target = /\.png$/i.test(result.filePath) ? result.filePath : result.filePath+'.png';
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'رسید کی تصویر محفوظ کریں',
+      defaultPath: path.join(app.getPath('documents'), name + '.png'),
+      filters: [{ name: 'PNG Image', extensions: ['png'] }],
+      properties: ['showOverwriteConfirmation', 'createDirectory']
+    });
+    if (result.canceled || !result.filePath) return { status: 'cancelled' };
+    const target = /\.png$/i.test(result.filePath) ? result.filePath : result.filePath + '.png';
     const image = await renderReceiptImage(values);
     const png = image.toPNG();
-    temporary = path.join(path.dirname(target),'.hisaab-png-'+randomUUID()+'.tmp');
-    await fs.writeFile(temporary,png,{flag:'wx'});
-    await fs.rename(temporary,target);temporary=null;
-    return {status:'saved',filePath:target};
-  } catch { return {status:'error'}; }
-  finally {
-    if (temporary) await fs.unlink(temporary).catch(()=>{});
-    receiptPNGBusy=false;
+    temporary = path.join(path.dirname(target), '.hisaab-png-' + randomUUID() + '.tmp');
+    await fs.writeFile(temporary, png, { flag: 'wx' });
+    await fs.rename(temporary, target);
+    temporary = null;
+    return { status: 'saved', filePath: target };
+  } catch (error) {
+    console.error('save-receipt-png failed:', error);
+    return { status: 'error', message: error.message };
+  } finally {
+    if (temporary) await fs.unlink(temporary).catch(() => {});
+    receiptPNGBusy = false;
   }
 });
 
+// Trusted renderer frame only
 ipcMain.handle('copy-receipt-png', async (event, values) => {
-  if (!mainWindow || event.sender !== mainWindow.webContents || event.senderFrame !== mainWindow.webContents.mainFrame) throw new Error('Unauthorized PNG request');
+  trustedFrame(event);
   if (!values || typeof values !== 'object' || receiptFields.some(key => typeof values[key] !== 'string' || values[key].length > 2000)) throw new Error('Invalid receipt');
-  if (receiptPNGBusy) return {status:'busy'};
+  if (receiptPNGBusy) return { status: 'busy' };
   receiptPNGBusy = true;
   try {
     const image = await renderReceiptImage(values);
     clipboard.writeImage(image);
-    return {status:'copied'};
-  } catch { return {status:'error'}; }
-  finally { receiptPNGBusy=false; }
-});
-ipcMain.handle('preview-pdf', async event => {
-  if (!mainWindow || event.sender !== mainWindow.webContents || event.senderFrame !== mainWindow.webContents.mainFrame) throw new Error('Unauthorized PDF request');
-  if (pdfBusy) return {status:'busy'};
-  pdfBusy=true;
-  let preview, temporary;
-  try {
-    const pdf=await event.sender.printToPDF({printBackground:true,landscape:true,pageSize:'A4',preferCSSPageSize:true,displayHeaderFooter:false});
-    temporary=path.join(app.getPath('temp'),'hisaab-preview-'+randomUUID()+'.pdf');
-    await fs.writeFile(temporary,pdf,{flag:'wx'});
-    preview=new BrowserWindow({parent:mainWindow,width:1150,height:850,title:'حساب — پرنٹ پیش منظر',show:false,webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true,plugins:true}});
-    preview.setMenu(null);
-    preview.webContents.setWindowOpenHandler(()=>({action:'deny'}));
-    const file=temporary;
-    preview.on('closed',()=>{fs.unlink(file).catch(()=>{});});
-    await preview.loadFile(file);
-    preview.show();
-    return {status:'opened'};
-  } catch(error) {
-    if(preview&&!preview.isDestroyed())preview.close();
-    if(temporary)await fs.unlink(temporary).catch(()=>{});
-    return {status:'error'};
-  } finally {pdfBusy=false;}
+    return { status: 'copied' };
+  } catch (error) {
+    console.error('copy-receipt-png failed:', error);
+    return { status: 'error', message: error.message };
+  } finally {
+    receiptPNGBusy = false;
+  }
 });
 
+// Trusted renderer frame only
+ipcMain.handle('preview-pdf', async (event) => {
+  trustedFrame(event);
+  if (pdfBusy) return { status: 'busy' };
+  pdfBusy = true;
+  let preview, temporary;
+  try {
+    const pdf = await event.sender.printToPDF({
+      printBackground: true,
+      landscape: true,
+      pageSize: 'A4',
+      preferCSSPageSize: true,
+      displayHeaderFooter: false
+    });
+    temporary = path.join(app.getPath('temp'), 'hisaab-preview-' + randomUUID() + '.pdf');
+    await fs.writeFile(temporary, pdf, { flag: 'wx' });
+    preview = new BrowserWindow({
+      parent: mainWindow,
+      width: 1150,
+      height: 850,
+      title: 'حساب — پرنٹ پیش منظر',
+      show: false,
+      webPreferences: {
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+        plugins: true
+      }
+    });
+    preview.setMenu(null);
+    preview.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    const file = temporary;
+    preview.on('closed', () => { fs.unlink(file).catch(() => {}); });
+    await preview.loadFile(file);
+    preview.show();
+    return { status: 'opened' };
+  } catch (error) {
+    console.error('preview-pdf failed:', error);
+    if (preview && !preview.isDestroyed()) preview.close();
+    if (temporary) await fs.unlink(temporary).catch(() => {});
+    return { status: 'error', message: error.message };
+  } finally {
+    pdfBusy = false;
+  }
+});
+
+// Trusted renderer frame only
 ipcMain.handle('save-pdf', async (event, suggestedName) => {
-  if (!mainWindow || event.sender !== mainWindow.webContents || event.senderFrame !== mainWindow.webContents.mainFrame) throw new Error('Unauthorized PDF request');
+  trustedFrame(event);
   if (pdfBusy) return { status: 'busy' };
   if (typeof suggestedName !== 'string') throw new Error('Invalid PDF name');
-  let name = suggestedName.replace(/\.pdf$/i,'').replace(/[<>:"/\\|?*\x00-\x1f]/g,'-').replace(/[. ]+$/g,'').trim().slice(0,160);
+  let name = suggestedName.replace(/\.pdf$/i, '').replace(/[<>:"/\\|?*\x00-\x1f]/g, '-').replace(/[. ]+$/g, '').trim().slice(0, 160);
   if (!name) name = 'Hisaab';
   if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name)) name = 'Hisaab-' + name;
   pdfBusy = true;
   let temporary;
   try {
-    const result = await dialog.showSaveDialog(mainWindow, {title:'PDF محفوظ کریں', defaultPath:path.join(app.getPath('documents'),name+'.pdf'), filters:[{name:'PDF',extensions:['pdf']}], properties:['showOverwriteConfirmation','createDirectory']});
-    if (result.canceled || !result.filePath) return {status:'cancelled'};
-    const target = /\.pdf$/i.test(result.filePath) ? result.filePath : result.filePath+'.pdf';
-    const pdf = await event.sender.printToPDF({printBackground:true,landscape:true,pageSize:'A4',preferCSSPageSize:true,displayHeaderFooter:false});
-    temporary = path.join(path.dirname(target),'.hisaab-pdf-'+randomUUID()+'.tmp');
-    await fs.writeFile(temporary,pdf,{flag:'wx'});
-    await fs.rename(temporary,target);
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'PDF محفوظ کریں',
+      defaultPath: path.join(app.getPath('documents'), name + '.pdf'),
+      filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      properties: ['showOverwriteConfirmation', 'createDirectory']
+    });
+    if (result.canceled || !result.filePath) return { status: 'cancelled' };
+    const target = /\.pdf$/i.test(result.filePath) ? result.filePath : result.filePath + '.pdf';
+    const pdf = await event.sender.printToPDF({
+      printBackground: true,
+      landscape: true,
+      pageSize: 'A4',
+      preferCSSPageSize: true,
+      displayHeaderFooter: false
+    });
+    temporary = path.join(path.dirname(target), '.hisaab-pdf-' + randomUUID() + '.tmp');
+    await fs.writeFile(temporary, pdf, { flag: 'wx' });
+    await fs.rename(temporary, target);
     temporary = null;
-    return {status:'saved', filePath: target};
-  } catch(error) {
-    return {status:'error'};
+    return { status: 'saved', filePath: target };
+  } catch (error) {
+    console.error('save-pdf failed:', error);
+    return { status: 'error', message: error.message };
   } finally {
-    if (temporary) await fs.unlink(temporary).catch(()=>{});
+    if (temporary) await fs.unlink(temporary).catch(() => {});
     pdfBusy = false;
   }
 });
 
+// Trusted renderer frame only
 ipcMain.handle('save-auto-backup', async (event, data, isSafety = false) => {
-  if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Unauthorized');
+  trustedFrame(event);
   if (!data || typeof data !== 'object') throw new Error('Invalid backup payload');
   try {
     const dir = await getBackupsDir();
@@ -258,8 +395,9 @@ ipcMain.handle('save-auto-backup', async (event, data, isSafety = false) => {
   }
 });
 
+// Trusted renderer frame only
 ipcMain.handle('get-auto-backups', async (event) => {
-  if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Unauthorized');
+  trustedFrame(event);
   try {
     const dir = await getBackupsDir();
     const files = await fs.readdir(dir);
@@ -284,8 +422,9 @@ ipcMain.handle('get-auto-backups', async (event) => {
   }
 });
 
+// Trusted renderer frame only
 ipcMain.handle('read-auto-backup', async (event, filename) => {
-  if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Unauthorized');
+  trustedFrame(event);
   if (typeof filename !== 'string' || !/^(auto-backup_|safety-pre-restore_|migration-localstorage_)[a-zA-Z0-9_\-\.]+\.json$/.test(filename)) {
     throw new Error('Invalid filename');
   }
@@ -295,23 +434,30 @@ ipcMain.handle('read-auto-backup', async (event, filename) => {
   return { status: 'ok', content };
 });
 
+// Trusted renderer frame only
 ipcMain.handle('open-backups-folder', async (event) => {
-  if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Unauthorized');
+  trustedFrame(event);
   const dir = await getBackupsDir();
   await shell.openPath(dir);
   return { status: 'ok' };
 });
 
+// Trusted renderer frame only
+// P3: Restricted to allowed roots
 ipcMain.handle('open-file', async (event, targetPath) => {
-  if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Unauthorized');
+  trustedFrame(event);
   if (typeof targetPath !== 'string') throw new Error('Invalid path');
+  if (!isPathAllowed(targetPath)) throw new Error('Path not allowed');
   await shell.openPath(targetPath);
   return { status: 'ok' };
 });
 
+// Trusted renderer frame only
+// P3: Restricted to allowed roots
 ipcMain.handle('show-in-folder', async (event, targetPath) => {
-  if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Unauthorized');
+  trustedFrame(event);
   if (typeof targetPath !== 'string') throw new Error('Invalid path');
+  if (!isPathAllowed(targetPath)) throw new Error('Path not allowed');
   shell.showItemInFolder(targetPath);
   return { status: 'ok' };
 });
@@ -337,15 +483,29 @@ function createWindow() {
   });
 
   mainWindow.maximize();
-  mainWindow.webContents.setWindowOpenHandler(()=>({action:'deny'}));
-  mainWindow.webContents.on('will-navigate',(event,url)=>{
-    const expected=require('url').pathToFileURL(path.join(__dirname,'index.html')).href;
-    if(!isSameFrameUrl(url,expected))event.preventDefault();
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const expected = require('url').pathToFileURL(path.join(__dirname, 'index.html')).href;
+    if (!isSameFrameUrl(url, expected)) event.preventDefault();
   });
-  mainWindow.webContents.on('will-prevent-unload',event=>{
-    const choice=dialog.showMessageBoxSync(mainWindow,{type:'warning',title:'غیر محفوظ تبدیلیاں',message:'کچھ تبدیلیاں محفوظ نہیں ہو سکیں۔ واپس جا کر دوبارہ محفوظ کریں یا بیک اَپ لیں۔',buttons:['واپس جائیں','بغیر محفوظ کیے بند کریں'],defaultId:0,cancelId:0});
-    if(choice===1)event.preventDefault();
+
+  // P1: Fixed will-prevent-unload inverted semantics
+  // In Electron's will-prevent-unload event, calling event.preventDefault() stops
+  // the page from unloading (keeps the window open).
+  // Button 0 ("واپس جائیں" / Go back) -> user wants to stay -> must preventDefault().
+  // Button 1 ("بغیر محفوظ کیے بند کریں" / Close without saving) -> user wants to close -> allow unload.
+  mainWindow.webContents.on('will-prevent-unload', (event) => {
+    const choice = dialog.showMessageBoxSync(mainWindow, {
+      type: 'warning',
+      title: 'غیر محفوظ تبدیلیاں',
+      message: 'کچھ تبدیلیاں محفوظ نہیں ہو سکیں۔ واپس جا کر دوبارہ محفوظ کریں یا بیک اَپ لیں۔',
+      buttons: ['واپس جائیں', 'بغیر محفوظ کیے بند کریں'],
+      defaultId: 0,
+      cancelId: 0
+    });
+    if (choice === 0) event.preventDefault();
   });
+
   mainWindow.webContents.on('context-menu', (event, params) => {
     const contextMenu = new Menu();
     if (params.isEditable) {
@@ -384,6 +544,12 @@ function sendAction(action) {
   }
 }
 
+// Architectural note:
+// Assumption: preload.js and database.js APIs expose synchronous SQLite storage methods
+// and validate state schemas via database.validateState().
+// Future improvement suggestion: Application menu items (File > Exit, Ledger > Summary, etc.)
+// can be dynamically enabled/disabled when modal dialogs (PIN lock or modal overlays) are open
+// by having mainWindow track modal state via IPC and updating MenuItem.enabled.
 function buildMenu() {
   const template = [
     {
@@ -466,7 +632,19 @@ function buildMenu() {
         {
           label: 'استعمال کی رہنمائی (User Guide)',
           click: () => {
-            const guide=new BrowserWindow({parent:mainWindow,width:850,height:720,title:'حساب — رہنمائی',webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true}});guide.setMenu(null);guide.loadFile(path.join(__dirname,'guide.html'));
+            const guide = new BrowserWindow({
+              parent: mainWindow,
+              width: 850,
+              height: 720,
+              title: 'حساب — رہنمائی',
+              webPreferences: {
+                contextIsolation: true,
+                nodeIntegration: false,
+                sandbox: true
+              }
+            });
+            guide.setMenu(null);
+            guide.loadFile(path.join(__dirname, 'guide.html'));
           }
         },
         {
