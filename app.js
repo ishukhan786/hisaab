@@ -13,8 +13,8 @@
   const fields = ['sender', 'mobile', 'receiver', 'place', 'branch', 'balance', 'aed', 'pkr'];
   const labels = ['ارسال کنندہ', 'موبائیل نمبر', 'وصول کنندہ', 'مقام', 'پارٹی', 'بقایا', 'درہم', 'روپیہ'];
   const moneyFields = ['balance', 'aed', 'pkr'];
-  /* FIX-14: populated checks branch as well to avoid dropping in-progress draft rows */
-  const populated = r => ['sender', 'mobile', 'receiver', 'place', 'branch', ...moneyFields].some(f => typeof r[f] === 'string' && r[f].trim());
+  /* FIX-14: populated checks transactional fields (branch excluded to prevent draft loops) */
+  const populated = r => ['sender', 'mobile', 'receiver', 'place', ...moneyFields].some(f => typeof r[f] === 'string' && r[f].trim());
   const formatAllah = value => String(value).replace(/(^|[\s\u060C\u06D4()\-]|\u0639\u0628\u062F|\u0621)\u0627\u0644\u0644[\u0651\u0670]*[\u06C1\u0647](?=$|[\s\u060C\u06D4()\-])/g, '$1\uFDF2');
   const cleanName = value => formatAllah(value).trim().replace(/\s+/g, ' ');
   const nameKey = value => cleanName(value).toLocaleLowerCase();
@@ -1174,9 +1174,9 @@
     });
     tr.addEventListener('focusout', () => setTimeout(() => { if (!tr.contains(document.activeElement)) applyFilter(true); }, 0));
     const tdReceipt = document.createElement('td'); tdReceipt.className = 'col-receipt no-print'; tr.append(tdReceipt);
-    const td = document.createElement('td'); td.className = 'no-print'; const del = document.createElement('button'); del.className = 'delete'; del.textContent = '×'; del.title = 'حذف کریں — Undo سے واپس لائیں'; del.setAttribute('aria-label', 'انٹری حذف کریں');
+    const td = document.createElement('td'); td.className = 'no-print'; const del = document.createElement('button'); del.type = 'button'; del.className = 'delete'; del.textContent = '×'; del.title = 'حذف کریں — Undo سے واپس لائیں'; del.setAttribute('aria-label', 'انٹری حذف کریں');
     if (rLocked) del.disabled = true;
-    del.onclick = () => { const index = state.rows.findIndex(r => r.id === row.id); if (index < 0) return; if (populated(row)) { state.trash.push({ row: structuredClone(row), index }); state.trash = state.trash.slice(-20); } state.rows.splice(index, 1); render(); save(); }; td.append(del); tr.append(td);
+    del.onclick = e => { e.stopPropagation(); e.preventDefault(); const index = state.rows.findIndex(r => r.id === row.id); if (index < 0) return; if (populated(row)) { state.trash.push({ row: structuredClone(row), index }); state.trash = state.trash.slice(-20); } state.rows.splice(index, 1); render(); save(); }; td.append(del); tr.append(td);
     return tr;
   }
   function appendRow(row) { $('rows').append(createRowElement(row)); }
