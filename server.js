@@ -105,9 +105,22 @@ async function connectDb() {
   return cachedDb;
 }
 
-// Database auto-connection middleware for all /api calls
+// 1. Health check (Public - responds immediately without requiring DB connection)
+app.get('/api/health', (req, res) => {
+  const isConnected = mongoose.connection.readyState === 1;
+  res.json({
+    status: 'ok',
+    mongodb: isConnected ? 'connected' : 'disconnected',
+    platform: process.env.VERCEL ? 'vercel' : 'local',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Database auto-connection middleware for state and backup endpoints only
+const DB_REQUIRED_ROUTES = new Set(['/api/state', '/api/save', '/api/backups']);
 app.use(async (req, res, next) => {
-  if (req.path.startsWith('/api')) {
+  const needsDb = DB_REQUIRED_ROUTES.has(req.path) || req.path.startsWith('/api/backup/');
+  if (needsDb) {
     try {
       await connectDb();
       next();
@@ -150,17 +163,6 @@ const backupSchema = new mongoose.Schema(
 const HisaabBackup = mongoose.models.HisaabBackup || mongoose.model('HisaabBackup', backupSchema);
 
 // ======================== API Endpoints ========================
-
-// 1. Health check (Public)
-app.get('/api/health', (req, res) => {
-  const isConnected = mongoose.connection.readyState === 1;
-  res.json({
-    status: 'ok',
-    mongodb: isConnected ? 'connected' : 'disconnected',
-    platform: process.env.VERCEL ? 'vercel' : 'local',
-    timestamp: new Date().toISOString()
-  });
-});
 
 // 2. Load state (Unified register)
 app.get('/api/state', async (req, res) => {

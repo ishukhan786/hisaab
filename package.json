@@ -5,6 +5,7 @@
   "description": "حساب — آف لائن روزانہ کھاتہ، اندراج رجسٹر اور پرنٹ سسٹم",
   "main": "main.js",
   "scripts": {
+    "build": "echo \"Build complete\"",
     "test": "node scripts/test-runner.cjs",
     "start": "electron .",
     "serve": "node server.js",
@@ -86,12 +87,12 @@
     ]
   },
   "dependencies": {
-    "@clerk/backend": "^3.26.0",
-    "@clerk/express": "^2.1.81",
-    "better-sqlite3": "12.11.1",
     "cors": "^2.8.6",
     "dotenv": "^18.0.8",
     "express": "^5.3.0",
     "mongoose": "^9.11.2"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "12.11.1"
   }
 }
