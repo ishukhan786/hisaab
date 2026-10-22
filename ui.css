@@ -2562,3 +2562,48 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
     background: #e1edde !important;
   }
 }
+
+/* Calm workspace surfaces. Screen-only so saved receipts retain their layout. */
+@media screen {
+  .app-shell {--surface:#fff;--surface-soft:#f5f7f8;--surface-line:#d9e2e5;--surface-ink:#243c38;--surface-active:#176b55}
+  html[data-theme="dark"] .app-shell {--surface:#16251f;--surface-soft:#1d3028;--surface-line:#395347;--surface-ink:#e0eee6;--surface-active:#257e61}
+  body.app-shell {background:var(--surface-soft)}
+  .app-shell .top-nav {background:var(--surface);border-bottom-color:var(--surface-line);box-shadow:0 2px 8px #102a2110}
+  .app-shell :is(button,summary.btn-nav):where(:not(.place-suggest-item):not(#toggle-pwd-btn)) {
+    background:var(--surface)!important;color:var(--surface-ink)!important;border-color:var(--surface-line)!important;
+    border-radius:8px;box-shadow:none!important;transition:background .15s,border-color .15s;
+  }
+  .app-shell :is(button,summary.btn-nav):hover:not(:disabled) {
+    background:var(--surface-soft)!important;border-color:var(--surface-active)!important;
+    transform:none!important;translate:none!important;scale:1!important;
+  }
+  .app-shell :is(button,summary.btn-nav):active:not(:disabled) {transform:none!important;translate:none!important;scale:1!important}
+  .app-shell button:hover .ui-icon {transform:none}
+  .app-shell :is(#add,#journal-add,.workspace-nav button.active,.summary-tab.active,.party-tab.active,#branch-form button[type="submit"],.pin-form button[type="submit"],#export-filtered) {
+    background:var(--surface-active)!important;color:#fff!important;border-color:var(--surface-active)!important;
+  }
+  .app-shell :is(.delete,.journal-delete,.delete-party-btn,#logout-btn,#pin-remove-btn) {color:#b42332!important}
+  html[data-theme="dark"] .app-shell :is(.delete,.journal-delete,.delete-party-btn,#logout-btn,#pin-remove-btn) {color:#ffabb2!important}
+  .app-shell :is(button,summary.btn-nav):focus-visible {outline:3px solid var(--surface-active);outline-offset:3px}
+  .app-shell :is(.workspace-nav,.party-tabs-bar) {background:var(--surface-soft);border-color:var(--surface-line);box-shadow:none}
+  .app-shell .party-tabs-bar {border-radius:10px}
+  .app-shell .party-tab.active {box-shadow:inset 0 -3px 0 #ffffff55!important}
+  .app-shell :is(.paper,.journal-card) {border-color:var(--surface-line);border-radius:12px;box-shadow:0 3px 14px #102a2108}
+  .app-shell .paper:hover {box-shadow:0 3px 14px #102a2108}
+  .app-shell :is(.paper-head,.journal-heading) {background:var(--surface);border-bottom-color:var(--surface-line)}
+  .app-shell .dialog-head button {width:44px;min-width:44px;height:44px;min-height:44px}
+  .app-shell dialog::backdrop {background:#10251d80;backdrop-filter:blur(3px)}
+  .app-shell :is(.table-wrap,.journal-table-wrap) {scrollbar-color:#8ba99a var(--surface-soft);scrollbar-width:thin}
+  .app-shell :is(.top-date-field,.top-search-wrap,.top-serial-field) {border-radius:8px;box-shadow:none}
+  .app-shell :is(.journal-table input,#journal-cash-count) {font-variant-numeric:tabular-nums}
+}
+@media screen and (max-width:600px) {
+  .app-shell .top-nav :is(button,summary.btn-nav),.app-shell :is(.party-tab,.tab-add-btn,.tab-manage-btn) {min-height:44px}
+  .app-shell .party-tabs-bar {top:0}
+}
+@media screen {
+  html[data-theme="dark"] .app-shell :is(.top-nav,.top-date-field,.top-search-wrap,.top-serial-field) {background:var(--surface)!important;color:var(--surface-ink);border-color:var(--surface-line)}
+  html[data-theme="dark"] .app-shell :is(.party-tabs-bar,.workspace-nav) {background:var(--surface-soft)!important;border-color:var(--surface-line)}
+  html[data-theme="dark"] .app-shell :is(button,summary.btn-nav):where(:not(.place-suggest-item):not(#toggle-pwd-btn)) {box-shadow:none!important}
+  html[data-theme="dark"] .app-shell #rows tr.draft-row>td {background:var(--surface-soft)!important}
+}
