@@ -2727,3 +2727,29 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
 @media screen and (prefers-reduced-motion:reduce) {
   html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):hover:not(:disabled),html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):active:not(:disabled) {translate:none!important;transition:none!important}
 }
+
+/* Shared control metrics align Latin digits consistently beside Nastaliq text. */
+@media screen {
+  .app-shell {--entry-control-height:calc(var(--entry-font) * 2.6 + 16px)}
+  .app-shell #rows>tr>td,.app-shell .journal-table tbody>tr>td {vertical-align:middle}
+  .app-shell #rows td textarea,.app-shell #rows td.col-place textarea,.app-shell .journal-table td textarea {
+    min-height:var(--entry-control-height);height:auto;line-height:2.6;padding-block:8px;box-sizing:border-box;transform:none;
+  }
+  .app-shell #rows td input.amount,.app-shell #rows td input.phone,.app-shell .journal-table td input {
+    font-family:Arial,sans-serif;font-size:var(--entry-font);font-variant-numeric:lining-nums tabular-nums;
+    height:var(--entry-control-height);min-height:var(--entry-control-height);line-height:1.4;padding-block:8px;box-sizing:border-box;
+    direction:ltr;unicode-bidi:isolate;transform:none;vertical-align:middle;
+  }
+  .app-shell .journal-table .bal-num {font-family:Arial,sans-serif;font-size:var(--entry-font);line-height:1.4;font-variant-numeric:lining-nums tabular-nums;vertical-align:middle}
+  .app-shell .register-summary strong {line-height:1.4;direction:ltr;unicode-bidi:isolate;font-variant-numeric:lining-nums tabular-nums}
+}
+@media screen {
+  html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item):active:not(:disabled) {scale:.98!important;transition:scale .1s ease,box-shadow .1s ease}
+  .entry-empty-hint {display:flex;align-items:center;justify-content:center;gap:14px;padding:18px;background:var(--surface-soft);border-bottom:1px solid var(--surface-line);color:var(--surface-ink)}
+  .entry-empty-hint[hidden] {display:none}
+  .entry-empty-hint p {margin:0;font-size:12px;line-height:2.4}
+  .entry-empty-icon {display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:14px;background:var(--surface);color:var(--surface-active);font:28px Arial,sans-serif;border:1px solid var(--surface-line)}
+}
+@media screen and (prefers-reduced-motion:reduce) {
+  html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item):active:not(:disabled),html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item):hover:not(:disabled) {scale:1!important;translate:none!important;transition:none!important}
+}

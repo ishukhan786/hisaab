@@ -118,3 +118,19 @@
   const warning=document.getElementById('duplicate-warning-text');
   if(warning){const details=document.createElement('details');details.className='warning-details';const title=document.createElement('summary');title.textContent='ممکنہ دہرے اندراجات — تفصیل دیکھیں';warning.before(details);details.append(title,warning);}
 })();
+
+(() => {
+  const badge=document.getElementById('save-state');let pulse;
+  document.addEventListener('hisaab:saved',()=>{
+    pulse?.cancel();
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    pulse=badge.animate([{boxShadow:'0 0 0 0 rgba(16,185,129,.45)'},{boxShadow:'0 0 0 8px rgba(16,185,129,.12)',offset:.45},{boxShadow:'0 0 0 12px rgba(16,185,129,0)'}],{duration:750,easing:'ease-out'});
+  });
+  new MutationObserver(()=>{if(!badge.textContent.trim().startsWith('✓'))pulse?.cancel();}).observe(badge,{childList:true,characterData:true,subtree:true});
+  const hint=document.createElement('div');hint.className='entry-empty-hint no-print';
+  const symbol=document.createElement('span');symbol.className='entry-empty-icon';symbol.textContent='✎';symbol.setAttribute('aria-hidden','true');
+  const message=document.createElement('p');message.textContent='اس منظر میں کوئی اندراج نہیں۔ نیچے خالی قطار سے شروع کریں، یا تاریخ اور تلاش کا فلٹر چیک کریں۔';
+  hint.append(symbol,message);document.querySelector('#register-page .table-wrap').before(hint);
+  const count=document.getElementById('count');const sync=()=>{hint.hidden=!/^0\s/.test(count.textContent);};
+  new MutationObserver(sync).observe(count,{childList:true,characterData:true,subtree:true});sync();
+})();

@@ -148,7 +148,7 @@
       if (result.status === 'saved') {
         storageRevision = result.revision;
         unsavedNative = false;
-        savedStatus();
+        savedStatus(); document.dispatchEvent(new Event("hisaab:saved"));
         return true;
       }
     } catch (err) {
@@ -185,10 +185,12 @@
       if (nativeNeedsInit) { legacySource = localStorage.getItem(KEY); if (legacySource) state = migrate(JSON.parse(legacySource)); }
       else state = migrate(loaded.state);
       state.date = today();
+      if (state.journal) state.journal.date = today();
       const help = $('storage-help'); if (help) help.textContent = 'ڈیٹا اسی کمپیوٹر کی SQLite فائل میں محفوظ ہے؛ دوسرے کمپیوٹر کے لیے بیک اَپ لے کر بحال کریں۔';
     } else {
       const raw = !isWebMode && localStorage.getItem(KEY); if (raw) state = migrate(JSON.parse(raw));
       state.date = today();
+      if (state.journal) state.journal.date = today();
       if (isWebMode) {
         const help = $('storage-help'); if (help) help.textContent = 'ڈیٹا کلاؤڈ MongoDB Atlas سے منسلک ہو رہا ہے...';
       }
@@ -226,7 +228,7 @@
     if (storageBlocked) { $('save-state').textContent = 'محفوظ نہیں ہو رہا — دوبارہ کھولیں یا بیک اَپ بحال کریں'; retrySave.hidden = false; return false; }
     try {
       writeState({ ...state, rows: state.rows.filter(populated) });
-      if (!isWebMode) savedStatus();
+      if (!isWebMode) { savedStatus(); document.dispatchEvent(new Event('hisaab:saved')); }
       return true;
     } catch {
       unsavedNative = !!nativeStorage; retrySave.hidden = false; $('save-state').textContent = 'محفوظ نہیں ہو سکا — دوبارہ کوشش کریں یا بیک اَپ لیں'; return false;
@@ -1599,6 +1601,7 @@
     applyFilter(true);
     renderPartyTabs();
   }
+  window.setWorkingDate = setWorkingDate;
   $('date').addEventListener('input', () => {
     setWorkingDate($('date').value);
   });

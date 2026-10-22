@@ -100,7 +100,7 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 .journal-table .journal-balance .bal-tag,#journal-closing .bal-tag{font-size:.85em}
 
 /* Fixed money column widths for the A4 journal printout. */
-@media print{.journal-table col.journal-balance-col{width:3.6cm}.journal-table col.journal-money-col{width:3cm}.journal-table col.journal-detail-col{width:auto}}
+@media print{.journal-table col.journal-balance-col{width:3.5cm}.journal-table col.journal-money-col{width:2.8cm}.journal-table col.journal-detail-col{width:auto}}
 
 /* Center the journal title above its date controls and printed page. */
 .journal-heading>div:first-child{flex-basis:100%;width:100%;text-align:center}.journal-heading .journal-tools{margin-inline:auto}
@@ -172,4 +172,15 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
   .app-shell .cash-summary-grid {gap:7px}
   .app-shell .cash-item {min-height:96px;padding:8px 6px}
   .app-shell .cash-item>strong {font-size:21px}
+}
+
+/* Balance labels remain plain text in both themes. */
+html .app-shell .journal-table :is(.journal-balance,#journal-closing) .bal-tag {
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+
+@media print {
+  .journal-table button.journal-delete {display:none!important}
 }
