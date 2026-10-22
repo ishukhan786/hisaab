@@ -133,7 +133,9 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 .app-shell #summary-table tfoot td{background:#e7f1ea;color:#0e4a36;border-top:2px solid #237857;border-bottom:0;font-size:13.5px;font-weight:700;padding:11px 12px;line-height:1.6;text-align:center;position:static}
 .app-shell #summary-hint{margin:12px 0 0;padding:9px 14px;background:#edf5ef;border:1px solid #d0e4d7;border-radius:10px;font-size:12px;font-weight:600;color:#21543d;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center}
 .app-shell #summary-hint::before{content:"💡";font-size:13px}
-.app-shell .summary-empty-cell{padding:30px 16px!important;color:#607c6d!important;font-weight:600!important}
+.app-shell :is(.summary-empty-cell, .history-empty-cell){padding:30px 16px!important;color:#607c6d!important;font-weight:600!important}
+.app-shell .history-from-val{color:#a83232;text-decoration:line-through;opacity:0.85}
+.app-shell .history-to-val{color:#15803d;font-weight:600}
 .app-shell #receipt-dialog{background:#f4f7f2;width:760px}.app-shell #receipt-dialog .dialog-head{background:#f4f7f2}
 .app-shell .receipt-actions{position:sticky;top:91px;z-index:4;background:#f4f7f2;padding:8px 0 12px;gap:8px;margin:0 0 12px;border-bottom:1px solid #dde7dc}
 .app-shell .receipt-actions button{flex:1;padding:6px 10px;font-size:11px}.app-shell #receipt-status{width:100%;line-height:2}.app-shell #receipt-status:empty{display:none}
@@ -2082,8 +2084,16 @@ html[data-theme="dark"] .app-shell #summary-hint {
   color: #8ebda5 !important;
 }
 
-html[data-theme="dark"] .app-shell .summary-empty-cell {
+html[data-theme="dark"] .app-shell :is(.summary-empty-cell, .history-empty-cell) {
   color: #799e8c !important;
+}
+
+html[data-theme="dark"] .app-shell .history-from-val {
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] .app-shell .history-to-val {
+  color: #86efac !important;
 }
 
 html[data-theme="dark"] .app-shell .dialog-head button {
@@ -2360,3 +2370,195 @@ html[data-theme="dark"] .external-backup-banner {
 .table-scroll-48 { max-height: 48vh; }
 .table-scroll-50 { max-height: 50vh; }
 .history-subtitle-custom { font-weight: 600; margin: 4px 0 10px; color: var(--green); }
+
+/* Compact lock screen: keep the full card inside laptop and mobile viewports. */
+body:has(#pin-lock-overlay:not([hidden])) {
+  overflow: hidden;
+}
+#pin-lock-overlay {
+  box-sizing: border-box;
+  padding: 16px;
+  align-items: safe center;
+  overscroll-behavior: contain;
+}
+#pin-unlock-form {
+  max-width: 340px;
+  padding: 20px 24px;
+  border-radius: 22px;
+  gap: 8px;
+  flex-shrink: 0;
+}
+#pin-unlock-form .pin-lock-badge-wrap { margin: 0 0 2px; }
+#pin-unlock-form .pin-logo { width: 44px; height: 44px; border-radius: 14px; font-size: 27px; }
+#pin-unlock-title { line-height: 1.8; }
+#pin-unlock-form #pin-unlock-title { font-size: 20px; }
+#pin-unlock-form #pin-unlock-reason { font-size: 12px; line-height: 1.9; }
+#pin-unlock-form .pin-input-container { margin: 4px 0; }
+#pin-unlock-form #pin-unlock-input { height: 46px; border-radius: 12px; font-size: 24px; }
+#pin-unlock-form .pin-keypad { direction: ltr; gap: 8px; margin: 2px 0; }
+.app-shell #pin-unlock-form .pin-key {
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 10px;
+  font: 600 18px/1 Arial, sans-serif;
+}
+#pin-unlock-form #pin-unlock-error:empty { display: none; }
+#pin-unlock-form #pin-unlock-error { margin: 0; line-height: 1.8; }
+#pin-unlock-form .pin-actions { margin: 4px 0 0; gap: 6px; }
+.app-shell #pin-unlock-form .pin-submit-btn { min-height: 44px; padding: 4px 12px; border-radius: 11px; }
+#pin-unlock-form .pin-hint-badge { margin: 0; padding: 6px 10px; font-size: 11px; line-height: 1.9; }
+#pin-unlock-form button:focus-visible { outline: 2px solid #10b981; outline-offset: 3px; }
+html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; border-color: #315442; color: #b4d8c5; }
+@media (max-height: 600px) {
+  #pin-lock-overlay { padding: 10px; }
+  #pin-unlock-form { padding: 14px 22px; gap: 5px; }
+  #pin-unlock-form .pin-logo { width: 36px; height: 36px; font-size: 24px; border-radius: 11px; }
+  #pin-unlock-form .pin-keypad { gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #pin-lock-overlay, #pin-unlock-form, #pin-unlock-form * { animation: none; transition: none; }
+}
+
+/* Complete night-theme surfaces and feedback. Screen-only: exports keep paper colours. */
+@media screen {
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --night-panel: #192d23;
+    --night-field: #101e17;
+    --night-border: #365747;
+    --night-text: #e5efe8;
+    --night-muted: #aac4b6;
+  }
+  html[data-theme="dark"] .app-shell :is(#branch-form, .external-backup-settings,
+    .pin-status-banner, .pin-dialog-badge-icon, .office-switcher, .clerk-login-panel,
+    .ba-stats > div, .ba-form-card, .branch-admin-user, .ba-branch-card,
+    .table-scroll-hint, .place-suggest-menu) {
+    background: var(--night-panel) !important;
+    border-color: var(--night-border) !important;
+    color: var(--night-text) !important;
+  }
+  html[data-theme="dark"] .app-shell :is(dialog p, dialog label, dialog small,
+    .pin-field-hint, .external-backup-banner, .external-backup-location,
+    .backup-menu-group h3, .journal-foot, #cash-summary-help, .table-scroll-hint,
+    .ba-eyebrow, .ba-stats span, .ba-field, .ba-field small, .ba-identity small,
+    .ba-owner-note, .ba-navigation span, .ba-empty, .office-switcher small) {
+    color: var(--night-muted) !important;
+  }
+  html[data-theme="dark"] .app-shell :is(.external-backup-settings h3,
+    #pin-status-badge, .branch-admin-dialog h3, .clerk-login-panel h2) {
+    color: var(--night-text) !important;
+  }
+  html[data-theme="dark"] .app-shell :is(input, textarea, select)::placeholder {
+    color: #a2b9ac !important;
+    opacity: 1;
+  }
+  html[data-theme="dark"] .app-shell :is(#rows, .journal-table) td :is(input, textarea)::placeholder,
+  html[data-theme="dark"] .app-shell #rows .bal-type-input::placeholder {
+    color: #a2b9ac !important;
+    opacity: 1;
+  }
+  html[data-theme="dark"] .app-shell :is(.help, .date-screen-badge) {
+    color: var(--night-muted) !important;
+  }
+  html[data-theme="dark"] .app-shell .register-totals .totals-gap > td {
+    background: #13221b !important;
+  }
+  html[data-theme="dark"] .app-shell .journal-balance .bal-num,
+  html[data-theme="dark"] .app-shell #journal-closing .bal-num {
+    color: var(--night-text) !important;
+  }
+  html[data-theme="dark"] .app-shell .is-jama .bal-num { color: #86efac !important; }
+  html[data-theme="dark"] .app-shell .is-banam .bal-num { color: #fca5a5 !important; }
+  html[data-theme="dark"] .app-shell #journal-closing.is-jama .bal-num { color: #86efac !important; }
+  html[data-theme="dark"] .app-shell #journal-closing.is-banam .bal-num { color: #fca5a5 !important; }
+  html[data-theme="dark"] .app-shell :is(.office-switcher select, dialog textarea,
+    .place-suggest-item, .pin-input-container input) {
+    background: var(--night-field) !important;
+    color: var(--night-text) !important;
+    border-color: var(--night-border) !important;
+  }
+  html[data-theme="dark"] .app-shell :is(input, textarea, select):focus-visible {
+    outline: 2px solid #6ee7b7;
+    outline-offset: 1px;
+  }
+  html[data-theme="dark"] .app-shell :is(.backup-history, .backup-menu-group, .ba-user-controls) {
+    border-color: var(--night-border);
+  }
+  html[data-theme="dark"] .app-shell :is(.pin-status-banner.active,
+    .ba-message[data-tone="success"], .ba-badge.enabled, .ba-owner .ba-avatar) {
+    background: #173c2b !important;
+    border-color: #376e50 !important;
+    color: #a7f3d0 !important;
+  }
+  html[data-theme="dark"] .app-shell :is(.external-backup-overview strong,
+    .pin-status-banner.active #pin-status-badge, .ba-stats strong, .ba-branch-icon) {
+    color: #a7f3d0 !important;
+  }
+  html[data-theme="dark"] .app-shell :is(.external-backup-banner.error,
+    .pin-error:not(:empty), .ba-message[data-tone="error"], .ba-badge.disabled) {
+    background: #3b2225 !important;
+    border-color: #8f4c54 !important;
+    color: #fecaca !important;
+  }
+  html[data-theme="dark"] .app-shell :is(#external-backup-error,
+    .external-backup-banner.error strong, #external-backup-status.error,
+    #pin-form-msg, #pin-unlock-error, .filter-panel p.error, .clerk-login-panel [role="alert"]) {
+    color: #fecaca !important;
+  }
+  html[data-theme="dark"] .app-shell :is(#branch-error, .ba-assignment-hint) {
+    color: #f5d58e !important;
+  }
+  html[data-theme="dark"] .app-shell :is(.ba-badge.owner, .ba-badge.unassigned, .dup-badge) {
+    background: #3a301b !important;
+    color: #f5d58e !important;
+    border-color: #796437 !important;
+  }
+  html[data-theme="dark"] .app-shell :is(.ba-message:not([data-tone]), .ba-avatar, .ba-badge) {
+    background: #223345;
+    color: #bedcfa;
+  }
+  html[data-theme="dark"] .app-shell .pin-status-indicator {
+    box-shadow: 0 0 0 2px #476354;
+  }
+  html[data-theme="dark"] .app-shell .place-suggest-item:hover {
+    background: #294a38 !important;
+  }
+  html[data-theme="dark"] .app-shell :is(.journal-table input, #journal-cash-count)[aria-invalid="true"] {
+    background: #3b2225 !important;
+    color: #fecaca !important;
+    outline-color: #fca5a5 !important;
+  }
+  /* Receipt preview remains a paper preview, with explicitly dark text throughout. */
+  html[data-theme="dark"] .app-shell .receipt-sheet {
+    color-scheme: light;
+    background: #ffffff !important;
+    color: #213e35 !important;
+    --green: #17634c;
+    --ink: #213e35;
+    --muted: #607969;
+  }
+  html[data-theme="dark"] .app-shell .receipt-sheet :is(p, label, small) {
+    color: #405e50 !important;
+  }
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-header h3,
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-badge,
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-amounts strong {
+    color: #17634c !important;
+  }
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-party {
+    background: #f5f8f3 !important;
+    color: #213e35 !important;
+    border-color: #d5e1d6 !important;
+  }
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-details dt {
+    color: #607969 !important;
+  }
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-amounts {
+    background: #f1f6ee !important;
+    border-color: #a9bfae !important;
+  }
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-amount-main {
+    background: #e1edde !important;
+  }
+}

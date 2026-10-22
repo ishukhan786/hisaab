@@ -15,11 +15,11 @@
   <title>حساب — روزانہ کھاتہ و رجسٹر (Hisaab)</title>
   <!-- FIX-4: Anti-FOUC theme preload moved to external theme-init.js -->
   <!-- localStorage.getItem('hisaab-theme') verification guard preserved -->
-  <script src="theme-init.js?v=1.4.14"></script>
-  <link rel="stylesheet" href="style.css?v=1.4.14">
-  <link rel="stylesheet" href="ui.css?v=1.4.14">
-  <link rel="stylesheet" href="journal.css?v=1.4.14">
-  <link rel="stylesheet" href="receipt-export.css?v=1.4.14">
+  <script src="theme-init.js?v=1.4.15"></script>
+  <link rel="stylesheet" href="style.css?v=1.4.15">
+  <link rel="stylesheet" href="ui.css?v=1.4.15">
+  <link rel="stylesheet" href="journal.css?v=1.4.15">
+  <link rel="stylesheet" href="receipt-export.css?v=1.4.15">
 </head>
 <body class="app-shell">
   <header class="top-nav no-print">
@@ -440,7 +440,7 @@
 
   <!-- FIX-4 & FIX-7: Zero-flash lock moved to external pin-init.js with safe overlay guard -->
   <!-- Web PIN auto-lock: window.location.protocol.startsWith('http') -> ov.hidden = false; el.inert = true; moved to pin-init.js -->
-  <script src="pin-init.js?v=1.4.14"></script>
+  <script src="pin-init.js?v=1.4.15"></script>
 
   <!-- FIX-21: Clean hidden semantics without redundant aria-hidden -->
   <section id="receipt-print" hidden></section>
@@ -448,14 +448,14 @@
   <input id="file" type="file" accept="application/json,.json" hidden aria-label="بیک اَپ فائل منتخب کریں">
 
   <!-- FIX-3: Universal dialog backdrop-click fallback polyfill -->
-  <script src="dialog-fallback.js?v=1.4.14"></script>
-  <script src="excel-export.js?v=1.4.14"></script>
-  <script src="journal.js?v=1.4.14"></script>
+  <script src="dialog-fallback.js?v=1.4.15"></script>
+  <script src="excel-export.js?v=1.4.15"></script>
+  <script src="journal.js?v=1.4.15"></script>
   <!-- FIX-6 & FIX-27: html2canvas with SRI integrity verification and deferred non-blocking load -->
   <script src="assets/html2canvas.min.js?v=1.4.1" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" defer></script>
-  <script src="receipt-png.js?v=1.4.14"></script>
-  <script src="external-backup-ui.js?v=1.4.14"></script>
-  <script src="app.js?v=1.4.14-fix1"></script>
-  <script src="ui.js?v=1.4.14"></script>
+  <script src="receipt-png.js?v=1.4.15"></script>
+  <script src="external-backup-ui.js?v=1.4.15"></script>
+  <script src="app.js?v=1.4.15"></script>
+  <script src="ui.js?v=1.4.15"></script>
 </body>
 </html>
