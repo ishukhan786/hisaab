@@ -115,15 +115,25 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 .app-shell .summary-tab{flex:1;min-height:38px;padding:4px 14px;border:1px solid transparent;border-radius:9px;background:transparent;color:#355648;font-size:12.5px;font-weight:600;box-shadow:none;transition:all .18s ease}
 .app-shell .summary-tab:hover{background:rgba(255,255,255,0.65);color:#104a36;transform:none}
 .app-shell .summary-tab.active{background:linear-gradient(135deg,#228d6b 0%,#15674e 55%,#0f4f3b 100%);border-color:#0e4a37;color:#fff;font-weight:700;box-shadow:0 3px 10px rgba(18,88,65,0.26),inset 0 1px 0 rgba(255,255,255,0.28)}
-.app-shell .summary-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-.app-shell .summary-toolbar #summary-scope{margin:0;font-weight:600;color:#274d3d}
+.app-shell .summary-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.app-shell .summary-toolbar #summary-scope{margin:0;display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:#edf5f0;border:1px solid #cadfd2;border-radius:20px;font-size:12px;font-weight:700;color:#15573d;box-shadow:0 1px 3px rgba(16,56,41,0.04)}
+.app-shell .summary-toolbar #summary-scope::before{content:"📊";font-size:13px}
 .app-shell .summary-export-btns{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.app-shell .summary-export-btns button{min-height:38px;padding:4px 14px;font-size:11.5px}
+.app-shell .summary-export-btns button{min-height:38px;padding:5px 14px;font-size:12px;border-radius:9px}
 .app-shell #summary-status{margin:0 0 8px;font-size:11.5px;font-weight:700;color:#14583d;line-height:2}.app-shell #summary-status:empty{display:none}
 .app-shell .summary-wrap{border:1px solid #d3e2d7;border-radius:12px;max-height:52vh;overflow:auto;box-shadow:inset 0 1px 3px rgba(0,0,0,0.03)}
-.app-shell :is(#summary-table,#history-table,#backup-list-table){margin:0;table-layout:auto}
-.app-shell :is(#summary-table,#history-table,#backup-list-table) th{position:sticky;top:0;background:#edf4ef;line-height:2.5;padding:10px;font-size:12px}
-.app-shell :is(#summary-table,#history-table,#backup-list-table) td{padding:10px;line-height:2.5;overflow-wrap:anywhere}
+.app-shell :is(#summary-table,#history-table,#backup-list-table){margin:0;width:100%;table-layout:auto;border-collapse:separate;border-spacing:0}
+.app-shell :is(#summary-table,#history-table,#backup-list-table) th{position:sticky;top:0;z-index:2;background:#edf4ef;line-height:1.6;padding:11px 12px;font-size:12.5px;font-weight:700;text-align:center;border-bottom:1px solid #c4d7cb}
+.app-shell :is(#summary-table,#history-table,#backup-list-table) td{padding:10px 12px;line-height:1.6;font-size:13px;text-align:center;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;border-bottom:1px solid #e2ebe4}
+.app-shell #summary-table tbody tr{cursor:pointer;transition:background .15s ease}
+.app-shell #summary-table tbody tr:nth-child(even){background:#f7faf8}
+.app-shell #summary-table tbody tr:hover{background:#e8f4ec}
+.app-shell #summary-table td:first-child{color:#15803d;font-weight:700}
+.app-shell #summary-table tfoot th,
+.app-shell #summary-table tfoot td{background:#e7f1ea;color:#0e4a36;border-top:2px solid #237857;border-bottom:0;font-size:13.5px;font-weight:700;padding:11px 12px;line-height:1.6;text-align:center;position:static}
+.app-shell #summary-hint{margin:12px 0 0;padding:9px 14px;background:#edf5ef;border:1px solid #d0e4d7;border-radius:10px;font-size:12px;font-weight:600;color:#21543d;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center}
+.app-shell #summary-hint::before{content:"💡";font-size:13px}
+.app-shell .summary-empty-cell{padding:30px 16px!important;color:#607c6d!important;font-weight:600!important}
 .app-shell #receipt-dialog{background:#f4f7f2;width:760px}.app-shell #receipt-dialog .dialog-head{background:#f4f7f2}
 .app-shell .receipt-actions{position:sticky;top:91px;z-index:4;background:#f4f7f2;padding:8px 0 12px;gap:8px;margin:0 0 12px;border-bottom:1px solid #dde7dc}
 .app-shell .receipt-actions button{flex:1;padding:6px 10px;font-size:11px}.app-shell #receipt-status{width:100%;line-height:2}.app-shell #receipt-status:empty{display:none}
@@ -1988,19 +1998,45 @@ html[data-theme="dark"] .app-shell .summary-tab {
   color: #8daea0 !important;
 }
 
+html[data-theme="dark"] .app-shell .summary-tab:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #c4ebd7 !important;
+}
+
 html[data-theme="dark"] .app-shell .summary-tab.active {
   background: linear-gradient(135deg, #1f916a 0%, #136649 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 10px rgba(18, 88, 65, 0.4) !important;
+}
+
+html[data-theme="dark"] .app-shell .summary-toolbar #summary-scope {
+  background: #15271f !important;
+  border-color: #244434 !important;
+  color: #a4cebb !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .app-shell #summary-png {
+  background: #172a21 !important;
+  border-color: #274536 !important;
+  color: #dceae2 !important;
+}
+
+html[data-theme="dark"] .app-shell #summary-png:hover {
+  background: #1f392d !important;
+  border-color: #3b6651 !important;
   color: #ffffff !important;
 }
 
 html[data-theme="dark"] .app-shell .summary-wrap {
   border-color: #233c2f !important;
+  scrollbar-color: #2c5440 #101c16 !important;
 }
 
 html[data-theme="dark"] .app-shell :is(#summary-table, #history-table, #backup-list-table) th {
   background: #172a21 !important;
-  color: #9bc5b0 !important;
-  border-color: #233c2f !important;
+  color: #9cd4ba !important;
+  border-color: #264736 !important;
 }
 
 html[data-theme="dark"] .app-shell :is(#summary-table, #history-table, #backup-list-table) td {
@@ -2008,8 +2044,59 @@ html[data-theme="dark"] .app-shell :is(#summary-table, #history-table, #backup-l
   color: #dceae2 !important;
 }
 
-html[data-theme="dark"] #summary-table tbody tr:hover {
-  background: #1a3026 !important;
+html[data-theme="dark"] .app-shell :is(#summary-table, #history-table, #backup-list-table) tbody tr {
+  background: #13221b !important;
+}
+
+html[data-theme="dark"] .app-shell :is(#summary-table, #history-table, #backup-list-table) tbody tr:nth-child(even),
+html[data-theme="dark"] .app-shell :is(#summary-table, #history-table, #backup-list-table) tbody tr:nth-child(even) > td {
+  background: #0f1c16 !important;
+}
+
+html[data-theme="dark"] .app-shell :is(#summary-table, #history-table, #backup-list-table) tbody tr:hover,
+html[data-theme="dark"] .app-shell :is(#summary-table, #history-table, #backup-list-table) tbody tr:hover > td {
+  background: #1c382b !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] #summary-table td:first-child {
+  color: #4ade80 !important;
+}
+
+html[data-theme="dark"] #summary-table tfoot th,
+html[data-theme="dark"] #summary-table tfoot td {
+  background: #173326 !important;
+  color: #ffffff !important;
+  border-top: 2px solid #2e7a57 !important;
+  border-bottom: 1px solid #224533 !important;
+  font-weight: 700 !important;
+}
+
+html[data-theme="dark"] #summary-table tfoot th[scope="row"] {
+  color: #4ade80 !important;
+}
+
+html[data-theme="dark"] .app-shell #summary-hint {
+  background: #112019 !important;
+  border-color: #20392b !important;
+  color: #8ebda5 !important;
+}
+
+html[data-theme="dark"] .app-shell .summary-empty-cell {
+  color: #799e8c !important;
+}
+
+html[data-theme="dark"] .app-shell .dialog-head button {
+  background: #172a21 !important;
+  border-color: #264736 !important;
+  color: #9bc5b0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+}
+
+html[data-theme="dark"] .app-shell .dialog-head button:hover {
+  background: #2a1b1b !important;
+  border-color: #7f2323 !important;
+  color: #f87171 !important;
 }
 
 /* Receipt Dialog */
