@@ -88,3 +88,33 @@
     }
   });
 })();
+
+// Arrange existing controls without duplicating their event handlers or accounting state.
+(() => {
+  const header=document.querySelector('.top-nav');
+  const first=document.createElement('div');first.className='workspace-header';
+  const tools=document.createElement('div');tools.className='workspace-tools';
+  first.append(document.querySelector('.brand-mini'),document.querySelector('.workspace-nav'),document.querySelector('#theme-toggle'),document.querySelector('#save-state'),document.querySelector('.more-menu'));
+  tools.append(document.querySelector('.top-nav-start'),document.querySelector('.top-nav-center'),document.querySelector('.top-nav-end'));
+  header.append(first,tools);
+  const output=document.createElement('details');output.className='output-menu';
+  const trigger=document.createElement('summary');trigger.className='btn-nav';trigger.textContent='پرنٹ / ایکسپورٹ ▾';
+  const panel=document.createElement('div');panel.className='output-panel';
+  for(const id of ['print','save-pdf','open-pdf','open-pdf-folder','export-open'])panel.append(document.getElementById(id));
+  output.append(trigger,panel);document.querySelector('.top-nav-end').prepend(output);
+  document.addEventListener('click',e=>{if(!output.contains(e.target))output.open=false;});
+  panel.addEventListener('click',e=>{if(e.target.closest('button'))output.open=false;});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&output.open){output.open=false;trigger.focus();}});
+  const strip=document.createElement('section');strip.className='register-summary no-print';strip.setAttribute('aria-label','منتخب اندراجات کا مجموعہ');
+  for(const [id,label] of [['total-orders-count','آرڈرز'],['total-balance','بقایا'],['total-aed','درہم'],['total-pkr','روپیہ'],['total-net-aed','موجودہ درہم']]){
+    const card=document.createElement('div'),caption=document.createElement('span'),value=document.createElement('strong');caption.textContent=label;
+    const source=document.getElementById(id);const sync=()=>{value.textContent=source.textContent.replace(/^[^:]*:\s*/,'');};sync();new MutationObserver(sync).observe(source,{subtree:true,childList:true,characterData:true});
+    card.append(caption,value);strip.append(card);
+  }
+  document.querySelector('#register-page .table-wrap').after(strip);
+})();
+
+(() => {
+  const warning=document.getElementById('duplicate-warning-text');
+  if(warning){const details=document.createElement('details');details.className='warning-details';const title=document.createElement('summary');title.textContent='ممکنہ دہرے اندراجات — تفصیل دیکھیں';warning.before(details);details.append(title,warning);}
+})();

@@ -2607,3 +2607,123 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   html[data-theme="dark"] .app-shell :is(button,summary.btn-nav):where(:not(.place-suggest-item):not(#toggle-pwd-btn)) {box-shadow:none!important}
   html[data-theme="dark"] .app-shell #rows tr.draft-row>td {background:var(--surface-soft)!important}
 }
+
+/* Glass chrome and soft elevation; opaque fallback keeps unsupported browsers readable. */
+@media screen {
+  .app-shell {--glass-panel:rgba(255,255,255,.86);--paper-shadow:0 2px 4px #163c2b04,0 8px 24px #163c2b08,0 24px 56px #163c2b06;--popup-shadow:0 8px 24px #163c2b12,0 28px 80px #163c2b26}
+  html[data-theme="dark"] .app-shell {--glass-panel:rgba(16,32,25,.9);--paper-shadow:0 2px 6px #0005,0 16px 40px #0004,0 0 28px #25aa7510;--popup-shadow:0 12px 30px #0006,0 32px 80px #0008,0 0 40px #27c58a14}
+  .app-shell .paper,.app-shell .paper:hover,.app-shell .journal-card {box-shadow:var(--paper-shadow)}
+  .app-shell dialog,.app-shell .more-menu .menu {background:var(--surface);box-shadow:var(--popup-shadow);border:1px solid var(--surface-line)}
+  @supports (backdrop-filter:blur(12px)) {
+    .app-shell .top-nav,html[data-theme="dark"] .app-shell .top-nav,
+    .app-shell dialog,html[data-theme="dark"] .app-shell dialog,
+    .app-shell .more-menu .menu,html[data-theme="dark"] .app-shell .more-menu .menu {
+      background:var(--glass-panel)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    }
+  }
+  .app-shell .top-nav {box-shadow:0 1px 0 #ffffff14,0 4px 18px #163c2b0c}
+  html[data-theme="dark"] .app-shell .top-nav {box-shadow:0 1px 0 #71d7a51a,0 8px 28px #0004}
+  .app-shell :is(#external-backup-state,#external-backup-status,#backup-status)::before {
+    content:'';display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:8px;background:#84958d;vertical-align:middle;
+  }
+  .app-shell [data-backup-state="ready"]::before {background:#10b981!important;animation:status-glow 2.6s ease-out infinite}
+  .app-shell [data-backup-state="working"]::before {background:#dca128!important;animation:status-glow 1.6s ease-out infinite}
+  .app-shell [data-backup-state="error"]::before {background:#ef6370!important}
+  .app-shell [data-backup-state="pending"]::before {background:#dca128!important}
+  .app-shell .pin-status-banner.active .pin-status-indicator {animation:status-glow 2.6s ease-out infinite}
+  @keyframes status-glow {0%{box-shadow:0 0 0 0 #10b98140}70%{box-shadow:0 0 0 6px #10b98100}100%{box-shadow:0 0 0 0 #10b98100}}
+}
+@media screen and (prefers-reduced-motion:reduce) {
+  .app-shell .pin-status-indicator,.app-shell [data-backup-state]::before {animation:none!important}
+}
+
+/* Task-oriented layout: navigation first, working controls second. */
+@media screen {
+  .app-shell .top-nav {display:flex;flex-direction:column;gap:8px}
+  .workspace-header,.workspace-tools {display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:wrap}
+  .workspace-header>#theme-toggle {margin-inline-end:auto}
+  .app-shell .workspace-header #save-state {order:initial}
+  .app-shell .workspace-tools .top-nav-end {border:0;padding:0;display:flex;gap:8px;flex-wrap:wrap;width:auto}
+  .workspace-tools .top-nav-center {flex:1;min-width:200px}
+  .app-shell .top-serial-field {margin:0;order:initial}
+  .app-shell .workspace-header #theme-toggle {display:inline-flex}
+  .output-menu {position:relative}
+  .output-panel {position:absolute;inset-inline-end:0;top:calc(100% + 8px);z-index:60;display:grid;gap:8px;width:220px;padding:12px;background:var(--surface);border:1px solid var(--surface-line);border-radius:12px;box-shadow:var(--popup-shadow)}
+  .output-menu:not([open])>.output-panel {display:none}
+  .app-shell .paper-head {display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:12px}
+  .app-shell .paper-head .date-block {display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+  .app-shell .paper-head .head-center {flex:0 1 260px}
+  .app-shell .paper-head #title {font-size:18px;width:100%}
+  .app-shell #rows td.money input {text-align:right;font-variant-numeric:tabular-nums}
+  .app-shell #rows tr.draft-row td:first-child::after {content:'نیا';display:block;font-size:10px;color:var(--surface-active)}
+  .app-shell .register-totals {display:none}
+  .register-summary {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:14px;background:var(--surface);border-top:1px solid var(--surface-line)}
+  .register-summary>div {display:flex;flex-direction:column;text-align:center;gap:6px;padding:10px 14px;background:var(--surface-soft);border:1px solid var(--surface-line);border-radius:10px;min-width:0}
+  .register-summary span {font-size:12px;color:var(--surface-ink)}
+  .register-summary strong {font:700 19px Arial,sans-serif;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;color:var(--surface-ink)}
+  .app-shell .journal-heading {padding:14px 20px}
+  .app-shell.journal-view .workspace-tools {justify-content:flex-end}
+}
+@media screen and (max-width:600px) {
+  .workspace-header {gap:8px;width:100%}
+  .workspace-header .brand-mini {display:none}
+  .app-shell .workspace-header .workspace-nav {flex:1}
+  .app-shell .workspace-header #save-state {font-size:9px;padding:2px 7px;max-width:130px}
+  .workspace-tools {gap:8px;width:100%}
+  .workspace-tools .top-nav-start {width:100%;display:flex;flex-wrap:wrap}
+  .workspace-tools .top-date-wrap {flex:1}
+  .app-shell .workspace-tools .btn-range,.app-shell .workspace-tools .all-dates-toggle {flex:0 1 auto;font-size:10px}
+  .workspace-tools .top-nav-center {flex-basis:100%;order:1}
+  .app-shell .workspace-tools .top-nav-end {order:2;width:100%;justify-content:space-between}
+  .output-panel {position:fixed;inset-inline:12px;top:auto;bottom:12px;width:auto;max-height:65vh;overflow:auto}
+  .app-shell .paper-head {display:grid;grid-template-columns:1fr auto;gap:6px;padding:10px 12px}
+  .app-shell .paper-head .head-center {display:none}
+  .app-shell .paper-head .date-block {justify-content:flex-end;font-size:10px}
+  .app-shell .paper-head .page-no-line {display:none}
+  .register-summary {grid-template-columns:repeat(2,minmax(0,1fr));padding:10px;gap:8px}
+  .register-summary>div:last-child {grid-column:1/-1}
+  .app-shell .party-tabs-actions {width:auto;margin-inline-start:auto}
+  .app-shell .party-tabs-scroll {flex-basis:auto}
+}
+@media screen {
+  .warning-details {flex:1;min-width:0}
+  .warning-details>summary {cursor:pointer;font-weight:700}
+  .warning-details>span {display:block;padding-block:6px}
+  .app-shell .duplicate-warning {padding:8px 12px;gap:8px}
+}
+@media screen {
+  .app-shell .workspace-header,.app-shell .workspace-tools {width:100%}
+  .app-shell .workspace-header #theme-toggle {display:inline-flex!important}
+  .app-shell .paper-head .date-block {display:flex!important;flex-direction:row!important;align-items:center;gap:10px}
+}
+
+/* Action colors and tactile feedback, confined to interactive screen controls. */
+@media screen {
+  .app-shell #theme-toggle {--action:#925a16;--action-tint:#fff1d4;--action-ink:#78450b}
+  .app-shell .output-menu>summary {--action:#2563b4;--action-tint:#e6efff;--action-ink:#194b91}
+  html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item) {
+    background:linear-gradient(160deg,var(--surface),var(--action-tint))!important;
+    color:var(--action-ink)!important;border-color:color-mix(in srgb,var(--action) 38%,var(--surface-line))!important;
+    box-shadow:0 2px 5px #163c2b0a,inset 0 1px 0 #ffffff70!important;
+    transition:background .18s,border-color .18s,box-shadow .18s,translate .18s;
+  }
+  html[data-theme="dark"] body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item) {
+    background:linear-gradient(150deg,color-mix(in srgb,var(--action) 20%,#16251f),color-mix(in srgb,var(--action) 10%,#101c17))!important;
+    color:color-mix(in srgb,var(--action-tint) 90%,white)!important;
+    border-color:color-mix(in srgb,var(--action) 65%,#395347)!important;
+    box-shadow:0 3px 8px #0003,inset 0 1px 0 #ffffff0c!important;
+  }
+  html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item):hover:not(:disabled) {
+    box-shadow:0 5px 14px color-mix(in srgb,var(--action) 25%,transparent),inset 0 1px 0 #ffffff25!important;
+    border-color:var(--action)!important;translate:0 -1px!important;
+  }
+  html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):active:not(:disabled) {translate:0 1px!important;box-shadow:inset 0 2px 5px #0002!important}
+  html body.app-shell :is(#add,#journal-add,#add-party-tab,.workspace-nav button.active,.party-tab.active,.summary-tab.active):not(#toggle-pwd-btn) {
+    background:linear-gradient(135deg,var(--action),color-mix(in srgb,var(--action) 78%,#07261d))!important;color:white!important;
+    border-color:var(--action)!important;box-shadow:0 3px 10px color-mix(in srgb,var(--action) 22%,transparent),inset 0 1px 0 #ffffff30!important;
+  }
+  html body.app-shell button:disabled {opacity:.45;translate:none!important;box-shadow:none!important}
+}
+@media screen and (prefers-reduced-motion:reduce) {
+  html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):hover:not(:disabled),html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):active:not(:disabled) {translate:none!important;transition:none!important}
+}

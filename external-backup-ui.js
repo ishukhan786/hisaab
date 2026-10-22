@@ -52,6 +52,9 @@
   const details=$('external-backup-status');
   details.textContent=[state,last?'آخری کامیاب بیک اَپ: '+last:'','مقام: '+folder,err?'وجہ: '+err:''].filter(Boolean).join(' — ');
   details.classList.toggle('error',!!err);
+  const badgeState=working?'working':err?'error':config.folder?(last?'ready':'pending'):'disabled';
+  details.dataset.backupState=badgeState;
+  document.getElementById('external-backup-state').dataset.backupState=badgeState;
   const supported=!!native||!!window.showDirectoryPicker;
   for(const id of ['external-backup-select'])$(id).disabled=!!working||!supported;
   for(const id of ['external-backup-retry']){
