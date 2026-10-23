@@ -946,8 +946,7 @@
       $('khata-view-address').textContent = khata.address || '—';
 
       const currBadge = $('khata-view-currency');
-      currBadge.textContent = khata.currency === 'aed' ? 'درہم (AED)' : 'پاکستانی روپیہ (PKR)';
-      currBadge.className = `khata-currency-badge ${khata.currency}`;
+      if (currBadge) currBadge.remove();
 
       // Column headers (clean بنام and جمع without currency text)
       $('khata-th-currency-label-1').textContent = 'بنام';
@@ -972,10 +971,8 @@
       const nameInput = $('new-khata-name');
       const mobileInput = $('new-khata-mobile');
       const addressInput = $('new-khata-address');
-      const currSelect = $('new-khata-currency');
       const balanceInput = $('new-khata-opening-balance');
       const balanceType = $('new-khata-opening-type');
-      const curTag = $('new-khata-cur-tag');
 
       if (codeInput) {
         codeInput.value = nextKhataCode();
@@ -984,10 +981,8 @@
       if (nameInput) nameInput.value = '';
       if (mobileInput) mobileInput.value = '';
       if (addressInput) addressInput.value = '';
-      if (currSelect) currSelect.value = 'pkr';
       if (balanceInput) balanceInput.value = '';
       if (balanceType) balanceType.value = 'debit';
-      if (curTag) curTag.textContent = 'PKR';
 
       const d = $('new-khata-dialog');
       if (d && !d.open) d.showModal();
@@ -1006,10 +1001,6 @@
       $('edit-khata-name').value = khata.name;
       $('edit-khata-mobile').value = khata.mobile || '';
       $('edit-khata-address').value = khata.address || '';
-      const currencySelect = $('edit-khata-currency');
-      currencySelect.value = khata.currency || 'pkr';
-      currencySelect.disabled = khata.rows.some(hasData);
-      currencySelect.title = currencySelect.disabled ? 'اندراجات والے کھاتے کی کرنسی تبدیل نہیں کی جا سکتی۔' : '';
 
       const d = $('edit-khata-dialog');
       if (d && !d.open) d.showModal();
@@ -1138,7 +1129,7 @@
       if (!list.length) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 7;
+        td.colSpan = 6;
         td.className = 'summary-empty-cell khata-empty-dir-cell';
 
         const wrap = document.createElement('div');
@@ -1178,7 +1169,7 @@
       } else if (!filtered.length) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 7;
+        td.colSpan = 6;
         td.className = 'summary-empty-cell khata-empty-dir-cell';
 
         const wrap = document.createElement('div');
@@ -1266,9 +1257,6 @@
           tdMobile.className = 'eng-num';
           tdMobile.textContent = k.mobile || '—';
 
-          const tdCurr = document.createElement('td');
-          tdCurr.textContent = k.currency === 'aed' ? 'درہم (AED)' : 'روپیہ (PKR)';
-
           const tdBal = document.createElement('td');
           tdBal.className = 'dir-td-bal ' + (running > 0n ? 'is-banam' : running < 0n ? 'is-jama' : 'is-zero');
 
@@ -1287,6 +1275,7 @@
           tdBal.append(splitWrap);
 
           const tdAction = document.createElement('td');
+          tdAction.className = 'dir-td-action';
           tdAction.style.textAlign = 'center';
           const btnOpen = document.createElement('button');
           btnOpen.type = 'button';
@@ -1298,7 +1287,7 @@
           };
           tdAction.append(btnOpen);
 
-          tr.append(tdIdx, tdCode, tdName, tdMobile, tdCurr, tdBal, tdAction);
+          tr.append(tdIdx, tdCode, tdName, tdMobile, tdBal, tdAction);
           fragment.append(tr);
         });
         tbody.append(fragment);
@@ -1420,7 +1409,7 @@
       const metaEl = $('khata-print-meta');
       if (titleEl) titleEl.textContent = `${khata.name} (${khata.code})`;
       if (metaEl) {
-        metaEl.textContent = `موبائیل: ${khata.mobile || '—'} | مقام: ${khata.address || '—'} | کرنسی: ${khata.currency === 'aed' ? 'درہم' : 'روپیہ'} | تاریخ پرنٹ: ${getToday()} | دورانیہ: ${getFilterPeriodText()}`;
+        metaEl.textContent = `موبائیل: ${khata.mobile || '—'} | مقام: ${khata.address || '—'} | تاریخ پرنٹ: ${getToday()} | دورانیہ: ${getFilterPeriodText()}`;
       }
 
       // Populate Official Bank Statement Dossier
@@ -1438,7 +1427,6 @@
       const custCodeEl = $('khata-print-cust-code');
       const custMobileEl = $('khata-print-cust-mobile');
       const custAddrEl = $('khata-print-cust-address');
-      const custCurrEl = $('khata-print-cust-currency');
 
       if (printDateEl) printDateEl.textContent = dateStr;
       if (printTimeEl) printTimeEl.textContent = timeStr;
@@ -1448,7 +1436,6 @@
       if (custCodeEl) custCodeEl.textContent = khata.code;
       if (custMobileEl) custMobileEl.textContent = khata.mobile || 'درج نہیں (—)';
       if (custAddrEl) custAddrEl.textContent = khata.address || 'درج نہیں (—)';
-      if (custCurrEl) custCurrEl.textContent = khata.currency === 'aed' ? 'اماراتی درہم' : 'پاکستانی روپیہ';
 
       // Refresh all cell print spans
       for (const r of khata.rows) {
@@ -1575,7 +1562,6 @@
         dataRows.push([i + 1, r.date, r.detail, debitCell, creditCell, balLabel]);
       });
 
-      const currencyName = khata.currency === 'aed' ? 'اماراتی درہم (AED)' : 'پاکستانی روپیہ (PKR)';
       const netBalAbs = bal < 0n ? -bal : bal;
       const dateSuffix = hasFilter ? (minDate === maxDate ? minDate : `${minDate}_تا_${maxDate}`) : getToday();
 
@@ -1583,10 +1569,9 @@
         ['کسٹمرز کھاتے لیجر — Hisaab App'],
         ['کسٹمر کا نام', khata.name, 'کھاتہ کوڈ', khata.code],
         ['موبائیل نمبر', khata.mobile || '—', 'پتہ / مقام', khata.address || '—'],
-        ['کرنسی', currencyName, 'اسٹیٹمنٹ دورانیہ', getFilterPeriodText()],
-        ['تاریخ رپورٹ', getToday()],
+        ['اسٹیٹمنٹ دورانیہ', getFilterPeriodText(), 'تاریخ رپورٹ', getToday()],
         [],
-        ['نمبر شمار', 'تاریخ', 'تفصیل', `بنام (${khata.currency.toUpperCase()})`, `جمع (${khata.currency.toUpperCase()})`, 'بقایا'],
+        ['نمبر شمار', 'تاریخ', 'تفصیل', 'بنام', 'جمع', 'بقایا'],
         ...dataRows,
         [],
         ['', 'کل میزان', '', { number: minorToDecimalString(totD) }, { number: minorToDecimalString(totC) }, `${formatAmount(netBalAbs, { withDecimals: hasDec })} ${bal > 0n ? 'بنام' : bal < 0n ? 'جمع' : 'برابر'}`]
@@ -1824,7 +1809,6 @@
           k.name,
           k.mobile || '—',
           k.address || '—',
-          k.currency === 'aed' ? 'درہم (AED)' : 'روپیہ (PKR)',
           { number: minorToDecimalString(absVal) },
           side
         ];
@@ -1839,10 +1823,10 @@
         ['تاریخ رپورٹ', getToday(), 'وقت', new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })],
         ['کل ریکارڈز', filtered.length],
         [],
-        ['نمبر شمار', 'کھاتہ کوڈ', 'گاہک یا پارٹی کا نام', 'موبائیل نمبر', 'پتہ / مقام', 'کرنسی', 'بقایا بیلنس', 'نوعیت'],
+        ['نمبر شمار', 'کھاتہ کوڈ', 'گاہک یا پارٹی کا نام', 'موبائیل نمبر', 'پتہ / مقام', 'بقایا بیلنس', 'نوعیت'],
         ...dataRows,
         [],
-        ['', '', 'کل میزان (Total)', '', '', '', { number: minorToDecimalString(absDisplayed) }, netSide]
+        ['', '', 'کل میزان (Total)', '', '', { number: minorToDecimalString(absDisplayed) }, netSide]
       ];
 
       exportSheet(rows, `کسٹمرز_کھاتے_${filterSlug}_${getToday()}.xlsx`);
@@ -1979,12 +1963,6 @@
       }
     });
 
-    // Currency selector dynamic tag
-    $('new-khata-currency')?.addEventListener('change', e => {
-      const curTag = $('new-khata-cur-tag');
-      if (curTag) curTag.textContent = e.target.value === 'aed' ? 'AED' : 'PKR';
-    });
-
     $('btn-new-khata-top')?.addEventListener('click', openNewKhataModal);
     $('btn-new-khata-ledger')?.addEventListener('click', openNewKhataModal);
     $('btn-new-khata-empty')?.addEventListener('click', openNewKhataModal);
@@ -2075,7 +2053,7 @@
       const name = ($('new-khata-name')?.value || '').trim();
       const mobile = digits($('new-khata-mobile')?.value || '').trim();
       const address = ($('new-khata-address')?.value || '').trim();
-      const currency = $('new-khata-currency')?.value === 'aed' ? 'aed' : 'pkr';
+      const currency = 'pkr';
       const openBal = parseAmount($('new-khata-opening-balance')?.value || '');
       const openType = $('new-khata-opening-type')?.value;
 
@@ -2130,7 +2108,6 @@
       const name = ($('edit-khata-name')?.value || '').trim();
       const mobile = digits($('edit-khata-mobile')?.value || '').trim();
       const address = ($('edit-khata-address')?.value || '').trim();
-      const currency = $('edit-khata-currency')?.value === 'aed' ? 'aed' : 'pkr';
 
       if (!name) {
         alert('براہ کرم گاہک کا نام درج کریں۔');
@@ -2147,7 +2124,6 @@
       khata.name = name;
       khata.mobile = mobile;
       khata.address = address;
-      if (!khata.rows.some(hasData)) khata.currency = currency;
 
       save();
       $('edit-khata-dialog')?.close();

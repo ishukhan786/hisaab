@@ -387,7 +387,6 @@
               <col class="dir-col-code">
               <col class="dir-col-name">
               <col class="dir-col-mobile">
-              <col class="dir-col-curr">
               <col class="dir-col-bal">
               <col class="dir-col-action">
             </colgroup>
@@ -397,7 +396,6 @@
                 <th scope="col">کھاتہ کوڈ</th>
                 <th scope="col" class="dir-th-name">گاہک یا پارٹی کا نام</th>
                 <th scope="col">موبائیل نمبر</th>
-                <th scope="col">کرنسی</th>
                 <th scope="col" class="dir-th-bal" id="khata-dir-th-bal">بقایا بیلنس</th>
                 <th scope="col" class="dir-th-action">کارروائی</th>
               </tr>
@@ -405,7 +403,7 @@
             <tbody id="khata-dir-rows"></tbody>
             <tfoot class="khata-dir-tfoot">
               <tr class="khata-dir-tfoot-row">
-                <td colspan="5" class="dir-tfoot-label" id="khata-dir-tfoot-label">کل میزان:</td>
+                <td colspan="4" class="dir-tfoot-label" id="khata-dir-tfoot-label">کل میزان:</td>
                 <td id="khata-dir-foot-bal" class="dir-tfoot-val eng-num">0</td>
                 <td class="no-print"></td>
               </tr>
@@ -468,7 +466,6 @@
               <div class="khata-profile-title-row">
                 <span id="khata-view-code" class="khata-code-badge">KH-1001</span>
                 <h1 id="khata-view-name" class="khata-customer-name">گاہک کا نام</h1>
-                <span id="khata-view-currency" class="khata-currency-badge pkr">پاکستانی روپیہ (PKR)</span>
               </div>
               <div class="khata-profile-details">
                 <div class="khata-detail-item">
@@ -594,10 +591,6 @@
                   <span class="info-label">پتہ و مقام:</span>
                   <strong id="khata-print-cust-address" class="info-val">—</strong>
                 </div>
-                <div class="khata-print-info-cell cell-currency">
-                  <span class="info-label">کھاتہ کرنسی:</span>
-                  <strong id="khata-print-cust-currency" class="info-val">—</strong>
-                </div>
               </div>
             </div>
 
@@ -703,7 +696,7 @@
 
       <form id="new-khata-form" class="khata-modal-form" novalidate>
         <div class="khata-form-grid">
-          <!-- Row 1: Locked Code & Currency Selection -->
+          <!-- Row 1: Code & Mobile in 2-column grid -->
           <div class="khata-field">
             <label for="new-khata-code" class="khata-field-label">
               <span>کھاتہ نمبر / کوڈ</span>
@@ -717,18 +710,13 @@
           </div>
 
           <div class="khata-field">
-            <label for="new-khata-currency" class="khata-field-label">
-              <span>کرنسی منتخب کریں *</span>
-              <span class="khata-badge-pill">اکاؤنٹ کرنسی</span>
+            <label for="new-khata-mobile" class="khata-field-label">
+              <span>موبائیل نمبر (انگریزی ہندسے)</span>
             </label>
             <div class="khata-input-wrapper">
-              <span class="khata-input-icon">💱</span>
-              <select id="new-khata-currency" class="khata-select" required>
-                <option value="pkr" selected>🇵🇰 پاکستانی روپیہ (PKR)</option>
-                <option value="aed">🇦🇪 اماراتی درہم (AED)</option>
-              </select>
+              <span class="khata-input-icon">📱</span>
+              <input id="new-khata-mobile" class="khata-input eng-num" type="tel" inputmode="numeric" maxlength="40" placeholder="0300 1234567" dir="ltr" autocomplete="off">
             </div>
-            <small class="khata-field-hint">نوٹ: کھاتہ بننے کے بعد اس کی کرنسی تبدیل نہیں ہوگی</small>
           </div>
 
           <!-- Row 2: Customer Name (Full Width) -->
@@ -743,18 +731,8 @@
             </div>
           </div>
 
-          <!-- Row 3: Mobile & Address -->
-          <div class="khata-field">
-            <label for="new-khata-mobile" class="khata-field-label">
-              <span>موبائیل نمبر (انگریزی ہندسے)</span>
-            </label>
-            <div class="khata-input-wrapper">
-              <span class="khata-input-icon">📱</span>
-              <input id="new-khata-mobile" class="khata-input eng-num" type="tel" inputmode="numeric" maxlength="40" placeholder="0300 1234567" dir="ltr" autocomplete="off">
-            </div>
-          </div>
-
-          <div class="khata-field">
+          <!-- Row 3: Address (Full Width) -->
+          <div class="khata-field full-width">
             <label for="new-khata-address" class="khata-field-label">
               <span>پتہ / شہر / مارکیٹ کا نام</span>
             </label>
@@ -776,7 +754,6 @@
               </div>
               <div class="khata-balance-controls">
                 <div class="khata-input-wrapper flex-grow">
-                  <span id="new-khata-cur-tag" class="khata-curr-tag">PKR</span>
                   <input id="new-khata-opening-balance" class="khata-input eng-num amount-input" type="text" inputmode="numeric" placeholder="0.00" dir="ltr">
                 </div>
                 <div class="khata-input-wrapper type-select-wrap">
@@ -834,15 +811,12 @@
           </div>
 
           <div class="khata-field">
-            <label for="edit-khata-currency" class="khata-field-label">
-              <span>کرنسی</span>
+            <label for="edit-khata-mobile" class="khata-field-label">
+              <span>موبائیل نمبر (انگریزی ہندسے)</span>
             </label>
             <div class="khata-input-wrapper">
-              <span class="khata-input-icon">💱</span>
-              <select id="edit-khata-currency" class="khata-select">
-                <option value="pkr">🇵🇰 پاکستانی روپیہ (PKR)</option>
-                <option value="aed">🇦🇪 اماراتی درہم (AED)</option>
-              </select>
+              <span class="khata-input-icon">📱</span>
+              <input id="edit-khata-mobile" class="khata-input eng-num" type="tel" inputmode="numeric" maxlength="40" dir="ltr" autocomplete="off">
             </div>
           </div>
 
@@ -857,17 +831,7 @@
             </div>
           </div>
 
-          <div class="khata-field">
-            <label for="edit-khata-mobile" class="khata-field-label">
-              <span>موبائیل نمبر (انگریزی ہندسے)</span>
-            </label>
-            <div class="khata-input-wrapper">
-              <span class="khata-input-icon">📱</span>
-              <input id="edit-khata-mobile" class="khata-input eng-num" type="tel" inputmode="numeric" maxlength="40" dir="ltr" autocomplete="off">
-            </div>
-          </div>
-
-          <div class="khata-field">
+          <div class="khata-field full-width">
             <label for="edit-khata-address" class="khata-field-label">
               <span>پتہ / شہر / مارکیٹ</span>
             </label>
@@ -922,7 +886,6 @@
             <col class="dir-col-code">
             <col class="dir-col-name">
             <col class="dir-col-mobile">
-            <col class="dir-col-curr">
             <col class="dir-col-bal">
           </colgroup>
           <thead>
@@ -931,7 +894,6 @@
               <th scope="col">کھاتہ کوڈ</th>
               <th scope="col" class="dir-th-name">گاہک کا نام</th>
               <th scope="col">موبائیل</th>
-              <th scope="col">کرنسی</th>
               <th scope="col" class="dir-th-bal">بقایا بیلنس</th>
             </tr>
           </thead>
