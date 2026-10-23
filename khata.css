@@ -294,26 +294,19 @@ body.khata-view .top-nav-end {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 12px;
-  border-radius: 20px;
+  padding: 2px 9px;
+  border-radius: 6px;
   background: var(--khata-emerald-50, #e6f6ee);
   border: 1px solid #a3dcbc;
   color: #0d6e4b;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   font-family: var(--khata-font-num, Arial, sans-serif);
   letter-spacing: 0.5px;
 }
 
 .khata-code-badge::before {
-  content: "";
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.7;
-  margin-inline-end: 6px;
+  display: none !important;
 }
 
 .khata-customer-name {
@@ -676,14 +669,14 @@ body.khata-view .top-nav-end {
 .khata-table col.col-delete { width: 44px; }
 
 .khata-table th {
-  height: auto;
-  min-height: 48px;
-  line-height: 1.9;
-  padding: 8px 10px;
+  height: 38px;
+  min-height: 38px;
+  line-height: 1.5;
+  padding: 6px 8px;
   background: var(--khata-surface-subtle, #edf5ef);
   border-bottom: 2px solid #bdd5c5;
   border-inline-end: 1px solid #dce8e0;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--khata-text, #174233);
   text-align: center;
@@ -711,8 +704,8 @@ body.khata-view .top-nav-end {
   border-bottom: 1px solid var(--khata-border-soft, #e2ebe4);
   border-inline-end: 1px solid #ecf3ee;
   vertical-align: middle;
-  height: auto;
-  min-height: 52px;
+  height: 38px;
+  min-height: 38px;
   padding: 0;
   text-align: center;
 }
@@ -736,28 +729,31 @@ body.khata-view .top-nav-end {
   display: block;
   width: 100%;
   min-width: 0;
-  padding: 8px 10px;
+  padding: 4px 8px;
   border: 0;
   background: transparent;
   outline: none;
   color: #1c3b2f;
   font-family: inherit;
-  font-size: 13.5px;
+  font-size: 13px;
   box-sizing: border-box;
   text-align: center;
-  line-height: 1.8;
+  line-height: 1.5;
+  height: 38px;
+  min-height: 38px;
   transition: background-color var(--khata-transition-fast, 0.14s ease), box-shadow var(--khata-transition-fast, 0.14s ease);
 }
 
-/* Detail textarea auto-grows up to 8em max with scroll fallback */
+/* Detail textarea auto-grows up to 6em max with scroll fallback */
 .khata-table td textarea {
   resize: none;
-  min-height: 1.9em;
-  max-height: 8em;
+  height: 38px;
+  min-height: 38px;
+  max-height: 6em;
   overflow-y: auto;
-  line-height: 1.8;
+  line-height: 1.5;
   text-align: right;
-  padding-inline: 12px;
+  padding-inline: 10px;
 }
 
 .khata-table td input:focus,
@@ -826,12 +822,12 @@ body.khata-view .top-nav-end {
   border: 0;
   background: transparent;
   color: #8da394;
-  font-size: 20px;
+  font-size: 18px;
   font-family: Arial, sans-serif;
   cursor: pointer;
-  padding: 4px;
-  min-width: 40px;
-  min-height: 40px;
+  padding: 2px;
+  min-width: 30px;
+  min-height: 30px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -884,7 +880,7 @@ body.khata-view .top-nav-end {
 }
 
 .khata-table tfoot tr.khata-totals-row {
-  height: 52px;
+  height: 40px;
   background: #e8f3ec;
   border-top: 2px solid #237857;
   font-weight: 700;
@@ -892,15 +888,15 @@ body.khata-view .top-nav-end {
 
 .khata-table tfoot th,
 .khata-table tfoot td {
-  padding: 8px 12px;
-  font-size: 14px;
+  padding: 6px 10px;
+  font-size: 13.5px;
   text-align: center;
   color: #124d36;
 }
 
 .khata-table tfoot td {
   font-family: var(--khata-font-num, Calibri, 'Segoe UI', Arial, sans-serif);
-  font-size: 16px;
+  font-size: 15px;
   direction: ltr;
   font-variant-numeric: tabular-nums;
 }
@@ -1452,8 +1448,8 @@ body:not(.khata-view) dialog.khata-directory-modal {
 
 .khata-dir-table th {
   background: var(--khata-surface-subtle, #edf5ef);
-  padding: 14px 18px;
-  font-size: 13px;
+  padding: 8px 12px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--khata-text, #174233);
   border-bottom: 2px solid #bcd7c6;
@@ -1466,32 +1462,33 @@ body:not(.khata-view) dialog.khata-directory-modal {
 
 .khata-dir-table th.dir-th-name {
   text-align: right;
-  padding-inline-start: 24px;
+  padding-inline-start: 16px;
 }
 
 .khata-dir-table th.dir-th-bal {
   text-align: right;
-  padding-inline-end: 28px;
+  padding-inline-end: 18px;
 }
 
 .khata-dir-table td {
-  padding: 14px 18px;
+  padding: 6px 12px;
   border-bottom: 1px solid var(--khata-border-soft, #e1ece4);
-  font-size: 14px;
+  font-size: 13.5px;
   text-align: center;
   vertical-align: middle;
+  height: 38px;
 }
 
 .khata-dir-table td:nth-child(3) {
   text-align: right;
-  padding-inline-start: 24px;
-  font-size: 15px;
+  padding-inline-start: 16px;
+  font-size: 14px;
 }
 
-.khata-dir-table td:nth-child(6) {
+.khata-dir-table td:nth-child(5) {
   text-align: right;
-  padding-inline-end: 28px;
-  font-size: 15px;
+  padding-inline-end: 18px;
+  font-size: 14px;
 }
 
 .khata-dir-table tbody tr {
@@ -1690,24 +1687,24 @@ body:not(.khata-view) dialog.khata-directory-modal {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 8px;
+  gap: 5px;
+  padding: 3px 12px;
+  border-radius: 6px;
   background: linear-gradient(135deg, var(--khata-emerald-600, #059669) 0%, var(--khata-emerald-700, #047857) 100%);
   color: #ffffff !important;
   border: 1px solid var(--khata-emerald-700, #047857);
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(4, 120, 87, 0.25);
+  box-shadow: 0 1px 4px rgba(4, 120, 87, 0.2);
   transition: all var(--khata-transition-fast, 0.14s ease);
 }
 
 .btn-open-khata:hover {
   background: linear-gradient(135deg, var(--khata-emerald-500, #10b981) 0%, var(--khata-emerald-600, #059669) 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(4, 120, 87, 0.35);
+  box-shadow: 0 3px 8px rgba(4, 120, 87, 0.3);
 }
 
 .btn-khata-back {
@@ -1857,8 +1854,8 @@ body:not(.khata-view) dialog.khata-directory-modal {
 }
 
 .khata-dir-tfoot-row td {
-  padding: 10px 14px !important;
-  font-size: 13.5px;
+  padding: 6px 12px !important;
+  font-size: 13px;
 }
 
 .dir-tfoot-label {
@@ -1868,9 +1865,9 @@ body:not(.khata-view) dialog.khata-directory-modal {
 }
 
 .dir-tfoot-val {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 800;
-  padding: 8px 10px !important;
+  padding: 6px 8px !important;
 }
 
 .khata-dir-table td.dir-td-bal {
@@ -2123,6 +2120,15 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
   body.khata-view.khata-dir-printing .khata-dir-table td.dir-td-action,
   body.khata-view.khata-dir-printing .khata-dir-table td:nth-child(6) {
     display: none !important;
+  }
+
+  body.khata-view.khata-dir-printing .khata-code-badge {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    color: #000000 !important;
+    font-size: 9.5pt !important;
+    box-shadow: none !important;
   }
 
   body.khata-view.khata-dir-printing .khata-dir-table tbody tr {
