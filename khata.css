@@ -2068,9 +2068,8 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     display: none !important;
   }
 
-  /* Customer Directory Receivables & Payables Specific Print Filters */
-  body.khata-view.khata-dir-printing.print-filter-receivables .khata-print-period-block,
-  body.khata-view.khata-dir-printing.print-filter-payables .khata-print-period-block {
+  /* In all Customer Directory reports (all, receivables, payables): hide top right period block */
+  body.khata-view.khata-dir-printing .khata-print-period-block {
     visibility: hidden !important;
   }
 

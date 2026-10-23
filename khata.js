@@ -1618,7 +1618,7 @@
       const absNet = netTotal < 0n ? -netTotal : netTotal;
 
       let mainTitle = 'کسٹمرز کھاتے — جامع گوشوارہ بیلنس';
-      let typeTitle = 'جامع گوشوارہ کسٹمرز کھاتے (تمام کھاتہ جات)';
+      let typeTitle = '';
       let subTitle = 'تمام کسٹمرز کے واجبات و وصولیوں کی تفصیلی بیلنس پوزیشن';
       let fileType = 'تمام_کھاتے';
 
@@ -1672,22 +1672,20 @@
       const cardPay = $('khata-dir-print-card-payable');
       const cardBal = $('khata-dir-print-card-balance');
       const periodBlock = document.querySelector('#khata-dir-print-dossier .khata-print-period-block');
+      if (periodBlock) periodBlock.style.visibility = 'hidden';
 
       if (directoryFilter === 'receivables') {
         if (cardRec) cardRec.style.display = '';
         if (cardPay) cardPay.style.display = 'none';
         if (cardBal) cardBal.style.display = 'none';
-        if (periodBlock) periodBlock.style.visibility = 'hidden';
       } else if (directoryFilter === 'payables') {
         if (cardRec) cardRec.style.display = 'none';
         if (cardPay) cardPay.style.display = '';
         if (cardBal) cardBal.style.display = 'none';
-        if (periodBlock) periodBlock.style.visibility = 'hidden';
       } else {
         if (cardRec) cardRec.style.display = '';
         if (cardPay) cardPay.style.display = '';
         if (cardBal) cardBal.style.display = '';
-        if (periodBlock) periodBlock.style.visibility = '';
       }
 
       document.body.classList.add('khata-dir-printing');
@@ -1707,7 +1705,7 @@
         if (cardRec) cardRec.style.display = '';
         if (cardPay) cardPay.style.display = '';
         if (cardBal) cardBal.style.display = '';
-        if (periodBlock) periodBlock.style.visibility = '';
+        if (periodBlock) periodBlock.style.visibility = 'hidden';
         restoreTheme?.();
       }
 
