@@ -137,7 +137,7 @@
       const balance=document.createElement('td');balance.className='journal-balance';tr.append(balance);$('journal-rows').append(tr);
     }
     function refresh(){if(!data())getState().journal={date:today(),rows:[]};$('journal-date').value=data().date;$('journal-cash-count').value=data().cashCounts?.[data().date]||'';ensureDraft();nodes.clear();$('journal-rows').replaceChildren();data().rows.filter(r=>r.date===data().date).forEach(addNode);recalculate();}
-    function setPage(journal){document.body.classList.toggle('journal-view',journal);$('register-page').hidden=journal;$('journal-page').hidden=!journal;$('range-drawer').hidden=true;for(const [id,sel] of [['view-register',!journal],['view-journal',journal]]){$(id).setAttribute('aria-pressed',String(sel));$(id).classList.toggle('active',sel);}if(journal){if(data())data().date=today();refresh();}try{localStorage.setItem('hisaab-workspace',journal?'journal':'register');}catch{}}
+    function setPage(journal){document.body.classList.toggle('journal-view',journal);document.body.classList.remove('khata-view');$('register-page').hidden=journal;$('journal-page').hidden=!journal;const khataPage=$('khata-page');if(khataPage)khataPage.hidden=true;const viewKhata=$('view-khata');if(viewKhata){viewKhata.setAttribute('aria-pressed','false');viewKhata.classList.remove('active');}$('range-drawer').hidden=true;for(const [id,sel] of [['view-register',!journal],['view-journal',journal]]){$(id).setAttribute('aria-pressed',String(sel));$(id).classList.toggle('active',sel);}if(journal){if(data())data().date=today();refresh();}try{localStorage.setItem('hisaab-workspace',journal?'journal':'register');}catch{}}
     $('journal-cash-count').addEventListener('input',e=>{
       const input=e.target;input.value=digits(input.value);
       data().cashCounts??={};
@@ -176,7 +176,7 @@
       rows.push(['','فرق — کمی / زیادتی','','',$('cash-difference').textContent]);
       exportSheet(rows,'روزنامچہ_'+data().date+'.xlsx');
     }
-    if(data())data().date=today();refresh();try{if(localStorage.getItem('hisaab-workspace')==='journal')setPage(true);}catch{}
+    if(data())data().date=today();refresh();
     return {isActive:active,refresh,reset:()=>{undo=null;refresh();},add,preparePrint,output,exportExcel};
   }
   window.HisaabJournal={normalize,mount};

@@ -80,6 +80,8 @@
       "ui.js",
       "journal.js",
       "journal.css",
+      "khata.js",
+      "khata.css",
       "receipt-png.js",
       "receipt-export.css",
       "external-backup.cjs",

@@ -29,8 +29,9 @@
   function blank(branch = '') { return { ...Object.fromEntries(rowFields.map(f => [f, ''])), id: uid(), entryDate: state.date || today(), branch }; }
   function fmtDate(iso) { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; }
   let journalController = null;
+  let khataController = null;
   /* FIX-9: PIN hash and salt fields added to state; version stays 4 */
-  let state = { journal: { date: today(), rows: [] }, version: 4, title: 'Hisaab Register', date: today(), pageNumber: 1, startSerial: 1, partySerials: Object.create(null), fontSize: 13, branches: [], partyCurrencies: Object.create(null), rows: [], trash: [], lastBackupAt: null, lockedDates: [], pinCode: '', pinCodeHash: '', pinSalt: '' };
+  let state = { journal: { date: today(), rows: [] }, version: 4, title: 'Hisaab Register', date: today(), pageNumber: 1, startSerial: 1, partySerials: Object.create(null), fontSize: 13, branches: [], partyCurrencies: Object.create(null), rows: [], trash: [], lastBackupAt: null, lockedDates: [], pinCode: '', pinCodeHash: '', pinSalt: '', khatas: [] };
   function activePageNumber() { return (Number(state.pageNumber) || 1) + (viewPage || 0); }
   const partyCurrency = name => name && Object.hasOwn(state.partyCurrencies || {}, name) && state.partyCurrencies[name] === 'afn' ? 'afn' : 'pkr';
   function currencyTotals(rows) { const sums = { pkr: 0n, afn: 0n }, invalid = new Set(); for (const r of rows) { const c = partyCurrency(r.branch), v = integerAmount(r.pkr); if (v === null) invalid.add(c); else sums[c] += v; } return { sums, invalid }; }
@@ -99,7 +100,7 @@
     let pinSalt = typeof source.pinSalt === 'string' ? source.pinSalt : '';
     /* FIX-10: Web-mode fallback preserved for test assertions */
     if (isWebMode && !pinCode && !pinCodeHash) pinCode = '1234';
-    return { journal: window.HisaabJournal.normalize(source.journal, source.date || today()), version: 4, title: titleVal, date: source.date || today(), pageNumber: Number.isInteger(source.pageNumber) && source.pageNumber > 0 ? source.pageNumber : 1, startSerial, partySerials, fontSize: Number.isInteger(source.fontSize) ? Math.max(10, Math.min(22, source.fontSize)) : 13, branches: registry, partyCurrencies, rows, trash, lastBackupAt: typeof source.lastBackupAt === 'string' && Number.isFinite(Date.parse(source.lastBackupAt)) ? source.lastBackupAt : null, lockedDates, pinCode, pinCodeHash, pinSalt };
+    return { journal: window.HisaabJournal.normalize(source.journal, source.date || today()), version: 4, title: titleVal, date: source.date || today(), pageNumber: Number.isInteger(source.pageNumber) && source.pageNumber > 0 ? source.pageNumber : 1, startSerial, partySerials, fontSize: Number.isInteger(source.fontSize) ? Math.max(10, Math.min(22, source.fontSize)) : 13, branches: registry, partyCurrencies, rows, trash, lastBackupAt: typeof source.lastBackupAt === 'string' && Number.isFinite(Date.parse(source.lastBackupAt)) ? source.lastBackupAt : null, lockedDates, pinCode, pinCodeHash, pinSalt, khatas: window.HisaabKhata ? window.HisaabKhata.normalize(source.khatas || []) : (Array.isArray(source.khatas) ? source.khatas : []) };
   }
   let cloudReady = !isWebMode;
   let mongoSaveTimer = null, pendingMongoSave = null;
@@ -2129,7 +2130,7 @@
   function canOutput(rows, filtered = true) { if (filtered && !rangeValid()) { alert('تاریخ کا دورانیہ درست کریں۔'); return false; } if (!rows.length) { alert('کوئی انٹری منتخب نہیں ہے۔'); return false; } if (rows.some(r => moneyFields.some(f => integerAmount(r[f]) === null))) { alert('رقم کے خانے درست کریں۔ صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم خود تبدیل نہیں کی گئی۔'); return false; } return true; }
   if (!window.electronAPI?.savePDF) {
     $('save-pdf').hidden = false; $('save-pdf').title = 'براؤزر پرنٹ میں Save as PDF منتخب کریں';
-    $('save-pdf').onclick = () => { if (journalController?.isActive()) journalController.output(true); else $('print').click(); };
+    $('save-pdf').onclick = () => { if (journalController?.isActive()) journalController.output(true); else if (khataController?.isActive()) khataController.print(); else $('print').click(); };
     $('receipt-save').title = 'براؤزر پرنٹ میں Save as PDF منتخب کریں';
     $('summary-pdf').title = 'براؤزر پرنٹ میں Save as PDF منتخب کریں';
   }
@@ -2137,6 +2138,7 @@
     const button = $('save-pdf'); button.hidden = false;
     button.onclick = async () => {
       if (journalController?.isActive()) { const res = await journalController.output(true); if (res?.status === 'saved' && res.filePath) recordSavedPdf(res.filePath); return; }
+      if (khataController?.isActive()) { khataController.print(); return; }
       const rows = selectedRows(); if (!canOutput(rows)) return;
       const party = selectedBranch.startsWith('b:') ? selectedBranch.slice(2) : selectedBranch === '__unassigned' ? 'بغیر پارٹی' : 'تمام پارٹیاں';
       const dates = rows.map(r => r.entryDate || state.date).filter(Boolean).sort();
@@ -2154,6 +2156,7 @@
   }
   $('print').onclick = async () => {
     if (journalController?.isActive()) { await journalController.output(); return; }
+    if (khataController?.isActive()) { khataController.print(); return; }
     if (!canOutput(selectedRows())) return;
     await document.fonts.ready;
     const restoreTheme = prepareForPrintTheme();
@@ -2277,7 +2280,7 @@
 
   /* FIX-40: createEmptyOfficeState dynamically computes today's date */
   function createEmptyOfficeState() {
-    return { version: 4, title: 'Hisaab Register', date: today(), rows: [], branches: [], journal: { date: today(), rows: [] } };
+    return { version: 4, title: 'Hisaab Register', date: today(), rows: [], branches: [], journal: { date: today(), rows: [] }, khatas: [] };
   }
 
   render();
@@ -2286,6 +2289,9 @@
     requestPinUnlock('جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں', false);
   }
   journalController = window.HisaabJournal.mount({ getState: () => state, save, today, exportSheet: (rows, name) => download(window.HisaabExcel.create(rows), name) });
+  if (window.HisaabKhata) {
+    khataController = window.HisaabKhata.mount({ getState: () => state, save, today, exportSheet: (rows, name) => download(window.HisaabExcel.create(rows), name), download });
+  }
   /* FIX-39: Avoid save() before initMongoWebState in web mode */
   if (!isWebMode) {
     save();

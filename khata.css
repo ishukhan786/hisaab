@@ -1,0 +1,2543 @@
+/* ------------------------------------------------------------------
+   HisaabKhata Stylesheet — v2
+   RTL customer ledger for Urdu accounting apps
+   Themes: light, dark, print
+   Maintains backward-compatible selectors (do not rename)
+
+   Dark Theme Policy:
+   Explicit '!important' flags in the dark mode section (Section 11)
+   are intentionally maintained to reliably override compound,
+   specificity-heavy base rules across existing legacy wrappers.
+   ------------------------------------------------------------------ */
+
+@font-face {
+  font-family: 'Bombay Black Unicode';
+  src: local('Bombay Black Unicode'),
+       local('Bombay Black'),
+       url('assets/BombayBlackUnicode.ttf') format('truetype');
+  font-weight: 400 900;
+  font-display: swap;
+}
+
+/* ==========================================================================
+   0. DESIGN TOKENS & CUSTOM PROPERTIES
+   ========================================================================== */
+:root {
+  /* Emerald Palette */
+  --khata-emerald-50:  #ecfdf5;
+  --khata-emerald-100: #d1fae5;
+  --khata-emerald-200: #a7f3d0;
+  --khata-emerald-400: #34d399;
+  --khata-emerald-500: #10b981;
+  --khata-emerald-600: #059669;
+  --khata-emerald-700: #047857;
+  --khata-emerald-900: #064e3b;
+
+  /* Red Palette (Banam / Debt) */
+  --khata-red-50:  #fef2f2;
+  --khata-red-200: #fecaca;
+  --khata-red-500: #ef4444;
+  --khata-red-600: #dc2626;
+  --khata-red-700: #b91c1c;
+
+  /* Sky Palette (Baqaya / Balances) */
+  --khata-sky-100: #e0f2fe;
+  --khata-sky-600: #0284c7;
+
+  /* Surface & Border Neutrals */
+  --khata-surface:        #ffffff;
+  --khata-surface-muted:  #f7faf8;
+  --khata-surface-subtle: #edf5ef;
+  --khata-border:         #cce0d3;
+  --khata-border-soft:    #e2ebe4;
+  --khata-text:           #174233;
+  --khata-text-muted:     #4b6b5b;
+  --khata-text-faint:     #637c6d;
+
+  /* Radii */
+  --khata-radius-sm: 8px;
+  --khata-radius-md: 12px;
+  --khata-radius-lg: 18px;
+  --khata-radius-xl: 20px;
+
+  /* Elevation & Shadows */
+  --khata-shadow-xs: 0 1px 2px rgba(18, 63, 46, 0.05);
+  --khata-shadow-sm: 0 2px 6px rgba(18, 63, 46, 0.08);
+  --khata-shadow-md: 0 6px 22px rgba(18, 63, 46, 0.10);
+  --khata-shadow-lg: 0 24px 70px rgba(16, 56, 40, 0.22);
+
+  /* Transitions */
+  --khata-transition-fast: 0.14s ease;
+  --khata-transition-med:  0.22s ease;
+
+  /* Typography */
+  --khata-font-ui:   system-ui, -apple-system, "Segoe UI", Calibri, Arial, sans-serif;
+  --khata-font-num:  "Segoe UI", Calibri, Arial, sans-serif;
+}
+
+/* ==========================================================================
+   1. APP SHELL VIEW SWITCHING & TOP NAV
+   ========================================================================== */
+body.khata-view .top-nav-start > :not(.brand-mini),
+body.khata-view .top-nav-center,
+body.khata-view .top-serial-field,
+body.khata-view #add,
+body.khata-view #summary-open,
+body.khata-view #manage-branches,
+body.khata-view #reset-filters {
+  display: none !important;
+}
+
+body.khata-view .top-nav {
+  grid-template-columns: 1fr auto;
+  column-gap: 12px;
+}
+
+body.khata-view .top-nav-start {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+body.khata-view .top-nav-end {
+  grid-column: 2;
+  grid-row: 1;
+  border: 0;
+  padding: 0;
+  justify-self: end;
+  justify-content: flex-end;
+}
+
+/* Base Print Elements (Hidden on screen; overridden in Section 10 @media print) */
+.khata-print-header,
+.khata-print-signatures,
+.khata-print-statement-dossier,
+.khata-print-disclaimer,
+.khata-print-val {
+  display: none;
+}
+
+
+/* ==========================================================================
+   2. KHATA MAIN CONTAINER & LAYOUT
+   ========================================================================== */
+#khata-page {
+  display: block;
+  max-width: 1680px;
+  margin: 14px auto;
+  padding: 0 24px;
+  line-height: 1.75;
+}
+
+#khata-page[hidden] {
+  display: none !important;
+}
+
+.khata-card {
+  background: var(--khata-surface, #ffffff);
+  border: 1px solid var(--khata-border, #cce0d3);
+  border-radius: var(--khata-radius-lg, 18px);
+  overflow: hidden;
+  box-shadow: var(--khata-shadow-md, 0 6px 22px rgba(18, 63, 46, 0.10));
+  transition: box-shadow var(--khata-transition-med, 0.22s ease), border-color var(--khata-transition-med, 0.22s ease);
+  contain: layout style;
+}
+
+/* ==========================================================================
+   3. CUSTOMER SWITCHER & TOP DIRECTORY BAR
+   ========================================================================== */
+.khata-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 22px;
+  background: linear-gradient(180deg, #fbfdfc 0%, var(--khata-surface-muted, #f4f8f5) 100%);
+  border-bottom: 1px solid var(--khata-border-soft, #dbe7df);
+  flex-wrap: wrap;
+}
+
+.khata-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+  max-width: 360px;
+}
+
+.khata-search-input {
+  width: 100%;
+  height: 40px;
+  min-height: 40px;
+  padding: 6px 36px 6px 14px;
+  border: 1px solid var(--khata-border, #cbdcd1);
+  border-radius: 10px;
+  background: var(--khata-surface, #ffffff);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--khata-text, #174233);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color var(--khata-transition-fast, 0.14s ease), box-shadow var(--khata-transition-fast, 0.14s ease);
+}
+
+.khata-search-input:focus {
+  border-color: var(--khata-emerald-500, #10b981);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.khata-search-icon {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--khata-text-faint, #638272);
+  pointer-events: none;
+}
+
+.khata-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-khata-new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: var(--khata-radius-md, 12px);
+  background: linear-gradient(135deg, var(--khata-emerald-500, #10b981) 0%, var(--khata-emerald-600, #059669) 100%);
+  color: #ffffff;
+  border: 1px solid var(--khata-emerald-700, #047857);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+  transition: transform var(--khata-transition-fast, 0.14s ease), box-shadow var(--khata-transition-fast, 0.14s ease), background var(--khata-transition-fast, 0.14s ease);
+  white-space: nowrap;
+}
+
+.btn-khata-new:hover {
+  background: linear-gradient(135deg, var(--khata-emerald-600, #059669) 0%, var(--khata-emerald-700, #047857) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+  will-change: transform;
+}
+
+.btn-khata-new:active {
+  transform: translateY(0);
+}
+
+.btn-khata-list {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: var(--khata-radius-md, 12px);
+  background: var(--khata-surface, #ffffff);
+  color: #1d523f;
+  border: 1px solid var(--khata-border, #c8dcd0);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: var(--khata-shadow-xs, 0 1px 2px rgba(18, 63, 46, 0.05));
+  transition: transform var(--khata-transition-fast, 0.14s ease), background var(--khata-transition-fast, 0.14s ease), border-color var(--khata-transition-fast, 0.14s ease);
+  white-space: nowrap;
+}
+
+.btn-khata-list:hover {
+  background: var(--khata-surface-subtle, #edf5f0);
+  border-color: var(--khata-emerald-500, #10b981);
+  transform: translateY(-1px);
+}
+
+.btn-khata-list:active {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   4. CUSTOMER PROFILE HEADER CARD & STATS
+   ========================================================================== */
+.khata-profile-card {
+  padding: 18px 24px;
+  background: var(--khata-surface, #ffffff);
+  border-bottom: 1px solid var(--khata-border-soft, #dce8df);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  align-items: center;
+}
+
+.khata-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.khata-profile-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.khata-code-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 12px;
+  border-radius: 20px;
+  background: var(--khata-emerald-50, #e6f6ee);
+  border: 1px solid #a3dcbc;
+  color: #0d6e4b;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--khata-font-num, Arial, sans-serif);
+  letter-spacing: 0.5px;
+}
+
+.khata-code-badge::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+  margin-inline-end: 6px;
+}
+
+.khata-customer-name {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #123d2f;
+  line-height: 1.8;
+}
+
+.khata-profile-details {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 13px;
+  color: var(--khata-text-muted, #4b6b5b);
+  flex-wrap: wrap;
+}
+
+.khata-detail-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.khata-currency-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.khata-currency-badge.pkr {
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+}
+
+.khata-currency-badge.aed {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+/* Balance Overview Stats Bar */
+.khata-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.khata-stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: var(--khata-radius-md, 12px);
+  border: 1px solid var(--khata-border-soft, #dce8df);
+  background: var(--khata-surface-muted, #f9fbf9);
+  min-width: 120px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), var(--khata-shadow-xs, 0 1px 2px rgba(18, 63, 46, 0.05));
+  transition: transform var(--khata-transition-fast, 0.14s ease);
+}
+
+.khata-stat-box::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, #cbd5e1, #e2e8f0);
+}
+
+.khata-stat-box.banam::before {
+  background: linear-gradient(90deg, var(--khata-red-500, #ef4444), #fca5a5);
+}
+
+.khata-stat-box.jama::before {
+  background: linear-gradient(90deg, var(--khata-emerald-500, #10b981), #6ee7b7);
+}
+
+.khata-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--khata-text-muted, #4b6b5b);
+}
+
+.khata-stat-val {
+  font-size: 17px;
+  font-weight: 700;
+  font-family: var(--khata-font-num, Calibri, 'Segoe UI', Arial, sans-serif);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
+.khata-stat-box.banam .khata-stat-val {
+  color: var(--khata-red-600, #dc2626);
+}
+
+.khata-stat-box.jama .khata-stat-val {
+  color: var(--khata-emerald-600, #059669);
+}
+
+.khata-stat-box.balance {
+  background: var(--khata-surface-subtle, #edf6f0);
+  border-color: #a4d9bb;
+  padding: 10px 20px;
+}
+
+.khata-stat-box.balance::before {
+  background: linear-gradient(90deg, #0ea5e9, #7dd3fc);
+}
+
+.khata-stat-box.balance.is-jama {
+  background: var(--khata-emerald-50, #ecfdf5);
+  border-color: #6ee7b7;
+}
+
+.khata-stat-box.balance.is-jama::before {
+  background: linear-gradient(90deg, var(--khata-emerald-600, #059669), var(--khata-emerald-400, #34d399));
+}
+
+.khata-stat-box.balance.is-jama .khata-stat-val {
+  color: var(--khata-emerald-700, #047857);
+}
+
+.khata-stat-box.balance.is-banam {
+  background: var(--khata-red-50, #fef2f2);
+  border-color: #fca5a5;
+}
+
+.khata-stat-box.balance.is-banam::before {
+  background: linear-gradient(90deg, var(--khata-red-600, #dc2626), #f87171);
+}
+
+.khata-stat-box.balance.is-banam .khata-stat-val {
+  color: var(--khata-red-700, #b91c1c);
+}
+
+/* ==========================================================================
+   5. KHATA ACTIONS BAR
+   ========================================================================== */
+.khata-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 24px;
+  background: #fafcfb;
+  border-bottom: 1px solid var(--khata-border-soft, #e1ebe3);
+  flex-wrap: wrap;
+}
+
+.khata-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-khata-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--khata-radius-sm, 8px);
+  background: var(--khata-surface, #ffffff);
+  border: 1px solid var(--khata-border, #c9dcd1);
+  color: #215440;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform var(--khata-transition-fast, 0.14s ease), background var(--khata-transition-fast, 0.14s ease), border-color var(--khata-transition-fast, 0.14s ease), box-shadow var(--khata-transition-fast, 0.14s ease);
+}
+
+.btn-khata-action:hover {
+  background: #eef6f1;
+  border-color: var(--khata-emerald-500, #10b981);
+  transform: translateY(-1px);
+}
+
+.btn-khata-action:active {
+  transform: translateY(0);
+}
+
+.btn-khata-delete {
+  color: #991b1b;
+  border-color: #fca5a5;
+  background: #fff5f5;
+}
+
+.btn-khata-delete:hover {
+  background: #fee2e2;
+  border-color: var(--khata-red-500, #ef4444);
+}
+
+/* ==========================================================================
+   6. KHATA LEDGER TABLE & GRID
+   ========================================================================== */
+.khata-table-wrap {
+  overflow: auto;
+  max-height: min(70vh, 720px);
+  overscroll-behavior: contain;
+  scrollbar-color: #bdcfc0 #f3f6f1;
+}
+
+.khata-table-wrap::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.khata-table-wrap::-webkit-scrollbar-track {
+  background: #f3f6f1;
+  border-radius: 10px;
+}
+
+.khata-table-wrap::-webkit-scrollbar-thumb {
+  background: #bdcfc0;
+  border-radius: 10px;
+  border: 2px solid #f3f6f1;
+}
+
+.khata-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #9fb8a9;
+}
+
+.khata-table {
+  width: 100%;
+  min-width: 780px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.khata-table col.col-serial { width: 62px; }
+.khata-table col.col-date   { width: 140px; }
+.khata-table col.col-detail { width: auto; }
+.khata-table col.col-banam  { width: 150px; }
+.khata-table col.col-jama   { width: 150px; }
+.khata-table col.col-baqaya { width: 180px; }
+.khata-table col.col-delete { width: 44px; }
+
+.khata-table th {
+  height: auto;
+  min-height: 48px;
+  line-height: 1.9;
+  padding: 8px 10px;
+  background: var(--khata-surface-subtle, #edf5ef);
+  border-bottom: 2px solid #bdd5c5;
+  border-inline-end: 1px solid #dce8e0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--khata-text, #174233);
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.khata-table th.th-banam {
+  border-bottom: 3px solid var(--khata-red-500, #ef4444);
+  color: #991b1b;
+}
+
+.khata-table th.th-jama {
+  border-bottom: 3px solid var(--khata-emerald-500, #10b981);
+  color: #065f46;
+}
+
+.khata-table th.th-baqaya {
+  border-bottom: 3px solid #0ea5e9;
+  color: #0369a1;
+}
+
+.khata-table td {
+  border-bottom: 1px solid var(--khata-border-soft, #e2ebe4);
+  border-inline-end: 1px solid #ecf3ee;
+  vertical-align: middle;
+  height: auto;
+  min-height: 52px;
+  padding: 0;
+  text-align: center;
+}
+
+.khata-table td.td-serial {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--khata-font-num, Arial, sans-serif);
+  color: #5c7566;
+  background: var(--khata-surface-muted, #f7faf8);
+  user-select: none;
+}
+
+.khata-table tr:hover td.td-serial {
+  background: #ebf5ee;
+  color: var(--khata-emerald-600, #059669);
+}
+
+.khata-table td input,
+.khata-table td textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: #1c3b2f;
+  font-family: inherit;
+  font-size: 13.5px;
+  box-sizing: border-box;
+  text-align: center;
+  line-height: 1.8;
+  transition: background-color var(--khata-transition-fast, 0.14s ease), box-shadow var(--khata-transition-fast, 0.14s ease);
+}
+
+/* Detail textarea auto-grows up to 8em max with scroll fallback */
+.khata-table td textarea {
+  resize: none;
+  min-height: 1.9em;
+  max-height: 8em;
+  overflow-y: auto;
+  line-height: 1.8;
+  text-align: right;
+  padding-inline: 12px;
+}
+
+.khata-table td input:focus,
+.khata-table td textarea:focus {
+  background: var(--khata-surface, #ffffff);
+  box-shadow: inset 0 0 0 2px var(--khata-emerald-500, #10b981), 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+/* Invalid amount input highlight */
+.khata-table input.is-invalid,
+.khata-table textarea.is-invalid {
+  box-shadow: inset 0 0 0 2px var(--khata-red-500, #ef4444), 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+  background: #fff5f5 !important;
+}
+
+.khata-table input.amount,
+.khata-table input.date-input {
+  direction: ltr;
+  font-family: var(--khata-font-num, Calibri, 'Segoe UI', Arial, sans-serif);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.khata-table td.td-baqaya {
+  padding: 0 12px;
+  text-align: right;
+  font-family: var(--khata-font-num, Calibri, 'Segoe UI', Arial, sans-serif);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  position: relative;
+}
+
+.khata-table .bal-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  direction: rtl;
+  unicode-bidi: isolate;
+  margin-inline-start: 6px;
+  white-space: nowrap;
+}
+
+.khata-table .is-jama .bal-tag {
+  background: var(--khata-emerald-50, #ecfdf5);
+  color: var(--khata-emerald-700, #047857);
+  border: 1px solid var(--khata-emerald-200, #a7f3d0);
+}
+
+.khata-table .is-banam .bal-tag {
+  background: var(--khata-red-50, #fef2f2);
+  color: var(--khata-red-700, #b91c1c);
+  border: 1px solid var(--khata-red-200, #fecaca);
+}
+
+.khata-table .is-jama { color: #15803d; }
+.khata-table .is-banam { color: #b91c1c; }
+
+.khata-table .btn-delete-row {
+  border: 0;
+  background: transparent;
+  color: #8da394;
+  font-size: 20px;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+  padding: 4px;
+  min-width: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--khata-radius-sm, 8px);
+  transition: all var(--khata-transition-fast, 0.14s ease);
+}
+
+.khata-table .btn-delete-row:hover {
+  color: var(--khata-red-600, #dc2626);
+  background: #fee2e2;
+}
+
+/* Zebra Striping (Light Mode) */
+.khata-table tbody tr:nth-child(even):not(.khata-draft) td {
+  background: #fbfdfb;
+}
+
+/* Draft Row Highlight */
+.khata-table tr.khata-draft td {
+  background: linear-gradient(90deg, #f4fdf7 0%, #fbfefc 100%);
+  border-bottom-style: dashed;
+  border-bottom-color: var(--khata-emerald-200, #a7f3d0);
+}
+
+.khata-table tr.khata-draft td.td-serial {
+  color: var(--khata-emerald-500, #10b981);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.khata-table tbody tr:hover td {
+  background: #f2f8f4;
+}
+
+/* Table Footer / Totals */
+.khata-table tfoot tr.khata-totals-gap,
+.khata-table tfoot tr.khata-totals-gap > td {
+  height: 0.3cm;
+  min-height: 0.3cm;
+  padding: 0;
+  border: 0;
+  border-top: 0;
+  border-bottom: 0;
+  border-left: 0;
+  border-right: 0;
+  background: var(--khata-surface, #ffffff);
+  font-size: 0;
+  line-height: 0;
+  box-shadow: none;
+}
+
+.khata-table tfoot tr.khata-totals-row {
+  height: 52px;
+  background: #e8f3ec;
+  border-top: 2px solid #237857;
+  font-weight: 700;
+}
+
+.khata-table tfoot th,
+.khata-table tfoot td {
+  padding: 8px 12px;
+  font-size: 14px;
+  text-align: center;
+  color: #124d36;
+}
+
+.khata-table tfoot td {
+  font-family: var(--khata-font-num, Calibri, 'Segoe UI', Arial, sans-serif);
+  font-size: 16px;
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+}
+
+.khata-table tfoot #khata-foot-baqaya .khata-bal-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 4px;
+  box-sizing: border-box;
+  direction: rtl;
+}
+
+.khata-table tfoot #khata-foot-baqaya .khata-bal-amount {
+  direction: ltr;
+  text-align: right;
+  font-family: var(--khata-font-num, Calibri, Arial, sans-serif);
+  font-weight: 700;
+}
+
+.khata-table tfoot #khata-foot-baqaya .khata-bal-side {
+  direction: rtl;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   7. EMPTY STATES
+   ========================================================================== */
+.khata-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #5d7a6b;
+}
+
+.khata-empty-icon {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, var(--khata-emerald-100, #d1fae5) 0%, var(--khata-emerald-50, #ecfdf5) 70%);
+  color: var(--khata-emerald-600, #059669);
+  font-size: 34px;
+  margin-bottom: 16px;
+}
+
+.khata-empty-state h3 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  color: #123d2f;
+  line-height: 1.6;
+}
+
+.khata-empty-state p {
+  margin: 0 0 16px;
+  font-size: 13px;
+  max-width: 400px;
+  line-height: 2.2;
+}
+
+/* ==========================================================================
+   8. NEW & EDIT KHATA MODAL DIALOGS & FORMS
+   ========================================================================== */
+dialog.khata-modal {
+  box-sizing: border-box;
+  width: min(640px, 95vw);
+  max-width: 640px;
+  max-height: 90vh;
+  padding: 0;
+  border-radius: 22px;
+  border: 1px solid var(--khata-border, #c2dbcd);
+  background: var(--khata-surface, #ffffff);
+  color: var(--khata-text, #153e2d);
+  box-shadow: var(--khata-shadow-lg, 0 28px 75px rgba(12, 48, 33, 0.28));
+  overflow-y: auto;
+  line-height: 1.6;
+}
+
+dialog.khata-modal::backdrop,
+dialog.khata-directory-modal::backdrop {
+  background: rgba(10, 32, 23, 0.72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+dialog.khata-modal[open],
+dialog.khata-directory-modal[open] {
+  animation: khata-dialog-in 0.18s ease-out;
+}
+
+@keyframes khata-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.khata-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #f9fcfb 0%, var(--khata-surface-subtle, #edf5f0) 100%);
+  border-bottom: 1px solid var(--khata-border-soft, #dce8e0);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.khata-modal-header-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.khata-modal-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e6f6ee 0%, #d1f0e0 100%);
+  border: 1px solid #a3dcbc;
+  color: var(--khata-emerald-600, #059669);
+  flex-shrink: 0;
+}
+
+.khata-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #124733;
+  line-height: 1.6;
+}
+
+.khata-modal-subtitle {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: #557967;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.btn-khata-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  border: 1px solid #d5e5db;
+  background: var(--khata-surface, #ffffff);
+  color: #5d7c6d;
+  cursor: pointer;
+  transition: all var(--khata-transition-fast, 0.14s ease);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.btn-khata-modal-close:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: var(--khata-red-600, #dc2626);
+  transform: rotate(90deg);
+}
+
+.khata-modal-form {
+  padding: 18px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.khata-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 16px;
+}
+
+.khata-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.khata-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.khata-field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  color: #274b39;
+}
+
+.khata-badge-pill-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #edf6f1;
+  border: 1px solid #b8dfca;
+  color: var(--khata-emerald-700, #047857);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.khata-badge-pill {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f1f5f3;
+  color: #557967;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.khata-req-star {
+  font-size: 10.5px;
+  color: #e11d48;
+  font-weight: 700;
+  background: #ffe4e6;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.khata-field-hint {
+  font-size: 10.5px;
+  color: #638573;
+  margin-top: 2px;
+}
+
+.khata-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--khata-border, #cbdcd1);
+  border-radius: 11px;
+  background: var(--khata-surface, #ffffff);
+  transition: border-color var(--khata-transition-fast, 0.14s ease), box-shadow var(--khata-transition-fast, 0.14s ease), background var(--khata-transition-fast, 0.14s ease);
+  overflow: hidden;
+}
+
+.khata-input-wrapper:focus-within {
+  border-color: var(--khata-emerald-500, #10b981);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+  background: var(--khata-surface, #ffffff);
+}
+
+.khata-input-wrapper.is-locked {
+  background: #f3f7f5;
+  border-color: #c4dcd0;
+}
+
+.khata-input-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 11px;
+  font-size: 14px;
+  color: #6c8a7b;
+  pointer-events: none;
+  user-select: none;
+}
+
+.khata-input,
+.khata-select {
+  width: 100%;
+  height: 42px;
+  min-height: 42px;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: #153e2d;
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.khata-input-locked {
+  cursor: not-allowed;
+  font-weight: 700;
+  color: var(--khata-emerald-700, #047857);
+  letter-spacing: 0.5px;
+}
+
+/* English Numerals Enforcement */
+.eng-num,
+.khata-input.eng-num,
+.khata-input-locked.eng-num,
+.khata-table input.amount,
+.khata-table input.date-input,
+.khata-code-badge,
+.khata-stat-val,
+.khata-dir-table td.eng-num,
+#khata-view-code,
+#khata-view-mobile,
+#khata-total-banam,
+#khata-total-jama,
+#khata-net-balance,
+#khata-foot-banam,
+#khata-foot-jama,
+#khata-foot-baqaya {
+  font-family: var(--khata-font-num, Calibri, 'Segoe UI', Arial, sans-serif) !important;
+  font-variant-numeric: tabular-nums !important;
+  direction: ltr !important;
+  font-feature-settings: 'latn' 1, 'numr' 0, 'tnum' 1, 'lnum' 1 !important;
+}
+
+/* Opening Balance Luxury Inset Card */
+.khata-balance-setup-card {
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid #cce2d5;
+  background: linear-gradient(180deg, var(--khata-surface-muted, #f7faf8) 0%, #f0f7f2 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.khata-setup-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.khata-setup-icon {
+  font-size: 18px;
+}
+
+.khata-setup-card-title strong {
+  display: block;
+  font-size: 12.5px;
+  color: #174b37;
+}
+
+.khata-setup-desc {
+  display: block;
+  font-size: 11px;
+  color: #5f8070;
+}
+
+.khata-balance-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.khata-balance-controls .flex-grow {
+  flex: 1;
+  min-width: 170px;
+}
+
+.khata-balance-controls .type-select-wrap {
+  min-width: 170px;
+}
+
+.khata-curr-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  height: 100%;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--khata-font-num, Calibri, sans-serif);
+  color: var(--khata-emerald-700, #047857);
+  background: #e1f4ea;
+  border-inline-end: 1px solid #c4ded0;
+}
+
+/* Modal Actions Footer */
+.khata-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--khata-border-soft, #e2ebe4);
+  margin-top: 4px;
+}
+
+.btn-khata-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 11px;
+  background: var(--khata-surface, #ffffff);
+  color: var(--khata-text-muted, #4b6b5b);
+  border: 1px solid var(--khata-border, #cbdcd1);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--khata-transition-fast, 0.14s ease);
+}
+
+.btn-khata-cancel:hover {
+  background: #f1f6f3;
+  color: #194432;
+  border-color: #a7c5b3;
+}
+
+.btn-khata-cancel:active {
+  transform: translateY(0);
+}
+
+.btn-khata-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  height: 42px;
+  padding: 0 22px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--khata-emerald-500, #10b981) 0%, var(--khata-emerald-700, #047857) 100%);
+  color: #ffffff;
+  border: 1px solid var(--khata-emerald-700, #047857);
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(4, 120, 87, 0.28);
+  transition: transform var(--khata-transition-fast, 0.14s ease), box-shadow var(--khata-transition-fast, 0.14s ease), background var(--khata-transition-fast, 0.14s ease);
+}
+
+.btn-khata-submit:hover {
+  background: linear-gradient(135deg, var(--khata-emerald-600, #059669) 0%, #065f46 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(4, 120, 87, 0.38);
+  will-change: transform;
+}
+
+.btn-khata-submit:active {
+  transform: translateY(0);
+}
+
+.btn-khata-submit .btn-icon {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   9. CUSTOMER LIST / DIRECTORY MODAL (Full Width Viewport Experience)
+   ========================================================================== */
+dialog.khata-directory-modal {
+  box-sizing: border-box;
+  width: min(1680px, 96vw);
+  max-width: 96vw;
+  height: 90vh;
+  max-height: 92vh;
+  margin: auto;
+  padding: 0;
+  border-radius: var(--khata-radius-xl, 20px);
+  border: 1px solid var(--khata-border, #cce0d3);
+  background: var(--khata-surface, #ffffff);
+  color: #183e30;
+  box-shadow: var(--khata-shadow-lg, 0 28px 75px rgba(16, 56, 40, 0.28));
+  overflow: hidden;
+}
+
+dialog.khata-directory-modal[open] {
+  display: flex !important;
+  flex-direction: column;
+}
+
+/* Strictly hide khata dialogs when closed or outside khata view */
+dialog.khata-modal:not([open]),
+dialog.khata-directory-modal:not([open]),
+body:not(.khata-view) dialog.khata-modal,
+body:not(.khata-view) dialog.khata-directory-modal {
+  display: none !important;
+}
+
+.khata-dir-search-wrap {
+  flex: 0 1 380px;
+  min-width: 200px;
+}
+
+.khata-dir-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.khata-dir-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 0;
+  scrollbar-color: #bdcfc0 #f3f6f1;
+}
+
+.khata-dir-table-wrap::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.khata-dir-table-wrap::-webkit-scrollbar-track {
+  background: #f3f6f1;
+}
+
+.khata-dir-table-wrap::-webkit-scrollbar-thumb {
+  background: #bdcfc0;
+  border-radius: 10px;
+  border: 2px solid #f3f6f1;
+}
+
+.khata-dir-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #9fb8a9;
+}
+
+.khata-dir-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.khata-dir-table col.dir-col-idx    { width: 90px; }
+.khata-dir-table col.dir-col-code   { width: 140px; }
+.khata-dir-table col.dir-col-name   { width: auto; }
+.khata-dir-table col.dir-col-mobile { width: 220px; }
+.khata-dir-table col.dir-col-curr   { width: 180px; }
+.khata-dir-table col.dir-col-bal    { width: 260px; }
+
+.khata-dir-table th {
+  background: var(--khata-surface-subtle, #edf5ef);
+  padding: 14px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--khata-text, #174233);
+  border-bottom: 2px solid #bcd7c6;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.khata-dir-table th.dir-th-name {
+  text-align: right;
+  padding-inline-start: 24px;
+}
+
+.khata-dir-table th.dir-th-bal {
+  text-align: right;
+  padding-inline-end: 28px;
+}
+
+.khata-dir-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--khata-border-soft, #e1ece4);
+  font-size: 14px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.khata-dir-table td:nth-child(3) {
+  text-align: right;
+  padding-inline-start: 24px;
+  font-size: 15px;
+}
+
+.khata-dir-table td:nth-child(6) {
+  text-align: right;
+  padding-inline-end: 28px;
+  font-size: 15px;
+}
+
+.khata-dir-table tbody tr {
+  cursor: pointer;
+  transition: background var(--khata-transition-fast, 0.12s ease);
+}
+
+.khata-dir-table tbody tr:nth-child(even) td {
+  background: #fbfdfb;
+}
+
+.khata-dir-table tbody tr:hover td {
+  background: #eef7f1 !important;
+}
+
+.khata-dir-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between !important;
+  padding: 14px 24px !important;
+  background: var(--khata-surface-muted, #f7faf8);
+  border-top: 1px solid var(--khata-border-soft, #dbe7df);
+  flex-shrink: 0;
+}
+
+.khata-dir-count-badge {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--khata-text-muted, #4b6b5b);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Primary Page Directory Header Card */
+.khata-dir-header-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  background: linear-gradient(180deg, #fcfdfc 0%, var(--khata-surface-muted, #f4f8f5) 100%);
+  border-bottom: 1px solid var(--khata-border-soft, #dbe7df);
+  flex-wrap: wrap;
+}
+
+.khata-dir-header-start {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.khata-dir-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e1f7eb 0%, #c5eed8 100%);
+  color: var(--khata-emerald-700, #047857);
+  box-shadow: 0 2px 8px rgba(4, 120, 87, 0.12);
+  flex-shrink: 0;
+}
+
+.khata-dir-main-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--khata-emerald-900, #064e3b);
+  line-height: 1.3;
+}
+
+.khata-dir-main-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: var(--khata-text-faint, #637c6d);
+}
+
+.khata-dir-stats-grid {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 12px 22px;
+  background: var(--khata-surface-subtle, #edf5ef);
+  border-bottom: 1px solid var(--khata-border-soft, #dbe7df);
+  flex-wrap: wrap;
+}
+
+.khata-dir-stats-grid .khata-stat-box {
+  flex: 1 1 calc(25% - 12px);
+  min-width: 140px;
+}
+
+.khata-dir-footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: var(--khata-surface-muted, #f7faf8);
+  border-top: 1px solid var(--khata-border-soft, #e2ebe4);
+}
+
+.khata-dir-table col.dir-col-action { width: 140px; }
+.khata-dir-table th.dir-th-action { text-align: center; }
+
+.btn-open-khata {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--khata-emerald-600, #059669) 0%, var(--khata-emerald-700, #047857) 100%);
+  color: #ffffff !important;
+  border: 1px solid var(--khata-emerald-700, #047857);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(4, 120, 87, 0.25);
+  transition: all var(--khata-transition-fast, 0.14s ease);
+}
+
+.btn-open-khata:hover {
+  background: linear-gradient(135deg, var(--khata-emerald-500, #10b981) 0%, var(--khata-emerald-600, #059669) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(4, 120, 87, 0.35);
+}
+
+.btn-khata-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 11px;
+  background: linear-gradient(180deg, #ffffff 0%, #edf5f0 100%);
+  border: 1px solid var(--khata-border, #cce0d3);
+  color: var(--khata-emerald-900, #064e3b);
+  font-weight: 700;
+  font-size: 13.5px;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: var(--khata-shadow-xs, 0 1px 2px rgba(18, 63, 46, 0.05));
+  transition: all var(--khata-transition-fast, 0.14s ease);
+}
+
+.btn-khata-back:hover {
+  background: var(--khata-emerald-50, #ecfdf5);
+  border-color: var(--khata-emerald-500, #10b981);
+  color: var(--khata-emerald-700, #047857);
+  transform: translateX(2px);
+}
+
+.btn-khata-back .back-arrow {
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   10. PRINT MODE (@media print) — OFFICIAL BANK STATEMENT & VOUCHER DOSSIER
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 0.5cm 10mm 0.5cm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Completely hide screen-only elements */
+  body.khata-view .top-nav,
+  body.khata-view .top-nav-wrap,
+  body.khata-view .workspace-nav,
+  body.khata-view .khata-topbar,
+  body.khata-view #khata-profile-section,
+  body.khata-view .khata-profile-card,
+  body.khata-view .khata-actions-bar,
+  body.khata-view .btn-delete-row,
+  body.khata-view th.th-delete,
+  body.khata-view td.td-delete,
+  body.khata-view col.col-delete,
+  body.khata-view td:last-child.no-print,
+  .khata-table th.th-delete,
+  .khata-table td.td-delete,
+  .khata-table col.col-delete,
+  body.khata-view tr.khata-draft,
+  body.khata-view .table-scroll-hint,
+  body.khata-view .help,
+  body.khata-view #khata-directory-view,
+  .no-print {
+    display: none !important;
+  }
+
+  body.khata-view #khata-page {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  body.khata-view #khata-ledger-view {
+    display: block !important;
+  }
+
+  body.khata-view .khata-card {
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 1. Bank Statement Letterhead */
+  .khata-print-statement-dossier {
+    display: block !important;
+    margin-bottom: 10px !important;
+    page-break-inside: avoid;
+  }
+
+  .khata-print-letterhead {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    border-bottom: 2.5px solid #174233 !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .khata-print-period-block {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    min-width: 140px !important;
+    text-align: right !important;
+    font-size: 8.5pt !important;
+    gap: 2px !important;
+  }
+
+  .khata-print-period-block .khata-print-meta-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+
+  .khata-print-period-block .meta-label {
+    color: #666666 !important;
+  }
+
+  .khata-print-period-block .meta-val {
+    color: #000000 !important;
+    font-weight: 700 !important;
+  }
+
+  .khata-print-spacer {
+    display: none !important;
+  }
+
+  .khata-print-title-block {
+    text-align: center !important;
+  }
+
+  .khata-print-main-title {
+    font-family: 'Bombay Black Unicode', 'Noto Nastaliq Urdu', serif !important;
+    font-size: 17pt !important;
+    font-weight: 700 !important;
+    color: #0c2d20 !important;
+    margin: 0 !important;
+    line-height: 1.3 !important;
+  }
+
+  .khata-print-doc-sub {
+    font-size: 8.5pt !important;
+    color: #444444 !important;
+    margin: 2px 0 0 0 !important;
+  }
+
+  .khata-print-meta-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    text-align: left !important;
+    font-size: 8.5pt !important;
+  }
+
+  .khata-print-meta-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+
+  .khata-print-meta-item .meta-label {
+    color: #666666 !important;
+  }
+
+  .khata-print-meta-item .meta-val {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-family: var(--khata-font-num) !important;
+  }
+
+  /* 2. Customer Account Information Box (بینک اکاؤنٹ کوائف) */
+  .khata-print-customer-box {
+    display: block !important;
+    border: 1px solid #77887b !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    margin-bottom: 9px !important;
+    background: #fafcfb !important;
+    page-break-inside: avoid;
+  }
+
+  .khata-print-box-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    background: #eef4f0 !important;
+    padding: 5px 12px 4px !important;
+    font-size: 9pt !important;
+    font-weight: 700 !important;
+    color: #174233 !important;
+    border-bottom: 1px solid #cbdacf !important;
+    line-height: 1.8 !important;
+  }
+
+  .khata-print-info-grid {
+    display: grid !important;
+    grid-template-columns: 1.25fr 0.85fr 1fr !important;
+    row-gap: 14px !important;
+    column-gap: 16px !important;
+    padding: 11px 14px 10px !important;
+    font-size: 9pt !important;
+    line-height: 2.1 !important;
+  }
+
+  .khata-print-info-cell {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 8px !important;
+    line-height: 2.1 !important;
+  }
+
+  .khata-print-info-cell.cell-address {
+    grid-column: span 2 !important;
+  }
+
+  .khata-print-info-cell .info-label {
+    color: #555555 !important;
+    white-space: nowrap !important;
+    line-height: 2.1 !important;
+  }
+
+  .khata-print-info-cell .info-val {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    line-height: 2.1 !important;
+  }
+
+  .khata-print-info-cell .info-val.info-name {
+    font-size: 11.5pt !important;
+    color: #123d2f !important;
+    line-height: 2.1 !important;
+  }
+
+  .khata-print-info-cell .info-code {
+    background: #e8f3ed !important;
+    padding: 2px 8px !important;
+    border-radius: 4px !important;
+    border: 1px solid #cbdacf !important;
+    line-height: 1.7 !important;
+  }
+
+  /* 3. Financial Summary Snapshot Strip (خلاصہ کھاتہ / Bank Summary Strip) */
+  .khata-print-summary-strip {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr 1.3fr !important;
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+    page-break-inside: avoid;
+  }
+
+  .khata-print-sum-card {
+    border: 1px solid #77887b !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    text-align: center !important;
+    background: #ffffff !important;
+  }
+
+  .khata-print-sum-card .sum-card-label {
+    font-size: 8.5pt !important;
+    font-weight: 700 !important;
+    margin-bottom: 1px !important;
+  }
+
+  .khata-print-sum-card .sum-card-val {
+    font-size: 11pt !important;
+    font-weight: 800 !important;
+    font-family: var(--khata-font-num) !important;
+  }
+
+  .khata-print-sum-card.sabqa {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #1e293b !important;
+  }
+
+  .khata-print-sum-card.banam {
+    background: #fdf5f5 !important;
+    border-color: #fca5a5 !important;
+    color: #b91c1c !important;
+  }
+
+  .khata-print-sum-card.jama {
+    background: #f0fdf4 !important;
+    border-color: #86efac !important;
+    color: #15803d !important;
+  }
+
+  .khata-print-sum-card.balance {
+    background: #eff6ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+  }
+
+  /* 4. Transaction Table */
+  .khata-table-wrap {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .khata-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    border: 1px solid #77887b !important;
+    margin-bottom: 0 !important;
+    font-size: 9.5pt !important;
+  }
+
+  .khata-table col.col-serial { width: 1.2cm !important; }
+  .khata-table col.col-date   { width: 2.3cm !important; }
+  .khata-table col.col-detail { width: auto !important; }
+  .khata-table col.col-banam  { width: 2.8cm !important; }
+  .khata-table col.col-jama   { width: 2.8cm !important; }
+  .khata-table col.col-baqaya { width: 3.6cm !important; }
+  .khata-table col.col-delete { width: 0 !important; display: none !important; }
+
+  .khata-table th,
+  .khata-table td {
+    border: 1px solid #77887b !important;
+    color: #000000 !important;
+    padding: 6px 6px !important;
+    vertical-align: middle !important;
+    font-size: 9.5pt !important;
+  }
+
+  .khata-table thead th {
+    background: #eef4f0 !important;
+    color: #174233 !important;
+    font-weight: 800 !important;
+    font-size: 10pt !important;
+    text-align: center !important;
+  }
+
+  /* Replace screen inputs with clean static print text */
+  .khata-table td input,
+  .khata-table td textarea {
+    display: none !important;
+  }
+
+  .khata-table td .khata-screen-bal,
+  .khata-table td .khata-screen-bal-tag {
+    display: none !important;
+  }
+
+  .khata-table td .khata-print-val {
+    display: block !important;
+    text-align: center !important;
+    font-family: var(--khata-font-num) !important;
+    font-size: 9.5pt !important;
+    color: #000000 !important;
+    line-height: 1.3 !important;
+  }
+
+  .khata-table td.td-serial {
+    text-align: center !important;
+    font-weight: 700 !important;
+    font-family: var(--khata-font-num) !important;
+  }
+
+  .khata-table td.td-detail .khata-print-val {
+    text-align: right !important;
+    font-family: inherit !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    padding: 2px 6px !important;
+  }
+
+  .khata-table td.td-baqaya {
+    padding: 4px 6px !important;
+  }
+
+  .khata-table td.td-baqaya .khata-print-bal,
+  .khata-table tfoot #khata-foot-baqaya .khata-bal-wrap {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    padding: 0 6px !important;
+    box-sizing: border-box !important;
+    direction: rtl !important;
+  }
+
+  .khata-bal-amount {
+    text-align: right !important;
+    font-family: var(--khata-font-num, Calibri, Arial, sans-serif) !important;
+    font-weight: 700 !important;
+    direction: ltr !important;
+  }
+
+  .khata-bal-side {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    padding-inline-start: 6px !important;
+    text-align: left !important;
+    font-weight: 700 !important;
+    font-size: 8.5pt !important;
+    direction: rtl !important;
+  }
+
+  /* Baqaya color: جمع = green, بنام = red */
+  .khata-table td.td-baqaya.is-jama .khata-print-bal,
+  .khata-table td.td-baqaya.is-jama .khata-print-bal > span,
+  .khata-table tfoot td#khata-foot-baqaya.is-jama,
+  .khata-table tfoot td#khata-foot-baqaya.is-jama span {
+    color: #15803d !important;
+  }
+
+  .khata-table td.td-baqaya.is-banam .khata-print-bal,
+  .khata-table td.td-baqaya.is-banam .khata-print-bal > span,
+  .khata-table tfoot td#khata-foot-baqaya.is-banam,
+  .khata-table tfoot td#khata-foot-baqaya.is-banam span {
+    color: #b91c1c !important;
+  }
+
+  .khata-table tbody tr {
+    page-break-inside: avoid;
+    height: 38px;
+    background: #ffffff !important;
+  }
+
+  .khata-table tbody tr:nth-child(even) {
+    background: #fbfdfc !important;
+  }
+
+  /* Table Footer (0.3cm gap and Total Summary) */
+  .khata-table tfoot tr.khata-totals-gap,
+  .khata-table tfoot tr.khata-totals-gap > td {
+    height: 0.3cm !important;
+    min-height: 0.3cm !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    background: #ffffff !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+
+  .khata-table tfoot tr.khata-totals-row {
+    background: #edf4ef !important;
+    border: 1px solid #77887b !important;
+    border-top: 2px solid #174233 !important;
+    border-bottom: 3px double #174233 !important;
+  }
+
+  .khata-table tfoot th,
+  .khata-table tfoot td {
+    font-weight: 800 !important;
+    font-size: 10pt !important;
+    text-align: center !important;
+    color: #000000 !important;
+    font-family: var(--khata-font-num) !important;
+    border-color: #77887b !important;
+  }
+
+  .khata-table tfoot th {
+    font-family: inherit !important;
+    color: #174233 !important;
+  }
+
+  /* 5. Bank Signatures & Authorization Section */
+  .khata-print-signatures {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1.2fr !important;
+    gap: 24px !important;
+    margin-top: 24px !important;
+    padding-top: 6px !important;
+    page-break-inside: avoid;
+  }
+
+  .khata-sig-block {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    text-align: center !important;
+    min-height: 64px !important;
+  }
+
+  .khata-sig-block .sig-line {
+    width: 85% !important;
+    border-top: 1.5px dashed #444444 !important;
+    margin-bottom: 5px !important;
+  }
+
+  .khata-sig-block .sig-title {
+    font-size: 9pt !important;
+    font-weight: 800 !important;
+    color: #174233 !important;
+  }
+
+  .khata-sig-block .sig-sub {
+    font-size: 7.5pt !important;
+    color: #666666 !important;
+    margin-top: 1px !important;
+  }
+
+  .khata-sig-block.sig-stamp .sig-stamp-box {
+    width: 105px !important;
+    height: 40px !important;
+    border: 1.5px dashed #77887b !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 7.5pt !important;
+    color: #77887b !important;
+    margin-bottom: 6px !important;
+    background: #fafcfb !important;
+  }
+
+  /* 6. Legal & System Footnote (Hidden per user request) */
+  .khata-print-disclaimer {
+    display: none !important;
+  }
+
+  /* Anti-Dark Mode Bleed: Force Complete Light Mode in Print */
+  html[data-theme="dark"],
+  html[data-theme="dark"] body,
+  html[data-theme="dark"] .khata-card,
+  html[data-theme="dark"] .khata-table,
+  html[data-theme="dark"] .khata-table th,
+  html[data-theme="dark"] .khata-table td,
+  html[data-theme="dark"] .khata-table tfoot tr,
+  html[data-theme="dark"] .khata-print-statement-dossier,
+  html[data-theme="dark"] .khata-print-customer-box,
+  html[data-theme="dark"] .khata-print-sum-card,
+  html[data-theme="dark"] .khata-print-signatures {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #77887b !important;
+    box-shadow: none !important;
+  }
+
+  html[data-theme="dark"] .khata-table thead th,
+  html[data-theme="dark"] .khata-print-box-header,
+  html[data-theme="dark"] .khata-table tfoot tr {
+    background: #eef4f0 !important;
+    color: #174233 !important;
+  }
+
+  html[data-theme="dark"] .khata-print-brand-badge {
+    background: #174233 !important;
+    color: #ffffff !important;
+  }
+
+  html[data-theme="dark"] .khata-print-val {
+    color: #000000 !important;
+  }
+}
+
+/* ==========================================================================
+   11. DARK MODE / NIGHT THEME (OBSIDIAN EMERALD HARMONY) — SCREEN ONLY
+   ========================================================================== */
+@media screen {
+html[data-theme="dark"] .khata-card {
+  background: #14241d !important;
+  border-color: #274536 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45) !important;
+}
+
+html[data-theme="dark"] .khata-topbar,
+html[data-theme="dark"] .khata-profile-card,
+html[data-theme="dark"] .khata-actions-bar {
+  background: #172a21 !important;
+  border-color: #264435 !important;
+}
+
+html[data-theme="dark"] .khata-customer-name {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .khata-code-badge {
+  background: #1c3d2e !important;
+  border-color: #336a50 !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-profile-details {
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .khata-search-input {
+  background: #101e17 !important;
+  border-color: #294738 !important;
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .khata-stat-box {
+  background: #122019 !important;
+  border-color: #254233 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.balance.is-jama {
+  background: #123323 !important;
+  border-color: #296d49 !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.balance.is-jama .khata-stat-val {
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.balance.is-banam {
+  background: #381b1e !important;
+  border-color: #7f323a !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.balance.is-banam .khata-stat-val {
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.banam .khata-stat-val {
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.jama .khata-stat-val {
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .btn-khata-action,
+html[data-theme="dark"] .btn-khata-list {
+  background: #172a21 !important;
+  border-color: #294738 !important;
+  color: #b3d6c4 !important;
+}
+
+html[data-theme="dark"] .btn-khata-action:hover,
+html[data-theme="dark"] .btn-khata-list:hover {
+  background: #1f3a2c !important;
+  border-color: var(--khata-emerald-400, #34d399) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .khata-table-wrap {
+  scrollbar-color: #2a523e #122119;
+}
+
+html[data-theme="dark"] .khata-table-wrap::-webkit-scrollbar-track {
+  background: #122119;
+}
+
+html[data-theme="dark"] .khata-table-wrap::-webkit-scrollbar-thumb {
+  background: #2a523e;
+  border: 2px solid #122119;
+}
+
+html[data-theme="dark"] .khata-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #3c7358;
+}
+
+html[data-theme="dark"] .khata-table th {
+  background: #172a21 !important;
+  color: #a4cebb !important;
+  border-color: #264435 !important;
+}
+
+html[data-theme="dark"] .khata-table td {
+  border-color: #1f362a !important;
+  color: #dceae2 !important;
+}
+
+html[data-theme="dark"] .khata-table tbody tr:nth-child(even):not(.khata-draft) td {
+  background: #142a1f !important;
+}
+
+html[data-theme="dark"] .khata-table td.td-serial {
+  background: #112019 !important;
+  color: #799e8c !important;
+}
+
+html[data-theme="dark"] .khata-table tr:hover td.td-serial {
+  background: #1a3a2b !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .khata-table td input,
+html[data-theme="dark"] .khata-table td textarea {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .khata-table td input:focus,
+html[data-theme="dark"] .khata-table td textarea:focus {
+  background: #101e17 !important;
+}
+
+html[data-theme="dark"] .khata-table input.is-invalid,
+html[data-theme="dark"] .khata-table textarea.is-invalid {
+  box-shadow: inset 0 0 0 2px #ef4444, 0 0 0 3px rgba(239, 68, 68, 0.3) !important;
+  background: #331518 !important;
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] .khata-table tr.khata-draft td {
+  background: linear-gradient(90deg, #102419 0%, #13281d 100%) !important;
+  border-bottom-style: dashed !important;
+  border-bottom-color: #26553d !important;
+}
+
+html[data-theme="dark"] .khata-table tr.khata-draft td.td-serial {
+  color: var(--khata-emerald-400, #34d399) !important;
+}
+
+html[data-theme="dark"] .khata-table tbody tr:hover td {
+  background: #193427 !important;
+}
+
+html[data-theme="dark"] .khata-table tfoot tr.khata-totals-gap,
+html[data-theme="dark"] .khata-table tfoot tr.khata-totals-gap > td {
+  background: var(--khata-surface, #0f1d16) !important;
+  border: 0 !important;
+}
+
+html[data-theme="dark"] .khata-table tfoot tr.khata-totals-row {
+  background: #163225 !important;
+  border-top-color: #2e7a57 !important;
+}
+
+html[data-theme="dark"] .khata-table tfoot th,
+html[data-theme="dark"] .khata-table tfoot td {
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] dialog.khata-modal,
+html[data-theme="dark"] dialog.khata-directory-modal {
+  background: #14251d !important;
+  border-color: #2a4c3a !important;
+  color: #e5efe8 !important;
+  box-shadow: 0 28px 75px rgba(0, 0, 0, 0.6) !important;
+}
+
+html[data-theme="dark"] .khata-modal-header {
+  background: linear-gradient(135deg, #101e18 0%, #15291f 100%) !important;
+  border-color: #244232 !important;
+}
+
+html[data-theme="dark"] .khata-modal-icon-badge {
+  background: linear-gradient(135deg, #183828 0%, #10261c 100%) !important;
+  border-color: #2a6647 !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-modal-header h2 {
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-modal-subtitle {
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .btn-khata-modal-close {
+  background: #182e22 !important;
+  border-color: #294c39 !important;
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .btn-khata-modal-close:hover {
+  background: #451a1d !important;
+  border-color: #7f2329 !important;
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] .khata-field-label {
+  color: #cce5d7 !important;
+}
+
+html[data-theme="dark"] .khata-badge-pill-locked {
+  background: #12281e !important;
+  border-color: #27563d !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-badge-pill {
+  background: #182c21 !important;
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .khata-field-hint {
+  color: #7ca390 !important;
+}
+
+html[data-theme="dark"] .khata-input-wrapper {
+  background: #0f1c16 !important;
+  border-color: #284736 !important;
+}
+
+html[data-theme="dark"] .khata-input-wrapper:focus-within {
+  border-color: var(--khata-emerald-500, #10b981) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22) !important;
+}
+
+html[data-theme="dark"] .khata-input-wrapper.is-locked {
+  background: #122119 !important;
+  border-color: #213c2d !important;
+}
+
+html[data-theme="dark"] .khata-input-icon {
+  color: #7c9f8e !important;
+}
+
+html[data-theme="dark"] .khata-input,
+html[data-theme="dark"] .khata-select {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .khata-input-locked {
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-balance-setup-card {
+  background: linear-gradient(180deg, #101e18 0%, #15261e 100%) !important;
+  border-color: #264634 !important;
+}
+
+html[data-theme="dark"] .khata-setup-card-title strong {
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-setup-desc {
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .khata-curr-tag {
+  background: #183325 !important;
+  border-color: #264d38 !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-modal-actions {
+  border-top-color: #223e2f !important;
+}
+
+html[data-theme="dark"] .btn-khata-cancel {
+  background: #16281f !important;
+  border-color: #284736 !important;
+  color: #a7ccb9 !important;
+}
+
+html[data-theme="dark"] .btn-khata-cancel:hover {
+  background: #1c3629 !important;
+  color: #ffffff !important;
+  border-color: var(--khata-emerald-400, #34d399) !important;
+}
+
+html[data-theme="dark"] .khata-dir-table-wrap {
+  scrollbar-color: #2a523e #122119;
+}
+
+html[data-theme="dark"] .khata-dir-table-wrap::-webkit-scrollbar-track {
+  background: #122119;
+}
+
+html[data-theme="dark"] .khata-dir-table-wrap::-webkit-scrollbar-thumb {
+  background: #2a523e;
+  border: 2px solid #122119;
+}
+
+html[data-theme="dark"] .khata-dir-table th {
+  background: #14261e !important;
+  color: #86efac !important;
+  border-color: #274536 !important;
+}
+
+html[data-theme="dark"] .khata-dir-table td {
+  border-color: #20392c !important;
+  color: #dceae2 !important;
+}
+
+html[data-theme="dark"] .khata-dir-table tbody tr:nth-child(even) td {
+  background: #122119 !important;
+}
+
+html[data-theme="dark"] .khata-dir-table tbody tr:hover td {
+  background: #1c392b !important;
+}
+
+html[data-theme="dark"] .khata-dir-footer {
+  background: #112019 !important;
+  border-top-color: #244232 !important;
+}
+
+html[data-theme="dark"] .khata-dir-count-badge {
+  color: #9cbdaf !important;
+}
+}
+
+/* ==========================================================================
+   12. ACCESSIBILITY, FOCUS RINGS, MEDIA QUERIES & RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+/* Keyboard Focus Visible System */
+.btn-khata-new:focus-visible,
+.btn-khata-list:focus-visible,
+.btn-khata-action:focus-visible,
+.btn-khata-cancel:focus-visible,
+.btn-khata-submit:focus-visible,
+.btn-khata-modal-close:focus-visible,
+.btn-delete-row:focus-visible,
+.khata-search-input:focus-visible,
+.khata-input:focus-visible,
+.khata-select:focus-visible {
+  outline: 2px solid var(--khata-emerald-500, #10b981) !important;
+  outline-offset: 2px !important;
+}
+
+/* Disabled State Standards */
+.btn-khata-new:disabled,
+.btn-khata-list:disabled,
+.btn-khata-action:disabled,
+.btn-khata-cancel:disabled,
+.btn-khata-submit:disabled,
+.btn-khata-modal-close:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Reduced Motion Mode */
+@media (prefers-reduced-motion: reduce) {
+  dialog.khata-modal[open],
+  dialog.khata-directory-modal[open],
+  .btn-khata-new,
+  .btn-khata-action,
+  .btn-khata-list,
+  .btn-khata-submit,
+  .btn-khata-cancel,
+  .btn-khata-modal-close,
+  .khata-card,
+  .khata-search-input,
+  .khata-input-wrapper {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Responsive Breakpoints */
+@media (min-width: 1024px) {
+  .khata-customer-name {
+    font-size: 26px;
+  }
+  .khata-profile-details {
+    gap: 24px;
+  }
+}
+
+@media (max-width: 1024px) {
+  #khata-page {
+    padding: 0 16px;
+    margin: 10px auto;
+  }
+  .khata-profile-card {
+    padding: 16px 18px;
+  }
+  .khata-stats-bar {
+    justify-content: flex-start;
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .khata-topbar {
+    padding: 12px 16px;
+  }
+  .khata-search-wrap {
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
+  .khata-top-actions {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+  }
+  .khata-customer-name {
+    font-size: 20px;
+  }
+  .khata-profile-card {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .khata-stats-bar {
+    gap: 8px;
+  }
+  .khata-stat-box {
+    flex: 1 1 calc(33.333% - 8px);
+    min-width: 0;
+  }
+  .khata-stat-box.balance {
+    flex-basis: 100%;
+  }
+  .khata-actions-bar {
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 580px) {
+  .khata-form-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .khata-stat-box {
+    flex: 1 1 calc(50% - 8px);
+  }
+  .khata-stat-val {
+    font-size: 15px;
+  }
+  .khata-empty-state p {
+    line-height: 2.4;
+  }
+  .btn-khata-action,
+  .btn-khata-list,
+  .btn-khata-new {
+    min-height: 44px;
+  }
+}

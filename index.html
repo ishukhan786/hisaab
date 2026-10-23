@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="style.css?v=1.4.15">
   <link rel="stylesheet" href="ui.css?v=1.4.15">
   <link rel="stylesheet" href="journal.css?v=1.4.15">
+  <link rel="stylesheet" href="khata.css?v=1.4.15">
   <link rel="stylesheet" href="receipt-export.css?v=1.4.15">
 </head>
 <body class="app-shell">
@@ -59,6 +60,7 @@
       <nav class="workspace-nav no-print" role="tablist" aria-label="صفحات">
         <button id="view-register" type="button" role="tab" class="active" aria-selected="true" aria-controls="register-page" aria-pressed="true">اندراج رجسٹر</button>
         <button id="view-journal" type="button" role="tab" aria-selected="false" aria-controls="journal-page" aria-pressed="false">روزنامچہ</button>
+        <button id="view-khata" type="button" role="tab" aria-selected="false" aria-controls="khata-page" aria-pressed="false">گاہک کھاتہ</button>
       </nav>
 
       <div class="top-serial-field" title="شروع نمبر شمار">
@@ -248,6 +250,578 @@
     <p class="journal-help no-print">بنام میں ادائیگی اور جمع میں وصولی لکھیں۔ پہلی انٹری سے حساب صفر پر شروع ہوتا ہے۔ نئی قطار خود بنے گی؛ Tab سے اگلے خانے میں جائیں۔</p>
   </main>
 
+  <!-- Khata Workspace Page -->
+  <main id="khata-page" role="tabpanel" aria-labelledby="view-khata" hidden>
+    <section class="khata-card" aria-label="گاہک کھاتہ">
+      <!-- ========================================================
+           SCREEN 1: FIRST PAGE — تمام گاہک اور پارٹی کھاتہ جات (DIRECTORY)
+           ======================================================== -->
+      <div id="khata-directory-view" class="khata-view-section">
+        <div class="khata-dir-header-card">
+          <div class="khata-dir-header-start">
+            <div class="khata-dir-icon-badge" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 class="khata-dir-main-title">تمام گاہک اور پارٹی کھاتہ جات</h2>
+              <p class="khata-dir-main-subtitle">کھاتے دار کا نام یا کوڈ سرچ کر کے کھاتہ کھولیں اور اندراج کریں</p>
+            </div>
+          </div>
+          <div class="khata-dir-search-wrap">
+            <span class="khata-search-icon" aria-hidden="true">🔍</span>
+            <input id="khata-dir-search" class="khata-search-input" type="search" placeholder="کھاتے دار تلاش کریں (نام، کوڈ، موبائل، پتہ)..." autocomplete="off" aria-label="کھاتہ تلاش کریں">
+          </div>
+          <div class="khata-dir-header-actions">
+            <button id="btn-new-khata-top" class="btn-khata-new" type="button">
+              <span>＋ نیا گاہک کھاتہ بنائیں</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Directory Summary Stats Bar -->
+        <div class="khata-dir-stats-grid">
+          <div class="khata-stat-box count">
+            <span class="khata-stat-label">کل کھاتے دار</span>
+            <span id="khata-dir-total-count" class="khata-stat-val">0</span>
+          </div>
+          <div class="khata-stat-box banam">
+            <span class="khata-stat-label">کل لینا ہے (Debit)</span>
+            <span id="khata-dir-total-banam" class="khata-stat-val">0</span>
+          </div>
+          <div class="khata-stat-box jama">
+            <span class="khata-stat-label">کل دینا ہے (Credit)</span>
+            <span id="khata-dir-total-jama" class="khata-stat-val">0</span>
+          </div>
+          <div id="khata-dir-stat-balance-box" class="khata-stat-box balance">
+            <span id="khata-dir-balance-status" class="khata-stat-label">خالص بقایا</span>
+            <span id="khata-dir-net-balance" class="khata-stat-val">0</span>
+          </div>
+        </div>
+
+        <!-- Directory Table -->
+        <div class="khata-dir-table-wrap">
+          <table class="khata-dir-table">
+            <colgroup>
+              <col class="dir-col-idx">
+              <col class="dir-col-code">
+              <col class="dir-col-name">
+              <col class="dir-col-mobile">
+              <col class="dir-col-curr">
+              <col class="dir-col-bal">
+              <col class="dir-col-action">
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">نمبر شمار</th>
+                <th scope="col">کھاتہ کوڈ</th>
+                <th scope="col" class="dir-th-name">گاہک یا پارٹی کا نام</th>
+                <th scope="col">موبائیل نمبر</th>
+                <th scope="col">کرنسی</th>
+                <th scope="col" class="dir-th-bal">بقایا بیلنس</th>
+                <th scope="col" class="dir-th-action">کارروائی</th>
+              </tr>
+            </thead>
+            <tbody id="khata-dir-rows"></tbody>
+          </table>
+        </div>
+        <div class="khata-dir-footer-bar">
+          <span id="khata-dir-count" class="khata-dir-count-badge">کل کھاتے: 0</span>
+        </div>
+      </div>
+
+      <!-- ========================================================
+           SCREEN 2: INDIVIDUAL CUSTOMER LEDGER (کھاتہ انٹری و لیجر)
+           ======================================================== -->
+      <div id="khata-ledger-view" class="khata-view-section" hidden>
+        <!-- 1. Top Customer Switcher & Directory Back Button -->
+        <div class="khata-topbar no-print">
+          <div class="khata-top-back-wrap">
+            <button id="btn-khata-directory" class="btn-khata-back" type="button" title="تمام گاہک اور پارٹی کھاتہ جات کی فہرست پر واپس جائیں">
+              <span class="back-arrow" aria-hidden="true">📋</span>
+              <span>تمام کھاتہ جات (فہرست)</span>
+            </button>
+          </div>
+          <div class="khata-search-wrap">
+            <span class="khata-search-icon" aria-hidden="true">🔍</span>
+            <input id="khata-search" class="khata-search-input" type="search" placeholder="کھاتہ یا گاہک تلاش کریں (کوڈ، نام، فون)..." autocomplete="off" aria-label="کھاتہ تلاش کریں">
+          </div>
+          <div class="khata-top-actions">
+            <button id="btn-new-khata-ledger" class="btn-khata-new" type="button">
+              <span>＋ نیا کھاتہ</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Customer Profile & Stats Section (Screen Only) -->
+        <div id="khata-profile-section" class="no-print">
+          <div class="khata-profile-card">
+            <div class="khata-profile-info">
+              <div class="khata-profile-title-row">
+                <span id="khata-view-code" class="khata-code-badge">KH-1001</span>
+                <h1 id="khata-view-name" class="khata-customer-name">گاہک کا نام</h1>
+                <span id="khata-view-currency" class="khata-currency-badge pkr">پاکستانی روپیہ (PKR)</span>
+              </div>
+              <div class="khata-profile-details">
+                <div class="khata-detail-item">
+                  <span>📱 موبائیل:</span>
+                  <strong id="khata-view-mobile" dir="ltr">—</strong>
+                </div>
+                <div class="khata-detail-item">
+                  <span>📍 پتہ / مقام:</span>
+                  <strong id="khata-view-address">—</strong>
+                </div>
+              </div>
+            </div>
+            <div class="khata-stats-bar">
+              <div class="khata-stat-box banam">
+                <span class="khata-stat-label">کل بنام (Debit)</span>
+                <span id="khata-total-banam" class="khata-stat-val">0</span>
+              </div>
+              <div class="khata-stat-box jama">
+                <span class="khata-stat-label">کل جمع (Credit)</span>
+                <span id="khata-total-jama" class="khata-stat-val">0</span>
+              </div>
+              <div id="khata-stat-balance-box" class="khata-stat-box balance">
+                <span id="khata-balance-status" class="khata-stat-label">خالص بقایا</span>
+                <span id="khata-net-balance" class="khata-stat-val">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="khata-actions-bar no-print">
+            <div class="khata-actions-group">
+              <button id="btn-khata-print" class="btn-khata-action" type="button">
+                <span>🖨 کھاتہ پرنٹ</span>
+              </button>
+              <button id="btn-khata-excel" class="btn-khata-action" type="button">
+                <span>📊 Excel ایکسپورٹ</span>
+              </button>
+            </div>
+            <div class="khata-actions-group">
+              <button id="btn-khata-edit" class="btn-khata-action" type="button">
+                <span>✏ کھاتہ ترمیم</span>
+              </button>
+              <button id="btn-khata-delete" class="btn-khata-action btn-khata-delete" type="button">
+                <span>🗑 کھاتہ حذف کریں</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Table Section & Official Bank Statement Print Dossier -->
+        <div id="khata-table-section">
+          <!-- Bank Statement Print Dossier (نمایاں لیجر ہیڈر) -->
+          <div class="khata-print-statement-dossier">
+            <!-- 1. Header & Letterhead (Top right text: Statement Period, title centered) -->
+            <div class="khata-print-letterhead">
+              <div class="khata-print-period-block">
+                <div class="khata-print-meta-item">
+                  <span class="meta-label">اسٹیٹمنٹ دورانیہ:</span>
+                  <strong id="khata-print-period" class="meta-val">مکمل کھاتہ ریکارڈ</strong>
+                </div>
+              </div>
+              <div class="khata-print-title-block">
+                <h1 class="khata-print-main-title">کھاتہ لیجر رپورٹ</h1>
+                <p class="khata-print-doc-sub">رسیدِ حساب و گوشوارہ لین دین</p>
+              </div>
+              <div class="khata-print-meta-grid">
+                <div class="khata-print-meta-item">
+                  <span class="meta-label">تاریخ پرنٹ:</span>
+                  <strong id="khata-print-date" class="meta-val eng-num">—</strong>
+                </div>
+                <div class="khata-print-meta-item">
+                  <span class="meta-label">پرنٹ وقت:</span>
+                  <strong id="khata-print-time" class="meta-val eng-num">—</strong>
+                </div>
+                <div class="khata-print-meta-item">
+                  <span class="meta-label">حوالہ نمبر:</span>
+                  <strong id="khata-print-ref" class="meta-val eng-num">—</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Legacy compatibility hooks for automated tests -->
+            <div class="khata-print-header" style="display:none;" aria-hidden="true">
+              <h2 id="khata-print-customer">گاہک کھاتہ</h2>
+              <p id="khata-print-meta"></p>
+            </div>
+
+            <!-- 2. Customer Account Information Box (کھاتے دار کوائف) -->
+            <div class="khata-print-customer-box">
+              <div class="khata-print-box-header">
+                <span class="box-title">اکاؤنٹ تفصیلات</span>
+              </div>
+              <div class="khata-print-info-grid">
+                <div class="khata-print-info-cell cell-name">
+                  <span class="info-label">کھاتہ بنام:</span>
+                  <strong id="khata-print-cust-name" class="info-val info-name">—</strong>
+                </div>
+                <div class="khata-print-info-cell cell-code">
+                  <span class="info-label">کھاتہ کوڈ / نمبر:</span>
+                  <strong id="khata-print-cust-code" class="info-val info-code eng-num">—</strong>
+                </div>
+                <div class="khata-print-info-cell cell-mobile">
+                  <span class="info-label">موبائل نمبر:</span>
+                  <strong id="khata-print-cust-mobile" class="info-val eng-num" dir="ltr">—</strong>
+                </div>
+                <div class="khata-print-info-cell cell-address">
+                  <span class="info-label">پتہ و مقام:</span>
+                  <strong id="khata-print-cust-address" class="info-val">—</strong>
+                </div>
+                <div class="khata-print-info-cell cell-currency">
+                  <span class="info-label">کھاتہ کرنسی:</span>
+                  <strong id="khata-print-cust-currency" class="info-val">—</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Financial Summary Snapshot Strip (خلاصہ کھاتہ) -->
+            <div class="khata-print-summary-strip">
+              <div class="khata-print-sum-card sabqa">
+                <div class="sum-card-label">سابقہ بیلنس</div>
+                <div id="khata-print-sum-sabqa" class="sum-card-val eng-num">0</div>
+              </div>
+              <div class="khata-print-sum-card banam">
+                <div class="sum-card-label">کل بنام</div>
+                <div id="khata-print-sum-banam" class="sum-card-val eng-num">0</div>
+              </div>
+              <div class="khata-print-sum-card jama">
+                <div class="sum-card-label">کل جمع</div>
+                <div id="khata-print-sum-jama" class="sum-card-val eng-num">0</div>
+              </div>
+              <div class="khata-print-sum-card balance">
+                <div id="khata-print-sum-status" class="sum-card-label">خالص بقایا</div>
+                <div id="khata-print-sum-balance" class="sum-card-val eng-num">0</div>
+              </div>
+            </div>
+          </div>
+
+          <p class="table-scroll-hint no-print">↔ مزید کالم دیکھنے کے لیے جدول دائیں یا بائیں کھسکائیں</p>
+          <div class="khata-table-wrap">
+            <table class="khata-table">
+              <colgroup>
+                <col class="col-serial">
+                <col class="col-date">
+                <col class="col-detail">
+                <col class="col-banam">
+                <col class="col-jama">
+                <col class="col-baqaya">
+                <col class="col-delete no-print">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th scope="col">نمبر</th>
+                  <th scope="col">تاریخ</th>
+                  <th scope="col">تفصیل</th>
+                  <th id="khata-th-currency-label-1" class="th-banam" scope="col">بنام</th>
+                  <th id="khata-th-currency-label-2" class="th-jama" scope="col">جمع</th>
+                  <th class="th-baqaya" scope="col">بقایا</th>
+                  <th class="th-delete no-print" scope="col">حذف</th>
+                </tr>
+              </thead>
+              <tbody id="khata-rows"></tbody>
+              <tfoot>
+                <tr class="khata-totals-gap" aria-hidden="true">
+                  <td colspan="6"></td>
+                  <td class="no-print"></td>
+                </tr>
+                <tr class="khata-totals-row">
+                  <th colspan="3" scope="row">کل میزان</th>
+                  <td id="khata-foot-banam">0</td>
+                  <td id="khata-foot-jama">0</td>
+                  <td id="khata-foot-baqaya">0</td>
+                  <td class="no-print"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="khata-print-disclaimer" style="display:none;" aria-hidden="true"></div>
+        </div>
+
+        <!-- 4. Empty State Placeholder -->
+        <div id="khata-empty-placeholder" class="khata-empty-state" hidden>
+          <div class="khata-empty-icon">📁</div>
+          <h3>ابھی کوئی کھاتہ منتخب نہیں ہے</h3>
+          <p>کسی گاہک یا پارٹی کا کھاتہ دیکھنے کے لیے تلاش کریں یا نیا کھاتہ کھولیں۔</p>
+          <button id="btn-new-khata-empty" class="btn-khata-new" type="button">＋ نیا گاہک کھاتہ بنائیں</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="help no-print">
+      <span>گاہک کھاتہ • Tab / Enter سے اگلا خانہ • سطر میں بنام یا جمع درج کرتے ہی بقایا خودکار طور پر شمار ہوگا • بنام (لینا ہے) اور جمع (دینا ہے)</span>
+    </footer>
+
+    <!-- New Khata Modal Dialog (Senior UI/UX Obsidian Emerald Edition) -->
+    <dialog id="new-khata-dialog" class="khata-modal" aria-labelledby="new-khata-title">
+      <div class="khata-modal-header">
+        <div class="khata-modal-header-info">
+          <div class="khata-modal-icon-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <line x1="20" y1="8" x2="20" y2="14"></line>
+              <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
+          </div>
+          <div>
+            <h2 id="new-khata-title">نیا گاہک / پارٹی کھاتہ بنائیں</h2>
+            <p class="khata-modal-subtitle">گاہک کی تفصیلات درج کریں — کھاتہ کوڈ خودکار تیار ہوگا</p>
+          </div>
+        </div>
+        <button id="btn-close-new-khata" type="button" class="btn-khata-modal-close" data-close-dialog aria-label="بند کریں">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <form id="new-khata-form" class="khata-modal-form" novalidate>
+        <div class="khata-form-grid">
+          <!-- Row 1: Locked Code & Currency Selection -->
+          <div class="khata-field">
+            <label for="new-khata-code" class="khata-field-label">
+              <span>کھاتہ نمبر / کوڈ</span>
+              <span class="khata-badge-pill-locked">🔒 خودکار محفوظ</span>
+            </label>
+            <div class="khata-input-wrapper is-locked">
+              <span class="khata-input-icon">🔑</span>
+              <input id="new-khata-code" class="khata-input-locked eng-num" type="text" maxlength="40" required placeholder="1" dir="ltr" readonly tabindex="-1" title="یہ کوڈ خودکار جنریٹ ہوتا ہے اور تبدیل نہیں ہو سکتا">
+            </div>
+            <small class="khata-field-hint">اگلا نیا کھاتہ نمبر خودکار سسٹم منتخب کرتا ہے</small>
+          </div>
+
+          <div class="khata-field">
+            <label for="new-khata-currency" class="khata-field-label">
+              <span>کرنسی منتخب کریں *</span>
+              <span class="khata-badge-pill">اکاؤنٹ کرنسی</span>
+            </label>
+            <div class="khata-input-wrapper">
+              <span class="khata-input-icon">💱</span>
+              <select id="new-khata-currency" class="khata-select" required>
+                <option value="pkr" selected>🇵🇰 پاکستانی روپیہ (PKR)</option>
+                <option value="aed">🇦🇪 اماراتی درہم (AED)</option>
+              </select>
+            </div>
+            <small class="khata-field-hint">نوٹ: کھاتہ بننے کے بعد اس کی کرنسی تبدیل نہیں ہوگی</small>
+          </div>
+
+          <!-- Row 2: Customer Name (Full Width) -->
+          <div class="khata-field full-width">
+            <label for="new-khata-name" class="khata-field-label">
+              <span>گاہک یا پارٹی کا نام *</span>
+              <span class="khata-req-star">لازمی</span>
+            </label>
+            <div class="khata-input-wrapper">
+              <span class="khata-input-icon">👤</span>
+              <input id="new-khata-name" class="khata-input" type="text" maxlength="300" required placeholder="مثلاً: حاجی محمد افضل خان" autocomplete="off">
+            </div>
+          </div>
+
+          <!-- Row 3: Mobile & Address -->
+          <div class="khata-field">
+            <label for="new-khata-mobile" class="khata-field-label">
+              <span>موبائیل نمبر (انگریزی ہندسے)</span>
+            </label>
+            <div class="khata-input-wrapper">
+              <span class="khata-input-icon">📱</span>
+              <input id="new-khata-mobile" class="khata-input eng-num" type="tel" inputmode="numeric" maxlength="40" placeholder="0300 1234567" dir="ltr" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="khata-field">
+            <label for="new-khata-address" class="khata-field-label">
+              <span>پتہ / شہر / مارکیٹ کا نام</span>
+            </label>
+            <div class="khata-input-wrapper">
+              <span class="khata-input-icon">📍</span>
+              <input id="new-khata-address" class="khata-input" type="text" maxlength="300" placeholder="مثلاً: قصہ خوانی بازار، پشاور" autocomplete="off">
+            </div>
+          </div>
+
+          <!-- Row 4: Opening Balance Card (Full Width) -->
+          <div class="khata-field full-width">
+            <div class="khata-balance-setup-card">
+              <div class="khata-setup-card-title">
+                <span class="khata-setup-icon">⚖️</span>
+                <div>
+                  <strong>ابتدائی سابقہ بقایا (Opening Balance)</strong>
+                  <span class="khata-setup-desc">اگر پہلے سے لین دین کا کوئی پرانا بقایا ہے تو درج کریں (اختیاری)</span>
+                </div>
+              </div>
+              <div class="khata-balance-controls">
+                <div class="khata-input-wrapper flex-grow">
+                  <span id="new-khata-cur-tag" class="khata-curr-tag">PKR</span>
+                  <input id="new-khata-opening-balance" class="khata-input eng-num amount-input" type="text" inputmode="numeric" placeholder="0.00" dir="ltr">
+                </div>
+                <div class="khata-input-wrapper type-select-wrap">
+                  <select id="new-khata-opening-type" class="khata-select balance-type-select">
+                    <option value="debit" selected>بنام (لینا ہے / Debit)</option>
+                    <option value="credit">جمع (دینا ہے / Credit)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="khata-modal-actions">
+          <button id="btn-cancel-new-khata" type="button" class="btn-khata-cancel" data-close-dialog>منسوخ کریں</button>
+          <button type="submit" class="btn-khata-submit">
+            <span class="btn-icon">✓</span>
+            <span>کھاتہ بنائیں اور لیجر کھولیں</span>
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Edit Khata Modal Dialog -->
+    <dialog id="edit-khata-dialog" class="khata-modal" aria-labelledby="edit-khata-title">
+      <div class="khata-modal-header">
+        <div class="khata-modal-header-info">
+          <div class="khata-modal-icon-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 id="edit-khata-title">کھاتہ تفصیلات میں ترمیم</h2>
+            <p class="khata-modal-subtitle">گاہک کی معلومات اپ ڈیٹ کریں</p>
+          </div>
+        </div>
+        <button id="btn-close-edit-khata" type="button" class="btn-khata-modal-close" data-close-dialog aria-label="بند کریں">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <form id="edit-khata-form" class="khata-modal-form" novalidate>
+        <div class="khata-form-grid">
+          <div class="khata-field">
+            <label for="edit-khata-code" class="khata-field-label">
+              <span>کھاتہ نمبر / کوڈ</span>
+              <span class="khata-badge-pill-locked">🔒 محفوظ شدہ</span>
+            </label>
+            <div class="khata-input-wrapper is-locked">
+              <span class="khata-input-icon">🔑</span>
+              <input id="edit-khata-code" class="khata-input-locked eng-num" type="text" maxlength="40" required dir="ltr" readonly tabindex="-1" title="کھاتہ کوڈ تبدیل نہیں کیا جا سکتا">
+            </div>
+          </div>
+
+          <div class="khata-field">
+            <label for="edit-khata-currency" class="khata-field-label">
+              <span>کرنسی</span>
+            </label>
+            <div class="khata-input-wrapper">
+              <span class="khata-input-icon">💱</span>
+              <select id="edit-khata-currency" class="khata-select">
+                <option value="pkr">🇵🇰 پاکستانی روپیہ (PKR)</option>
+                <option value="aed">🇦🇪 اماراتی درہم (AED)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="khata-field full-width">
+            <label for="edit-khata-name" class="khata-field-label">
+              <span>گاہک یا پارٹی کا نام *</span>
+              <span class="khata-req-star">لازمی</span>
+            </label>
+            <div class="khata-input-wrapper">
+              <span class="khata-input-icon">👤</span>
+              <input id="edit-khata-name" class="khata-input" type="text" maxlength="300" required autocomplete="off">
+            </div>
+          </div>
+
+          <div class="khata-field">
+            <label for="edit-khata-mobile" class="khata-field-label">
+              <span>موبائیل نمبر (انگریزی ہندسے)</span>
+            </label>
+            <div class="khata-input-wrapper">
+              <span class="khata-input-icon">📱</span>
+              <input id="edit-khata-mobile" class="khata-input eng-num" type="tel" inputmode="numeric" maxlength="40" dir="ltr" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="khata-field">
+            <label for="edit-khata-address" class="khata-field-label">
+              <span>پتہ / شہر / مارکیٹ</span>
+            </label>
+            <div class="khata-input-wrapper">
+              <span class="khata-input-icon">📍</span>
+              <input id="edit-khata-address" class="khata-input" type="text" maxlength="300" autocomplete="off">
+            </div>
+          </div>
+        </div>
+
+        <div class="khata-modal-actions">
+          <button id="btn-cancel-edit-khata" type="button" class="btn-khata-cancel" data-close-dialog>منسوخ کریں</button>
+          <button type="submit" class="btn-khata-submit">
+            <span class="btn-icon">✓</span>
+            <span>تبدیلیاں محفوظ کریں</span>
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Khata Directory Dialog -->
+    <dialog id="khata-directory-dialog" class="khata-directory-modal" aria-labelledby="khata-dir-title">
+      <div class="khata-modal-header">
+        <div class="khata-modal-header-info">
+          <div class="khata-modal-icon-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 id="khata-dir-title">تمام گاہک اور پارٹی کھاتہ جات</h2>
+            <p class="khata-modal-subtitle">کسی بھی گاہک پر کلک کر کے ان کا کھاتہ اوپن کریں یا نیا کھاتہ بنائیں</p>
+          </div>
+        </div>
+        <div class="khata-dir-search-wrap">
+          <input type="search" id="khata-dir-search" class="khata-search-input" placeholder="🔍 کھاتہ تلاش کریں (نام، کوڈ، موبائل)..." aria-label="ڈائریکٹری میں کھاتہ تلاش کریں">
+        </div>
+        <div class="khata-dir-top-actions">
+          <button id="btn-new-khata-dir" type="button" class="btn-khata-new" style="padding: 6px 14px; font-size: 0.9rem;">
+            <span>＋ نیا کھاتہ</span>
+          </button>
+          <button id="btn-close-dir-khata" type="button" class="btn-khata-modal-close" data-close-dialog aria-label="بند کریں">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+      <div class="khata-dir-table-wrap">
+        <table class="khata-dir-table">
+          <colgroup>
+            <col class="dir-col-idx">
+            <col class="dir-col-code">
+            <col class="dir-col-name">
+            <col class="dir-col-mobile">
+            <col class="dir-col-curr">
+            <col class="dir-col-bal">
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">نمبر شمار</th>
+              <th scope="col">کھاتہ کوڈ</th>
+              <th scope="col" class="dir-th-name">گاہک کا نام</th>
+              <th scope="col">موبائیل</th>
+              <th scope="col">کرنسی</th>
+              <th scope="col" class="dir-th-bal">بقایا بیلنس</th>
+            </tr>
+          </thead>
+          <tbody id="khata-dir-rows"></tbody>
+        </table>
+      </div>
+      <div class="khata-modal-actions khata-dir-footer">
+        <div class="khata-dir-count-badge" id="khata-dir-count"></div>
+        <button id="btn-footer-close-dir-khata" type="button" class="btn-khata-cancel" data-close-dialog>بند کریں</button>
+      </div>
+    </dialog>
+  </main>
+
   <!-- FIX-3: Universal backdrop click fallback handles dialogs on Chrome<134, Firefox, Safari -->
   <dialog id="branch-dialog" aria-labelledby="branch-dialog-title">
     <div class="dialog-head"><h2 id="branch-dialog-title">پارٹیوں کا انتظام اور کرنسی</h2><button id="close-branches" aria-label="بند کریں">×</button></div>
@@ -395,6 +969,7 @@
     </form>
   </dialog>
 
+
   <div id="pin-lock-overlay" class="pin-lock-overlay no-print" hidden>
     <!-- FIX-15 & FIX-29: method=dialog prevents default GET navigation and PIN leaks in URL -->
     <form id="pin-unlock-form" class="pin-lock-card" method="dialog">
@@ -451,6 +1026,7 @@
   <script src="dialog-fallback.js?v=1.4.15"></script>
   <script src="excel-export.js?v=1.4.15"></script>
   <script src="journal.js?v=1.4.15"></script>
+  <script src="khata.js?v=1.4.15"></script>
   <!-- FIX-6 & FIX-27: html2canvas with SRI integrity verification and deferred non-blocking load -->
   <script src="assets/html2canvas.min.js?v=1.4.1" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" defer></script>
   <script src="receipt-png.js?v=1.4.15"></script>

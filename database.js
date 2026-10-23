@@ -17,6 +17,13 @@ const MAX_BYTES = 15_000_000;
 const fields = ['sender','mobile','receiver','place','branch','balance','aed','pkr'];
 const validDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;
 const text = (value, max) => typeof value === 'string' && value.length <= max;
+const validKhataAmount = value => {
+  if (!text(value, 40)) return false;
+  const normalized = value.replace(/[۰-۹]/g, c => String(c.charCodeAt(0) - 1776))
+    .replace(/[٠-٩]/g, c => String(c.charCodeAt(0) - 1632))
+    .replace(/[٬,\s]/g, '');
+  return normalized === '' || /^\+?\d{1,12}(?:\.\d{1,2})?$/.test(normalized);
+};
 /* FIX-11: use HisaabError with INVALID_DATA code */
 function invalid(message) { throw new HisaabError('Invalid data: ' + message, 'INVALID_DATA'); }
 
@@ -79,6 +86,29 @@ function validateState(input) {
   /* FIX-1: safely filter empty draft rows; keep rows with content even if branch is empty */
   data.rows = data.rows.filter(r => fields.filter(f => f !== 'branch').some(f => typeof r[f] === 'string' && r[f].trim()));
   data.journal.rows = data.journal.rows.filter(r => ['detail','debit','credit'].some(f => typeof r[f] === 'string' && r[f].trim()));
+  if (data.khatas !== undefined) {
+    if (!Array.isArray(data.khatas) || data.khatas.length > 5000) invalid('khatas');
+    const khataIds = new Set(), khataCodes = new Set();
+    for (const khata of data.khatas) {
+      const code = typeof khata?.code === 'string' ? khata.code.trim().toUpperCase() : '';
+      if (!khata || !text(khata.id, 99) || !khata.id.trim() || !code || !text(khata.name, 300) || !khata.name.trim()) invalid('khata profile');
+      if (khataIds.has(khata.id) || khataCodes.has(code)) invalid('duplicate khata');
+      khataIds.add(khata.id); khataCodes.add(code);
+      if (khata.mobile !== undefined && !text(khata.mobile, 40)) invalid('khata mobile');
+      if (khata.address !== undefined && !text(khata.address, 300)) invalid('khata address');
+      if (khata.currency !== undefined && !['pkr', 'aed'].includes(khata.currency)) invalid('khata currency');
+      if (khata.rows !== undefined) {
+        if (!Array.isArray(khata.rows) || khata.rows.length > 10000) invalid('khata rows');
+        const rowIds = new Set();
+        for (const r of khata.rows) {
+          if (!r || !text(r.id, 99) || rowIds.has(r.id) || !validDate(r.date) || !text(r.detail, 2000) || !validKhataAmount(r.debit) || !validKhataAmount(r.credit)) invalid('khata entry');
+          if (r.debit.trim() && r.credit.trim()) invalid('khata double-sided entry');
+          rowIds.add(r.id);
+        }
+        khata.rows = khata.rows.filter(r => ['detail', 'debit', 'credit'].some(f => typeof r[f] === 'string' && r[f].trim()));
+      }
+    }
+  }
   return data;
 }
 
