@@ -134,7 +134,12 @@ assert.ok(appJs.includes('khataController = window.HisaabKhata.mount'), 'HisaabK
 assert.ok(appJs.includes('khatas: window.HisaabKhata'), 'khatas normalized in state migration');
 assert.ok(serverJs.includes("'khata.css'"), 'khata.css whitelisted in server.js');
 assert.ok(serverJs.includes("'khata.js'"), 'khata.js whitelisted in server.js');
-console.log('  ✓ khata.js controller, auto-code sequence starting at 1, balance arithmetic, and server static whitelist verified');
+
+const journalJs = fs.readFileSync(path.resolve('journal.js'), 'utf8');
+assert.ok(khataJs.includes("confirm('کیا آپ واقعی یہ انٹری حذف کرنا چاہتے ہیں؟')"), 'Khata entry delete confirmation prompt present');
+assert.ok(appJs.includes("confirm('کیا آپ واقعی یہ انٹری حذف کرنا چاہتے ہیں؟')"), 'Andraj register entry delete confirmation prompt present');
+assert.ok(journalJs.includes("confirm('کیا آپ واقعی روزنامچہ کی یہ انٹری حذف کرنا چاہتے ہیں؟')"), 'Journal entry delete confirmation prompt present');
+console.log('  ✓ khata.js controller, auto-code sequence starting at 1, balance arithmetic, server whitelist, and delete confirmations verified');
 
 // 4. CSS & Design System Checks
 const khataCss = fs.readFileSync(path.resolve('khata.css'), 'utf8');
@@ -147,6 +152,10 @@ assert.ok(khataCss.includes('.khata-input-locked'), 'Locked input styling define
 assert.ok(khataCss.includes('html[data-theme="dark"] .khata-card'), 'Dark theme emerald obsidian styles present');
 assert.ok(khataCss.includes('html[data-theme="dark"] .khata-stat-box'), 'Dark theme stat boxes styled');
 assert.ok(khataCss.includes('html[data-theme="dark"] dialog.khata-modal'), 'Dark theme modal dialogs styled');
+assert.ok(khataCss.includes('html[data-theme="dark"] #khata-foot-banam'), 'Dark theme ledger table tfoot cells styled');
+assert.ok(khataCss.includes('html[data-theme="dark"] .khata-dir-header-card'), 'Dark theme directory header card styled');
+assert.ok(khataCss.includes('html[data-theme="dark"] .khata-dir-stats-grid'), 'Dark theme directory stats grid styled');
+assert.ok(khataCss.includes('html[data-theme="dark"] .khata-dir-footer-bar'), 'Dark theme directory footer bar styled');
 assert.ok(khataCss.includes('@page khata {'), 'Named @page khata defined to prevent register landscape override');
 assert.ok(khataCss.includes('page: khata;'), 'page: khata assigned to #khata-page');
 
@@ -156,7 +165,48 @@ assert.ok(excelExportJs.includes('maxCols'), 'Dynamic max columns detection acro
 assert.ok(appJs.includes('khataController.exportExcel()'), 'Khata Excel export routed via top-bar export button');
 assert.ok(appJs.includes('!khataController?.isActive()'), 'Khata active checks guard shortcuts');
 
-console.log('  ✓ khata.css implements luxury cards, named @page khata, responsive layout, dark emerald theme, and print column');
+assert.ok(html.includes('id="khata-filter-from"'), 'khata-filter-from date input present');
+assert.ok(html.includes('id="khata-filter-to"'), 'khata-filter-to date input present');
+assert.ok(html.includes('id="btn-khata-filter-today"'), 'btn-khata-filter-today quick button present');
+assert.ok(html.includes('id="btn-khata-filter-clear"'), 'btn-khata-filter-clear button present');
+assert.ok(html.includes('id="khata-print-period"'), 'khata-print-period statement period indicator present');
+
+assert.ok(khataJs.includes('setDateFilter'), 'Customer ledger date filter controller function present');
+assert.ok(khataJs.includes('isRowInDateRange'), 'Date range comparison helper present');
+assert.ok(khataJs.includes('getFilterPeriodText'), 'Statement period formatting helper present');
+
+assert.ok(khataCss.includes('.khata-date-filter-group'), 'Date filter group styles present');
+assert.ok(khataCss.includes('.khata-filter-date-input'), 'Date filter input styles present');
+assert.ok(khataCss.includes('.khata-table tr[hidden]'), 'Hidden row filter suppression present in CSS');
+
+console.log('  ✓ khata.css implements luxury cards, named @page khata, responsive layout, dark emerald theme, date filters, and print column');
+
+// 5. Customer Directory Receivables, Payables & Print/PDF Dossier Checks
+assert.ok(html.includes('id="tab-khata-all"'), 'tab-khata-all present');
+assert.ok(html.includes('id="tab-khata-receivables"'), 'tab-khata-receivables present');
+assert.ok(html.includes('id="tab-khata-payables"'), 'tab-khata-payables present');
+assert.ok(html.includes('id="badge-khata-receivables-count"'), 'badge-khata-receivables-count present');
+assert.ok(html.includes('id="badge-khata-payables-count"'), 'badge-khata-payables-count present');
+assert.ok(html.includes('id="stat-card-khata-receivables"'), 'stat-card-khata-receivables present');
+assert.ok(html.includes('id="stat-card-khata-payables"'), 'stat-card-khata-payables present');
+assert.ok(html.includes('id="btn-khata-dir-print"'), 'btn-khata-dir-print present');
+assert.ok(html.includes('id="btn-khata-dir-excel"'), 'btn-khata-dir-excel present');
+assert.ok(html.includes('id="khata-dir-print-dossier"'), 'khata-dir-print-dossier present');
+assert.ok(html.includes('class="khata-dir-print-signatures"'), 'khata-dir-print-signatures present');
+assert.ok(html.includes('id="khata-dir-foot-bal"'), 'khata-dir-foot-bal table footer present');
+
+assert.ok(khataJs.includes('directoryFilter'), 'directoryFilter state present in khata.js');
+assert.ok(khataJs.includes('setDirectoryFilter'), 'setDirectoryFilter helper present in khata.js');
+assert.ok(khataJs.includes('printDirectoryReport'), 'printDirectoryReport print dossier function present in khata.js');
+assert.ok(khataJs.includes('exportDirectoryExcel'), 'exportDirectoryExcel function present in khata.js');
+assert.ok(khataJs.includes('btn-khata-dir-print'), 'btn-khata-dir-print event listener wired');
+assert.ok(khataJs.includes('btn-khata-dir-excel'), 'btn-khata-dir-excel event listener wired');
+
+assert.ok(khataCss.includes('.khata-dir-tabs-bar'), 'khata-dir-tabs-bar styling defined');
+assert.ok(khataCss.includes('.khata-dir-tab.is-receivable'), 'is-receivable tab styling defined');
+assert.ok(khataCss.includes('.khata-dir-tab.is-payable'), 'is-payable tab styling defined');
+assert.ok(khataCss.includes('body.khata-view.khata-dir-printing'), 'khata-dir-printing print mode defined');
+console.log('  ✓ Receivables & Payables tabs, badges, directory print dossier, and Excel export verified');
 
 console.log('\n========================================');
 console.log('🎉 ALL KHATA VERIFICATION CHECKS PASSED!');

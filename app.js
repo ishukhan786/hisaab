@@ -877,40 +877,36 @@
   document.body.append(placeSuggestMenu);
   let activePlaceInput = null, placeSuggestItems = [], placeSuggestIndex = 0;
 
-  /* FIX-21: memoized suggestions lookup */
+  /* FIX-21: memoized suggestions lookup - restricted exclusively to 'place' (مقام) */
   const suggestionCache = new Map();
   function getFieldSuggestions(field, query, row) {
+    if (field !== 'place') return [];
     const q = nameKey(query);
     if (!q) return [];
-    const cacheKey = `${field}:${q}:${row?.id || ''}`;
+    const cacheKey = `place:${q}:${row?.id || ''}`;
     if (suggestionCache.has(cacheKey)) return suggestionCache.get(cacheKey);
 
-    const ctxSender = field === 'receiver' && row?.sender ? nameKey(row.sender) : '';
-    const ctxReceiver = field === 'place' && row?.receiver ? nameKey(row.receiver) : '';
     const map = new Map();
     for (let i = state.rows.length - 1; i >= 0; i--) {
       const r = state.rows[i];
       if (r.id === row?.id || !populated(r)) continue;
-      const p = cleanName(r[field]);
+      const p = cleanName(r.place);
       if (!p) continue;
       const k = nameKey(p);
-      const sameCtx = (ctxSender && nameKey(r.sender) === ctxSender) || (ctxReceiver && nameKey(r.receiver) === ctxReceiver);
-      if (!map.has(k)) map.set(k, { text: p, key: k, count: 1, last: i, sameCtx: !!sameCtx });
+      if (!map.has(k)) map.set(k, { text: p, key: k, count: 1, last: i });
       else {
         const entry = map.get(k);
         entry.count++;
-        if (sameCtx) entry.sameCtx = true;
       }
     }
     const matches = [...map.values()].filter(m => m.key.includes(q) && m.key !== q);
     matches.sort((a, b) => {
       const aStarts = a.key.startsWith(q) ? 1 : 0, bStarts = b.key.startsWith(q) ? 1 : 0;
       if (aStarts !== bStarts) return bStarts - aStarts;
-      if (a.sameCtx !== b.sameCtx) return (b.sameCtx ? 1 : 0) - (a.sameCtx ? 1 : 0);
       if (b.count !== a.count) return b.count - a.count;
       return b.last - a.last;
     });
-    const res = matches.slice(0, 6).map(m => m.text);
+    const res = matches.slice(0, 8).map(m => m.text);
     if (suggestionCache.size > 200) suggestionCache.clear();
     suggestionCache.set(cacheKey, res);
     return res;
@@ -925,7 +921,8 @@
   function updateActivePlaceItem() {
     Array.from(placeSuggestMenu.children).forEach((el, idx) => el.classList.toggle('active', idx === placeSuggestIndex));
   }
-  function showFieldSuggestions(field, input, row, acceptFn, onPicked) {
+  function showFieldSuggestions(field, input, row, acceptFn) {
+    if (field !== 'place') return;
     const items = getFieldSuggestions(field, input.value, row);
     if (!items.length) { hidePlaceSuggestions(); return; }
     activePlaceInput = input;
@@ -942,7 +939,6 @@
         input.value = text;
         hidePlaceSuggestions();
         acceptFn();
-        if (onPicked) onPicked();
       };
       placeSuggestMenu.append(btn);
     });
@@ -1057,8 +1053,7 @@
         });
         updateBalTypeVis();
       }
-      const afterSuggestionPick = () => { if (field === 'sender') autoFillFromSender(row, tr); };
-      if (isText) {
+      if (field === 'place') {
         input.addEventListener('keydown', e => {
           if (placeSuggestMenu.hidden || activePlaceInput !== input || !placeSuggestItems.length) return;
           if (e.key === 'ArrowDown') { e.preventDefault(); placeSuggestIndex = (placeSuggestIndex + 1) % placeSuggestItems.length; updateActivePlaceItem(); }
@@ -1067,11 +1062,11 @@
           else if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault(); e.stopImmediatePropagation();
             const picked = placeSuggestItems[placeSuggestIndex] || placeSuggestItems[0];
-            if (picked) { input.value = picked; hidePlaceSuggestions(); accept(); afterSuggestionPick(); moveEntryFocus(row, input); }
+            if (picked) { input.value = picked; hidePlaceSuggestions(); accept(); moveEntryFocus(row, input); }
           } else if (e.key === 'Tab' && !e.shiftKey) {
             const picked = placeSuggestItems[placeSuggestIndex] || placeSuggestItems[0];
             if (picked && (placeSuggestIndex > 0 || nameKey(picked).startsWith(nameKey(input.value)))) {
-              input.value = picked; hidePlaceSuggestions(); accept(); afterSuggestionPick();
+              input.value = picked; hidePlaceSuggestions(); accept();
             } else hidePlaceSuggestions();
           }
         });
@@ -1086,7 +1081,7 @@
       if (rLocked) input.disabled = true;
       input.addEventListener('focus', () => { input._prevVal = input.value; });
       input.addEventListener('blur', () => {
-        if (isText) hidePlaceSuggestions();
+        if (field === 'place') hidePlaceSuggestions();
         if (input._prevVal !== undefined && input._prevVal !== input.value) { recordHistory(row, field, input._prevVal, input.value); input._prevVal = input.value; }
         if (field === 'sender') autoFillFromSender(row, tr);
         save(true);
@@ -1105,8 +1100,8 @@
         if (!wasPopulated && matches(row)) viewPage = Math.floor(selectedRows().findIndex(r => r.id === row.id) / pageSize);
         if (updateBalTypeVis) updateBalTypeVis();
         applyFilter(true); save();
-        if (isText) {
-          if (input._dismissedFor !== input.value) { input._dismissedFor = null; showFieldSuggestions(field, input, row, accept, afterSuggestionPick); }
+        if (field === 'place') {
+          if (input._dismissedFor !== input.value) { input._dismissedFor = null; showFieldSuggestions(field, input, row, accept); }
         }
       }
       if (moneyFields.includes(field)) {
@@ -1202,7 +1197,20 @@
     const tdReceipt = document.createElement('td'); tdReceipt.className = 'col-receipt no-print'; tr.append(tdReceipt);
     const td = document.createElement('td'); td.className = 'no-print'; const del = document.createElement('button'); del.type = 'button'; del.className = 'delete'; del.textContent = '×'; del.title = 'حذف کریں — Undo سے واپس لائیں'; del.setAttribute('aria-label', 'انٹری حذف کریں');
     if (rLocked) del.disabled = true;
-    del.onclick = e => { e.stopPropagation(); e.preventDefault(); const index = state.rows.findIndex(r => r.id === row.id); if (index < 0) return; if (populated(row)) { state.trash.push({ row: structuredClone(row), index }); state.trash = state.trash.slice(-20); } state.rows.splice(index, 1); render(); save(true); }; td.append(del); tr.append(td);
+    del.onclick = e => {
+      e.stopPropagation();
+      e.preventDefault();
+      const index = state.rows.findIndex(r => r.id === row.id);
+      if (index < 0) return;
+      if (populated(row)) {
+        if (typeof confirm === 'function' && !confirm('کیا آپ واقعی یہ انٹری حذف کرنا چاہتے ہیں؟')) return;
+        state.trash.push({ row: structuredClone(row), index });
+        state.trash = state.trash.slice(-20);
+      }
+      state.rows.splice(index, 1);
+      render();
+      save(true);
+    }; td.append(del); tr.append(td);
     return tr;
   }
   function appendRow(row) { $('rows').append(createRowElement(row)); }

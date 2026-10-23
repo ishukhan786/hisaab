@@ -521,6 +521,115 @@ body.khata-view .top-nav-end {
   border-color: var(--khata-red-500, #ef4444);
 }
 
+/* Customer Ledger Date Filter Group */
+.khata-date-filter-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: var(--khata-surface-subtle, #f0f7f3);
+  border: 1px solid var(--khata-border, #cce3d5);
+  border-radius: var(--khata-radius-md, 10px);
+  flex-wrap: wrap;
+}
+
+.khata-date-filter-group .khata-filter-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--khata-emerald-800, #065f46);
+  white-space: nowrap;
+}
+
+.khata-filter-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.khata-filter-input-wrap label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--khata-text-muted, #496856);
+  white-space: nowrap;
+}
+
+.khata-filter-date-input {
+  height: 30px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--khata-border, #c3d9cc);
+  background: #ffffff;
+  color: var(--khata-emerald-900, #064e3b);
+  font-family: var(--khata-font-num, Calibri, Arial, sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  outline: none;
+  direction: ltr;
+  text-align: center;
+  transition: border-color var(--khata-transition-fast), box-shadow var(--khata-transition-fast);
+}
+
+.khata-filter-date-input:focus {
+  border-color: var(--khata-emerald-500, #10b981);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.btn-khata-filter-quick {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff !important;
+  border: 1px solid #047857;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.2);
+  transition: all var(--khata-transition-fast);
+}
+
+.btn-khata-filter-quick:hover {
+  background: #047857;
+  transform: translateY(-1px);
+}
+
+.btn-khata-filter-clear {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--khata-text-muted, #496856);
+  border: 1px solid var(--khata-border, #c3d9cc);
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--khata-transition-fast);
+}
+
+.btn-khata-filter-clear:hover {
+  background: #edf5ef;
+  color: #123d2b;
+  border-color: #9cbdaf;
+}
+
+.khata-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.khata-table tr[hidden] {
+  display: none !important;
+}
+
 /* ==========================================================================
    6. KHATA LEDGER TABLE & GRID
    ========================================================================== */
@@ -1418,6 +1527,59 @@ body:not(.khata-view) dialog.khata-directory-modal {
   gap: 6px;
 }
 
+/* Customer Directory Empty State Card */
+.khata-empty-dir-cell {
+  padding: 56px 24px !important;
+  text-align: center !important;
+  background: transparent !important;
+  border-bottom: none !important;
+}
+
+.khata-empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.khata-empty-icon-wrap {
+  width: 68px;
+  height: 68px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #e6f6ee 0%, #d1f0df 100%);
+  border: 1px solid #b8e7cc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--khata-emerald-600, #059669);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.15);
+  margin-bottom: 4px;
+}
+
+.khata-empty-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--khata-emerald-900, #064e3b);
+  line-height: 1.3;
+}
+
+.khata-empty-sub {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--khata-text-muted, #527766);
+  line-height: 1.6;
+}
+
+.btn-khata-empty-action {
+  margin-top: 6px;
+  padding: 10px 24px !important;
+  font-size: 14px !important;
+}
+
 /* Primary Page Directory Header Card */
 .khata-dir-header-card {
   display: flex;
@@ -1425,9 +1587,44 @@ body:not(.khata-view) dialog.khata-directory-modal {
   justify-content: space-between;
   gap: 16px;
   padding: 16px 24px;
-  background: linear-gradient(180deg, #fcfdfc 0%, var(--khata-surface-muted, #f4f8f5) 100%);
+  background: linear-gradient(180deg, #ffffff 0%, var(--khata-surface-muted, #f4f8f5) 100%);
   border-bottom: 1px solid var(--khata-border-soft, #dbe7df);
   flex-wrap: wrap;
+}
+
+.khata-dir-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#btn-khata-dir-print {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff !important;
+  border: 1px solid #1e40af;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  font-weight: 700;
+}
+
+#btn-khata-dir-print:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+#btn-khata-dir-excel {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff !important;
+  border: 1px solid #065f46;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+  font-weight: 700;
+}
+
+#btn-khata-dir-excel:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
 }
 
 .khata-dir-header-start {
@@ -1543,6 +1740,147 @@ body:not(.khata-view) dialog.khata-directory-modal {
 }
 
 /* ==========================================================================
+   CUSTOMER DIRECTORY RECEIVABLES / PAYABLES TABS & TABLE FOOTER
+   ========================================================================== */
+.khata-dir-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 22px;
+  background: var(--khata-surface-muted, #f8fbf9);
+  border-bottom: 1px solid var(--khata-border-soft, #dbe7df);
+  flex-wrap: wrap;
+}
+
+.khata-dir-tabs-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--khata-surface-subtle, #edf5ef);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--khata-border, #cce0d3);
+}
+
+.khata-dir-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--khata-text-muted, #4b6b5b);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--khata-transition-fast, 0.14s ease);
+}
+
+.khata-dir-tab:hover {
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--khata-emerald-900, #064e3b);
+}
+
+.khata-dir-tab.active {
+  background: #ffffff;
+  color: var(--khata-emerald-900, #064e3b);
+  border-color: var(--khata-border, #cce0d3);
+  box-shadow: 0 2px 6px rgba(18, 63, 46, 0.08);
+}
+
+.khata-dir-tab.is-receivable.active {
+  color: #b91c1c;
+  border-color: #fca5a5;
+  background: #fff5f5;
+}
+
+.khata-dir-tab.is-payable.active {
+  color: #15803d;
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.khata-dir-tab .tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.06);
+  color: inherit;
+}
+
+.khata-dir-tab.is-receivable .tab-badge {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.khata-dir-tab.is-payable .tab-badge {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.khata-dir-tab .tab-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.tab-dot.dot-receivable { background: #ef4444; }
+.tab-dot.dot-payable { background: #10b981; }
+
+.khata-dir-filter-info {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--khata-text-faint, #637c6d);
+}
+
+.khata-stat-box[role="button"] {
+  cursor: pointer;
+  transition: transform var(--khata-transition-fast, 0.14s ease), box-shadow var(--khata-transition-fast, 0.14s ease);
+}
+
+.khata-stat-box[role="button"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(18, 63, 46, 0.12);
+}
+
+.khata-dir-tfoot {
+  background: var(--khata-surface-subtle, #edf5ef);
+  font-weight: 800;
+  border-top: 2px solid var(--khata-emerald-700, #047857);
+}
+
+.khata-dir-tfoot-row td {
+  padding: 10px 14px !important;
+  font-size: 13.5px;
+}
+
+.dir-tfoot-label {
+  text-align: left;
+  font-weight: 800;
+  color: var(--khata-emerald-900, #064e3b);
+}
+
+.dir-tfoot-val {
+  font-size: 14px;
+  font-weight: 800;
+  direction: ltr;
+}
+
+/* Screen Only: Strictly hide directory print dossier and signatures */
+.khata-dir-print-dossier,
+.khata-dir-print-signatures {
+  display: none !important;
+}
+
+/* ==========================================================================
    10. PRINT MODE (@media print) — OFFICIAL BANK STATEMENT & VOUCHER DOSSIER
    ========================================================================== */
 @page khata {
@@ -1578,11 +1916,9 @@ body:not(.khata-view) dialog.khata-directory-modal {
   body.khata-view td:last-child.no-print,
   .khata-table th.th-delete,
   .khata-table td.td-delete,
-  .khata-table col.col-delete,
   body.khata-view tr.khata-draft,
   body.khata-view .table-scroll-hint,
   body.khata-view .help,
-  body.khata-view #khata-directory-view,
   .no-print {
     display: none !important;
   }
@@ -1593,8 +1929,120 @@ body:not(.khata-view) dialog.khata-directory-modal {
     max-width: 100% !important;
   }
 
-  body.khata-view #khata-ledger-view {
+  body.khata-view:not(.khata-dir-printing) #khata-ledger-view {
     display: block !important;
+  }
+
+  body.khata-view:not(.khata-dir-printing) #khata-directory-view {
+    display: none !important;
+  }
+
+  body.khata-view.khata-dir-printing #khata-ledger-view {
+    display: none !important;
+  }
+
+  body.khata-view.khata-dir-printing #khata-directory-view {
+    display: block !important;
+  }
+
+  /* Customer Directory / Receivables / Payables Print Mode */
+  body.khata-view.khata-dir-printing .khata-dir-print-dossier {
+    display: block !important;
+    margin-bottom: 12px !important;
+    page-break-inside: avoid;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-print-signatures {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    margin-top: 24px !important;
+    page-break-inside: avoid;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-header-card,
+  body.khata-view.khata-dir-printing .khata-dir-stats-grid,
+  body.khata-view.khata-dir-printing .khata-dir-tabs-bar,
+  body.khata-view.khata-dir-printing .khata-dir-footer-bar,
+  body.khata-view.khata-dir-printing .btn-open-khata {
+    display: none !important;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-table-wrap {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: 1px solid #77887b !important;
+    table-layout: fixed !important;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-idx    { width: 1.2cm !important; }
+  body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-code   { width: 2.2cm !important; }
+  body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-name   { width: auto !important; }
+  body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-mobile { width: 3.0cm !important; }
+  body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-curr   { width: 2.0cm !important; }
+  body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-bal    { width: 3.8cm !important; }
+  body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-action { width: 0 !important; display: none !important; }
+
+  body.khata-view.khata-dir-printing .khata-dir-table th,
+  body.khata-view.khata-dir-printing .khata-dir-table td {
+    border: 1px solid #77887b !important;
+    padding: 6px 8px !important;
+    font-size: 9.5pt !important;
+    color: #000000 !important;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-table th {
+    background: #eef4f0 !important;
+    color: #174233 !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-table th.dir-th-action,
+  body.khata-view.khata-dir-printing .khata-dir-table td:nth-child(7) {
+    display: none !important;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-table tbody tr {
+    page-break-inside: avoid;
+    height: 34px;
+    background: #ffffff !important;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-table tbody tr:nth-child(even) {
+    background: #fbfdfc !important;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-table td.is-jama {
+    color: #15803d !important;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-table td.is-banam {
+    color: #b91c1c !important;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-tfoot-row {
+    background: #edf4ef !important;
+    border-top: 2px solid #174233 !important;
+    border-bottom: 3px double #174233 !important;
+    font-weight: 800 !important;
+  }
+
+  body.khata-view.khata-dir-printing .dir-tfoot-label {
+    text-align: left !important;
+    font-weight: 800 !important;
+    color: #174233 !important;
+  }
+
+  body.khata-view.khata-dir-printing .dir-tfoot-val {
+    text-align: center !important;
+    font-weight: 800 !important;
+    font-family: var(--khata-font-num) !important;
   }
 
   body.khata-view .khata-card {
@@ -1940,6 +2388,11 @@ body:not(.khata-view) dialog.khata-directory-modal {
     color: #b91c1c !important;
   }
 
+  .khata-table tbody tr[hidden],
+  .khata-table tbody tr.khata-draft {
+    display: none !important;
+  }
+
   .khata-table tbody tr {
     page-break-inside: avoid;
     height: 38px;
@@ -2065,7 +2518,12 @@ body:not(.khata-view) dialog.khata-directory-modal {
 
   html[data-theme="dark"] .khata-table thead th,
   html[data-theme="dark"] .khata-print-box-header,
-  html[data-theme="dark"] .khata-table tfoot tr {
+  html[data-theme="dark"] .khata-table tfoot tr,
+  html[data-theme="dark"] .khata-table tfoot th,
+  html[data-theme="dark"] .khata-table tfoot td,
+  html[data-theme="dark"] #khata-foot-banam,
+  html[data-theme="dark"] #khata-foot-jama,
+  html[data-theme="dark"] #khata-foot-baqaya {
     background: #eef4f0 !important;
     color: #174233 !important;
   }
@@ -2123,9 +2581,42 @@ html[data-theme="dark"] .khata-stat-box {
   box-shadow: none !important;
 }
 
+html[data-theme="dark"] .khata-stat-label {
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .khata-stat-box::before {
+  background: linear-gradient(90deg, #334155, #475569) !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.count::before {
+  background: linear-gradient(90deg, #0284c7, #38bdf8) !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.count .khata-stat-val {
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.balance {
+  background: #11261d !important;
+  border-color: #23523a !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.balance::before {
+  background: linear-gradient(90deg, #0284c7, #38bdf8) !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.balance .khata-stat-val {
+  color: #67e8f9 !important;
+}
+
 html[data-theme="dark"] .khata-stat-box.balance.is-jama {
   background: #123323 !important;
   border-color: #296d49 !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.balance.is-jama::before {
+  background: linear-gradient(90deg, #059669, #34d399) !important;
 }
 
 html[data-theme="dark"] .khata-stat-box.balance.is-jama .khata-stat-val {
@@ -2137,16 +2628,41 @@ html[data-theme="dark"] .khata-stat-box.balance.is-banam {
   border-color: #7f323a !important;
 }
 
+html[data-theme="dark"] .khata-stat-box.balance.is-banam::before {
+  background: linear-gradient(90deg, #dc2626, #f87171) !important;
+}
+
 html[data-theme="dark"] .khata-stat-box.balance.is-banam .khata-stat-val {
   color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] .khata-stat-box.banam::before {
+  background: linear-gradient(90deg, #dc2626, #f87171) !important;
 }
 
 html[data-theme="dark"] .khata-stat-box.banam .khata-stat-val {
   color: #fca5a5 !important;
 }
 
+html[data-theme="dark"] .khata-stat-box.jama::before {
+  background: linear-gradient(90deg, #059669, #34d399) !important;
+}
+
 html[data-theme="dark"] .khata-stat-box.jama .khata-stat-val {
   color: #86efac !important;
+}
+
+html[data-theme="dark"] .btn-khata-back {
+  background: #172a21 !important;
+  border-color: #294738 !important;
+  color: #dceae2 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .btn-khata-back:hover {
+  background: #1f3a2c !important;
+  border-color: var(--khata-emerald-400, #34d399) !important;
+  color: #ffffff !important;
 }
 
 html[data-theme="dark"] .btn-khata-action,
@@ -2244,12 +2760,44 @@ html[data-theme="dark"] .khata-table tfoot tr.khata-totals-gap > td {
 
 html[data-theme="dark"] .khata-table tfoot tr.khata-totals-row {
   background: #163225 !important;
-  border-top-color: #2e7a57 !important;
+  border-top: 2px solid #2e7a57 !important;
+  border-bottom: 2px solid #2e7a57 !important;
 }
 
 html[data-theme="dark"] .khata-table tfoot th,
-html[data-theme="dark"] .khata-table tfoot td {
+html[data-theme="dark"] .khata-table tfoot td,
+html[data-theme="dark"] .khata-table tfoot tr.khata-totals-row > th,
+html[data-theme="dark"] .khata-table tfoot tr.khata-totals-row > td,
+html[data-theme="dark"] #khata-foot-banam,
+html[data-theme="dark"] #khata-foot-jama,
+html[data-theme="dark"] #khata-foot-baqaya {
+  background: #163225 !important;
+  border-top: 2px solid #2e7a57 !important;
+  border-bottom: 2px solid #2e7a57 !important;
+  border-color: #264435 !important;
   color: #ffffff !important;
+}
+
+html[data-theme="dark"] #khata-foot-banam {
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] #khata-foot-jama {
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] #khata-foot-baqaya.is-jama,
+html[data-theme="dark"] #khata-foot-baqaya.is-jama span,
+html[data-theme="dark"] #khata-foot-baqaya.is-jama .khata-bal-amount,
+html[data-theme="dark"] #khata-foot-baqaya.is-jama .khata-bal-side {
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] #khata-foot-baqaya.is-banam,
+html[data-theme="dark"] #khata-foot-baqaya.is-banam span,
+html[data-theme="dark"] #khata-foot-baqaya.is-banam .khata-bal-amount,
+html[data-theme="dark"] #khata-foot-baqaya.is-banam .khata-bal-side {
+  color: #fca5a5 !important;
 }
 
 html[data-theme="dark"] dialog.khata-modal,
@@ -2386,6 +2934,46 @@ html[data-theme="dark"] .khata-dir-table-wrap::-webkit-scrollbar-thumb {
   border: 2px solid #122119;
 }
 
+/* Customer Directory Header Card, Search & Stats Grid in Dark Mode */
+html[data-theme="dark"] .khata-dir-header-card {
+  background: #172a21 !important;
+  border-bottom: 1px solid #264435 !important;
+}
+
+html[data-theme="dark"] .khata-dir-icon-badge {
+  background: linear-gradient(135deg, #183828 0%, #10261c 100%) !important;
+  border: 1px solid #2a6647 !important;
+  color: #86efac !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .khata-dir-main-title {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .khata-dir-main-subtitle {
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .khata-dir-search-wrap .khata-search-input {
+  background: #101e17 !important;
+  border-color: #294738 !important;
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .khata-dir-search-wrap .khata-search-input::placeholder {
+  color: #5d826e !important;
+}
+
+html[data-theme="dark"] .khata-dir-search-wrap .khata-search-icon {
+  color: #799e8c !important;
+}
+
+html[data-theme="dark"] .khata-dir-stats-grid {
+  background: #0f1c16 !important;
+  border-bottom: 1px solid #244232 !important;
+}
+
 html[data-theme="dark"] .khata-dir-table th {
   background: #14261e !important;
   color: #86efac !important;
@@ -2405,13 +2993,211 @@ html[data-theme="dark"] .khata-dir-table tbody tr:hover td {
   background: #1c392b !important;
 }
 
+html[data-theme="dark"] .khata-dir-table td.is-jama {
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-dir-table td.is-banam {
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] .khata-dir-table td.is-zero {
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .khata-dir-footer-bar,
 html[data-theme="dark"] .khata-dir-footer {
   background: #112019 !important;
-  border-top-color: #244232 !important;
+  border-top: 1px solid #244232 !important;
 }
 
 html[data-theme="dark"] .khata-dir-count-badge {
   color: #9cbdaf !important;
+}
+
+/* Customer Directory Tabs & Table Footer in Dark Mode */
+html[data-theme="dark"] .khata-dir-tabs-bar {
+  background: #112019 !important;
+  border-bottom: 1px solid #244232 !important;
+}
+
+html[data-theme="dark"] .khata-dir-tabs-group {
+  background: #0f1c16 !important;
+  border-color: #274536 !important;
+}
+
+html[data-theme="dark"] .khata-dir-tab {
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .khata-dir-tab:hover {
+  background: #172a21 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .khata-dir-tab.active {
+  background: #193326 !important;
+  color: #86efac !important;
+  border-color: #2e6248 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+html[data-theme="dark"] .khata-dir-tab.is-receivable.active {
+  background: #36171b !important;
+  color: #fca5a5 !important;
+  border-color: #7f323a !important;
+}
+
+html[data-theme="dark"] .khata-dir-tab.is-receivable .tab-badge {
+  background: #4c1d24 !important;
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] .khata-dir-tab.is-payable.active {
+  background: #133324 !important;
+  color: #86efac !important;
+  border-color: #2b6b4a !important;
+}
+
+html[data-theme="dark"] .khata-dir-tab.is-payable .tab-badge {
+  background: #1b4731 !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-dir-filter-info {
+  color: #799e8c !important;
+}
+
+html[data-theme="dark"] .khata-dir-tfoot {
+  background: #112019 !important;
+  border-top-color: #2b6b4a !important;
+}
+
+html[data-theme="dark"] .dir-tfoot-label {
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-stat-box[role="button"]:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Customer Directory Action Buttons in Dark Mode */
+html[data-theme="dark"] #btn-khata-dir-print {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+html[data-theme="dark"] #btn-khata-dir-print:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  border-color: #60a5fa !important;
+}
+
+html[data-theme="dark"] #btn-khata-dir-excel {
+  background: linear-gradient(135deg, #047857 0%, #064e3b 100%) !important;
+  border-color: #10b981 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+html[data-theme="dark"] #btn-khata-dir-excel:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  border-color: #34d399 !important;
+}
+
+/* Empty State Dark Mode Styling */
+html[data-theme="dark"] .khata-empty-state {
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .khata-empty-state h3 {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .khata-empty-state p {
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .khata-empty-icon {
+  background: radial-gradient(circle at center, #1e3a2c 0%, #11221a 70%) !important;
+  color: #86efac !important;
+  border-color: #2a5e42 !important;
+}
+
+/* Customer Directory Table Empty Card in Dark Mode */
+html[data-theme="dark"] .khata-empty-dir-cell {
+  background: transparent !important;
+}
+
+html[data-theme="dark"] .khata-empty-icon-wrap {
+  background: linear-gradient(135deg, #183828 0%, #10261c 100%) !important;
+  border: 1px solid #2a6647 !important;
+  color: #86efac !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+}
+
+html[data-theme="dark"] .khata-empty-title {
+  color: #e5efe8 !important;
+}
+
+html[data-theme="dark"] .khata-empty-sub {
+  color: #9cbdaf !important;
+}
+
+/* Customer Ledger Date Filter Group in Dark Mode */
+html[data-theme="dark"] .khata-date-filter-group {
+  background: #102118 !important;
+  border-color: #244434 !important;
+}
+
+html[data-theme="dark"] .khata-date-filter-group .khata-filter-title {
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-filter-input-wrap label {
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .khata-filter-date-input {
+  background: #0d1a13 !important;
+  border-color: #284c39 !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .khata-filter-date-input:focus {
+  border-color: var(--khata-emerald-400, #34d399) !important;
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.25) !important;
+}
+
+html[data-theme="dark"] .btn-khata-filter-quick {
+  background: linear-gradient(135deg, #183828 0%, #10261c 100%) !important;
+  border-color: #2a6647 !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .btn-khata-filter-quick:hover {
+  background: #1f4733 !important;
+  border-color: #34d399 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .btn-khata-filter-clear {
+  background: #15271e !important;
+  border-color: #284c39 !important;
+  color: #9cbdaf !important;
+}
+
+html[data-theme="dark"] .btn-khata-filter-clear:hover {
+  background: #1b3528 !important;
+  color: #ffffff !important;
+  border-color: var(--khata-emerald-400, #34d399) !important;
+}
+
+html[data-theme="dark"] .khata-filter-badge {
+  background: #123323 !important;
+  border-color: #296d49 !important;
+  color: #86efac !important;
 }
 }
 

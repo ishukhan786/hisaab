@@ -15,12 +15,12 @@
   <title>حساب — روزانہ کھاتہ و رجسٹر (Hisaab)</title>
   <!-- FIX-4: Anti-FOUC theme preload moved to external theme-init.js -->
   <!-- localStorage.getItem('hisaab-theme') verification guard preserved -->
-  <script src="theme-init.js?v=1.4.15"></script>
-  <link rel="stylesheet" href="style.css?v=1.4.15">
-  <link rel="stylesheet" href="ui.css?v=1.4.15">
-  <link rel="stylesheet" href="journal.css?v=1.4.15">
-  <link rel="stylesheet" href="khata.css?v=1.4.15">
-  <link rel="stylesheet" href="receipt-export.css?v=1.4.15">
+  <script src="theme-init.js?v=1.4.16"></script>
+  <link rel="stylesheet" href="style.css?v=1.4.16">
+  <link rel="stylesheet" href="ui.css?v=1.4.16">
+  <link rel="stylesheet" href="journal.css?v=1.4.16">
+  <link rel="stylesheet" href="khata.css?v=1.4.16">
+  <link rel="stylesheet" href="receipt-export.css?v=1.4.16">
 </head>
 <body class="app-shell">
   <header class="top-nav no-print">
@@ -60,7 +60,7 @@
       <nav class="workspace-nav no-print" role="tablist" aria-label="صفحات">
         <button id="view-register" type="button" role="tab" class="active" aria-selected="true" aria-controls="register-page" aria-pressed="true">اندراج رجسٹر</button>
         <button id="view-journal" type="button" role="tab" aria-selected="false" aria-controls="journal-page" aria-pressed="false">روزنامچہ</button>
-        <button id="view-khata" type="button" role="tab" aria-selected="false" aria-controls="khata-page" aria-pressed="false">گاہک کھاتہ</button>
+        <button id="view-khata" type="button" role="tab" aria-selected="false" aria-controls="khata-page" aria-pressed="false">کسٹمرز کھاتے</button>
       </nav>
 
       <div class="top-serial-field" title="شروع نمبر شمار">
@@ -252,9 +252,9 @@
 
   <!-- Khata Workspace Page -->
   <main id="khata-page" role="tabpanel" aria-labelledby="view-khata" hidden>
-    <section class="khata-card" aria-label="گاہک کھاتہ">
+    <section class="khata-card" aria-label="کسٹمرز کھاتے">
       <!-- ========================================================
-           SCREEN 1: FIRST PAGE — تمام گاہک اور پارٹی کھاتہ جات (DIRECTORY)
+           SCREEN 1: FIRST PAGE — تمام کسٹمرز کھاتے (DIRECTORY)
            ======================================================== -->
       <div id="khata-directory-view" class="khata-view-section">
         <div class="khata-dir-header-card">
@@ -266,7 +266,7 @@
               </svg>
             </div>
             <div>
-              <h2 class="khata-dir-main-title">تمام گاہک اور پارٹی کھاتہ جات</h2>
+              <h2 class="khata-dir-main-title">تمام کسٹمرز کھاتے</h2>
               <p class="khata-dir-main-subtitle">کھاتے دار کا نام یا کوڈ سرچ کر کے کھاتہ کھولیں اور اندراج کریں</p>
             </div>
           </div>
@@ -275,29 +275,107 @@
             <input id="khata-dir-search" class="khata-search-input" type="search" placeholder="کھاتے دار تلاش کریں (نام، کوڈ، موبائل، پتہ)..." autocomplete="off" aria-label="کھاتہ تلاش کریں">
           </div>
           <div class="khata-dir-header-actions">
+            <button id="btn-khata-dir-print" class="btn-khata-action" type="button" title="کسٹمرز کھاتے یا وصولی و ادائیگی رپورٹ پرنٹ / PDF بنائیں">
+              <span>🖨 پرنٹ رپورٹ / PDF</span>
+            </button>
+            <button id="btn-khata-dir-excel" class="btn-khata-action" type="button" title="موجودہ فہرست ایکسل میں ڈاؤنلوڈ کریں">
+              <span>📊 Excel ایکسپورٹ</span>
+            </button>
             <button id="btn-new-khata-top" class="btn-khata-new" type="button">
-              <span>＋ نیا گاہک کھاتہ بنائیں</span>
+              <span>＋ نیا کسٹمر کھاتہ بنائیں</span>
             </button>
           </div>
         </div>
 
-        <!-- Directory Summary Stats Bar -->
+        <!-- Directory Summary Stats Bar with Clickable Category Filters -->
         <div class="khata-dir-stats-grid">
-          <div class="khata-stat-box count">
+          <div class="khata-stat-box count" id="stat-card-khata-all" role="button" tabindex="0" title="تمام کسٹمرز کھاتے دیکھیں">
             <span class="khata-stat-label">کل کھاتے دار</span>
-            <span id="khata-dir-total-count" class="khata-stat-val">0</span>
+            <span id="khata-dir-total-count" class="khata-stat-val eng-num">0</span>
           </div>
-          <div class="khata-stat-box banam">
-            <span class="khata-stat-label">کل لینا ہے (Debit)</span>
-            <span id="khata-dir-total-banam" class="khata-stat-val">0</span>
+          <div class="khata-stat-box banam" id="stat-card-khata-receivables" role="button" tabindex="0" title="صرف قابلِ وصول (Receivables) کھاتے دیکھیں">
+            <span class="khata-stat-label">کل قابلِ وصول (Receivables — لینا ہے)</span>
+            <span id="khata-dir-total-banam" class="khata-stat-val eng-num">0</span>
           </div>
-          <div class="khata-stat-box jama">
-            <span class="khata-stat-label">کل دینا ہے (Credit)</span>
-            <span id="khata-dir-total-jama" class="khata-stat-val">0</span>
+          <div class="khata-stat-box jama" id="stat-card-khata-payables" role="button" tabindex="0" title="صرف واجب الادا (Payables) کھاتے دیکھیں">
+            <span class="khata-stat-label">کل واجب الادا (Payables — دینا ہے)</span>
+            <span id="khata-dir-total-jama" class="khata-stat-val eng-num">0</span>
           </div>
           <div id="khata-dir-stat-balance-box" class="khata-stat-box balance">
-            <span id="khata-dir-balance-status" class="khata-stat-label">خالص بقایا</span>
-            <span id="khata-dir-net-balance" class="khata-stat-val">0</span>
+            <span id="khata-dir-balance-status" class="khata-stat-label">خالص بقایا (Net Position)</span>
+            <span id="khata-dir-net-balance" class="khata-stat-val eng-num">0</span>
+          </div>
+        </div>
+
+        <!-- Receivables & Payables Category Filter Tabs Bar -->
+        <div class="khata-dir-tabs-bar no-print">
+          <div class="khata-dir-tabs-group" role="tablist" aria-label="کھاتے نوعیت فلٹر">
+            <button type="button" id="tab-khata-all" class="khata-dir-tab active" role="tab" aria-selected="true">
+              <span class="tab-label">تمام کھاتے</span>
+              <span id="badge-khata-all-count" class="tab-badge eng-num">0</span>
+            </button>
+            <button type="button" id="tab-khata-receivables" class="khata-dir-tab is-receivable" role="tab" aria-selected="false">
+              <span class="tab-dot dot-receivable" aria-hidden="true"></span>
+              <span class="tab-label">قابلِ وصول — Receivables (لینا ہے)</span>
+              <span id="badge-khata-receivables-count" class="tab-badge eng-num">0</span>
+            </button>
+            <button type="button" id="tab-khata-payables" class="khata-dir-tab is-payable" role="tab" aria-selected="false">
+              <span class="tab-dot dot-payable" aria-hidden="true"></span>
+              <span class="tab-label">واجب الادا — Payables (دینا ہے)</span>
+              <span id="badge-khata-payables-count" class="tab-badge eng-num">0</span>
+            </button>
+          </div>
+          <div class="khata-dir-filter-info">
+            <span id="khata-dir-filter-desc" class="khata-dir-filter-desc">تمام کھاتہ داروں کی فہرست دکھائی جا رہی ہے</span>
+          </div>
+        </div>
+
+        <!-- Official Bank Statement Dossier for Customer Directory / Receivables / Payables -->
+        <div class="khata-dir-print-dossier" id="khata-dir-print-dossier">
+          <div class="khata-print-letterhead">
+            <div class="khata-print-period-block">
+              <div class="khata-print-meta-item">
+                <span class="meta-label">رپورٹ کی نوعیت:</span>
+                <strong id="khata-dir-print-type" class="meta-val">جامع گوشوارہ کسٹمرز کھاتے</strong>
+              </div>
+            </div>
+            <div class="khata-print-title-block">
+              <h1 id="khata-dir-print-main-title" class="khata-print-main-title">کسٹمرز کھاتے رپورٹ</h1>
+              <p id="khata-dir-print-subtitle" class="khata-print-doc-sub">فہرست کھاتہ جات و بقایا بیلنس پوزیشن</p>
+            </div>
+            <div class="khata-print-meta-grid">
+              <div class="khata-print-meta-item">
+                <span class="meta-label">تاریخ پرنٹ:</span>
+                <strong id="khata-dir-print-date" class="meta-val eng-num">—</strong>
+              </div>
+              <div class="khata-print-meta-item">
+                <span class="meta-label">پرنٹ وقت:</span>
+                <strong id="khata-dir-print-time" class="meta-val eng-num">—</strong>
+              </div>
+              <div class="khata-print-meta-item">
+                <span class="meta-label">کل ریکارڈز:</span>
+                <strong id="khata-dir-print-count" class="meta-val eng-num">—</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="khata-print-summary-strip dir-summary-strip">
+            <div class="khata-print-sum-card count">
+              <div class="sum-card-label">تعداد کھاتے دار</div>
+              <div id="khata-dir-print-sum-count" class="sum-card-val eng-num">0</div>
+            </div>
+            <div class="khata-print-sum-card banam">
+              <div class="sum-card-label">کل قابلِ وصول (Receivables)</div>
+              <div id="khata-dir-print-sum-receivable" class="sum-card-val eng-num">0</div>
+            </div>
+            <div class="khata-print-sum-card jama">
+              <div class="sum-card-label">کل واجب الادا (Payables)</div>
+              <div id="khata-dir-print-sum-payable" class="sum-card-val eng-num">0</div>
+            </div>
+            <div class="khata-print-sum-card balance">
+              <div id="khata-dir-print-sum-status" class="sum-card-label">خالص بقایا (Net)</div>
+              <div id="khata-dir-print-sum-balance" class="sum-card-val eng-num">0</div>
+            </div>
           </div>
         </div>
 
@@ -325,9 +403,37 @@
               </tr>
             </thead>
             <tbody id="khata-dir-rows"></tbody>
+            <tfoot class="khata-dir-tfoot">
+              <tr class="khata-dir-tfoot-row">
+                <td colspan="5" class="dir-tfoot-label">کل میزان (Total):</td>
+                <td id="khata-dir-foot-bal" class="dir-tfoot-val eng-num">0</td>
+                <td class="no-print"></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
-        <div class="khata-dir-footer-bar">
+
+        <!-- Directory Print Signatures -->
+        <div class="khata-dir-print-signatures">
+          <div class="khata-sig-block">
+            <div class="sig-line"></div>
+            <strong class="sig-title">تیار کنندہ (Prepared By)</strong>
+            <span class="sig-sub">دستخط اکاؤنٹنٹ</span>
+          </div>
+          <div class="khata-sig-block sig-stamp">
+            <div class="sig-stamp-box">
+              <span>تصدیقی مہر</span>
+            </div>
+            <strong class="sig-title">آفیشل مہر / اسٹیمپ</strong>
+          </div>
+          <div class="khata-sig-block">
+            <div class="sig-line"></div>
+            <strong class="sig-title">تصدیق کنندہ (Authorized By)</strong>
+            <span class="sig-sub">دستخط مالک / منیجر</span>
+          </div>
+        </div>
+
+        <div class="khata-dir-footer-bar no-print">
           <span id="khata-dir-count" class="khata-dir-count-badge">کل کھاتے: 0</span>
         </div>
       </div>
@@ -339,9 +445,9 @@
         <!-- 1. Top Customer Switcher & Directory Back Button -->
         <div class="khata-topbar no-print">
           <div class="khata-top-back-wrap">
-            <button id="btn-khata-directory" class="btn-khata-back" type="button" title="تمام گاہک اور پارٹی کھاتہ جات کی فہرست پر واپس جائیں">
+            <button id="btn-khata-directory" class="btn-khata-back" type="button" title="کسٹمرز کھاتے کی فہرست پر واپس جائیں">
               <span class="back-arrow" aria-hidden="true">📋</span>
-              <span>تمام کھاتہ جات (فہرست)</span>
+              <span>کسٹمرز کھاتے (فہرست)</span>
             </button>
           </div>
           <div class="khata-search-wrap">
@@ -400,6 +506,23 @@
                 <span>📊 Excel ایکسپورٹ</span>
               </button>
             </div>
+
+            <!-- Customer Ledger Date Filter Controls -->
+            <div class="khata-date-filter-group" id="khata-date-filter-group" role="search" aria-label="تاریخ فلٹر برائے کھاتہ">
+              <span class="khata-filter-title">📅 تاریخ فلٹر:</span>
+              <div class="khata-filter-input-wrap">
+                <label for="khata-filter-from">تاریخ سے:</label>
+                <input type="date" id="khata-filter-from" class="khata-filter-date-input" title="شروعاتی تاریخ منتخب کریں">
+              </div>
+              <div class="khata-filter-input-wrap">
+                <label for="khata-filter-to">تاریخ تک:</label>
+                <input type="date" id="khata-filter-to" class="khata-filter-date-input" title="آخری تاریخ منتخب کریں">
+              </div>
+              <button id="btn-khata-filter-today" class="btn-khata-filter-quick" type="button" title="صرف آج کی تاریخ کا لیجر پرنٹ و دیکھیں">آج</button>
+              <button id="btn-khata-filter-clear" class="btn-khata-filter-clear" type="button" title="مکمل کھاتہ ریکارڈ دیکھیں (فلٹر صاف کریں)">سب دیکھیں</button>
+              <span id="khata-filter-badge" class="khata-filter-badge" hidden></span>
+            </div>
+
             <div class="khata-actions-group">
               <button id="btn-khata-edit" class="btn-khata-action" type="button">
                 <span>✏ کھاتہ ترمیم</span>
@@ -445,7 +568,7 @@
 
             <!-- Legacy compatibility hooks for automated tests -->
             <div class="khata-print-header" style="display:none;" aria-hidden="true">
-              <h2 id="khata-print-customer">گاہک کھاتہ</h2>
+              <h2 id="khata-print-customer">کسٹمرز کھاتے</h2>
               <p id="khata-print-meta"></p>
             </div>
 
@@ -547,13 +670,13 @@
           <div class="khata-empty-icon">📁</div>
           <h3>ابھی کوئی کھاتہ منتخب نہیں ہے</h3>
           <p>کسی گاہک یا پارٹی کا کھاتہ دیکھنے کے لیے تلاش کریں یا نیا کھاتہ کھولیں۔</p>
-          <button id="btn-new-khata-empty" class="btn-khata-new" type="button">＋ نیا گاہک کھاتہ بنائیں</button>
+          <button id="btn-new-khata-empty" class="btn-khata-new" type="button">＋ نیا کسٹمر کھاتہ بنائیں</button>
         </div>
       </div>
     </section>
 
     <footer class="help no-print">
-      <span>گاہک کھاتہ • Tab / Enter سے اگلا خانہ • سطر میں بنام یا جمع درج کرتے ہی بقایا خودکار طور پر شمار ہوگا • بنام (لینا ہے) اور جمع (دینا ہے)</span>
+      <span>کسٹمرز کھاتے • Tab / Enter سے اگلا خانہ • سطر میں بنام یا جمع درج کرتے ہی بقایا خودکار طور پر شمار ہوگا • بنام (لینا ہے) اور جمع (دینا ہے)</span>
     </footer>
 
     <!-- New Khata Modal Dialog (Senior UI/UX Obsidian Emerald Edition) -->
@@ -569,8 +692,8 @@
             </svg>
           </div>
           <div>
-            <h2 id="new-khata-title">نیا گاہک / پارٹی کھاتہ بنائیں</h2>
-            <p class="khata-modal-subtitle">گاہک کی تفصیلات درج کریں — کھاتہ کوڈ خودکار تیار ہوگا</p>
+            <h2 id="new-khata-title">نیا کسٹمر کھاتہ بنائیں</h2>
+            <p class="khata-modal-subtitle">کسٹمر کی تفصیلات درج کریں — کھاتہ کوڈ خودکار تیار ہوگا</p>
           </div>
         </div>
         <button id="btn-close-new-khata" type="button" class="btn-khata-modal-close" data-close-dialog aria-label="بند کریں">
@@ -1015,7 +1138,7 @@
 
   <!-- FIX-4 & FIX-7: Zero-flash lock moved to external pin-init.js with safe overlay guard -->
   <!-- Web PIN auto-lock: window.location.protocol.startsWith('http') -> ov.hidden = false; el.inert = true; moved to pin-init.js -->
-  <script src="pin-init.js?v=1.4.15"></script>
+  <script src="pin-init.js?v=1.4.16"></script>
 
   <!-- FIX-21: Clean hidden semantics without redundant aria-hidden -->
   <section id="receipt-print" hidden></section>
@@ -1023,15 +1146,15 @@
   <input id="file" type="file" accept="application/json,.json" hidden aria-label="بیک اَپ فائل منتخب کریں">
 
   <!-- FIX-3: Universal dialog backdrop-click fallback polyfill -->
-  <script src="dialog-fallback.js?v=1.4.15"></script>
-  <script src="excel-export.js?v=1.4.15"></script>
-  <script src="journal.js?v=1.4.15"></script>
-  <script src="khata.js?v=1.4.15"></script>
+  <script src="dialog-fallback.js?v=1.4.16"></script>
+  <script src="excel-export.js?v=1.4.16"></script>
+  <script src="journal.js?v=1.4.16"></script>
+  <script src="khata.js?v=1.4.16"></script>
   <!-- FIX-6 & FIX-27: html2canvas with SRI integrity verification and deferred non-blocking load -->
   <script src="assets/html2canvas.min.js?v=1.4.1" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" defer></script>
-  <script src="receipt-png.js?v=1.4.15"></script>
-  <script src="external-backup-ui.js?v=1.4.15"></script>
-  <script src="app.js?v=1.4.15"></script>
-  <script src="ui.js?v=1.4.15"></script>
+  <script src="receipt-png.js?v=1.4.16"></script>
+  <script src="external-backup-ui.js?v=1.4.16"></script>
+  <script src="app.js?v=1.4.16"></script>
+  <script src="ui.js?v=1.4.16"></script>
 </body>
 </html>

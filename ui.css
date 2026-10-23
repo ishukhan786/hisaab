@@ -2661,8 +2661,7 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   .register-summary>div {display:flex;flex-direction:column;text-align:center;gap:6px;padding:10px 14px;background:var(--surface-soft);border:1px solid var(--surface-line);border-radius:10px;min-width:0}
   .register-summary span {font-size:12px;color:var(--surface-ink)}
   .register-summary strong {font:700 19px Arial,sans-serif;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;color:var(--surface-ink)}
-  .app-shell .journal-heading {padding:14px 20px}
-  .app-shell.journal-view .workspace-tools {justify-content:flex-end}
+  .app-shell:is(.journal-view, .khata-view) .workspace-tools {display:none!important}
 }
 @media screen and (max-width:600px) {
   .workspace-header {gap:8px;width:100%}

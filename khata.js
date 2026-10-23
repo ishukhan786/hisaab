@@ -284,6 +284,61 @@
     })();
     const rowNodes = new Map();
 
+    let dateFilterFrom = '';
+    let dateFilterTo = '';
+
+    function isRowInDateRange(rowDate, fromDate, toDate) {
+      if (!fromDate && !toDate) return true;
+      if (!rowDate) return false;
+      const f = fromDate || toDate;
+      const t = toDate || fromDate;
+      const min = f <= t ? f : t;
+      const max = f <= t ? t : f;
+      return rowDate >= min && rowDate <= max;
+    }
+
+    function getFilterPeriodText() {
+      const f = dateFilterFrom;
+      const t = dateFilterTo;
+      if (!f && !t) return 'مکمل کھاتہ ریکارڈ';
+      const min = (f && t) ? (f <= t ? f : t) : (f || t);
+      const max = (f && t) ? (f <= t ? t : f) : (f || t);
+      if (min === max) {
+        return `تاریخ: ${formatDisplayDate(min)}`;
+      }
+      return `دورانیہ: ${formatDisplayDate(min)} تا ${formatDisplayDate(max)}`;
+    }
+
+    function setDateFilter(from, to) {
+      dateFilterFrom = from ? from.trim() : '';
+      dateFilterTo = to ? to.trim() : '';
+      const fEl = $('khata-filter-from');
+      const tEl = $('khata-filter-to');
+      if (fEl && fEl.value !== dateFilterFrom) fEl.value = dateFilterFrom;
+      if (tEl && tEl.value !== dateFilterTo) tEl.value = dateFilterTo;
+      recalculate(getActiveKhata());
+    }
+
+    let directoryFilter = 'all'; // 'all' | 'receivables' | 'payables'
+
+    function setDirectoryFilter(filter) {
+      directoryFilter = filter || 'all';
+      const tabs = [
+        { id: 'tab-khata-all', val: 'all' },
+        { id: 'tab-khata-receivables', val: 'receivables' },
+        { id: 'tab-khata-payables', val: 'payables' }
+      ];
+      tabs.forEach(t => {
+        const el = $(t.id);
+        if (el) {
+          const isActive = t.val === directoryFilter;
+          el.classList.toggle('active', isActive);
+          el.setAttribute('aria-selected', String(isActive));
+        }
+      });
+      renderDirectory();
+    }
+
     const getKhatas = () => {
       const state = getState();
       if (!Array.isArray(state.khatas)) state.khatas = [];
@@ -291,6 +346,14 @@
     };
 
     function selectKhata(id) {
+      if (activeKhataId !== id) {
+        dateFilterFrom = '';
+        dateFilterTo = '';
+        const fEl = $('khata-filter-from');
+        const tEl = $('khata-filter-to');
+        if (fEl) fEl.value = '';
+        if (tEl) tEl.value = '';
+      }
       activeKhataId = id || null;
       try {
         if (activeKhataId) localStorage.setItem('hisaab-active-khata-id', activeKhataId);
@@ -349,6 +412,33 @@
       let totCredit = 0n;
       let serial = 1;
 
+      const f = dateFilterFrom;
+      const t = dateFilterTo;
+      const hasFilter = Boolean(f || t);
+      const minDate = (f && t) ? (f <= t ? f : t) : (f || t);
+      const maxDate = (f && t) ? (f <= t ? t : f) : (f || t);
+
+      // If date filter is active, calculate brought-forward balance prior to minDate
+      let sabqaAmount = 0n;
+      let sabqaHasDec = false;
+      if (hasFilter) {
+        for (const r of khata.rows) {
+          if (hasData(r) && r.date && r.date < minDate) {
+            const nd = parseAmount(r.debit);
+            const nc = parseAmount(r.credit);
+            if (nd !== null) {
+              sabqaAmount += nd;
+              if (nd % 100n !== 0n) sabqaHasDec = true;
+            }
+            if (nc !== null) {
+              sabqaAmount -= nc;
+              if (nc % 100n !== 0n) sabqaHasDec = true;
+            }
+          }
+        }
+        running = sabqaAmount;
+      }
+
       const hasDecimals = khata.rows.some(r => {
         const nd = parseAmount(r.debit);
         const nc = parseAmount(r.credit);
@@ -363,10 +453,14 @@
         const numD = parseAmount(dStr);
         const numC = parseAmount(cStr);
 
+        // Check if row falls in date filter
+        const inFilter = !hasFilter || (hasData(r) && r.date && r.date >= minDate && r.date <= maxDate);
+
         if (tr) {
+          tr.hidden = hasFilter ? !inFilter : false;
           tr.classList.toggle('khata-draft', isDraft);
           const sCell = tr.querySelector('.td-serial');
-          if (sCell) sCell.textContent = isDraft ? '＋' : formatCount(serial++);
+          if (sCell) sCell.textContent = isDraft ? '＋' : (inFilter ? formatCount(serial++) : '—');
 
           const banamInput = tr.querySelector('td:nth-child(4) input');
           const jamaInput = tr.querySelector('td:nth-child(5) input');
@@ -389,9 +483,16 @@
         if (!isDraft) {
           const dVal = numD !== null ? numD : 0n;
           const cVal = numC !== null ? numC : 0n;
-          totDebit += dVal;
-          totCredit += cVal;
-          running += (dVal - cVal);
+
+          if (inFilter) {
+            totDebit += dVal;
+            totCredit += cVal;
+            running += (dVal - cVal);
+          } else if (!hasFilter) {
+            totDebit += dVal;
+            totCredit += cVal;
+            running += (dVal - cVal);
+          }
 
           if (tr) {
             const bCell = tr.querySelector('.td-baqaya');
@@ -452,6 +553,17 @@
         }
       }
 
+      // Update Filter Badge
+      const filterBadge = $('khata-filter-badge');
+      if (filterBadge) {
+        if (hasFilter) {
+          filterBadge.hidden = false;
+          filterBadge.textContent = `${serial - 1} اندراجات (فلٹر لاگو)`;
+        } else {
+          filterBadge.hidden = true;
+        }
+      }
+
       // Update Header Stats
       const statBanam = $('khata-total-banam');
       const statJama = $('khata-total-jama');
@@ -503,11 +615,17 @@
         tfootBaqaya.append(wrapSpan);
       }
 
-      // Update print summary snapshot if element exists
+      // Update print dossier period & summary snapshots
+      const periodEl = $('khata-print-period');
+      if (periodEl) periodEl.textContent = getFilterPeriodText();
+
       const sumSabqaEl = $('khata-print-sum-sabqa');
-      if (sumSabqaEl && khata) {
-        let sabqaAmount = 0n;
-        let sabqaHasDec = false;
+      const sumBanamEl = $('khata-print-sum-banam');
+      const sumJamaEl = $('khata-print-sum-jama');
+      const sumBalEl = $('khata-print-sum-balance');
+      const sumStatEl = $('khata-print-sum-status');
+
+      if (!hasFilter && khata) {
         if (khata.openingBalance !== undefined && khata.openingBalance !== null && khata.openingBalance !== '') {
           const ob = parseAmount(khata.openingBalance);
           if (ob !== null) {
@@ -529,7 +647,24 @@
             }
           }
         }
-        sumSabqaEl.textContent = formatAmount(sabqaAmount, { withDecimals: sabqaHasDec || hasDecimals });
+      }
+
+      if (sumSabqaEl) {
+        const absSabqa = sabqaAmount < 0n ? -sabqaAmount : sabqaAmount;
+        const sideSuffix = hasFilter && sabqaAmount !== 0n ? (sabqaAmount > 0n ? ' (بنام)' : ' (جمع)') : '';
+        sumSabqaEl.textContent = `${formatAmount(absSabqa, { withDecimals: sabqaHasDec || hasDecimals })}${sideSuffix}`;
+      }
+      if (sumBanamEl) sumBanamEl.textContent = formatAmount(totDebit, { withDecimals: hasDecimals });
+      if (sumJamaEl) sumJamaEl.textContent = formatAmount(totCredit, { withDecimals: hasDecimals });
+      if (sumBalEl) sumBalEl.textContent = formatAmount(netAbs, { withDecimals: hasDecimals });
+      if (sumStatEl) {
+        if (running > 0n) {
+          sumStatEl.textContent = 'خالص بقایا (بنام - قابلِ وصول / لینا ہے)';
+        } else if (running < 0n) {
+          sumStatEl.textContent = 'خالص بقایا (جمع - واجب الادا / دینا ہے)';
+        } else {
+          sumStatEl.textContent = 'خالص بقایا (حساب برابر ✓)';
+        }
       }
     }
 
@@ -768,6 +903,9 @@
       btnDel.textContent = '×';
       btnDel.title = 'سطر حذف کریں';
       btnDel.onclick = () => {
+        if (hasData(r)) {
+          if (typeof confirm === 'function' && !confirm('کیا آپ واقعی یہ انٹری حذف کرنا چاہتے ہیں؟')) return;
+        }
         khata.rows = khata.rows.filter(x => x.id !== r.id);
         rowNodes.delete(r.id);
         tr.remove();
@@ -883,52 +1021,224 @@
       if (!tbody) return;
       tbody.replaceChildren();
 
-      let totBanam = 0n;
-      let totJama = 0n;
+      // 1. Calculate running balance and decimal flag for each customer
+      let totReceivables = 0n; // sum of positive balances (بنام - لینا ہے)
+      let totPayables = 0n;    // sum of negative balances as positive amount (جمع - دینا ہے)
+      let recCount = 0;
+      let payCount = 0;
       let hasAnyDec = false;
 
+      const evaluatedList = list.map(k => {
+        let running = 0n;
+        let hasDec = false;
+        for (const r of k.rows) {
+          if (hasData(r)) {
+            const nd = parseAmount(r.debit) || 0n;
+            const nc = parseAmount(r.credit) || 0n;
+            if (nd % 100n !== 0n || nc % 100n !== 0n) {
+              hasDec = true;
+              hasAnyDec = true;
+            }
+            running += (nd - nc);
+          }
+        }
+        if (running > 0n) {
+          totReceivables += running;
+          recCount++;
+        } else if (running < 0n) {
+          totPayables += (-running);
+          payCount++;
+        }
+        return { khata: k, running, hasDec };
+      });
+
+      // Update Badges on Category Tabs
+      const badgeAll = $('badge-khata-all-count');
+      const badgeRec = $('badge-khata-receivables-count');
+      const badgePay = $('badge-khata-payables-count');
+      if (badgeAll) badgeAll.textContent = formatCount(list.length);
+      if (badgeRec) badgeRec.textContent = formatCount(recCount);
+      if (badgePay) badgePay.textContent = formatCount(payCount);
+
+      // Update Overview Stats Grid
+      const statCount = $('khata-dir-total-count');
+      const statReceivables = $('khata-dir-total-banam');
+      const statPayables = $('khata-dir-total-jama');
+      const statNet = $('khata-dir-net-balance');
+      const statBox = $('khata-dir-stat-balance-box');
+      const statStatus = $('khata-dir-balance-status');
+
+      if (statCount) statCount.textContent = formatCount(list.length);
+      if (statReceivables) statReceivables.textContent = formatAmount(totReceivables, { withDecimals: hasAnyDec });
+      if (statPayables) statPayables.textContent = formatAmount(totPayables, { withDecimals: hasAnyDec });
+
+      const netTotal = totReceivables - totPayables;
+      const absNet = netTotal < 0n ? -netTotal : netTotal;
+      if (statNet) statNet.textContent = formatAmount(absNet, { withDecimals: hasAnyDec });
+
+      if (statBox && statStatus) {
+        statBox.classList.remove('is-jama', 'is-banam');
+        if (netTotal > 0n) {
+          statBox.classList.add('is-banam');
+          statStatus.textContent = 'خالص لینا ہے (بنام — Net Receivable)';
+        } else if (netTotal < 0n) {
+          statBox.classList.add('is-jama');
+          statStatus.textContent = 'خالص دینا ہے (جمع — Net Payable)';
+        } else {
+          statStatus.textContent = 'حساب برابر ✓ (Balanced)';
+        }
+      }
+
+      // Update Filter Description Info
+      const filterDesc = $('khata-dir-filter-desc');
+      if (filterDesc) {
+        if (directoryFilter === 'receivables') {
+          filterDesc.textContent = `صرف قابلِ وصول (Receivables — لینا ہے) کھاتے دکھائے جا رہے ہیں (${formatCount(recCount)})`;
+        } else if (directoryFilter === 'payables') {
+          filterDesc.textContent = `صرف واجب الادا (Payables — دینا ہے) کھاتے دکھائے جا رہے ہیں (${formatCount(payCount)})`;
+        } else {
+          filterDesc.textContent = `تمام کسٹمرز کھاتہ داروں کی فہرست دکھائی جا رہی ہے (${formatCount(list.length)})`;
+        }
+      }
+
+      // Filter based on directoryFilter
+      let filtered = evaluatedList;
+      if (directoryFilter === 'receivables') {
+        filtered = evaluatedList.filter(item => item.running > 0n);
+      } else if (directoryFilter === 'payables') {
+        filtered = evaluatedList.filter(item => item.running < 0n);
+      }
+
+      // Filter based on search query
+      const searchInput = $('khata-dir-search');
+      const query = searchInput ? digits(searchInput.value.toLowerCase().trim()) : '';
+      if (query) {
+        filtered = filtered.filter(item => {
+          const k = item.khata;
+          return (
+            k.code.toLowerCase().includes(query) ||
+            k.name.toLowerCase().includes(query) ||
+            (k.mobile && k.mobile.includes(query)) ||
+            (k.address && k.address.toLowerCase().includes(query))
+          );
+        });
+      }
+
+      // Update count indicator
+      const countEl = $('khata-dir-count');
+      if (countEl) {
+        if (query || directoryFilter !== 'all') {
+          countEl.textContent = `نتائج: ${formatCount(filtered.length)} / ${formatCount(list.length)}`;
+        } else {
+          countEl.textContent = `کل کھاتے: ${formatCount(list.length)}`;
+        }
+      }
+
+      // Render Table Rows
       if (!list.length) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 7;
-        td.className = 'summary-empty-cell';
-        td.style.padding = '42px 20px';
-        td.style.textAlign = 'center';
+        td.className = 'summary-empty-cell khata-empty-dir-cell';
 
-        const p = document.createElement('p');
-        p.textContent = 'ابھی کوئی کھاتہ موجود نہیں ہے۔';
-        p.style.marginBottom = '14px';
-        p.style.fontSize = '1.1rem';
-        p.style.color = '#527766';
+        const wrap = document.createElement('div');
+        wrap.className = 'khata-empty-content';
+
+        const icon = document.createElement('div');
+        icon.className = 'khata-empty-icon-wrap';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.innerHTML = `<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>`;
+
+        const title = document.createElement('h3');
+        title.className = 'khata-empty-title';
+        title.textContent = 'ابھی کوئی کسٹمر کھاتہ موجود نہیں ہے';
+
+        const sub = document.createElement('p');
+        sub.className = 'khata-empty-sub';
+        sub.textContent = 'کاروبار کے کسٹمرز یا پارٹیوں کا لیجر کھاتہ بنانے کے لیے نیا کسٹمر کھاتہ بنائیں۔';
 
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'btn-khata-new';
-        btn.textContent = '＋ نیا گاہک کھاتہ بنائیں';
+        btn.className = 'btn-khata-new btn-khata-empty-action';
+        btn.innerHTML = '<span>＋ نیا کسٹمر کھاتہ بنائیں</span>';
         btn.onclick = openNewKhataModal;
 
-        td.append(p, btn);
+        wrap.append(icon, title, sub, btn);
+        td.append(wrap);
         tr.append(td);
         tbody.append(tr);
+
+        const footBal = $('khata-dir-foot-bal');
+        if (footBal) footBal.textContent = '0 برابر';
+      } else if (!filtered.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 7;
+        td.className = 'summary-empty-cell khata-empty-dir-cell';
+
+        const wrap = document.createElement('div');
+        wrap.className = 'khata-empty-content';
+
+        const icon = document.createElement('div');
+        icon.className = 'khata-empty-icon-wrap';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>`;
+
+        const title = document.createElement('h3');
+        title.className = 'khata-empty-title';
+
+        const sub = document.createElement('p');
+        sub.className = 'khata-empty-sub';
+
+        if (query) {
+          title.textContent = 'تلاش کے مطابق کوئی کھاتہ نہیں ملا';
+          sub.textContent = `"${query}" سے ملتا جلتا کوئی نام، کوڈ، موبائل یا پتہ موجود نہیں ہے۔`;
+        } else if (directoryFilter === 'receivables') {
+          title.textContent = 'کوئی قابلِ وصول (Receivables) کھاتہ نہیں ملا';
+          sub.textContent = 'اس وقت تمام کسٹمرز کے واجبات صفر یا ادا شدہ ہیں۔';
+        } else if (directoryFilter === 'payables') {
+          title.textContent = 'کوئی واجب الادا (Payables) کھاتہ نہیں ملا';
+          sub.textContent = 'اس وقت تمام کسٹمرز کی ادائیگیاں صفر یا مکمل ہیں۔';
+        } else {
+          title.textContent = 'کوئی ریکارڈ موجود نہیں ہے';
+          sub.textContent = 'فہرست دوبارہ دیکھنے کے لیے فلٹر ری سیٹ کریں۔';
+        }
+
+        const resetBtn = document.createElement('button');
+        resetBtn.type = 'button';
+        resetBtn.className = 'btn-khata-action';
+        resetBtn.innerHTML = '<span>تمام کھاتے دیکھیں</span>';
+        resetBtn.onclick = () => {
+          if (searchInput) searchInput.value = '';
+          setDirectoryFilter('all');
+        };
+
+        wrap.append(icon, title, sub, resetBtn);
+        td.append(wrap);
+        tr.append(td);
+        tbody.append(tr);
+
+        const footBal = $('khata-dir-foot-bal');
+        if (footBal) footBal.textContent = '0 برابر';
       } else {
         const fragment = document.createDocumentFragment();
-        list.forEach((k, idx) => {
-          let running = 0n;
-          let hasDec = false;
-          for (const r of k.rows) {
-            if (hasData(r)) {
-              const nd = parseAmount(r.debit) || 0n;
-              const nc = parseAmount(r.credit) || 0n;
-              if (nd % 100n !== 0n || nc % 100n !== 0n) {
-                hasDec = true;
-                hasAnyDec = true;
-              }
-              running += (nd - nc);
-              totBanam += nd;
-              totJama += nc;
-            }
-          }
+        let displayedNet = 0n;
+
+        filtered.forEach((item, idx) => {
+          const k = item.khata;
+          const running = item.running;
+          const hasDec = item.hasDec;
+          displayedNet += running;
           const absVal = running < 0n ? -running : running;
+
           const tr = document.createElement('tr');
           tr.onclick = e => {
             if (e.target?.closest?.('.btn-open-khata')) return; // Handled by button
@@ -957,7 +1267,7 @@
           tdCurr.textContent = k.currency === 'aed' ? 'درہم (AED)' : 'روپیہ (PKR)';
 
           const tdBal = document.createElement('td');
-          tdBal.className = 'eng-num';
+          tdBal.className = 'eng-num dir-td-bal ' + (running > 0n ? 'is-banam' : running < 0n ? 'is-jama' : 'is-zero');
           tdBal.style.fontWeight = '700';
           tdBal.style.direction = 'ltr';
           tdBal.textContent = `${formatAmount(absVal, { withDecimals: hasDec })} ${running > 0n ? 'بنام' : running < 0n ? 'جمع' : 'برابر'}`;
@@ -979,40 +1289,15 @@
           fragment.append(tr);
         });
         tbody.append(fragment);
-      }
 
-      // Update Directory Overview Stats
-      const statCount = $('khata-dir-total-count');
-      const statBanam = $('khata-dir-total-banam');
-      const statJama = $('khata-dir-total-jama');
-      const statNet = $('khata-dir-net-balance');
-      const statBox = $('khata-dir-stat-balance-box');
-      const statStatus = $('khata-dir-balance-status');
-      const countEl = $('khata-dir-count');
-
-      if (statCount) statCount.textContent = formatCount(list.length);
-      if (statBanam) statBanam.textContent = formatAmount(totBanam, { withDecimals: hasAnyDec });
-      if (statJama) statJama.textContent = formatAmount(totJama, { withDecimals: hasAnyDec });
-
-      const netTotal = totBanam - totJama;
-      const absNet = netTotal < 0n ? -netTotal : netTotal;
-      if (statNet) statNet.textContent = formatAmount(absNet, { withDecimals: hasAnyDec });
-
-      if (statBox && statStatus) {
-        statBox.classList.remove('is-jama', 'is-banam');
-        if (netTotal > 0n) {
-          statBox.classList.add('is-banam');
-          statStatus.textContent = 'خالص لینا ہے (بنام)';
-        } else if (netTotal < 0n) {
-          statBox.classList.add('is-jama');
-          statStatus.textContent = 'خالص دینا ہے (جمع)';
-        } else {
-          statStatus.textContent = 'حساب برابر ✓';
+        // Update Table Footer Total Balance
+        const footBal = $('khata-dir-foot-bal');
+        if (footBal) {
+          const absDisplayed = displayedNet < 0n ? -displayedNet : displayedNet;
+          const typeText = displayedNet > 0n ? 'بنام' : displayedNet < 0n ? 'جمع' : 'برابر';
+          footBal.textContent = `${formatAmount(absDisplayed, { withDecimals: hasAnyDec })} ${typeText}`;
+          footBal.style.color = displayedNet > 0n ? '#dc2626' : displayedNet < 0n ? '#059669' : '#174233';
         }
-      }
-
-      if (countEl) {
-        countEl.textContent = `کل کھاتے: ${formatCount(list.length)}`;
       }
     }
 
@@ -1022,13 +1307,13 @@
       if (dirView) dirView.hidden = false;
       if (ledView) ledView.hidden = true;
 
-      renderDirectory();
-
       const dirSearch = $('khata-dir-search');
       if (dirSearch) {
         dirSearch.value = '';
         setTimeout(() => dirSearch.focus(), 60);
       }
+
+      renderDirectory();
     }
 
     function showLedgerView(id) {
@@ -1077,18 +1362,24 @@
       const khata = getActiveKhata();
       if (!canOutputKhata(khata)) return;
 
+      // Recalculate will apply the active date filter, hide/show rows, update running balances and dossier summary
+      recalculate(khata);
+
       // Legacy test hooks
       const titleEl = $('khata-print-customer');
       const metaEl = $('khata-print-meta');
       if (titleEl) titleEl.textContent = `${khata.name} (${khata.code})`;
       if (metaEl) {
-        metaEl.textContent = `موبائیل: ${khata.mobile || '—'} | مقام: ${khata.address || '—'} | کرنسی: ${khata.currency === 'aed' ? 'درہم' : 'روپیہ'} | تاریخ پرنٹ: ${getToday()}`;
+        metaEl.textContent = `موبائیل: ${khata.mobile || '—'} | مقام: ${khata.address || '—'} | کرنسی: ${khata.currency === 'aed' ? 'درہم' : 'روپیہ'} | تاریخ پرنٹ: ${getToday()} | دورانیہ: ${getFilterPeriodText()}`;
       }
 
       // Populate Official Bank Statement Dossier
       const now = new Date();
       const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
       const dateStr = formatDisplayDate(getToday());
+
+      const periodEl = $('khata-print-period');
+      if (periodEl) periodEl.textContent = getFilterPeriodText();
 
       const printDateEl = $('khata-print-date');
       const printTimeEl = $('khata-print-time');
@@ -1108,67 +1399,6 @@
       if (custMobileEl) custMobileEl.textContent = khata.mobile || 'درج نہیں (—)';
       if (custAddrEl) custAddrEl.textContent = khata.address || 'درج نہیں (—)';
       if (custCurrEl) custCurrEl.textContent = khata.currency === 'aed' ? 'اماراتی درہم' : 'پاکستانی روپیہ';
-
-      // Financial Summary in Dossier
-      let totD = 0n;
-      let totC = 0n;
-      let hasDec = false;
-      for (const r of khata.rows) {
-        if (hasData(r)) {
-          const nd = parseAmount(r.debit);
-          const nc = parseAmount(r.credit);
-          if (nd !== null) { totD += nd; if (nd % 100n !== 0n) hasDec = true; }
-          if (nc !== null) { totC += nc; if (nc % 100n !== 0n) hasDec = true; }
-        }
-      }
-      const net = totD - totC;
-      const absNet = net < 0n ? -net : net;
-
-      // Sabqa (Opening) Balance
-      let sabqaAmount = 0n;
-      let sabqaHasDec = false;
-      if (khata.openingBalance !== undefined && khata.openingBalance !== null && khata.openingBalance !== '') {
-        const ob = parseAmount(khata.openingBalance);
-        if (ob !== null) {
-          sabqaAmount = ob < 0n ? -ob : ob;
-          if (ob % 100n !== 0n) sabqaHasDec = true;
-        }
-      }
-      if (sabqaAmount === 0n && Array.isArray(khata.rows)) {
-        const firstRow = khata.rows.find(r => r && hasData(r) && r.detail && (/سابقہ|opening/i.test(r.detail)));
-        if (firstRow) {
-          const nd = parseAmount(firstRow.debit);
-          const nc = parseAmount(firstRow.credit);
-          if (nd !== null && nd > 0n) {
-            sabqaAmount = nd;
-            if (nd % 100n !== 0n) sabqaHasDec = true;
-          } else if (nc !== null && nc > 0n) {
-            sabqaAmount = nc;
-            if (nc % 100n !== 0n) sabqaHasDec = true;
-          }
-        }
-      }
-
-      const sumSabqaEl = $('khata-print-sum-sabqa');
-      const sumBanamEl = $('khata-print-sum-banam');
-      const sumJamaEl = $('khata-print-sum-jama');
-      const sumBalEl = $('khata-print-sum-balance');
-      const sumStatEl = $('khata-print-sum-status');
-
-      if (sumSabqaEl) sumSabqaEl.textContent = formatAmount(sabqaAmount, { withDecimals: sabqaHasDec || hasDec });
-      if (sumBanamEl) sumBanamEl.textContent = formatAmount(totD, { withDecimals: hasDec });
-      if (sumJamaEl) sumJamaEl.textContent = formatAmount(totC, { withDecimals: hasDec });
-      if (sumBalEl) sumBalEl.textContent = formatAmount(absNet, { withDecimals: hasDec });
-
-      if (sumStatEl) {
-        if (net > 0n) {
-          sumStatEl.textContent = 'خالص بقایا (بنام - قابلِ وصول / لینا ہے)';
-        } else if (net < 0n) {
-          sumStatEl.textContent = 'خالص بقایا (جمع - واجب الادا / دینا ہے)';
-        } else {
-          sumStatEl.textContent = 'خالص بقایا (حساب برابر ✓)';
-        }
-      }
 
       // Refresh all cell print spans
       for (const r of khata.rows) {
@@ -1190,13 +1420,20 @@
       const restoreTheme = window.prepareForPrintTheme
         ? window.prepareForPrintTheme() : null;
 
+      const f = dateFilterFrom;
+      const t = dateFilterTo;
+      const hasFilter = Boolean(f || t);
+      const minDate = (f && t) ? (f <= t ? f : t) : (f || t);
+      const maxDate = (f && t) ? (f <= t ? t : f) : (f || t);
+      const dateSuffix = hasFilter ? (minDate === maxDate ? minDate : `${minDate}_تا_${maxDate}`) : getToday();
+
       // In Electron desktop environment, use previewPDF for flawless native preview
       if (window.electronAPI?.previewPDF) {
         if (document.body.inert) { restoreTheme?.(); return; }
         document.body.inert = true;
         try {
           const safeName = (khata.name || 'کھاتہ').replace(/[<>:"/\\|?*]/g, '_');
-          const fileName = `لیجر_${safeName}_${getToday()}.pdf`;
+          const fileName = `لیجر_${safeName}_${dateSuffix}.pdf`;
           const result = options?.savePDF && window.electronAPI?.savePDF
             ? await window.electronAPI.savePDF(fileName, { landscape: false })
             : await window.electronAPI.previewPDF({ landscape: false });
@@ -1224,17 +1461,56 @@
       const khata = getActiveKhata();
       if (!canOutputKhata(khata) || !exportSheet) return;
 
+      const f = dateFilterFrom;
+      const t = dateFilterTo;
+      const hasFilter = Boolean(f || t);
+      const minDate = (f && t) ? (f <= t ? f : t) : (f || t);
+      const maxDate = (f && t) ? (f <= t ? t : f) : (f || t);
+
       let bal = 0n;
       let totD = 0n;
       let totC = 0n;
-      const validRows = khata.rows.filter(hasData);
-      const hasDec = validRows.some(r => {
+      let sabqaAmount = 0n;
+
+      if (hasFilter) {
+        for (const r of khata.rows) {
+          if (hasData(r) && r.date && r.date < minDate) {
+            const nd = parseAmount(r.debit);
+            const nc = parseAmount(r.credit);
+            if (nd !== null) sabqaAmount += nd;
+            if (nc !== null) sabqaAmount -= nc;
+          }
+        }
+        bal = sabqaAmount;
+      }
+
+      const allValidRows = khata.rows.filter(hasData);
+      const filteredRows = hasFilter
+        ? allValidRows.filter(r => r.date && r.date >= minDate && r.date <= maxDate)
+        : allValidRows;
+
+      const hasDec = filteredRows.some(r => {
         const nd = parseAmount(r.debit) || 0n;
         const nc = parseAmount(r.credit) || 0n;
         return nd % 100n !== 0n || nc % 100n !== 0n;
-      });
+      }) || (sabqaAmount % 100n !== 0n);
 
-      const dataRows = validRows.map((r, i) => {
+      const dataRows = [];
+
+      if (hasFilter && sabqaAmount !== 0n) {
+        const absSabqa = sabqaAmount < 0n ? -sabqaAmount : sabqaAmount;
+        const sabqaSide = sabqaAmount > 0n ? 'بنام' : 'جمع';
+        dataRows.push([
+          '—',
+          minDate,
+          'سابقہ بقایا (Brought Forward)',
+          sabqaAmount > 0n ? { number: minorToDecimalString(sabqaAmount) } : '',
+          sabqaAmount < 0n ? { number: minorToDecimalString(-sabqaAmount) } : '',
+          `${formatAmount(absSabqa, { withDecimals: hasDec })} ${sabqaSide}`
+        ]);
+      }
+
+      filteredRows.forEach((r, i) => {
         const d = parseAmount(r.debit);
         const c = parseAmount(r.credit);
         const dMinor = d !== null ? d : 0n;
@@ -1246,16 +1522,19 @@
         const balLabel = `${formatAmount(absBal, { withDecimals: hasDec })} ${bal > 0n ? 'بنام' : bal < 0n ? 'جمع' : 'برابر'}`;
         const debitCell = d !== null && d > 0n ? { number: minorToDecimalString(d) } : (d === 0n ? { number: '0.00' } : '');
         const creditCell = c !== null && c > 0n ? { number: minorToDecimalString(c) } : (c === 0n ? { number: '0.00' } : '');
-        return [i + 1, r.date, r.detail, debitCell, creditCell, balLabel];
+        dataRows.push([i + 1, r.date, r.detail, debitCell, creditCell, balLabel]);
       });
 
       const currencyName = khata.currency === 'aed' ? 'اماراتی درہم (AED)' : 'پاکستانی روپیہ (PKR)';
       const netBalAbs = bal < 0n ? -bal : bal;
+      const dateSuffix = hasFilter ? (minDate === maxDate ? minDate : `${minDate}_تا_${maxDate}`) : getToday();
+
       const rows = [
-        ['گاہک کھاتہ لیجر — Hisaab App'],
-        ['گاہک کا نام', khata.name, 'کھاتہ کوڈ', khata.code],
+        ['کسٹمرز کھاتے لیجر — Hisaab App'],
+        ['کسٹمر کا نام', khata.name, 'کھاتہ کوڈ', khata.code],
         ['موبائیل نمبر', khata.mobile || '—', 'پتہ / مقام', khata.address || '—'],
-        ['کرنسی', currencyName, 'تاریخ رپورٹ', getToday()],
+        ['کرنسی', currencyName, 'اسٹیٹمنٹ دورانیہ', getFilterPeriodText()],
+        ['تاریخ رپورٹ', getToday()],
         [],
         ['نمبر شمار', 'تاریخ', 'تفصیل', `بنام (${khata.currency.toUpperCase()})`, `جمع (${khata.currency.toUpperCase()})`, 'بقایا'],
         ...dataRows,
@@ -1263,7 +1542,242 @@
         ['', 'کل میزان', '', { number: minorToDecimalString(totD) }, { number: minorToDecimalString(totC) }, `${formatAmount(netBalAbs, { withDecimals: hasDec })} ${bal > 0n ? 'بنام' : bal < 0n ? 'جمع' : 'برابر'}`]
       ];
 
-      exportSheet(rows, `کھاتہ_${khata.code}_${khata.name}_${getToday()}.xlsx`);
+      exportSheet(rows, `کھاتہ_${khata.code}_${khata.name}_${dateSuffix}.xlsx`);
+    }
+
+    // Official Bank Statement Dossier for Customer Directory / Receivables / Payables Print
+    async function printDirectoryReport(options = {}) {
+      const list = getKhatas();
+      if (!list.length) {
+        alert('پرنٹ کرنے کے لیے کوئی کسٹمر کھاتہ موجود نہیں ہے۔');
+        return;
+      }
+
+      // Ensure latest render is in sync
+      renderDirectory();
+
+      // Populate Print Dossier
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const dateStr = formatDisplayDate(getToday());
+
+      let totReceivables = 0n;
+      let totPayables = 0n;
+      let hasAnyDec = false;
+
+      list.forEach(k => {
+        let running = 0n;
+        for (const r of k.rows) {
+          if (hasData(r)) {
+            const nd = parseAmount(r.debit) || 0n;
+            const nc = parseAmount(r.credit) || 0n;
+            if (nd % 100n !== 0n || nc % 100n !== 0n) hasAnyDec = true;
+            running += (nd - nc);
+          }
+        }
+        if (running > 0n) totReceivables += running;
+        else if (running < 0n) totPayables += (-running);
+      });
+
+      const netTotal = totReceivables - totPayables;
+      const absNet = netTotal < 0n ? -netTotal : netTotal;
+
+      let mainTitle = 'کسٹمرز کھاتے — جامع گوشوارہ بیلنس';
+      let typeTitle = 'جامع گوشوارہ کسٹمرز کھاتے (تمام کھاتہ جات)';
+      let subTitle = 'تمام کسٹمرز کے واجبات و وصولیوں کی تفصیلی بیلنس پوزیشن';
+      let fileType = 'تمام_کھاتے';
+
+      if (directoryFilter === 'receivables') {
+        mainTitle = 'کسٹمرز کھاتے — قابلِ وصول (Receivables) رپورٹ';
+        typeTitle = 'فہرست و گوشوارہ قابلِ وصول کسٹمرز کھاتے (Receivables — لینا ہے)';
+        subTitle = 'جن گاہکوں سے رقم وصول کرنی ہے (بنام بیلنس پوزیشن)';
+        fileType = 'قابل_وصول_Receivables';
+      } else if (directoryFilter === 'payables') {
+        mainTitle = 'کسٹمرز کھاتے — واجب الادا (Payables) رپورٹ';
+        typeTitle = 'فہرست و گوشوارہ واجب الادا کسٹمرز کھاتے (Payables — دینا ہے)';
+        subTitle = 'جن گاہکوں کو رقم ادا کرنی ہے (جمع بیلنس پوزیشن)';
+        fileType = 'واجب_الادا_Payables';
+      }
+
+      const printTypeEl = $('khata-dir-print-type');
+      const printMainTitleEl = $('khata-dir-print-main-title');
+      const printSubTitleEl = $('khata-dir-print-subtitle');
+      const printDateEl = $('khata-dir-print-date');
+      const printTimeEl = $('khata-dir-print-time');
+      const printCountEl = $('khata-dir-print-count');
+
+      const sumCountEl = $('khata-dir-print-sum-count');
+      const sumRecEl = $('khata-dir-print-sum-receivable');
+      const sumPayEl = $('khata-dir-print-sum-payable');
+      const sumBalEl = $('khata-dir-print-sum-balance');
+      const sumStatusEl = $('khata-dir-print-sum-status');
+
+      if (printTypeEl) printTypeEl.textContent = typeTitle;
+      if (printMainTitleEl) printMainTitleEl.textContent = mainTitle;
+      if (printSubTitleEl) printSubTitleEl.textContent = subTitle;
+      if (printDateEl) printDateEl.textContent = dateStr;
+      if (printTimeEl) printTimeEl.textContent = timeStr;
+
+      const rowsCount = $('khata-dir-rows')?.querySelectorAll('tr:not(.summary-empty-cell)')?.length || $('khata-dir-rows')?.children?.length || 0;
+      if (printCountEl) printCountEl.textContent = `${formatCount(rowsCount)} کھاتے`;
+
+      if (sumCountEl) sumCountEl.textContent = formatCount(rowsCount);
+      if (sumRecEl) sumRecEl.textContent = formatAmount(totReceivables, { withDecimals: hasAnyDec });
+      if (sumPayEl) sumPayEl.textContent = formatAmount(totPayables, { withDecimals: hasAnyDec });
+      if (sumBalEl) {
+        const netSide = netTotal > 0n ? 'بنام' : netTotal < 0n ? 'جمع' : 'برابر';
+        sumBalEl.textContent = `${formatAmount(absNet, { withDecimals: hasAnyDec })} ${netSide}`;
+      }
+      if (sumStatusEl) {
+        sumStatusEl.textContent = netTotal > 0n ? 'خالص لینا ہے (بنام)' : netTotal < 0n ? 'خالص دینا ہے (جمع)' : 'حساب برابر';
+      }
+
+      document.body.classList.add('khata-dir-printing');
+
+      await document.fonts?.ready;
+
+      const restoreTheme = window.prepareForPrintTheme
+        ? window.prepareForPrintTheme() : null;
+
+      const fileName = `کسٹمرز_رپورٹ_${fileType}_${getToday()}.pdf`;
+
+      if (window.electronAPI?.previewPDF) {
+        if (document.body.inert) {
+          restoreTheme?.();
+          document.body.classList.remove('khata-dir-printing');
+          return;
+        }
+        document.body.inert = true;
+        try {
+          const result = options?.savePDF && window.electronAPI?.savePDF
+            ? await window.electronAPI.savePDF(fileName, { landscape: false })
+            : await window.electronAPI.previewPDF({ landscape: false });
+          if (result?.status === 'error') {
+            alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');
+          }
+          return result;
+        } catch (_) {
+          alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');
+        } finally {
+          document.body.inert = false;
+          document.body.classList.remove('khata-dir-printing');
+          restoreTheme?.();
+        }
+      }
+
+      // Browser fallback (Web version): window.print()
+      try {
+        window.print();
+      } finally {
+        document.body.classList.remove('khata-dir-printing');
+        restoreTheme?.();
+      }
+    }
+
+    function exportDirectoryExcel() {
+      if (!exportSheet) return;
+      const list = getKhatas();
+      if (!list.length) {
+        alert('ایکسپورٹ کرنے کے لیے کوئی کسٹمر کھاتہ موجود نہیں ہے۔');
+        return;
+      }
+
+      let totReceivables = 0n;
+      let totPayables = 0n;
+
+      const evaluated = list.map(k => {
+        let running = 0n;
+        for (const r of k.rows) {
+          if (hasData(r)) {
+            const nd = parseAmount(r.debit) || 0n;
+            const nc = parseAmount(r.credit) || 0n;
+            running += (nd - nc);
+          }
+        }
+        if (running > 0n) totReceivables += running;
+        else if (running < 0n) totPayables += (-running);
+        return { khata: k, running };
+      });
+
+      let filtered = evaluated;
+      let reportType = 'جامع فہرست تمام کسٹمرز کھاتے';
+      let filterSlug = 'تمام_کھاتے';
+
+      if (directoryFilter === 'receivables') {
+        filtered = evaluated.filter(item => item.running > 0n);
+        reportType = 'فہرست قابلِ وصول کسٹمرز کھاتے (Receivables — لینا ہے)';
+        filterSlug = 'قابل_وصول_Receivables';
+      } else if (directoryFilter === 'payables') {
+        filtered = evaluated.filter(item => item.running < 0n);
+        reportType = 'فہرست واجب الادا کسٹمرز کھاتے (Payables — دینا ہے)';
+        filterSlug = 'واجب_الادا_Payables';
+      }
+
+      const query = $('khata-dir-search') ? digits($('khata-dir-search').value.toLowerCase().trim()) : '';
+      if (query) {
+        filtered = filtered.filter(item => {
+          const k = item.khata;
+          return (
+            k.code.toLowerCase().includes(query) ||
+            k.name.toLowerCase().includes(query) ||
+            (k.mobile && k.mobile.includes(query)) ||
+            (k.address && k.address.toLowerCase().includes(query))
+          );
+        });
+      }
+
+      let displayedNet = 0n;
+      const dataRows = filtered.map((item, idx) => {
+        const k = item.khata;
+        const running = item.running;
+        displayedNet += running;
+        const absVal = running < 0n ? -running : running;
+        const side = running > 0n ? 'بنام (لینا ہے — Receivable)' : running < 0n ? 'جمع (دینا ہے — Payable)' : 'برابر';
+
+        return [
+          idx + 1,
+          k.code,
+          k.name,
+          k.mobile || '—',
+          k.address || '—',
+          k.currency === 'aed' ? 'درہم (AED)' : 'روپیہ (PKR)',
+          { number: minorToDecimalString(absVal) },
+          side
+        ];
+      });
+
+      const absDisplayed = displayedNet < 0n ? -displayedNet : displayedNet;
+      const netSide = displayedNet > 0n ? 'بنام (خالص لینا ہے)' : displayedNet < 0n ? 'جمع (خالص دینا ہے)' : 'برابر';
+
+      const rows = [
+        ['کسٹمرز کھاتے رپورٹ — Hisaab App'],
+        ['رپورٹ کی نوعیت', reportType],
+        ['تاریخ رپورٹ', getToday(), 'وقت', new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })],
+        ['کل ریکارڈز', filtered.length],
+        [],
+        ['نمبر شمار', 'کھاتہ کوڈ', 'گاہک یا پارٹی کا نام', 'موبائیل نمبر', 'پتہ / مقام', 'کرنسی', 'بقایا بیلنس', 'نوعیت'],
+        ...dataRows,
+        [],
+        ['', '', 'کل میزان (Total)', '', '', '', { number: minorToDecimalString(absDisplayed) }, netSide]
+      ];
+
+      exportSheet(rows, `کسٹمرز_کھاتے_${filterSlug}_${getToday()}.xlsx`);
+    }
+
+    async function print(options = {}) {
+      const isDirectory = $('khata-directory-view') && !$('khata-directory-view').hidden;
+      if (isDirectory) {
+        return printDirectoryReport(options);
+      }
+      return printKhata(options);
+    }
+
+    function exportExcel() {
+      const isDirectory = $('khata-directory-view') && !$('khata-directory-view').hidden;
+      if (isDirectory) {
+        return exportDirectoryExcel();
+      }
+      return exportKhataExcel();
     }
 
     function syncNavButtons(khataView) {
@@ -1399,6 +1913,64 @@
     $('btn-khata-print')?.addEventListener('click', printKhata);
     $('btn-khata-excel')?.addEventListener('click', exportKhataExcel);
 
+    // Customer Directory Action Buttons
+    $('btn-khata-dir-print')?.addEventListener('click', () => printDirectoryReport());
+    $('btn-khata-dir-excel')?.addEventListener('click', () => exportDirectoryExcel());
+
+    // Receivables & Payables Category Filter Tabs
+    $('tab-khata-all')?.addEventListener('click', () => setDirectoryFilter('all'));
+    $('tab-khata-receivables')?.addEventListener('click', () => setDirectoryFilter('receivables'));
+    $('tab-khata-payables')?.addEventListener('click', () => setDirectoryFilter('payables'));
+
+    // Directory Overview Stat Card Clickable Filters
+    ['stat-card-khata-all', 'stat-card-khata-receivables', 'stat-card-khata-payables'].forEach(id => {
+      const el = $(id);
+      if (!el) return;
+      const targetFilter = id === 'stat-card-khata-receivables' ? 'receivables' : id === 'stat-card-khata-payables' ? 'payables' : 'all';
+      el.addEventListener('click', () => setDirectoryFilter(targetFilter));
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setDirectoryFilter(targetFilter);
+        }
+      });
+    });
+
+    // Customer Ledger Date Filter Events
+    const filterFromInput = $('khata-filter-from');
+    const filterToInput = $('khata-filter-to');
+    const filterTodayBtn = $('btn-khata-filter-today');
+    const filterClearBtn = $('btn-khata-filter-clear');
+
+    filterFromInput?.addEventListener('change', () => {
+      const fromVal = filterFromInput.value;
+      if (fromVal && (!filterToInput.value || filterToInput.value < fromVal)) {
+        filterToInput.value = fromVal;
+      }
+      setDateFilter(filterFromInput.value, filterToInput.value);
+    });
+
+    filterToInput?.addEventListener('change', () => {
+      const toVal = filterToInput.value;
+      if (toVal && (!filterFromInput.value || filterFromInput.value > toVal)) {
+        filterFromInput.value = toVal;
+      }
+      setDateFilter(filterFromInput.value, filterToInput.value);
+    });
+
+    filterTodayBtn?.addEventListener('click', () => {
+      const today = getToday();
+      if (filterFromInput) filterFromInput.value = today;
+      if (filterToInput) filterToInput.value = today;
+      setDateFilter(today, today);
+    });
+
+    filterClearBtn?.addEventListener('click', () => {
+      if (filterFromInput) filterFromInput.value = '';
+      if (filterToInput) filterToInput.value = '';
+      setDateFilter('', '');
+    });
+
     $('btn-khata-delete')?.addEventListener('click', () => {
       const khata = getActiveKhata();
       if (!khata) return;
@@ -1514,35 +2086,15 @@
       }
     });
 
-    // Directory Page Live Filter
-    $('khata-dir-search')?.addEventListener('input', e => {
-      const q = digits(e.target.value.toLowerCase().trim());
-      const rows = $('khata-dir-rows')?.children;
-      if (!rows) return;
-      let visible = 0;
-      for (const tr of rows) {
-        if (!q) {
-          tr.hidden = false;
-          visible++;
-        } else {
-          const text = tr.textContent.toLowerCase();
-          const match = text.includes(q);
-          tr.hidden = !match;
-          if (match) visible++;
-        }
-      }
-      const countEl = $('khata-dir-count');
-      if (countEl) {
-        countEl.textContent = q
-          ? `نتائج: ${formatCount(visible)} / ${formatCount(rows.length)}`
-          : `کل کھاتے: ${formatCount(rows.length)}`;
-      }
+    // Directory Page Live Filter & Search
+    $('khata-dir-search')?.addEventListener('input', () => {
+      renderDirectory();
     });
 
     $('khata-dir-search')?.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        const rows = Array.from($('khata-dir-rows')?.children || []).filter(tr => !tr.hidden && tr.onclick);
+        const rows = Array.from($('khata-dir-rows')?.children || []).filter(tr => tr.onclick);
         if (rows.length === 1) {
           rows[0].click();
         }
@@ -1563,8 +2115,18 @@
       },
       showDirectory: showDirectoryView,
       showLedger: showLedgerView,
-      print: printKhata,
-      exportExcel: exportKhataExcel
+      print,
+      printKhata,
+      printDirectory: printDirectoryReport,
+      exportExcel,
+      exportKhataExcel,
+      exportDirectoryExcel,
+      setDirectoryFilter,
+      getDirectoryFilter: () => directoryFilter,
+      setDateFilter,
+      getDateFilter: () => ({ from: dateFilterFrom, to: dateFilterTo }),
+      clearDateFilter: () => setDateFilter('', ''),
+      getFilterPeriodText
     };
   }
 

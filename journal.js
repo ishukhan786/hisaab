@@ -131,7 +131,24 @@
         input.addEventListener('blur',()=>{if(key!=='detail'&&input.value.trim()&&amount(input.value)!==null){input.value=format(amount(input.value));r[key]=input.value;}save(true);});
         input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();input.blur();}if(e.key==='Tab'&&!e.shiftKey&&key==='credit'){e.preventDefault();input.blur();const rows=data().rows.filter(x=>x.date===data().date),next=rows[rows.indexOf(r)+1]||ensureDraft();if(!nodes.has(next.id))addNode(next);nodes.get(next.id).querySelector('textarea').focus();}});
         td.append(input);
-        if(key==='detail'){td.className='journal-description';const remove=document.createElement('button');remove.className='journal-delete no-print';remove.type='button';remove.textContent='×';remove.setAttribute('aria-label','روزنامچہ انٹری حذف کریں');remove.onclick=()=>{if(hasData(r)){undo={row:structuredClone(r),index:data().rows.indexOf(r)};}data().rows=data().rows.filter(x=>x.id!==r.id);refresh();save(true);};td.append(remove);}
+        if(key==='detail'){
+          td.className='journal-description';
+          const remove=document.createElement('button');
+          remove.className='journal-delete no-print';
+          remove.type='button';
+          remove.textContent='×';
+          remove.setAttribute('aria-label','روزنامچہ انٹری حذف کریں');
+          remove.onclick=()=>{
+            if(hasData(r)){
+              if(typeof confirm==='function'&&!confirm('کیا آپ واقعی روزنامچہ کی یہ انٹری حذف کرنا چاہتے ہیں؟'))return;
+              undo={row:structuredClone(r),index:data().rows.indexOf(r)};
+            }
+            data().rows=data().rows.filter(x=>x.id!==r.id);
+            refresh();
+            save(true);
+          };
+          td.append(remove);
+        }
         tr.append(td);
       }
       const balance=document.createElement('td');balance.className='journal-balance';tr.append(balance);(container||$('journal-rows')).append(tr);
