@@ -2053,11 +2053,7 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
   }
 
   body.khata-view.khata-dir-printing .khata-dir-print-signatures {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: flex-end !important;
-    margin-top: 24px !important;
-    page-break-inside: avoid;
+    display: none !important;
   }
 
   body.khata-view.khata-dir-printing .khata-dir-header-card,
@@ -2623,14 +2619,9 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     color: #174233 !important;
   }
 
-  /* 5. Bank Signatures & Authorization Section */
+  /* 5. Bank Signatures & Authorization Section (Hidden) */
   .khata-print-signatures {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr 1.2fr !important;
-    gap: 24px !important;
-    margin-top: 24px !important;
-    padding-top: 6px !important;
-    page-break-inside: avoid;
+    display: none !important;
   }
 
   .khata-sig-block {
