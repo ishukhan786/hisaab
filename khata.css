@@ -863,17 +863,24 @@ body.khata-view .top-nav-end {
 }
 
 /* Table Footer / Totals */
+.khata-table tbody tr:last-child td {
+  border-bottom: 1.5px solid #bdd5c5 !important;
+}
+
 .khata-table tfoot tr.khata-totals-gap,
 .khata-table tfoot tr.khata-totals-gap > td {
   height: 0.3cm;
   min-height: 0.3cm;
   padding: 0;
-  border: 0;
-  border-top: 0;
-  border-bottom: 0;
-  border-left: 0;
-  border-right: 0;
-  border-style: hidden;
+  border: none;
+  border-top: 1.5px solid #bdd5c5 !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-left-style: hidden !important;
+  border-right-style: hidden !important;
+  border-inline-start-style: hidden !important;
+  border-inline-end-style: hidden !important;
   background: var(--khata-surface, #ffffff);
   font-size: 0;
   line-height: 0;
@@ -883,11 +890,18 @@ body.khata-view .top-nav-end {
 .khata-table tfoot tr.khata-totals-row {
   height: 40px;
   background: #ffffff;
-  border-top: 2px solid #237857;
-  border-bottom: 2px solid #237857;
-  border-left: none;
-  border-right: none;
+  border-top: 2px solid #237857 !important;
+  border-bottom: 2px solid #237857 !important;
+  border-left: none !important;
+  border-right: none !important;
   font-weight: 700;
+}
+
+.khata-table tfoot tr.khata-totals-row > th,
+.khata-table tfoot tr.khata-totals-row > td {
+  border-top: 2px solid #237857 !important;
+  border-bottom: 2px solid #237857 !important;
+  background: #ffffff;
 }
 
 .khata-table tfoot tr.khata-totals-row > th:first-child,
@@ -2601,6 +2615,10 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     background: #fbfdfc !important;
   }
 
+  .khata-table tbody tr:last-child td {
+    border-bottom: 1.5px solid #77887b !important;
+  }
+
   /* Table Footer (0.3cm gap and Total Summary) */
   .khata-table tfoot tr.khata-totals-gap,
   .khata-table tfoot tr.khata-totals-gap > td {
@@ -2608,11 +2626,14 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     min-height: 0.3cm !important;
     padding: 0 !important;
     border: none !important;
-    border-style: hidden !important;
+    border-top: 1.5px solid #77887b !important;
+    border-bottom: none !important;
     border-left: none !important;
     border-right: none !important;
     border-left-style: hidden !important;
     border-right-style: hidden !important;
+    border-inline-start-style: hidden !important;
+    border-inline-end-style: hidden !important;
     background: #ffffff !important;
     font-size: 0 !important;
     line-height: 0 !important;
@@ -2622,7 +2643,7 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     background: #ffffff !important;
     border: none !important;
     border-top: 2px solid #174233 !important;
-    border-bottom: 3px double #174233 !important;
+    border-bottom: 2px solid #174233 !important;
     border-left: none !important;
     border-right: none !important;
   }
@@ -2637,7 +2658,7 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     border-color: #77887b !important;
     background: #ffffff !important;
     border-top: 2px solid #174233 !important;
-    border-bottom: 3px double #174233 !important;
+    border-bottom: 2px solid #174233 !important;
   }
 
   .khata-table tfoot th {
