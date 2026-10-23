@@ -1080,12 +1080,12 @@
         statBox.classList.remove('is-jama', 'is-banam');
         if (netTotal > 0n) {
           statBox.classList.add('is-banam');
-          statStatus.textContent = 'خالص لینا ہے (بنام — Net Receivable)';
+          statStatus.textContent = 'خالص لینا ہے (بنام)';
         } else if (netTotal < 0n) {
           statBox.classList.add('is-jama');
-          statStatus.textContent = 'خالص دینا ہے (جمع — Net Payable)';
+          statStatus.textContent = 'خالص دینا ہے (جمع)';
         } else {
-          statStatus.textContent = 'حساب برابر ✓ (Balanced)';
+          statStatus.textContent = 'حساب برابر ✓';
         }
       }
 
@@ -1093,9 +1093,9 @@
       const filterDesc = $('khata-dir-filter-desc');
       if (filterDesc) {
         if (directoryFilter === 'receivables') {
-          filterDesc.textContent = `صرف قابلِ وصول (Receivables — لینا ہے) کھاتے دکھائے جا رہے ہیں (${formatCount(recCount)})`;
+          filterDesc.textContent = `صرف قابلِ وصول (لینا ہے) کھاتے دکھائے جا رہے ہیں (${formatCount(recCount)})`;
         } else if (directoryFilter === 'payables') {
-          filterDesc.textContent = `صرف واجب الادا (Payables — دینا ہے) کھاتے دکھائے جا رہے ہیں (${formatCount(payCount)})`;
+          filterDesc.textContent = `صرف واجب الادا (دینا ہے) کھاتے دکھائے جا رہے ہیں (${formatCount(payCount)})`;
         } else {
           filterDesc.textContent = `تمام کسٹمرز کھاتہ داروں کی فہرست دکھائی جا رہی ہے (${formatCount(list.length)})`;
         }
@@ -1202,10 +1202,10 @@
           title.textContent = 'تلاش کے مطابق کوئی کھاتہ نہیں ملا';
           sub.textContent = `"${query}" سے ملتا جلتا کوئی نام، کوڈ، موبائل یا پتہ موجود نہیں ہے۔`;
         } else if (directoryFilter === 'receivables') {
-          title.textContent = 'کوئی قابلِ وصول (Receivables) کھاتہ نہیں ملا';
+          title.textContent = 'کوئی قابلِ وصول کھاتہ نہیں ملا';
           sub.textContent = 'اس وقت تمام کسٹمرز کے واجبات صفر یا ادا شدہ ہیں۔';
         } else if (directoryFilter === 'payables') {
-          title.textContent = 'کوئی واجب الادا (Payables) کھاتہ نہیں ملا';
+          title.textContent = 'کوئی واجب الادا کھاتہ نہیں ملا';
           sub.textContent = 'اس وقت تمام کسٹمرز کی ادائیگیاں صفر یا مکمل ہیں۔';
         } else {
           title.textContent = 'کوئی ریکارڈ موجود نہیں ہے';
@@ -1289,6 +1289,29 @@
           fragment.append(tr);
         });
         tbody.append(fragment);
+
+        // Update Table Headers and Footer based on filter
+        const thBal = $('khata-dir-th-bal');
+        if (thBal) {
+          if (directoryFilter === 'receivables') {
+            thBal.textContent = 'قابلِ وصول رقم (لینا ہے)';
+          } else if (directoryFilter === 'payables') {
+            thBal.textContent = 'واجب الادا رقم (دینا ہے)';
+          } else {
+            thBal.textContent = 'بقایا بیلنس';
+          }
+        }
+
+        const tfootLabel = $('khata-dir-tfoot-label');
+        if (tfootLabel) {
+          if (directoryFilter === 'receivables') {
+            tfootLabel.textContent = 'کل قابلِ وصول میزان:';
+          } else if (directoryFilter === 'payables') {
+            tfootLabel.textContent = 'کل واجب الادا میزان:';
+          } else {
+            tfootLabel.textContent = 'کل میزان:';
+          }
+        }
 
         // Update Table Footer Total Balance
         const footBal = $('khata-dir-foot-bal');
@@ -1588,15 +1611,15 @@
       let fileType = 'تمام_کھاتے';
 
       if (directoryFilter === 'receivables') {
-        mainTitle = 'کسٹمرز کھاتے — قابلِ وصول (Receivables) رپورٹ';
-        typeTitle = 'فہرست و گوشوارہ قابلِ وصول کسٹمرز کھاتے (Receivables — لینا ہے)';
+        mainTitle = 'کسٹمرز کھاتے — قابلِ وصول رپورٹ';
+        typeTitle = '';
         subTitle = 'جن گاہکوں سے رقم وصول کرنی ہے (بنام بیلنس پوزیشن)';
-        fileType = 'قابل_وصول_Receivables';
+        fileType = 'قابل_وصول';
       } else if (directoryFilter === 'payables') {
-        mainTitle = 'کسٹمرز کھاتے — واجب الادا (Payables) رپورٹ';
-        typeTitle = 'فہرست و گوشوارہ واجب الادا کسٹمرز کھاتے (Payables — دینا ہے)';
+        mainTitle = 'کسٹمرز کھاتے — واجب الادا رپورٹ';
+        typeTitle = '';
         subTitle = 'جن گاہکوں کو رقم ادا کرنی ہے (جمع بیلنس پوزیشن)';
-        fileType = 'واجب_الادا_Payables';
+        fileType = 'واجب_الادا';
       }
 
       const printTypeEl = $('khata-dir-print-type');
@@ -1632,19 +1655,55 @@
         sumStatusEl.textContent = netTotal > 0n ? 'خالص لینا ہے (بنام)' : netTotal < 0n ? 'خالص دینا ہے (جمع)' : 'حساب برابر';
       }
 
+      // Filter Print Dossier Summary Strip & Top Right text
+      const cardRec = $('khata-dir-print-card-receivable');
+      const cardPay = $('khata-dir-print-card-payable');
+      const cardBal = $('khata-dir-print-card-balance');
+      const periodBlock = document.querySelector('#khata-dir-print-dossier .khata-print-period-block');
+
+      if (directoryFilter === 'receivables') {
+        if (cardRec) cardRec.style.display = '';
+        if (cardPay) cardPay.style.display = 'none';
+        if (cardBal) cardBal.style.display = 'none';
+        if (periodBlock) periodBlock.style.visibility = 'hidden';
+      } else if (directoryFilter === 'payables') {
+        if (cardRec) cardRec.style.display = 'none';
+        if (cardPay) cardPay.style.display = '';
+        if (cardBal) cardBal.style.display = 'none';
+        if (periodBlock) periodBlock.style.visibility = 'hidden';
+      } else {
+        if (cardRec) cardRec.style.display = '';
+        if (cardPay) cardPay.style.display = '';
+        if (cardBal) cardBal.style.display = '';
+        if (periodBlock) periodBlock.style.visibility = '';
+      }
+
       document.body.classList.add('khata-dir-printing');
+      if (directoryFilter === 'receivables') {
+        document.body.classList.add('print-filter-receivables');
+      } else if (directoryFilter === 'payables') {
+        document.body.classList.add('print-filter-payables');
+      }
 
       await document.fonts?.ready;
 
       const restoreTheme = window.prepareForPrintTheme
         ? window.prepareForPrintTheme() : null;
 
+      function cleanupPrint() {
+        document.body.classList.remove('khata-dir-printing', 'print-filter-receivables', 'print-filter-payables');
+        if (cardRec) cardRec.style.display = '';
+        if (cardPay) cardPay.style.display = '';
+        if (cardBal) cardBal.style.display = '';
+        if (periodBlock) periodBlock.style.visibility = '';
+        restoreTheme?.();
+      }
+
       const fileName = `کسٹمرز_رپورٹ_${fileType}_${getToday()}.pdf`;
 
       if (window.electronAPI?.previewPDF) {
         if (document.body.inert) {
-          restoreTheme?.();
-          document.body.classList.remove('khata-dir-printing');
+          cleanupPrint();
           return;
         }
         document.body.inert = true;
@@ -1660,8 +1719,7 @@
           alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');
         } finally {
           document.body.inert = false;
-          document.body.classList.remove('khata-dir-printing');
-          restoreTheme?.();
+          cleanupPrint();
         }
       }
 
@@ -1669,8 +1727,7 @@
       try {
         window.print();
       } finally {
-        document.body.classList.remove('khata-dir-printing');
-        restoreTheme?.();
+        cleanupPrint();
       }
     }
 
@@ -1705,12 +1762,12 @@
 
       if (directoryFilter === 'receivables') {
         filtered = evaluated.filter(item => item.running > 0n);
-        reportType = 'فہرست قابلِ وصول کسٹمرز کھاتے (Receivables — لینا ہے)';
-        filterSlug = 'قابل_وصول_Receivables';
+        reportType = 'فہرست قابلِ وصول کسٹمرز کھاتے (لینا ہے)';
+        filterSlug = 'قابل_وصول';
       } else if (directoryFilter === 'payables') {
         filtered = evaluated.filter(item => item.running < 0n);
-        reportType = 'فہرست واجب الادا کسٹمرز کھاتے (Payables — دینا ہے)';
-        filterSlug = 'واجب_الادا_Payables';
+        reportType = 'فہرست واجب الادا کسٹمرز کھاتے (دینا ہے)';
+        filterSlug = 'واجب_الادا';
       }
 
       const query = $('khata-dir-search') ? digits($('khata-dir-search').value.toLowerCase().trim()) : '';
@@ -1732,7 +1789,7 @@
         const running = item.running;
         displayedNet += running;
         const absVal = running < 0n ? -running : running;
-        const side = running > 0n ? 'بنام (لینا ہے — Receivable)' : running < 0n ? 'جمع (دینا ہے — Payable)' : 'برابر';
+        const side = running > 0n ? 'بنام (لینا ہے)' : running < 0n ? 'جمع (دینا ہے)' : 'برابر';
 
         return [
           idx + 1,

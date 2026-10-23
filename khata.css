@@ -1968,6 +1968,34 @@ body:not(.khata-view) dialog.khata-directory-modal {
     display: none !important;
   }
 
+  /* Customer Directory Receivables & Payables Specific Print Filters */
+  body.khata-view.khata-dir-printing.print-filter-receivables .khata-print-period-block,
+  body.khata-view.khata-dir-printing.print-filter-payables .khata-print-period-block {
+    visibility: hidden !important;
+  }
+
+  /* In Receivables report: hide Payables card and Net card */
+  body.khata-view.khata-dir-printing.print-filter-receivables .khata-print-sum-card.jama,
+  body.khata-view.khata-dir-printing.print-filter-receivables .khata-print-sum-card.balance {
+    display: none !important;
+  }
+  body.khata-view.khata-dir-printing.print-filter-receivables .khata-print-summary-strip {
+    grid-template-columns: 1fr 1.6fr !important;
+    max-width: 440px !important;
+    margin-inline: auto !important;
+  }
+
+  /* In Payables report: hide Receivables card and Net card */
+  body.khata-view.khata-dir-printing.print-filter-payables .khata-print-sum-card.banam,
+  body.khata-view.khata-dir-printing.print-filter-payables .khata-print-sum-card.balance {
+    display: none !important;
+  }
+  body.khata-view.khata-dir-printing.print-filter-payables .khata-print-summary-strip {
+    grid-template-columns: 1fr 1.6fr !important;
+    max-width: 440px !important;
+    margin-inline: auto !important;
+  }
+
   body.khata-view.khata-dir-printing .khata-dir-table-wrap {
     overflow: visible !important;
     max-height: none !important;

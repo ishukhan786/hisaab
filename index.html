@@ -293,16 +293,16 @@
             <span class="khata-stat-label">کل کھاتے دار</span>
             <span id="khata-dir-total-count" class="khata-stat-val eng-num">0</span>
           </div>
-          <div class="khata-stat-box banam" id="stat-card-khata-receivables" role="button" tabindex="0" title="صرف قابلِ وصول (Receivables) کھاتے دیکھیں">
-            <span class="khata-stat-label">کل قابلِ وصول (Receivables — لینا ہے)</span>
+          <div class="khata-stat-box banam" id="stat-card-khata-receivables" role="button" tabindex="0" title="صرف قابلِ وصول کھاتے دیکھیں">
+            <span class="khata-stat-label">کل قابلِ وصول (لینا ہے)</span>
             <span id="khata-dir-total-banam" class="khata-stat-val eng-num">0</span>
           </div>
-          <div class="khata-stat-box jama" id="stat-card-khata-payables" role="button" tabindex="0" title="صرف واجب الادا (Payables) کھاتے دیکھیں">
-            <span class="khata-stat-label">کل واجب الادا (Payables — دینا ہے)</span>
+          <div class="khata-stat-box jama" id="stat-card-khata-payables" role="button" tabindex="0" title="صرف واجب الادا کھاتے دیکھیں">
+            <span class="khata-stat-label">کل واجب الادا (دینا ہے)</span>
             <span id="khata-dir-total-jama" class="khata-stat-val eng-num">0</span>
           </div>
           <div id="khata-dir-stat-balance-box" class="khata-stat-box balance">
-            <span id="khata-dir-balance-status" class="khata-stat-label">خالص بقایا (Net Position)</span>
+            <span id="khata-dir-balance-status" class="khata-stat-label">خالص بقایا</span>
             <span id="khata-dir-net-balance" class="khata-stat-val eng-num">0</span>
           </div>
         </div>
@@ -316,12 +316,12 @@
             </button>
             <button type="button" id="tab-khata-receivables" class="khata-dir-tab is-receivable" role="tab" aria-selected="false">
               <span class="tab-dot dot-receivable" aria-hidden="true"></span>
-              <span class="tab-label">قابلِ وصول — Receivables (لینا ہے)</span>
+              <span class="tab-label">قابلِ وصول (لینا ہے)</span>
               <span id="badge-khata-receivables-count" class="tab-badge eng-num">0</span>
             </button>
             <button type="button" id="tab-khata-payables" class="khata-dir-tab is-payable" role="tab" aria-selected="false">
               <span class="tab-dot dot-payable" aria-hidden="true"></span>
-              <span class="tab-label">واجب الادا — Payables (دینا ہے)</span>
+              <span class="tab-label">واجب الادا (دینا ہے)</span>
               <span id="badge-khata-payables-count" class="tab-badge eng-num">0</span>
             </button>
           </div>
@@ -360,20 +360,20 @@
           </div>
 
           <div class="khata-print-summary-strip dir-summary-strip">
-            <div class="khata-print-sum-card count">
+            <div class="khata-print-sum-card count" id="khata-dir-print-card-count">
               <div class="sum-card-label">تعداد کھاتے دار</div>
               <div id="khata-dir-print-sum-count" class="sum-card-val eng-num">0</div>
             </div>
-            <div class="khata-print-sum-card banam">
-              <div class="sum-card-label">کل قابلِ وصول (Receivables)</div>
+            <div class="khata-print-sum-card banam" id="khata-dir-print-card-receivable">
+              <div class="sum-card-label">کل قابلِ وصول (لینا ہے)</div>
               <div id="khata-dir-print-sum-receivable" class="sum-card-val eng-num">0</div>
             </div>
-            <div class="khata-print-sum-card jama">
-              <div class="sum-card-label">کل واجب الادا (Payables)</div>
+            <div class="khata-print-sum-card jama" id="khata-dir-print-card-payable">
+              <div class="sum-card-label">کل واجب الادا (دینا ہے)</div>
               <div id="khata-dir-print-sum-payable" class="sum-card-val eng-num">0</div>
             </div>
-            <div class="khata-print-sum-card balance">
-              <div id="khata-dir-print-sum-status" class="sum-card-label">خالص بقایا (Net)</div>
+            <div class="khata-print-sum-card balance" id="khata-dir-print-card-balance">
+              <div id="khata-dir-print-sum-status" class="sum-card-label">خالص بقایا</div>
               <div id="khata-dir-print-sum-balance" class="sum-card-val eng-num">0</div>
             </div>
           </div>
@@ -398,14 +398,14 @@
                 <th scope="col" class="dir-th-name">گاہک یا پارٹی کا نام</th>
                 <th scope="col">موبائیل نمبر</th>
                 <th scope="col">کرنسی</th>
-                <th scope="col" class="dir-th-bal">بقایا بیلنس</th>
+                <th scope="col" class="dir-th-bal" id="khata-dir-th-bal">بقایا بیلنس</th>
                 <th scope="col" class="dir-th-action">کارروائی</th>
               </tr>
             </thead>
             <tbody id="khata-dir-rows"></tbody>
             <tfoot class="khata-dir-tfoot">
               <tr class="khata-dir-tfoot-row">
-                <td colspan="5" class="dir-tfoot-label">کل میزان (Total):</td>
+                <td colspan="5" class="dir-tfoot-label" id="khata-dir-tfoot-label">کل میزان:</td>
                 <td id="khata-dir-foot-bal" class="dir-tfoot-val eng-num">0</td>
                 <td class="no-print"></td>
               </tr>
