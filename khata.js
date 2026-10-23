@@ -1227,7 +1227,10 @@
         tbody.append(tr);
 
         const footBal = $('khata-dir-foot-bal');
-        if (footBal) footBal.textContent = '0 برابر';
+        if (footBal) {
+          footBal.className = 'dir-tfoot-val is-zero';
+          footBal.innerHTML = '<div class="dir-bal-split"><span class="dir-bal-amt eng-num">0</span><span class="dir-bal-tag">برابر</span></div>';
+        }
       } else {
         const fragment = document.createDocumentFragment();
         let displayedNet = 0n;
@@ -1267,11 +1270,21 @@
           tdCurr.textContent = k.currency === 'aed' ? 'درہم (AED)' : 'روپیہ (PKR)';
 
           const tdBal = document.createElement('td');
-          tdBal.className = 'eng-num dir-td-bal ' + (running > 0n ? 'is-banam' : running < 0n ? 'is-jama' : 'is-zero');
-          tdBal.style.fontWeight = '700';
-          tdBal.style.direction = 'ltr';
-          tdBal.textContent = `${formatAmount(absVal, { withDecimals: hasDec })} ${running > 0n ? 'بنام' : running < 0n ? 'جمع' : 'برابر'}`;
-          tdBal.style.color = running > 0n ? '#dc2626' : running < 0n ? '#059669' : '#174233';
+          tdBal.className = 'dir-td-bal ' + (running > 0n ? 'is-banam' : running < 0n ? 'is-jama' : 'is-zero');
+
+          const splitWrap = document.createElement('div');
+          splitWrap.className = 'dir-bal-split';
+
+          const amtSpan = document.createElement('span');
+          amtSpan.className = 'dir-bal-amt eng-num';
+          amtSpan.textContent = formatAmount(absVal, { withDecimals: hasDec });
+
+          const tagSpan = document.createElement('span');
+          tagSpan.className = 'dir-bal-tag';
+          tagSpan.textContent = running > 0n ? 'بنام' : running < 0n ? 'جمع' : 'برابر';
+
+          splitWrap.append(amtSpan, tagSpan);
+          tdBal.append(splitWrap);
 
           const tdAction = document.createElement('td');
           tdAction.style.textAlign = 'center';
@@ -1318,8 +1331,22 @@
         if (footBal) {
           const absDisplayed = displayedNet < 0n ? -displayedNet : displayedNet;
           const typeText = displayedNet > 0n ? 'بنام' : displayedNet < 0n ? 'جمع' : 'برابر';
-          footBal.textContent = `${formatAmount(absDisplayed, { withDecimals: hasAnyDec })} ${typeText}`;
-          footBal.style.color = displayedNet > 0n ? '#dc2626' : displayedNet < 0n ? '#059669' : '#174233';
+          footBal.className = 'dir-tfoot-val ' + (displayedNet > 0n ? 'is-banam' : displayedNet < 0n ? 'is-jama' : 'is-zero');
+          footBal.replaceChildren();
+
+          const footSplit = document.createElement('div');
+          footSplit.className = 'dir-bal-split';
+
+          const footAmt = document.createElement('span');
+          footAmt.className = 'dir-bal-amt eng-num';
+          footAmt.textContent = formatAmount(absDisplayed, { withDecimals: hasAnyDec });
+
+          const footTag = document.createElement('span');
+          footTag.className = 'dir-bal-tag';
+          footTag.textContent = typeText;
+
+          footSplit.append(footAmt, footTag);
+          footBal.append(footSplit);
         }
       }
     }

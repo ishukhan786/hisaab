@@ -1871,7 +1871,97 @@ body:not(.khata-view) dialog.khata-directory-modal {
 .dir-tfoot-val {
   font-size: 14px;
   font-weight: 800;
-  direction: ltr;
+  padding: 8px 10px !important;
+}
+
+.khata-dir-table td.dir-td-bal {
+  padding: 6px 10px !important;
+}
+
+.dir-bal-split {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  gap: 8px !important;
+  direction: rtl !important;
+  box-sizing: border-box !important;
+}
+
+.dir-bal-amt {
+  text-align: right !important;
+  font-family: var(--khata-font-num, Calibri, Arial, sans-serif) !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums !important;
+  direction: ltr !important;
+  unicode-bidi: isolate;
+  flex: 1 1 auto !important;
+}
+
+.dir-bal-tag {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+  font-weight: 800 !important;
+  font-size: 11.5px !important;
+  direction: rtl !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+}
+
+.dir-td-bal.is-banam .dir-bal-amt,
+.dir-tfoot-val.is-banam .dir-bal-amt { color: #dc2626 !important; }
+.dir-td-bal.is-banam .dir-bal-tag,
+.dir-tfoot-val.is-banam .dir-bal-tag {
+  color: #b91c1c !important;
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+}
+
+.dir-td-bal.is-jama .dir-bal-amt,
+.dir-tfoot-val.is-jama .dir-bal-amt { color: #059669 !important; }
+.dir-td-bal.is-jama .dir-bal-tag,
+.dir-tfoot-val.is-jama .dir-bal-tag {
+  color: #047857 !important;
+  background: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+.dir-td-bal.is-zero .dir-bal-amt,
+.dir-tfoot-val.is-zero .dir-bal-amt { color: #5c7566 !important; }
+.dir-td-bal.is-zero .dir-bal-tag,
+.dir-tfoot-val.is-zero .dir-bal-tag {
+  color: #5c7566 !important;
+  background: #f3f6f3 !important;
+  border: 1px solid #dce8df !important;
+}
+
+/* Dark Mode dir balance split */
+html[data-theme="dark"] .dir-td-bal.is-banam .dir-bal-amt,
+html[data-theme="dark"] .dir-tfoot-val.is-banam .dir-bal-amt { color: #fca5a5 !important; }
+html[data-theme="dark"] .dir-td-bal.is-banam .dir-bal-tag,
+html[data-theme="dark"] .dir-tfoot-val.is-banam .dir-bal-tag {
+  color: #fca5a5 !important;
+  background: #381b1e !important;
+  border-color: #7f323a !important;
+}
+
+html[data-theme="dark"] .dir-td-bal.is-jama .dir-bal-amt,
+html[data-theme="dark"] .dir-tfoot-val.is-jama .dir-bal-amt { color: #86efac !important; }
+html[data-theme="dark"] .dir-td-bal.is-jama .dir-bal-tag,
+html[data-theme="dark"] .dir-tfoot-val.is-jama .dir-bal-tag {
+  color: #86efac !important;
+  background: #123323 !important;
+  border-color: #296d49 !important;
+}
+
+html[data-theme="dark"] .dir-td-bal.is-zero .dir-bal-amt,
+html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-amt { color: #9cbdaf !important; }
+html[data-theme="dark"] .dir-td-bal.is-zero .dir-bal-tag,
+html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
+  color: #9cbdaf !important;
+  background: #15271e !important;
+  border-color: #284c39 !important;
 }
 
 /* Screen Only: Strictly hide directory print dossier and signatures */
@@ -2068,9 +2158,55 @@ body:not(.khata-view) dialog.khata-directory-modal {
   }
 
   body.khata-view.khata-dir-printing .dir-tfoot-val {
-    text-align: center !important;
+    padding: 6px 8px !important;
+  }
+
+  body.khata-view.khata-dir-printing .khata-dir-table td.dir-td-bal {
+    padding: 6px 8px !important;
+  }
+
+  body.khata-view.khata-dir-printing .dir-bal-split {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
+    direction: rtl !important;
+  }
+
+  body.khata-view.khata-dir-printing .dir-bal-amt {
+    text-align: right !important;
+    font-family: var(--khata-font-num, Arial, sans-serif) !important;
     font-weight: 800 !important;
-    font-family: var(--khata-font-num) !important;
+    font-size: 9.5pt !important;
+    direction: ltr !important;
+    flex: 1 1 auto !important;
+  }
+
+  body.khata-view.khata-dir-printing .dir-bal-tag {
+    text-align: left !important;
+    font-weight: 800 !important;
+    font-size: 8.5pt !important;
+    direction: rtl !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+  }
+
+  body.khata-view.khata-dir-printing .dir-td-bal.is-banam .dir-bal-amt,
+  body.khata-view.khata-dir-printing .dir-td-bal.is-banam .dir-bal-tag,
+  body.khata-view.khata-dir-printing .dir-tfoot-val.is-banam .dir-bal-amt,
+  body.khata-view.khata-dir-printing .dir-tfoot-val.is-banam .dir-bal-tag {
+    color: #b91c1c !important;
+  }
+
+  body.khata-view.khata-dir-printing .dir-td-bal.is-jama .dir-bal-amt,
+  body.khata-view.khata-dir-printing .dir-td-bal.is-jama .dir-bal-tag,
+  body.khata-view.khata-dir-printing .dir-tfoot-val.is-jama .dir-bal-amt,
+  body.khata-view.khata-dir-printing .dir-tfoot-val.is-jama .dir-bal-tag {
+    color: #15803d !important;
   }
 
   body.khata-view .khata-card {
