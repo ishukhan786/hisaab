@@ -126,6 +126,27 @@ const DB_REQUIRED_ROUTES = new Set(['/api/state', '/api/save', '/api/backup', '/
 app.use(async (req, res, next) => {
   const needsDb = DB_REQUIRED_ROUTES.has(req.path) || req.path.startsWith('/api/backup/');
   if (needsDb) {
+    // Validate request payloads BEFORE attempting database connection
+    if (req.method === 'POST') {
+      if (req.path === '/api/backup') {
+        let state;
+        try {
+          state = require('./database').validateState(req.body ? req.body.state : null);
+        } catch {
+          return res.status(400).json({ status: 'error', message: 'Invalid backup' });
+        }
+        if (!state) return res.status(400).json({ status: 'error', message: 'Missing state' });
+      } else if (req.path === '/api/save') {
+        let state;
+        try {
+          state = require('./database').validateState(req.body ? req.body.state : null);
+        } catch {
+          return res.status(400).json({ status: 'error', message: 'Invalid state' });
+        }
+        if (!state) return res.status(400).json({ status: 'error', message: 'Missing state data' });
+      }
+    }
+
     try {
       await connectDb();
       next();
