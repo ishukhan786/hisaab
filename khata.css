@@ -1491,6 +1491,20 @@ body:not(.khata-view) dialog.khata-directory-modal {
   font-size: 14px;
 }
 
+.khata-dir-table .khata-code-badge {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  color: var(--khata-emerald-800, #065f46) !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .khata-dir-table .khata-code-badge {
+  color: #86efac !important;
+}
+
 .khata-dir-table tbody tr {
   cursor: pointer;
   transition: background var(--khata-transition-fast, 0.12s ease);
