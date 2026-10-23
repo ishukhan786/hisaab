@@ -62,14 +62,22 @@ function trustedFrame(event) {
 }
 
 // P3: Whitelist helper to restrict file opening / showing to allowed directories
+const explicitlyAllowedPaths = new Set();
 function isPathAllowed(targetPath) {
   if (typeof targetPath !== 'string' || !targetPath) return false;
   const resolved = path.resolve(targetPath);
-  const allowedRoots = [
-    app.getPath('userData'),     // includes backups dir and hisaab.sqlite
-    app.getPath('documents'),
-    app.getPath('temp'),
-  ].map(p => path.resolve(p) + path.sep);
+  if (explicitlyAllowedPaths.has(resolved)) return true;
+  const getSafePath = name => {
+    try { return app.getPath(name); } catch (_) { return null; }
+  };
+  const roots = [
+    getSafePath('userData'),
+    getSafePath('documents'),
+    getSafePath('desktop'),
+    getSafePath('downloads'),
+    getSafePath('temp'),
+  ].filter(Boolean);
+  const allowedRoots = roots.map(p => path.resolve(p) + path.sep);
   return allowedRoots.some(root => resolved.startsWith(root) || (resolved + path.sep) === root);
 }
 
@@ -267,7 +275,7 @@ ipcMain.handle('copy-receipt-png', async (event, values) => {
 });
 
 // Trusted renderer frame only
-ipcMain.handle('preview-pdf', async (event) => {
+ipcMain.handle('preview-pdf', async (event, options = {}) => {
   trustedFrame(event);
   if (pdfBusy) return { status: 'busy' };
   pdfBusy = true;
@@ -275,8 +283,8 @@ ipcMain.handle('preview-pdf', async (event) => {
   try {
     const pdf = await event.sender.printToPDF({
       printBackground: true,
-      landscape: true,
-      pageSize: 'A4',
+      landscape: options?.landscape ?? true,
+      pageSize: options?.pageSize || 'A4',
       preferCSSPageSize: true,
       displayHeaderFooter: false
     });
@@ -313,7 +321,7 @@ ipcMain.handle('preview-pdf', async (event) => {
 });
 
 // Trusted renderer frame only
-ipcMain.handle('save-pdf', async (event, suggestedName) => {
+ipcMain.handle('save-pdf', async (event, suggestedName, options = {}) => {
   trustedFrame(event);
   if (pdfBusy) return { status: 'busy' };
   if (typeof suggestedName !== 'string') throw new Error('Invalid PDF name');
@@ -331,10 +339,11 @@ ipcMain.handle('save-pdf', async (event, suggestedName) => {
     });
     if (result.canceled || !result.filePath) return { status: 'cancelled' };
     const target = /\.pdf$/i.test(result.filePath) ? result.filePath : result.filePath + '.pdf';
+    explicitlyAllowedPaths.add(path.resolve(target));
     const pdf = await event.sender.printToPDF({
       printBackground: true,
-      landscape: true,
-      pageSize: 'A4',
+      landscape: options?.landscape ?? true,
+      pageSize: options?.pageSize || 'A4',
       preferCSSPageSize: true,
       displayHeaderFooter: false
     });

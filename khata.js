@@ -396,43 +396,41 @@
           if (tr) {
             const bCell = tr.querySelector('.td-baqaya');
             if (bCell) {
-              bCell.classList.remove('is-jama', 'is-banam');
-              bCell.replaceChildren();
               const absVal = running < 0n ? -running : running;
+              const formattedAbs = formatAmount(absVal, { withDecimals: hasDecimals });
+              const isBanam = running > 0n;
+              const isJama = running < 0n;
+              const tagText = isBanam ? 'بنام (لینا ہے)' : isJama ? 'جمع (دینا ہے)' : 'برابر ✓';
+              const sideText = isBanam ? 'بنام' : isJama ? 'جمع' : 'برابر';
 
-              // Screen Balance Elements
-              const numSpan = document.createElement('span');
-              numSpan.className = 'khata-screen-bal eng-num';
-              numSpan.textContent = formatAmount(absVal, { withDecimals: hasDecimals });
-              bCell.append(numSpan);
+              bCell.classList.toggle('is-banam', isBanam);
+              bCell.classList.toggle('is-jama', isJama);
 
-              const tag = document.createElement('span');
-              tag.className = 'bal-tag khata-screen-bal-tag';
-              if (running > 0n) {
-                bCell.classList.add('is-banam');
-                tag.textContent = 'بنام (لینا ہے)';
-              } else if (running < 0n) {
-                bCell.classList.add('is-jama');
-                tag.textContent = 'جمع (دینا ہے)';
-              } else {
-                tag.textContent = 'برابر ✓';
+              let numSpan = bCell.querySelector('.khata-screen-bal');
+              let tag = bCell.querySelector('.khata-screen-bal-tag');
+              let amtSpan = bCell.querySelector('.khata-bal-amount');
+              let sideSpan = bCell.querySelector('.khata-bal-side');
+
+              if (!numSpan || !tag || !amtSpan || !sideSpan) {
+                bCell.replaceChildren();
+                numSpan = document.createElement('span');
+                numSpan.className = 'khata-screen-bal eng-num';
+                tag = document.createElement('span');
+                tag.className = 'bal-tag khata-screen-bal-tag';
+                const printBal = document.createElement('span');
+                printBal.className = 'khata-print-val khata-print-bal';
+                amtSpan = document.createElement('span');
+                amtSpan.className = 'khata-bal-amount eng-num';
+                sideSpan = document.createElement('span');
+                sideSpan.className = 'khata-bal-side';
+                printBal.append(amtSpan, sideSpan);
+                bCell.append(numSpan, tag, printBal);
               }
-              bCell.append(tag);
 
-              // Clean Print Balance with right-aligned amount and left-aligned side label
-              const printBal = document.createElement('span');
-              printBal.className = 'khata-print-val khata-print-bal';
-
-              const amtSpan = document.createElement('span');
-              amtSpan.className = 'khata-bal-amount eng-num';
-              amtSpan.textContent = formatAmount(absVal, { withDecimals: hasDecimals });
-
-              const sideSpan = document.createElement('span');
-              sideSpan.className = 'khata-bal-side';
-              sideSpan.textContent = running > 0n ? 'بنام' : running < 0n ? 'جمع' : 'برابر';
-
-              printBal.append(amtSpan, sideSpan);
-              bCell.append(printBal);
+              if (numSpan.textContent !== formattedAbs) numSpan.textContent = formattedAbs;
+              if (tag.textContent !== tagText) tag.textContent = tagText;
+              if (amtSpan.textContent !== formattedAbs) amtSpan.textContent = formattedAbs;
+              if (sideSpan.textContent !== sideText) sideSpan.textContent = sideText;
             }
 
             // Sync static print text for other cells
@@ -539,8 +537,9 @@
      * Constructs and appends a single row element into the ledger table.
      * @param {object} r
      * @param {object} khata
+     * @param {HTMLElement|DocumentFragment} [container]
      */
-    function addRowNode(r, khata) {
+    function addRowNode(r, khata, container = null) {
       if (rowNodes.has(r.id)) return;
       const tr = document.createElement('tr');
       tr.dataset.id = r.id;
@@ -570,7 +569,7 @@
           inDate.value = r.date || getToday();
         }
         printDate.textContent = formatDisplayDate(inDate.value);
-        save();
+        save(true);
       };
       tdDate.append(inDate, printDate);
       tr.append(tdDate);
@@ -595,6 +594,9 @@
           ensureDraft(khata, { appendNode: true });
         }
         save();
+      };
+      inDetail.onblur = () => {
+        save(true);
       };
       inDetail.onkeydown = e => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -650,7 +652,7 @@
           printBanam.textContent = '';
           inBanam.classList.remove('is-invalid');
           recalculate(khata);
-          save();
+          save(true);
           return;
         }
         const val = parseAmount(raw);
@@ -663,14 +665,14 @@
           printJama.textContent = '';
           inBanam.classList.remove('is-invalid');
           recalculate(khata);
-          save();
+          save(true);
         } else {
           inBanam.classList.remove('is-invalid');
           inBanam.value = '';
           printBanam.textContent = '';
           r.debit = '';
           recalculate(khata);
-          save();
+          save(true);
         }
       };
       tdBanam.append(inBanam, printBanam);
@@ -712,7 +714,7 @@
           printJama.textContent = '';
           inJama.classList.remove('is-invalid');
           recalculate(khata);
-          save();
+          save(true);
           return;
         }
         const val = parseAmount(raw);
@@ -725,14 +727,14 @@
           printBanam.textContent = '';
           inJama.classList.remove('is-invalid');
           recalculate(khata);
-          save();
+          save(true);
         } else {
           inJama.classList.remove('is-invalid');
           inJama.value = '';
           printJama.textContent = '';
           r.credit = '';
           recalculate(khata);
-          save();
+          save(true);
         }
       };
       inJama.onkeydown = e => {
@@ -771,12 +773,12 @@
         tr.remove();
         ensureDraft(khata, { appendNode: true });
         recalculate(khata);
-        save();
+        save(true);
       };
       tdDelete.append(btnDel);
       tr.append(tdDelete);
 
-      $('khata-rows').append(tr);
+      (container || $('khata-rows')).append(tr);
     }
 
     function renderActiveKhata() {
@@ -818,9 +820,11 @@
       rowNodes.clear();
       $('khata-rows').replaceChildren();
 
+      const fragment = document.createDocumentFragment();
       for (const r of khata.rows) {
-        addRowNode(r, khata);
+        addRowNode(r, khata, fragment);
       }
+      $('khata-rows').append(fragment);
 
       recalculate(khata);
     }
@@ -907,6 +911,7 @@
         tr.append(td);
         tbody.append(tr);
       } else {
+        const fragment = document.createDocumentFragment();
         list.forEach((k, idx) => {
           let running = 0n;
           let hasDec = false;
@@ -971,8 +976,9 @@
           tdAction.append(btnOpen);
 
           tr.append(tdIdx, tdCode, tdName, tdMobile, tdCurr, tdBal, tdAction);
-          tbody.append(tr);
+          fragment.append(tr);
         });
+        tbody.append(fragment);
       }
 
       // Update Directory Overview Stats
@@ -1035,6 +1041,7 @@
       renderActiveKhata();
 
       setTimeout(() => {
+        if (document.activeElement && document.activeElement.id === 'khata-search') return;
         const khata = getActiveKhata();
         if (khata) {
           const draft = khata.rows.find(r => !hasData(r));
@@ -1191,8 +1198,8 @@
           const safeName = (khata.name || 'کھاتہ').replace(/[<>:"/\\|?*]/g, '_');
           const fileName = `لیجر_${safeName}_${getToday()}.pdf`;
           const result = options?.savePDF && window.electronAPI?.savePDF
-            ? await window.electronAPI.savePDF(fileName)
-            : await window.electronAPI.previewPDF();
+            ? await window.electronAPI.savePDF(fileName, { landscape: false })
+            : await window.electronAPI.previewPDF({ landscape: false });
           if (result?.status === 'error') {
             alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔');
           }
@@ -1270,14 +1277,17 @@
       if (btnReg) {
         btnReg.classList.toggle('active', isRegister);
         btnReg.setAttribute('aria-pressed', String(isRegister));
+        btnReg.setAttribute('aria-selected', String(isRegister));
       }
       if (btnJrn) {
         btnJrn.classList.toggle('active', isJournal);
         btnJrn.setAttribute('aria-pressed', String(isJournal));
+        btnJrn.setAttribute('aria-selected', String(isJournal));
       }
       if (btnKht) {
         btnKht.classList.toggle('active', khataView);
         btnKht.setAttribute('aria-pressed', String(khataView));
+        btnKht.setAttribute('aria-selected', String(khataView));
       }
     }
 
@@ -1315,18 +1325,9 @@
     }
 
     // Event Bindings
-    if ($('view-khata')) $('view-khata').onclick = () => setPage(true);
     $('view-khata')?.addEventListener('click', () => setPage(true));
-
-    document.addEventListener('click', e => {
-      if (e.target?.closest?.('#view-khata')) {
-        setPage(true);
-      } else if (e.target?.closest?.('#view-register')) {
-        setPage(false);
-      } else if (e.target?.closest?.('#view-journal')) {
-        setPage(false);
-      }
-    });
+    $('view-register')?.addEventListener('click', () => setPage(false));
+    $('view-journal')?.addEventListener('click', () => setPage(false));
 
     // Dialog Close and Dismiss Handlers
     const closeDialog = d => {

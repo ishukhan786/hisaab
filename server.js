@@ -122,7 +122,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Database auto-connection middleware for state and backup endpoints only
-const DB_REQUIRED_ROUTES = new Set(['/api/state', '/api/save', '/api/backups']);
+const DB_REQUIRED_ROUTES = new Set(['/api/state', '/api/save', '/api/backup', '/api/backups']);
 app.use(async (req, res, next) => {
   const needsDb = DB_REQUIRED_ROUTES.has(req.path) || req.path.startsWith('/api/backup/');
   if (needsDb) {

@@ -1545,10 +1545,14 @@ body:not(.khata-view) dialog.khata-directory-modal {
 /* ==========================================================================
    10. PRINT MODE (@media print) — OFFICIAL BANK STATEMENT & VOUCHER DOSSIER
    ========================================================================== */
+@page khata {
+  size: A4 portrait;
+  margin: 10mm 0.5cm 10mm 0.5cm;
+}
+
 @media print {
-  @page {
-    size: A4 portrait;
-    margin: 10mm 0.5cm 10mm 0.5cm;
+  body.khata-view #khata-page {
+    page: khata;
   }
 
   html,

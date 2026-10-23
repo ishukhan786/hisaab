@@ -9,7 +9,9 @@
   function zip(files){const local=[],central=[];let offset=0,centralSize=0;for(const [name,body]of Object.entries(files)){const path=encode(name),data=encode(body),sum=crc(data);const header=record(30,[[0,0x04034b50,4],[4,20,2],[12,33,2],[14,sum,4],[18,data.length,4],[22,data.length,4],[26,path.length,2]]);local.push(header,path,data);const directory=record(46,[[0,0x02014b50,4],[4,20,2],[6,20,2],[14,33,2],[16,sum,4],[20,data.length,4],[24,data.length,4],[28,path.length,2],[42,offset,4]]);central.push(directory,path);centralSize+=46+path.length;offset+=30+path.length+data.length;}const end=record(22,[[0,0x06054b50,4],[8,central.length/2,2],[10,central.length/2,2],[12,centralSize,4],[16,offset,4]]);return new Blob([...local,...central,end],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});}
   const declaration='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
   function create(rows){
-    const last=rows.length;const lastColumn=String.fromCharCode(64+rows[0].length);
+    const last=rows.length;
+    const maxCols=Math.max(1,...rows.map(r=>Array.isArray(r)?r.length:0));
+    const lastColumn=String.fromCharCode(64+Math.min(26,maxCols));
     const cells=rows.map((row,i)=>`<row r="${i+1}" ht="34" customHeight="1">${row.map((value,j)=>{const ref=String.fromCharCode(65+j)+(i+1);const numeric=typeof value==='number'||(value&&typeof value==='object'&&'number'in value);const raw=numeric?String(typeof value==='number'?value:value.number):String(value??'');const exact=numeric&&raw.replace(/[-.]/g,'').replace(/^0+/,'').length<=15;const style=i===0?1:i===last-1?(exact?4:3):(exact?2:0);return exact?`<c r="${ref}" s="${style}"><v>${xml(raw)}</v></c>`:`<c r="${ref}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${xml(raw)}</t></is></c>`;}).join('')}</row>`).join('');
     const ns='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
     return zip({

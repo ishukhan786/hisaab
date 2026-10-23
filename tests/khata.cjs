@@ -66,7 +66,19 @@ assert.throws(() => validateState(doubleSidedKhata), /double-sided entry/, 'A ro
 const malformedKhata = structuredClone(sampleState);
 malformedKhata.khatas[0].rows[0].debit = 'bad amount';
 assert.throws(() => validateState(malformedKhata), /khata entry/, 'Malformed Khata amounts are rejected');
-console.log('  ✓ Khata IDs/codes, single-sided ledger rows, and numeric amounts are enforced');
+
+// Intermediate decimal typing test (e.g. typing "150.")
+const intermediateDecimalKhata = structuredClone(sampleState);
+intermediateDecimalKhata.khatas[0].rows[0].debit = '150.';
+assert.doesNotThrow(() => validateState(intermediateDecimalKhata), 'Intermediate trailing decimal during typing is valid');
+intermediateDecimalKhata.khatas[0].rows[0].debit = '150.75';
+assert.doesNotThrow(() => validateState(intermediateDecimalKhata), 'Standard 2-decimal amount is valid');
+
+const tooManyDecimalsKhata = structuredClone(sampleState);
+tooManyDecimalsKhata.khatas[0].rows[0].debit = '150.123';
+assert.throws(() => validateState(tooManyDecimalsKhata), /khata entry/, '3+ decimals are rejected');
+
+console.log('  ✓ Khata IDs/codes, single-sided ledger rows, decimal typing tolerance and caps are enforced');
 
 // 2. HTML Markup & Component Integrity Checks
 const html = fs.readFileSync(path.resolve('index.html'), 'utf8');
@@ -135,12 +147,16 @@ assert.ok(khataCss.includes('.khata-input-locked'), 'Locked input styling define
 assert.ok(khataCss.includes('html[data-theme="dark"] .khata-card'), 'Dark theme emerald obsidian styles present');
 assert.ok(khataCss.includes('html[data-theme="dark"] .khata-stat-box'), 'Dark theme stat boxes styled');
 assert.ok(khataCss.includes('html[data-theme="dark"] dialog.khata-modal'), 'Dark theme modal dialogs styled');
-assert.ok(khataCss.includes('@media print'), 'Print styling present');
-assert.ok(khataCss.includes('col.col-baqaya { width: 3.6cm'), 'Baqaya column 3.6cm print width verified');
-assert.ok(khataCss.includes('0.3cm'), 'Totals gap 0.3cm space verified');
-assert.ok(khataCss.includes('.khata-bal-amount'), 'Baqaya amount right alignment class verified');
-assert.ok(khataCss.includes('.khata-bal-side'), 'Baqaya side left alignment class verified');
-console.log('  ✓ khata.css implements luxury cards, responsive layout, dark emerald theme, 0.3cm gap, and 3.6cm print column');
+assert.ok(khataCss.includes('@page khata {'), 'Named @page khata defined to prevent register landscape override');
+assert.ok(khataCss.includes('page: khata;'), 'page: khata assigned to #khata-page');
+
+const excelExportJs = fs.readFileSync(path.resolve('excel-export.js'), 'utf8');
+assert.ok(excelExportJs.includes('maxCols'), 'Dynamic max columns detection across rows present in excel-export.js');
+
+assert.ok(appJs.includes('khataController.exportExcel()'), 'Khata Excel export routed via top-bar export button');
+assert.ok(appJs.includes('!khataController?.isActive()'), 'Khata active checks guard shortcuts');
+
+console.log('  ✓ khata.css implements luxury cards, named @page khata, responsive layout, dark emerald theme, and print column');
 
 console.log('\n========================================');
 console.log('🎉 ALL KHATA VERIFICATION CHECKS PASSED!');

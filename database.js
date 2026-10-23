@@ -22,7 +22,7 @@ const validKhataAmount = value => {
   const normalized = value.replace(/[۰-۹]/g, c => String(c.charCodeAt(0) - 1776))
     .replace(/[٠-٩]/g, c => String(c.charCodeAt(0) - 1632))
     .replace(/[٬,\s]/g, '');
-  return normalized === '' || /^\+?\d{1,12}(?:\.\d{1,2})?$/.test(normalized);
+  return normalized === '' || /^\+?\d{1,12}(?:\.\d{0,2})?$/.test(normalized);
 };
 /* FIX-11: use HisaabError with INVALID_DATA code */
 function invalid(message) { throw new HisaabError('Invalid data: ' + message, 'INVALID_DATA'); }
@@ -126,7 +126,9 @@ class HisaabDatabase {
       if (version === 0 && this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all().length) throw new HisaabError('Unknown database schema', 'UNKNOWN_SCHEMA');
       this.db.pragma('foreign_keys = ON');
       this.db.pragma('journal_mode = WAL');
-      this.db.pragma('synchronous = FULL');
+      this.db.pragma('synchronous = NORMAL');
+      this.db.pragma('temp_store = MEMORY');
+      this.db.pragma('cache_size = -64000');
       if (version === 0) this.db.transaction(() => {
         this.db.exec(`
           CREATE TABLE app_state (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL, metadata TEXT CHECK(json_valid(metadata)));

@@ -99,7 +99,7 @@
       $('journal-undo').hidden=!undo;
       return valid&&count!==null;
     }
-    function addNode(r){
+    function addNode(r, container = null){
       const tr=document.createElement('tr');tr.dataset.journalId=r.id;nodes.set(r.id,tr);
       const sTd=document.createElement('td');sTd.className='journal-serial number';tr.append(sTd);
       for(const key of ['detail','debit','credit']){
@@ -128,16 +128,16 @@
           save();
         });
         input.addEventListener('compositionend',()=>input.dispatchEvent(new Event('input')));
-        input.addEventListener('blur',()=>{if(key!=='detail'&&input.value.trim()&&amount(input.value)!==null){input.value=format(amount(input.value));r[key]=input.value;save();}});
+        input.addEventListener('blur',()=>{if(key!=='detail'&&input.value.trim()&&amount(input.value)!==null){input.value=format(amount(input.value));r[key]=input.value;}save(true);});
         input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();input.blur();}if(e.key==='Tab'&&!e.shiftKey&&key==='credit'){e.preventDefault();input.blur();const rows=data().rows.filter(x=>x.date===data().date),next=rows[rows.indexOf(r)+1]||ensureDraft();if(!nodes.has(next.id))addNode(next);nodes.get(next.id).querySelector('textarea').focus();}});
         td.append(input);
-        if(key==='detail'){td.className='journal-description';const remove=document.createElement('button');remove.className='journal-delete no-print';remove.type='button';remove.textContent='×';remove.setAttribute('aria-label','روزنامچہ انٹری حذف کریں');remove.onclick=()=>{if(hasData(r)){undo={row:structuredClone(r),index:data().rows.indexOf(r)};}data().rows=data().rows.filter(x=>x.id!==r.id);refresh();save();};td.append(remove);}
+        if(key==='detail'){td.className='journal-description';const remove=document.createElement('button');remove.className='journal-delete no-print';remove.type='button';remove.textContent='×';remove.setAttribute('aria-label','روزنامچہ انٹری حذف کریں');remove.onclick=()=>{if(hasData(r)){undo={row:structuredClone(r),index:data().rows.indexOf(r)};}data().rows=data().rows.filter(x=>x.id!==r.id);refresh();save(true);};td.append(remove);}
         tr.append(td);
       }
-      const balance=document.createElement('td');balance.className='journal-balance';tr.append(balance);$('journal-rows').append(tr);
+      const balance=document.createElement('td');balance.className='journal-balance';tr.append(balance);(container||$('journal-rows')).append(tr);
     }
-    function refresh(){if(!data())getState().journal={date:today(),rows:[]};$('journal-date').value=data().date;$('journal-cash-count').value=data().cashCounts?.[data().date]||'';ensureDraft();nodes.clear();$('journal-rows').replaceChildren();data().rows.filter(r=>r.date===data().date).forEach(addNode);recalculate();}
-    function setPage(journal){document.body.classList.toggle('journal-view',journal);document.body.classList.remove('khata-view');$('register-page').hidden=journal;$('journal-page').hidden=!journal;const khataPage=$('khata-page');if(khataPage)khataPage.hidden=true;const viewKhata=$('view-khata');if(viewKhata){viewKhata.setAttribute('aria-pressed','false');viewKhata.classList.remove('active');}$('range-drawer').hidden=true;for(const [id,sel] of [['view-register',!journal],['view-journal',journal]]){$(id).setAttribute('aria-pressed',String(sel));$(id).classList.toggle('active',sel);}if(journal){if(data())data().date=today();refresh();}try{localStorage.setItem('hisaab-workspace',journal?'journal':'register');}catch{}}
+    function refresh(){if(!data())getState().journal={date:today(),rows:[]};$('journal-date').value=data().date;$('journal-cash-count').value=data().cashCounts?.[data().date]||'';ensureDraft();nodes.clear();$('journal-rows').replaceChildren();const fragment=document.createDocumentFragment();data().rows.filter(r=>r.date===data().date).forEach(r=>addNode(r,fragment));$('journal-rows').append(fragment);recalculate();}
+    function setPage(journal){document.body.classList.toggle('journal-view',journal);document.body.classList.remove('khata-view');$('register-page').hidden=journal;$('journal-page').hidden=!journal;const khataPage=$('khata-page');if(khataPage)khataPage.hidden=true;const viewKhata=$('view-khata');if(viewKhata){viewKhata.setAttribute('aria-pressed','false');viewKhata.setAttribute('aria-selected','false');viewKhata.classList.remove('active');}$('range-drawer').hidden=true;for(const [id,sel] of [['view-register',!journal],['view-journal',journal]]){$(id).setAttribute('aria-pressed',String(sel));$(id).setAttribute('aria-selected',String(sel));$(id).classList.toggle('active',sel);}if(journal){if(data())data().date=today();refresh();}try{localStorage.setItem('hisaab-workspace',journal?'journal':'register');}catch{}}
     $('journal-cash-count').addEventListener('input',e=>{
       const input=e.target;input.value=digits(input.value);
       data().cashCounts??={};
@@ -147,10 +147,11 @@
     });
     $('journal-cash-count').addEventListener('blur',e=>{
       const n=amount(e.target.value);
-      if(e.target.value.trim()&&n!==null){e.target.value=format(n);data().cashCounts[data().date]=e.target.value;recalculate();save();}
+      if(e.target.value.trim()&&n!==null){e.target.value=format(n);data().cashCounts[data().date]=e.target.value;recalculate();}
+      save(true);
     });
     $('view-register').onclick=()=>{setPage(false);if(window.setWorkingDate)window.setWorkingDate(today());};$('view-journal').onclick=()=>setPage(true);
-    $('journal-date').onchange=()=>{if(!validDate($('journal-date').value)){$('journal-date').value=data().date;return;}data().date=$('journal-date').value;refresh();save();};
+    $('journal-date').onchange=()=>{if(!validDate($('journal-date').value)){$('journal-date').value=data().date;return;}data().date=$('journal-date').value;refresh();save(true);};
     function shiftDate(days){
       const current=data().date,date=new Date(current+'T12:00:00Z');
       date.setUTCDate(date.getUTCDate()+days);
@@ -161,9 +162,9 @@
     $('journal-date-prev').onclick=()=>shiftDate(-1);
     $('journal-date-next').onclick=()=>shiftDate(1);
     function add(){const row=ensureDraft();if(!nodes.has(row.id))addNode(row);nodes.get(row.id).querySelector('textarea').focus();}
-    $('journal-undo').onclick=()=>{if(!undo)return;data().rows.splice(Math.min(undo.index,data().rows.length),0,undo.row);data().date=undo.row.date;undo=null;refresh();save();};
+    $('journal-undo').onclick=()=>{if(!undo)return;data().rows.splice(Math.min(undo.index,data().rows.length),0,undo.row);data().date=undo.row.date;undo=null;refresh();save(true);};
     function preparePrint(){recalculate();document.querySelectorAll('.journal-print-value').forEach(n=>n.remove());for(const tr of nodes.values())tr.querySelectorAll('input,textarea').forEach(input=>{const span=document.createElement('span');span.className='journal-print-value'+(input.dataset.journal==='detail'?'':' journal-money');span.textContent=input.value;input.after(span);});}
-    async function output(pdf=false){if(!selected().length&&!data().cashCounts?.[data().date]?.trim()){alert('اس تاریخ پر کوئی انٹری موجود نہیں ہے۔');return;}if(!recalculate()){alert('پرنٹ سے پہلے روزنامچے کی رقم درست کریں۔');return;}await document.fonts.ready;preparePrint();const restoreTheme=window.prepareForPrintTheme?window.prepareForPrintTheme():null;if(!window.electronAPI?.previewPDF){try{window.print();}finally{restoreTheme?.();}return;}if(document.body.inert){restoreTheme?.();return;}document.body.inert=true;try{const result=pdf?await window.electronAPI.savePDF('روزنامچہ_'+data().date+'.pdf'):await window.electronAPI.previewPDF();if(result.status==='error')alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');return result;}catch{alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');}finally{document.body.inert=false;restoreTheme?.();}}
+    async function output(pdf=false){if(!selected().length&&!data().cashCounts?.[data().date]?.trim()){alert('اس تاریخ پر کوئی انٹری موجود نہیں ہے۔');return;}if(!recalculate()){alert('پرنٹ سے پہلے روزنامچے کی رقم درست کریں۔');return;}await document.fonts.ready;preparePrint();const restoreTheme=window.prepareForPrintTheme?window.prepareForPrintTheme():null;if(!window.electronAPI?.previewPDF){try{window.print();}finally{restoreTheme?.();}return;}if(document.body.inert){restoreTheme?.();return;}document.body.inert=true;try{const result=pdf?await window.electronAPI.savePDF('روزنامچہ_'+data().date+'.pdf', { landscape: false }):await window.electronAPI.previewPDF({ landscape: false });if(result.status==='error')alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');return result;}catch{alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');}finally{document.body.inert=false;restoreTheme?.();}}
     function exportExcel(){
       if((!selected().length&&!data().cashCounts?.[data().date]?.trim())||!recalculate()){alert('ایکسپورٹ کے لیے درست انٹریاں منتخب کریں۔');return;}
       let bal=openingBalance().value,totD=0n,totC=0n;

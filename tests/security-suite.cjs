@@ -224,6 +224,27 @@ async function runSecurityTests() {
       const res = await fetchUrl('/assets/hisaab-logo.svg');
       assert.equal(res.status, 200);
     });
+
+    await testAsync('POST /api/backup validates input payload and rejects empty body with 400', async () => {
+      const res = await new Promise((resolve, reject) => {
+        const req = http.request({
+          hostname: '127.0.0.1',
+          port: 3987,
+          path: '/api/backup',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        }, r => {
+          let body = '';
+          r.on('data', c => body += c);
+          r.on('end', () => resolve({ status: r.statusCode, body }));
+        });
+        req.on('error', reject);
+        req.write(JSON.stringify({}));
+        req.end();
+      });
+      assert.equal(res.status, 400);
+      assert.ok(res.body.includes('Invalid backup'));
+    });
   } finally {
     server.close();
   }

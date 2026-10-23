@@ -235,9 +235,29 @@
       unsavedNative = !!nativeStorage; retrySave.hidden = false; $('save-state').textContent = 'محفوظ نہیں ہو سکا — دوبارہ کوشش کریں یا بیک اَپ لیں'; return false;
     }
   }
-  function save() { const ok = persist(); if (ok) { scheduleDiskSync(); scheduleAutoBackup(); } return ok; }
-  retrySave.onclick = () => { if (storageReadFailed) location.reload(); else save(); };
-  window.addEventListener('beforeunload', event => { if (unsavedNative || unsavedDisk) { event.preventDefault(); event.returnValue = ''; } });
+  let saveDebounceTimer = null;
+  function flushSave() {
+    if (saveDebounceTimer) {
+      clearTimeout(saveDebounceTimer);
+      saveDebounceTimer = null;
+    }
+    const ok = persist();
+    if (ok) { scheduleDiskSync(); scheduleAutoBackup(); }
+    return ok;
+  }
+  function save(immediate = false) {
+    if (immediate) return flushSave();
+    unsavedNative = !!nativeStorage;
+    clearTimeout(saveDebounceTimer);
+    saveDebounceTimer = setTimeout(() => {
+      saveDebounceTimer = null;
+      const ok = persist();
+      if (ok) { scheduleDiskSync(); scheduleAutoBackup(); }
+    }, 180);
+    return true;
+  }
+  retrySave.onclick = () => { if (storageReadFailed) location.reload(); else flushSave(); };
+  window.addEventListener('beforeunload', event => { flushSave(); if (unsavedNative || unsavedDisk) { event.preventDefault(); event.returnValue = ''; } });
   const branchMatch = r => !selectedBranch || (selectedBranch === '__unassigned' ? !r.branch : r.branch === selectedBranch.slice(2));
   function rangeValid() { return !$('date-from').value || !$('date-to').value || $('date-from').value <= $('date-to').value; }
   const rangeActive = () => !!($('date-from').value || $('date-to').value);
@@ -384,8 +404,10 @@
   $('duplicate-review').onclick = () => { const r = duplicatePending[0]; if (!r) return; const rows = selectedRows(); viewPage = Math.floor(rows.findIndex(x => x.id === r.id) / pageSize); applyFilter(); focusRow(r); };
   
   /* FIX-22: memoized duplicate lookup computation */
-  function duplicateLookup() {
-    const groups = new Map(), keys = new Map(), serials = new Map(selectedRows().map((r, i) => [r.id, activeStartSerial() + i]));
+  function duplicateLookup(precomputedFiltered, precomputedStart) {
+    const filteredRows = precomputedFiltered || selectedRows();
+    const startVal = precomputedStart !== undefined ? precomputedStart : activeStartSerial();
+    const groups = new Map(), keys = new Map(), serials = new Map(filteredRows.map((r, i) => [r.id, startVal + i]));
     for (const row of state.rows) {
       if (!populated(row)) continue;
       let record = duplicateRecords.get(row);
@@ -757,7 +779,7 @@
     const currPage = activePageNumber();
     if ($('page-no-input') && document.activeElement !== $('page-no-input')) $('page-no-input').value = currPage;
     if ($('page-no-val')) $('page-no-val').textContent = currPage;
-    const findDuplicate = duplicateLookup(), visibleNodes = [];
+    const findDuplicate = duplicateLookup(filtered, start), visibleNodes = [];
     reviewDuplicates(filtered, findDuplicate);
     state.rows.forEach(r => {
       let tr = rowNodes.get(r.id);
@@ -1029,7 +1051,7 @@
           acceptBalType();
         });
         balTypeInput.addEventListener('change', acceptBalType);
-        balTypeInput.addEventListener('blur', acceptBalType);
+        balTypeInput.addEventListener('blur', () => { acceptBalType(); save(true); });
         balTypeInput.addEventListener('keydown', e => {
           if ((e.key === 'Enter' || e.key === 'Tab') && !e.isComposing) { e.preventDefault(); acceptBalType(); moveEntryFocus(row, balTypeInput, e.shiftKey); }
         });
@@ -1067,6 +1089,7 @@
         if (isText) hidePlaceSuggestions();
         if (input._prevVal !== undefined && input._prevVal !== input.value) { recordHistory(row, field, input._prevVal, input.value); input._prevVal = input.value; }
         if (field === 'sender') autoFillFromSender(row, tr);
+        save(true);
       });
       function accept(event) {
         if (event?.isComposing) return;
@@ -1087,7 +1110,7 @@
         }
       }
       if (moneyFields.includes(field)) {
-        input.addEventListener('blur', () => { const value = wholeText(input.value); if (value !== input.value) { input.value = value; row[field] = value; save(); } });
+        input.addEventListener('blur', () => { const value = wholeText(input.value); if (value !== input.value) { input.value = value; row[field] = value; } save(true); });
       }
       /* FIX-20: paste handler supports multi-token paste */
       input.addEventListener('paste', e => {
@@ -1179,7 +1202,7 @@
     const tdReceipt = document.createElement('td'); tdReceipt.className = 'col-receipt no-print'; tr.append(tdReceipt);
     const td = document.createElement('td'); td.className = 'no-print'; const del = document.createElement('button'); del.type = 'button'; del.className = 'delete'; del.textContent = '×'; del.title = 'حذف کریں — Undo سے واپس لائیں'; del.setAttribute('aria-label', 'انٹری حذف کریں');
     if (rLocked) del.disabled = true;
-    del.onclick = e => { e.stopPropagation(); e.preventDefault(); const index = state.rows.findIndex(r => r.id === row.id); if (index < 0) return; if (populated(row)) { state.trash.push({ row: structuredClone(row), index }); state.trash = state.trash.slice(-20); } state.rows.splice(index, 1); render(); save(); }; td.append(del); tr.append(td);
+    del.onclick = e => { e.stopPropagation(); e.preventDefault(); const index = state.rows.findIndex(r => r.id === row.id); if (index < 0) return; if (populated(row)) { state.trash.push({ row: structuredClone(row), index }); state.trash = state.trash.slice(-20); } state.rows.splice(index, 1); render(); save(true); }; td.append(del); tr.append(td);
     return tr;
   }
   function appendRow(row) { $('rows').append(createRowElement(row)); }
@@ -1765,7 +1788,7 @@
     prepareSummaryOutput();
     const restoreTheme = prepareForPrintTheme();
     if (!window.electronAPI?.savePDF) {
-      try { window.print(); } finally { restoreTheme(); }
+      try { window.print(); } finally { restoreTheme(); clearSummaryOutput(); }
       return;
     }
     document.body.inert = true;
@@ -2022,7 +2045,7 @@
     $('receipt-paper').querySelectorAll('[data-receipt]').forEach(el => { values[el.dataset.receipt] = el.textContent; });
     document.body.inert = true; $('receipt-status').textContent = 'تصویر کاپی ہو رہی ہے…';
     try {
-      let result; if (window.electronAPI?.copyReceiptPNG) result = await window.electronAPI.copyReceiptPNG(values); else { const image = window.createReceiptPNG(values); await navigator.clipboard.write([new ClipboardItem({ 'image/png': image })]); result = { status: 'copied' }; }
+      let result; if (window.electronAPI?.copyReceiptPNG) result = await window.electronAPI.copyReceiptPNG(values); else { const image = await window.createReceiptPNG(values); await navigator.clipboard.write([new ClipboardItem({ 'image/png': image })]); result = { status: 'copied' }; }
       $('receipt-status').textContent = result.status === 'copied' ? '✓ رسید کی تصویر کاپی ہو گئی (WhatsApp میں Ctrl+V کریں)' : result.status === 'busy' ? 'پہلی تصویر مکمل ہونے دیں۔' : 'تصویر کاپی نہیں ہو سکی؛ دوبارہ کوشش کریں۔';
     } catch { $('receipt-status').textContent = 'تصویر کاپی نہیں ہو سکی؛ دوبارہ کوشش کریں۔'; }
     finally { document.body.inert = false; }
@@ -2041,12 +2064,12 @@
     prepareReceiptOutput();
     const restoreTheme = prepareForPrintTheme();
     if (!window.electronAPI?.previewPDF) {
-      try { window.print(); } finally { restoreTheme(); }
+      try { window.print(); } finally { restoreTheme(); clearReceiptOutput(); }
       return;
     }
     document.body.inert = true;
     try {
-      const result = savePDF ? await window.electronAPI.savePDF(selection.branch + '_' + selection.date + '_رسید-' + selection.serial + '.pdf') : await window.electronAPI.previewPDF();
+      const result = savePDF ? await window.electronAPI.savePDF(selection.branch + '_' + selection.date + '_رسید-' + selection.serial + '.pdf', { landscape: false }) : await window.electronAPI.previewPDF({ landscape: false });
       if (result?.status === 'saved' && result.filePath) recordSavedPdf(result.filePath);
       $('receipt-status').textContent = result.status === 'saved' ? '✓ رسید محفوظ ہو گئی' : result.status === 'busy' ? 'پہلی PDF مکمل ہونے دیں۔' : result.status === 'error' ? 'رسید نہیں بن سکی؛ دوبارہ کوشش کریں۔' : '';
     } catch { $('receipt-status').textContent = 'رسید نہیں بن سکی؛ دوبارہ کوشش کریں۔'; }
@@ -2138,7 +2161,7 @@
     const button = $('save-pdf'); button.hidden = false;
     button.onclick = async () => {
       if (journalController?.isActive()) { const res = await journalController.output(true); if (res?.status === 'saved' && res.filePath) recordSavedPdf(res.filePath); return; }
-      if (khataController?.isActive()) { khataController.print(); return; }
+      if (khataController?.isActive()) { const res = await khataController.print({ savePDF: true }); if (res?.status === 'saved' && res.filePath) recordSavedPdf(res.filePath); return; }
       const rows = selectedRows(); if (!canOutput(rows)) return;
       const party = selectedBranch.startsWith('b:') ? selectedBranch.slice(2) : selectedBranch === '__unassigned' ? 'بغیر پارٹی' : 'تمام پارٹیاں';
       const dates = rows.map(r => r.entryDate || state.date).filter(Boolean).sort();
@@ -2183,12 +2206,12 @@
       requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔', false);
       return;
     }
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !e.shiftKey && !journalController?.isActive()) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !e.shiftKey && !journalController?.isActive() && !khataController?.isActive()) {
       const active = document.activeElement;
       const inInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
       if (!inInput && state.trash.length) { e.preventDefault(); $('undo').click(); }
     }
-    if (e.altKey && !e.ctrlKey && !e.metaKey && !journalController?.isActive()) {
+    if (e.altKey && !e.ctrlKey && !e.metaKey && !journalController?.isActive() && !khataController?.isActive()) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         const tabs = Array.from($('party-tabs')?.querySelectorAll('.party-tab') || []);
         if (tabs.length > 1) {
@@ -2213,7 +2236,7 @@
     window.electronAPI.onMenuAction(action => {
       if (action === 'add-row') add();
       else if (action === 'print') $('print').click();
-      else if (action === 'export') { if (journalController?.isActive()) journalController.exportExcel(); else $('export-open').click(); }
+      else if (action === 'export') { if (journalController?.isActive()) journalController.exportExcel(); else if (khataController?.isActive()) khataController.exportExcel(); else $('export-open').click(); }
       else if (action === 'summary') { if (!journalController?.isActive()) openSummary(); }
       else if (action === 'branches') openBranches();
       else if (action === 'reset-filters') resetFilters();
@@ -2224,7 +2247,7 @@
   $('backup').onclick = backup; setInterval(updateBackup, 60000);
   $('restore').onclick = () => $('file').click();
   $('file').onchange = async e => { const file = e.target.files[0]; if (!file) return; try { if (file.size > 15000000) throw Error('Large file'); await restoreBackupData(JSON.parse(await file.text())); } catch { alert('یہ درست حساب بیک اَپ نہیں ہے۔ موجودہ ڈیٹا تبدیل نہیں ہوا۔'); } finally { e.target.value = ''; } };
-  $('export-open').onclick = () => { if (journalController?.isActive()) journalController.exportExcel(); else $('export-dialog').showModal(); }; $('close-export').onclick = () => $('export-dialog').close();
+  $('export-open').onclick = () => { if (journalController?.isActive()) journalController.exportExcel(); else if (khataController?.isActive()) khataController.exportExcel(); else $('export-dialog').showModal(); }; $('close-export').onclick = () => $('export-dialog').close();
 
   /* FIX-34: exportExcel corrects currency labels for all-AFN case */
   function exportExcel(all) {
