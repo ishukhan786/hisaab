@@ -873,6 +873,7 @@ body.khata-view .top-nav-end {
   border-bottom: 0;
   border-left: 0;
   border-right: 0;
+  border-style: hidden;
   background: var(--khata-surface, #ffffff);
   font-size: 0;
   line-height: 0;
@@ -881,9 +882,28 @@ body.khata-view .top-nav-end {
 
 .khata-table tfoot tr.khata-totals-row {
   height: 40px;
-  background: #e8f3ec;
+  background: #ffffff;
   border-top: 2px solid #237857;
+  border-bottom: 2px solid #237857;
+  border-left: none;
+  border-right: none;
   font-weight: 700;
+}
+
+.khata-table tfoot tr.khata-totals-row > th:first-child,
+.khata-table tfoot tr.khata-totals-row > td:first-child {
+  border-right: none !important;
+  border-right-style: hidden !important;
+  border-inline-start: none !important;
+  border-inline-start-style: hidden !important;
+}
+
+.khata-table tfoot tr.khata-totals-row > td#khata-foot-baqaya,
+.khata-table tfoot tr.khata-totals-row > td:last-child {
+  border-left: none !important;
+  border-left-style: hidden !important;
+  border-inline-end: none !important;
+  border-inline-end-style: hidden !important;
 }
 
 .khata-table tfoot th,
@@ -2455,7 +2475,7 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     max-width: 100% !important;
     table-layout: fixed !important;
     border-collapse: collapse !important;
-    border: 1px solid #77887b !important;
+    border: none !important;
     margin-bottom: 0 !important;
     font-size: 9.5pt !important;
   }
@@ -2587,21 +2607,24 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     height: 0.3cm !important;
     min-height: 0.3cm !important;
     padding: 0 !important;
-    border: 0 !important;
-    border-top: 0 !important;
-    border-bottom: 0 !important;
-    border-left: 0 !important;
-    border-right: 0 !important;
+    border: none !important;
+    border-style: hidden !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-left-style: hidden !important;
+    border-right-style: hidden !important;
     background: #ffffff !important;
     font-size: 0 !important;
     line-height: 0 !important;
   }
 
   .khata-table tfoot tr.khata-totals-row {
-    background: #edf4ef !important;
-    border: 1px solid #77887b !important;
+    background: #ffffff !important;
+    border: none !important;
     border-top: 2px solid #174233 !important;
     border-bottom: 3px double #174233 !important;
+    border-left: none !important;
+    border-right: none !important;
   }
 
   .khata-table tfoot th,
@@ -2612,11 +2635,31 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     color: #000000 !important;
     font-family: var(--khata-font-num) !important;
     border-color: #77887b !important;
+    background: #ffffff !important;
+    border-top: 2px solid #174233 !important;
+    border-bottom: 3px double #174233 !important;
   }
 
   .khata-table tfoot th {
     font-family: inherit !important;
     color: #174233 !important;
+  }
+
+  /* Remove left and right borders of total row */
+  .khata-table tfoot tr.khata-totals-row > th:first-child,
+  .khata-table tfoot tr.khata-totals-row > td:first-child {
+    border-right: none !important;
+    border-right-style: hidden !important;
+    border-inline-start: none !important;
+    border-inline-start-style: hidden !important;
+  }
+
+  .khata-table tfoot tr.khata-totals-row > td#khata-foot-baqaya,
+  .khata-table tfoot tr.khata-totals-row > td:last-child {
+    border-left: none !important;
+    border-left-style: hidden !important;
+    border-inline-end: none !important;
+    border-inline-end-style: hidden !important;
   }
 
   /* 5. Bank Signatures & Authorization Section (Hidden) */
@@ -2690,14 +2733,18 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
   }
 
   html[data-theme="dark"] .khata-table thead th,
-  html[data-theme="dark"] .khata-print-box-header,
+  html[data-theme="dark"] .khata-print-box-header {
+    background: #eef4f0 !important;
+    color: #174233 !important;
+  }
+
   html[data-theme="dark"] .khata-table tfoot tr,
   html[data-theme="dark"] .khata-table tfoot th,
   html[data-theme="dark"] .khata-table tfoot td,
   html[data-theme="dark"] #khata-foot-banam,
   html[data-theme="dark"] #khata-foot-jama,
   html[data-theme="dark"] #khata-foot-baqaya {
-    background: #eef4f0 !important;
+    background: #ffffff !important;
     color: #174233 !important;
   }
 
