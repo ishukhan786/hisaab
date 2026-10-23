@@ -2111,7 +2111,7 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
   body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-code   { width: 2.2cm !important; }
   body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-name   { width: auto !important; }
   body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-mobile { width: 3.5cm !important; }
-  body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-bal    { width: 4.5cm !important; }
+  body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-bal    { width: 3.6cm !important; }
   body.khata-view.khata-dir-printing .khata-dir-table col.dir-col-action { width: 0 !important; display: none !important; }
 
   body.khata-view.khata-dir-printing .khata-dir-table th,
