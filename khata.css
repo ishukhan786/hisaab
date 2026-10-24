@@ -210,27 +210,28 @@ body.khata-view .top-nav-end {
   height: 40px;
   padding: 0 18px;
   border-radius: var(--khata-radius-md, 12px);
-  background: linear-gradient(135deg, var(--khata-emerald-500, #10b981) 0%, var(--khata-emerald-600, #059669) 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
   color: #ffffff;
-  border: 1px solid var(--khata-emerald-700, #047857);
+  border: 1px solid #047857;
   font-size: 13px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4), 0 1px 3px rgba(5, 150, 105, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.42);
   transition: transform var(--khata-transition-fast, 0.14s ease), box-shadow var(--khata-transition-fast, 0.14s ease), background var(--khata-transition-fast, 0.14s ease);
   white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(4, 78, 56, 0.35);
 }
 
 .btn-khata-new:hover {
-  background: linear-gradient(135deg, var(--khata-emerald-600, #059669) 0%, var(--khata-emerald-700, #047857) 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+  background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.55);
   will-change: transform;
 }
 
 .btn-khata-new:active {
-  transform: translateY(0);
+  transform: translateY(1px) scale(0.98);
 }
 
 .btn-khata-list {
@@ -242,26 +243,28 @@ body.khata-view .top-nav-end {
   height: 40px;
   padding: 0 14px;
   border-radius: var(--khata-radius-md, 12px);
-  background: var(--khata-surface, #ffffff);
-  color: #1d523f;
-  border: 1px solid var(--khata-border, #c8dcd0);
+  background: linear-gradient(180deg, #ffffff 0%, #f1f6f3 100%);
+  color: #1a4233;
+  border: 1px solid #b7d5c4;
   font-size: 12.5px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: var(--khata-shadow-xs, 0 1px 2px rgba(18, 63, 46, 0.05));
-  transition: transform var(--khata-transition-fast, 0.14s ease), background var(--khata-transition-fast, 0.14s ease), border-color var(--khata-transition-fast, 0.14s ease);
+  box-shadow: 0 2px 5px rgba(16, 56, 41, 0.08), inset 0 1px 0 #ffffff;
+  transition: transform var(--khata-transition-fast, 0.14s ease), background var(--khata-transition-fast, 0.14s ease), border-color var(--khata-transition-fast, 0.14s ease), box-shadow var(--khata-transition-fast, 0.14s ease);
   white-space: nowrap;
 }
 
 .btn-khata-list:hover {
-  background: var(--khata-surface-subtle, #edf5f0);
-  border-color: var(--khata-emerald-500, #10b981);
-  transform: translateY(-1px);
+  background: linear-gradient(180deg, #ffffff 0%, #e3f2e9 100%);
+  border-color: #059669;
+  color: #047857;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px -2px rgba(5, 150, 105, 0.22), inset 0 1px 0 #ffffff;
 }
 
 .btn-khata-list:active {
-  transform: translateY(0);
+  transform: translateY(1px) scale(0.98);
 }
 
 /* ==========================================================================
@@ -1644,31 +1647,33 @@ html[data-theme="dark"] .khata-dir-table .khata-code-badge {
 }
 
 #btn-khata-dir-print {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 55%, #1d4ed8 100%);
   color: #ffffff !important;
   border: 1px solid #1e40af;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   font-weight: 700;
+  text-shadow: 0 1px 2px rgba(30, 64, 175, 0.4);
 }
 
 #btn-khata-dir-print:hover {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 55%, #2563eb 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 #btn-khata-dir-excel {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #15803d 0%, #166534 55%, #14532d 100%);
   color: #ffffff !important;
-  border: 1px solid #065f46;
-  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+  border: 1px solid #14532d;
+  box-shadow: 0 4px 14px rgba(21, 128, 61, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   font-weight: 700;
+  text-shadow: 0 1px 2px rgba(20, 83, 45, 0.4);
 }
 
 #btn-khata-dir-excel:hover {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 55%, #15803d 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 .khata-dir-header-start {

@@ -2568,26 +2568,9 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   .app-shell {--surface:#fff;--surface-soft:#f5f7f8;--surface-line:#d9e2e5;--surface-ink:#243c38;--surface-active:#176b55}
   html[data-theme="dark"] .app-shell {--surface:#16251f;--surface-soft:#1d3028;--surface-line:#395347;--surface-ink:#e0eee6;--surface-active:#257e61}
   body.app-shell {background:var(--surface-soft)}
-  .app-shell .top-nav {background:var(--surface);border-bottom-color:var(--surface-line);box-shadow:0 2px 8px #102a2110}
-  .app-shell :is(button,summary.btn-nav):where(:not(.place-suggest-item):not(#toggle-pwd-btn)) {
-    background:var(--surface)!important;color:var(--surface-ink)!important;border-color:var(--surface-line)!important;
-    border-radius:8px;box-shadow:none!important;transition:background .15s,border-color .15s;
-  }
-  .app-shell :is(button,summary.btn-nav):hover:not(:disabled) {
-    background:var(--surface-soft)!important;border-color:var(--surface-active)!important;
-    transform:none!important;translate:none!important;scale:1!important;
-  }
-  .app-shell :is(button,summary.btn-nav):active:not(:disabled) {transform:none!important;translate:none!important;scale:1!important}
-  .app-shell button:hover .ui-icon {transform:none}
-  .app-shell :is(#add,#journal-add,.workspace-nav button.active,.summary-tab.active,.party-tab.active,#branch-form button[type="submit"],.pin-form button[type="submit"],#export-filtered) {
-    background:var(--surface-active)!important;color:#fff!important;border-color:var(--surface-active)!important;
-  }
-  .app-shell :is(.delete,.journal-delete,.delete-party-btn,#logout-btn,#pin-remove-btn) {color:#b42332!important}
-  html[data-theme="dark"] .app-shell :is(.delete,.journal-delete,.delete-party-btn,#logout-btn,#pin-remove-btn) {color:#ffabb2!important}
-  .app-shell :is(button,summary.btn-nav):focus-visible {outline:3px solid var(--surface-active);outline-offset:3px}
-  .app-shell :is(.workspace-nav,.party-tabs-bar) {background:var(--surface-soft);border-color:var(--surface-line);box-shadow:none}
-  .app-shell .party-tabs-bar {border-radius:10px}
-  .app-shell .party-tab.active {box-shadow:inset 0 -3px 0 #ffffff55!important}
+  .app-shell .top-nav {background:var(--surface);border-bottom-color:var(--surface-line);box-shadow:0 2px 8px #102a  .app-shell :is(button,summary.btn-nav):focus-visible {outline:3px solid var(--surface-active);outline-offset:3px}
+  .app-shell :is(.workspace-nav,.party-tabs-bar) {background:var(--surface-soft);border-color:var(--surface-line)}
+  .app-shell .party-tabs-bar {border-radius:12px}
   .app-shell :is(.paper,.journal-card) {border-color:var(--surface-line);border-radius:12px;box-shadow:0 3px 14px #102a2108}
   .app-shell .paper:hover {box-shadow:0 3px 14px #102a2108}
   .app-shell :is(.paper-head,.journal-heading) {background:var(--surface);border-bottom-color:var(--surface-line)}
@@ -2603,8 +2586,7 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
 }
 @media screen {
   html[data-theme="dark"] .app-shell :is(.top-nav,.top-date-field,.top-search-wrap,.top-serial-field) {background:var(--surface)!important;color:var(--surface-ink);border-color:var(--surface-line)}
-  html[data-theme="dark"] .app-shell :is(.party-tabs-bar,.workspace-nav) {background:var(--surface-soft)!important;border-color:var(--surface-line)}
-  html[data-theme="dark"] .app-shell :is(button,summary.btn-nav):where(:not(.place-suggest-item):not(#toggle-pwd-btn)) {box-shadow:none!important}
+  html[data-theme="dark"] .app-shell :is(.party-tabs-bar,.workspace-nav) {background:var(--surface-soft)!important;border-color:var(--surface-line)}rtant}
   html[data-theme="dark"] .app-shell #rows tr.draft-row>td {background:var(--surface-soft)!important}
 }
 
@@ -2696,35 +2678,279 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   .app-shell .paper-head .date-block {display:flex!important;flex-direction:row!important;align-items:center;gap:10px}
 }
 
-/* Action colors and tactile feedback, confined to interactive screen controls. */
+/* ==========================================================================
+   JEWEL TONES & STUNNING BUTTON ENHANCEMENT SYSTEM
+   Rich 3D gradients, luminous glows, crisp top-light highlights & tactile feel
+   ========================================================================== */
 @media screen {
-  .app-shell #theme-toggle {--action:#925a16;--action-tint:#fff1d4;--action-ink:#78450b}
-  .app-shell .output-menu>summary {--action:#2563b4;--action-tint:#e6efff;--action-ink:#194b91}
-  html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item) {
-    background:linear-gradient(160deg,var(--surface),var(--action-tint))!important;
-    color:var(--action-ink)!important;border-color:color-mix(in srgb,var(--action) 38%,var(--surface-line))!important;
-    box-shadow:0 2px 5px #163c2b0a,inset 0 1px 0 #ffffff70!important;
-    transition:background .18s,border-color .18s,box-shadow .18s,translate .18s;
+  /* Base button enamel */
+  html body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item) {
+    position: relative;
+    border-radius: 12px;
+    font-weight: 600;
+    line-height: 2.2;
+    background: linear-gradient(180deg, #ffffff 0%, #f1f6f3 100%) !important;
+    color: #1a4233 !important;
+    border: 1px solid #b7d5c4 !important;
+    box-shadow: 0 2px 5px rgba(16, 56, 41, 0.08), inset 0 1px 0 #ffffff !important;
+    transition: background 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+                translate 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+                scale 0.12s cubic-bezier(0.22, 1, 0.36, 1),
+                color 0.15s ease !important;
+    -webkit-tap-highlight-color: transparent;
   }
-  html[data-theme="dark"] body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item) {
-    background:linear-gradient(150deg,color-mix(in srgb,var(--action) 20%,#16251f),color-mix(in srgb,var(--action) 10%,#101c17))!important;
-    color:color-mix(in srgb,var(--action-tint) 90%,white)!important;
-    border-color:color-mix(in srgb,var(--action) 65%,#395347)!important;
-    box-shadow:0 3px 8px #0003,inset 0 1px 0 #ffffff0c!important;
+
+  html body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item):hover:not(:disabled) {
+    background: linear-gradient(180deg, #ffffff 0%, #e3f2e9 100%) !important;
+    border-color: #059669 !important;
+    color: #047857 !important;
+    box-shadow: 0 6px 18px -2px rgba(5, 150, 105, 0.22), 0 2px 6px -1px rgba(5, 150, 105, 0.12), inset 0 1px 0 #ffffff !important;
+    translate: 0 -2px !important;
   }
-  html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item):hover:not(:disabled) {
-    box-shadow:0 5px 14px color-mix(in srgb,var(--action) 25%,transparent),inset 0 1px 0 #ffffff25!important;
-    border-color:var(--action)!important;translate:0 -1px!important;
+
+  html body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item):active:not(:disabled) {
+    translate: 0 1px !important;
+    scale: 0.975 !important;
+    box-shadow: 0 1px 2px rgba(16, 56, 41, 0.15), inset 0 1px 2px rgba(16, 56, 41, 0.12) !important;
   }
-  html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):active:not(:disabled) {translate:0 1px!important;box-shadow:inset 0 2px 5px #0002!important}
-  html body.app-shell :is(#add,#journal-add,#add-party-tab,.workspace-nav button.active,.party-tab.active,.summary-tab.active):not(#toggle-pwd-btn) {
-    background:linear-gradient(135deg,var(--action),color-mix(in srgb,var(--action) 78%,#07261d))!important;color:white!important;
-    border-color:var(--action)!important;box-shadow:0 3px 10px color-mix(in srgb,var(--action) 22%,transparent),inset 0 1px 0 #ffffff30!important;
+
+  /* 1. EMERALD JEWEL: Primary Actions (Add, Create, Submit, Confirm) */
+  html body.app-shell :is(#add, #journal-add, #add-party-tab, .btn-add-primary, .primary, #duplicate-keep, #receipt-copy, .btn-khata-new, .btn-khata-submit, #branch-form button[type="submit"], .pin-form button[type="submit"]):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #047857 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4), 0 1px 3px rgba(5, 150, 105, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+    text-shadow: 0 1px 2px rgba(4, 78, 56, 0.35);
   }
-  html body.app-shell button:disabled {opacity:.45;translate:none!important;box-shadow:none!important}
+  html body.app-shell :is(#add, #journal-add, #add-party-tab, .btn-add-primary, .primary, #duplicate-keep, #receipt-copy, .btn-khata-new, .btn-khata-submit, #branch-form button[type="submit"], .pin-form button[type="submit"]):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%) !important;
+    border-color: #047857 !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 24px rgba(5, 150, 105, 0.52), 0 2px 6px rgba(5, 150, 105, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 2. SAPPHIRE BLUE JEWEL: Print & Print-Preview */
+  html body.app-shell :is(#print, #receipt-preview):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 55%, #1d4ed8 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #1e40af !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38), 0 1px 3px rgba(37, 99, 235, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    text-shadow: 0 1px 2px rgba(30, 64, 175, 0.4);
+  }
+  html body.app-shell :is(#print, #receipt-preview):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 55%, #2563eb 100%) !important;
+    border-color: #1d4ed8 !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.52), 0 2px 6px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 3. SPREADSHEET FOREST EMERALD: Excel Export */
+  html body.app-shell :is(#export-open, #export-filtered, #export-all):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #15803d 0%, #166534 55%, #14532d 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #14532d !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(21, 128, 61, 0.38), 0 1px 3px rgba(21, 128, 61, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    text-shadow: 0 1px 2px rgba(20, 83, 45, 0.4);
+  }
+  html body.app-shell :is(#export-open, #export-filtered, #export-all):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 55%, #15803d 100%) !important;
+    border-color: #14532d !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 24px rgba(22, 163, 74, 0.52), 0 2px 6px rgba(22, 163, 74, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 4. ROYAL AMETHYST PURPLE JEWEL: Summary & Date Overview */
+  html body.app-shell :is(#summary-open, #summary-tab-date, #duplicate-review):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 55%, #6d28d9 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #5b21b6 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.38), 0 1px 3px rgba(124, 58, 237, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    text-shadow: 0 1px 2px rgba(91, 33, 182, 0.4);
+  }
+  html body.app-shell :is(#summary-open, #summary-tab-date, #duplicate-review):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 55%, #7c3aed 100%) !important;
+    border-color: #5b21b6 !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.52), 0 2px 6px rgba(124, 58, 237, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 5. TWILIGHT SLATE & GOLD: Theme Toggle */
+  html body.app-shell :is(#theme-toggle, .btn-theme-toggle):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    color: #facc15 !important;
+    border: 1px solid #334155 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+  }
+  html body.app-shell :is(#theme-toggle, .btn-theme-toggle):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+    border-color: #facc15 !important;
+    color: #fef08a !important;
+    box-shadow: 0 6px 18px rgba(250, 204, 21, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 6. RUBY CRIMSON JEWEL: Destructive / Delete */
+  html body.app-shell :is(.delete, .journal-delete, .delete-party-btn, .btn-khata-delete, #logout-btn, #external-backup-disable, #pin-remove-btn):not(#toggle-pwd-btn) {
+    background: linear-gradient(180deg, #fff5f5 0%, #fee2e2 100%) !important;
+    color: #dc2626 !important;
+    border: 1px solid #fca5a5 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 5px rgba(220, 38, 38, 0.12), inset 0 1px 0 #ffffff !important;
+  }
+  html body.app-shell :is(.delete, .journal-delete, .delete-party-btn, .btn-khata-delete, #logout-btn, #external-backup-disable, #pin-remove-btn):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%) !important;
+    border-color: #991b1b !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.45), 0 2px 6px rgba(220, 38, 38, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 7. WARM HONEY AMBER: Today & Quick Time Controls */
+  html body.app-shell :is(#today-btn):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 60%, #b45309 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #92400e !important;
+    font-weight: 700 !important;
+    box-shadow: 0 3px 10px rgba(217, 119, 6, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+    text-shadow: 0 1px 2px rgba(146, 64, 14, 0.4);
+  }
+  html body.app-shell :is(#today-btn):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 60%, #d97706 100%) !important;
+    box-shadow: 0 6px 18px rgba(217, 119, 6, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 8. ROSE RUBY JEWEL: PDF Exports & Saves */
+  html body.app-shell :is(#save-pdf, #summary-pdf, #receipt-save):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 55%, #be123c 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #9f1239 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(225, 29, 72, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+  html body.app-shell :is(#save-pdf, #summary-pdf, #receipt-save):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #fb7185 0%, #f43f5e 55%, #e11d48 100%) !important;
+    box-shadow: 0 8px 22px rgba(225, 29, 72, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.52) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 9. WORKSPACE & PARTY TABS ACTIVE STATES */
+  html body.app-shell :is(.workspace-nav button.active, .party-tab.active, .summary-tab.active):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #059669 0%, #047857 55%, #064e3b 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #064e3b !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(4, 120, 87, 0.42), 0 1px 3px rgba(4, 120, 87, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    text-shadow: 0 1px 2px rgba(6, 78, 59, 0.4);
+  }
+  html body.app-shell .workspace-nav {
+    background: #e2ede6 !important;
+    border: 1px solid #b6d3c2 !important;
+    box-shadow: inset 0 1.5px 3px rgba(13, 92, 67, 0.12), 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  }
+  html body.app-shell .party-tab {
+    background: linear-gradient(180deg, #ffffff 0%, #f0f7f3 100%) !important;
+    border: 1px solid #b9d6c6 !important;
+    color: #174735 !important;
+    box-shadow: 0 1px 3px rgba(18, 56, 40, 0.06), inset 0 1px 0 #ffffff !important;
+  }
+  html body.app-shell .party-tab:hover:not(.active) {
+    background: linear-gradient(180deg, #ffffff 0%, #e1f2e8 100%) !important;
+    border-color: #059669 !important;
+    color: #047857 !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2), inset 0 1px 0 #ffffff !important;
+    translate: 0 -1.5px !important;
+  }
+
+  /* 10. DARK MODE JEWEL TONES GLOW */
+  html[data-theme="dark"] body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item) {
+    background: linear-gradient(180deg, #1b2e25 0%, #12211a 100%) !important;
+    color: #d1fae5 !important;
+    border: 1px solid #28543f !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item):hover:not(:disabled) {
+    background: linear-gradient(180deg, #244235 0%, #172c23 100%) !important;
+    border-color: #34d399 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 16px rgba(52, 211, 153, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+    translate: 0 -2px !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(#add, #journal-add, #add-party-tab, .btn-add-primary, .primary, #duplicate-keep, #receipt-copy, .btn-khata-new, .btn-khata-submit, #branch-form button[type="submit"], .pin-form button[type="submit"]):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%) !important;
+    border-color: #34d399 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(#print, #receipt-preview):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 60%, #1d4ed8 100%) !important;
+    border-color: #60a5fa !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(#export-open, #export-filtered, #export-all):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 60%, #14532d 100%) !important;
+    border-color: #4ade80 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 20px rgba(22, 163, 74, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(#summary-open, #summary-tab-date, #duplicate-review):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 60%, #6d28d9 100%) !important;
+    border-color: #c084fc !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(.delete, .journal-delete, .delete-party-btn, .btn-khata-delete, #logout-btn, #external-backup-disable, #pin-remove-btn):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 60%, #7f1d1d 100%) !important;
+    border-color: #f87171 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(.workspace-nav button.active, .party-tab.active, .summary-tab.active):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%) !important;
+    border-color: #34d399 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+  html[data-theme="dark"] body.app-shell .workspace-nav {
+    background: #111e18 !important;
+    border-color: #233c30 !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  }
+  html[data-theme="dark"] body.app-shell .workspace-nav button {
+    color: #8daea0 !important;
+  }
+  html[data-theme="dark"] body.app-shell .workspace-nav button:hover:not(.active) {
+    background: #1a2f25 !important;
+    color: #34d399 !important;
+  }
+
+  html body.app-shell button:disabled {
+    opacity: 0.45 !important;
+    cursor: not-allowed !important;
+    translate: none !important;
+    scale: 1 !important;
+    box-shadow: none !important;
+  }
 }
 @media screen and (prefers-reduced-motion:reduce) {
-  html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):hover:not(:disabled),html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):active:not(:disabled) {translate:none!important;transition:none!important}
+  html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):hover:not(:disabled),
+  html body.app-shell :is(button,summary.btn-nav):not(#toggle-pwd-btn):active:not(:disabled) {
+    translate: none !important;
+    scale: 1 !important;
+    transition: none !important;
+  }
 }
 
 /* Shared control metrics align Latin digits consistently beside Nastaliq text. */
