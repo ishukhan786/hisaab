@@ -907,20 +907,36 @@ body.khata-view .top-nav-end {
   background: #ffffff;
 }
 
+/* Outer table edges on total row */
 .khata-table tfoot tr.khata-totals-row > th:first-child,
 .khata-table tfoot tr.khata-totals-row > td:first-child {
   border-right: none !important;
   border-right-style: hidden !important;
-  border-inline-start: none !important;
-  border-inline-start-style: hidden !important;
 }
 
-.khata-table tfoot tr.khata-totals-row > td#khata-foot-baqaya,
 .khata-table tfoot tr.khata-totals-row > td:last-child {
   border-left: none !important;
   border-left-style: hidden !important;
-  border-inline-end: none !important;
-  border-inline-end-style: hidden !important;
+}
+
+/* Ensure vertical dividing lines between columns in total row */
+.khata-table tfoot tr.khata-totals-row > td#khata-foot-baqaya {
+  border-right: 1px solid var(--khata-border-soft, #bdd5c5) !important;
+  border-right-style: solid !important;
+}
+
+.khata-table tfoot tr.khata-totals-row > td#khata-foot-jama {
+  border-left: 1px solid var(--khata-border-soft, #bdd5c5) !important;
+  border-left-style: solid !important;
+  border-right: 1px solid var(--khata-border-soft, #bdd5c5) !important;
+  border-right-style: solid !important;
+}
+
+.khata-table tfoot tr.khata-totals-row > td#khata-foot-banam {
+  border-left: 1px solid var(--khata-border-soft, #bdd5c5) !important;
+  border-left-style: solid !important;
+  border-right: 1px solid var(--khata-border-soft, #bdd5c5) !important;
+  border-right-style: solid !important;
 }
 
 .khata-table tfoot th,
@@ -2671,21 +2687,33 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     color: #174233 !important;
   }
 
-  /* Remove left and right borders of total row */
+  /* Outer table edges on total row in print */
   .khata-table tfoot tr.khata-totals-row > th:first-child,
   .khata-table tfoot tr.khata-totals-row > td:first-child {
     border-right: none !important;
     border-right-style: hidden !important;
-    border-inline-start: none !important;
-    border-inline-start-style: hidden !important;
   }
 
-  .khata-table tfoot tr.khata-totals-row > td#khata-foot-baqaya,
-  .khata-table tfoot tr.khata-totals-row > td:last-child {
+  /* In print, td.no-print is hidden, so baqaya is at outer left edge */
+  .khata-table tfoot tr.khata-totals-row > td#khata-foot-baqaya {
+    border-right: 1px solid #77887b !important;
+    border-right-style: solid !important;
     border-left: none !important;
     border-left-style: hidden !important;
-    border-inline-end: none !important;
-    border-inline-end-style: hidden !important;
+  }
+
+  .khata-table tfoot tr.khata-totals-row > td#khata-foot-jama {
+    border-left: 1px solid #77887b !important;
+    border-left-style: solid !important;
+    border-right: 1px solid #77887b !important;
+    border-right-style: solid !important;
+  }
+
+  .khata-table tfoot tr.khata-totals-row > td#khata-foot-banam {
+    border-left: 1px solid #77887b !important;
+    border-left-style: solid !important;
+    border-right: 1px solid #77887b !important;
+    border-right-style: solid !important;
   }
 
   /* 5. Bank Signatures & Authorization Section (Hidden) */
@@ -3022,6 +3050,25 @@ html[data-theme="dark"] #khata-foot-baqaya {
   border-bottom: 2px solid #2e7a57 !important;
   border-color: #264435 !important;
   color: #ffffff !important;
+}
+
+html[data-theme="dark"] .khata-table tfoot tr.khata-totals-row > td#khata-foot-baqaya {
+  border-right: 1px solid #264435 !important;
+  border-right-style: solid !important;
+}
+
+html[data-theme="dark"] .khata-table tfoot tr.khata-totals-row > td#khata-foot-jama {
+  border-left: 1px solid #264435 !important;
+  border-left-style: solid !important;
+  border-right: 1px solid #264435 !important;
+  border-right-style: solid !important;
+}
+
+html[data-theme="dark"] .khata-table tfoot tr.khata-totals-row > td#khata-foot-banam {
+  border-left: 1px solid #264435 !important;
+  border-left-style: solid !important;
+  border-right: 1px solid #264435 !important;
+  border-right-style: solid !important;
 }
 
 html[data-theme="dark"] #khata-foot-banam {
