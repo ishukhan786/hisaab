@@ -372,23 +372,24 @@
         if (!slip) return;
 
         const currentTime = this.formatTime();
-        const currentUser = window.HisaabAuth?.getCurrentUser()?.username || 'ایڈمن';
+        const currentUser = (typeof window.HisaabAuth?.getAuth === 'function' ? window.HisaabAuth.getAuth()?.username : null)
+          || (typeof window.HisaabAuth?.getCurrentUser === 'function' ? window.HisaabAuth.getCurrentUser()?.username : null)
+          || 'ایڈمن';
 
         // Map values
         const thermalData = {
           serial: this.formatSerial(values.serial),
-          date: values.date || '',
+          date: values.date || values.entryDate || '',
           time: currentTime,
           operator: currentUser,
-          branch: values.branch || '—',
           sender: values.sender || '—',
           mobile: values.mobile || '—',
           receiver: values.receiver || '—',
           place: values.place || '—',
           pkr: values.pkr || '0',
+          'pkr-sub': values.pkr || '0',
           currency: values.currency || 'روپیہ (PKR)',
-          aed: values.aed || '0',
-          balance: values.balance || '0'
+          aed: values.aed || '0'
         };
 
         for (const [key, val] of Object.entries(thermalData)) {
@@ -402,10 +403,10 @@
           const isAedEmpty = !values.aed || values.aed === '0' || values.aed === '—';
           aedWrap.hidden = isAedEmpty;
         }
-        const balWrap = slip.querySelector('[data-thermal-wrap="balance"]');
-        if (balWrap) {
-          const isBalEmpty = !values.balance || values.balance === '0' || values.balance === '—';
-          balWrap.hidden = isBalEmpty;
+        const pkrWrap = slip.querySelector('[data-thermal-wrap="pkr"]');
+        if (pkrWrap) {
+          const isPkrEmpty = !values.pkr || values.pkr === '0';
+          pkrWrap.hidden = isPkrEmpty;
         }
 
         // Generate Verification QR Code
@@ -414,9 +415,8 @@
           try {
             const verificationText = [
               'HISAAB',
-              `Slip: ${thermalData.serial}`,
+              `Receipt: ${thermalData.serial}`,
               `Date: ${thermalData.date}`,
-              `Party: ${thermalData.branch}`,
               `Amt: ${thermalData.pkr} ${thermalData.currency}`
             ].join(' | ');
 

@@ -144,6 +144,7 @@
     sessionUnlocked = true;
     const overlay = $('auth-overlay');
     if (overlay) overlay.hidden = true;
+    document.body.classList.remove('auth-startup-pending');
 
     document.querySelectorAll('body > :not(#auth-overlay)').forEach(el => {
       el.inert = false;
@@ -471,6 +472,7 @@
     }
 
     lockApp();
+    document.body.classList.remove('auth-startup-pending');
   }
 
   function setupGlassInteractivity() {
@@ -656,6 +658,7 @@
     unlock: unlockApp,
     isUnlocked: () => sessionUnlocked,
     getAuth: getStoredAuth,
+    getCurrentUser: () => getStoredAuth(),
     setAuth: saveStoredAuth,
     setup: executeSetup,
     login: executeLogin,

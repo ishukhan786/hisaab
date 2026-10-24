@@ -82,6 +82,7 @@
         const d=amount(r.debit),c=amount(r.credit),tr=nodes.get(r.id);if(!tr)continue;
         const populated=hasData(r);
         tr.classList.toggle('journal-draft',!populated);
+        tr.dataset.journalPopulated = String(populated);
         const sCell=tr.querySelector('.journal-serial');
         if(sCell)sCell.textContent=populated?String(serial++):'＋';
         for(const k of ['debit','credit']){const input=tr.querySelector('[data-journal="'+k+'"]');input.setCustomValidity(amount(r[k])===null?'صرف مثبت مکمل رقم لکھیں':'');input.setAttribute('aria-invalid',String(amount(r[k])===null));}

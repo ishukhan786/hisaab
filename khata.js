@@ -1124,6 +1124,14 @@
           countEl.textContent = `کل کھاتے: ${formatCount(list.length)}`;
         }
       }
+      const clearSearch = $('khata-dir-search-clear');
+      if (clearSearch) clearSearch.hidden = !query;
+      const searchSummary = $('khata-dir-search-summary');
+      if (searchSummary) {
+        searchSummary.textContent = query
+          ? `${formatCount(filtered.length)} نتائج`
+          : `${formatCount(list.length)} کھاتے`;
+      }
 
       // Render Table Rows
       if (!list.length) {
@@ -2147,6 +2155,14 @@
     // Directory Page Live Filter & Search
     $('khata-dir-search')?.addEventListener('input', () => {
       renderDirectory();
+    });
+
+    $('khata-dir-search-clear')?.addEventListener('click', () => {
+      const search = $('khata-dir-search');
+      if (!search) return;
+      search.value = '';
+      renderDirectory();
+      search.focus();
     });
 
     $('khata-dir-search')?.addEventListener('keydown', e => {

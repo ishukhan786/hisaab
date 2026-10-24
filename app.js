@@ -285,7 +285,10 @@
     if (sorted.length > 0) {
       selectedBranch = 'b:' + sorted[0];
     } else {
-      selectedBranch = '__unassigned';
+      // Keep the register on the unified view when no party exists.
+      // "بغیر پارٹی" is a real filter for rows explicitly saved without a party;
+      // it must not be auto-selected or auto-created just because the list is empty.
+      selectedBranch = '';
     }
   }
 
@@ -320,7 +323,7 @@
       tab.onclick = () => selectPartyTab('b:' + name);
       container.append(tab);
     }
-    if (unassignedCount > 0 || selectedBranch === '__unassigned' || sorted.length === 0) {
+    if (unassignedCount > 0 || selectedBranch === '__unassigned') {
       const unassignedTab = document.createElement('button'); unassignedTab.type = 'button'; const isSel = selectedBranch === '__unassigned'; unassignedTab.className = 'party-tab' + (isSel ? ' active' : ''); unassignedTab.role = 'tab'; unassignedTab.setAttribute('aria-selected', isSel ? 'true' : 'false');
       const labelSpan = document.createElement('span'); labelSpan.textContent = 'بغیر پارٹی';
       const badgeSpan = document.createElement('span'); badgeSpan.className = 'tab-badge'; badgeSpan.textContent = String(unassignedCount);
@@ -345,7 +348,7 @@
 
     const sorted = state.branches.slice().sort((a, b) => a.localeCompare(b, 'ur'));
     const { unassignedCount, byBranch } = partyDateCounts();
-    const hasUnassigned = unassignedCount > 0 || selectedBranch === '__unassigned' || sorted.length === 0;
+    const hasUnassigned = unassignedCount > 0 || selectedBranch === '__unassigned';
     const expectedCount = sorted.length + (hasUnassigned ? 1 : 0);
     if (container.children.length !== expectedCount) { renderPartyTabs(); return; }
     Array.from(container.children).forEach((tab, i) => {
@@ -1831,7 +1834,7 @@
     if (paperThm) paperThm.hidden = !isThermal;
     if (btnPreview) btnPreview.hidden = isThermal;
     if (btnThermal) btnThermal.hidden = !isThermal;
-    if (btnSave) btnSave.hidden = isThermal;
+    if (btnSave) btnSave.hidden = false;
     if ($('receipt-status')) $('receipt-status').textContent = '';
   }
 
@@ -1907,8 +1910,9 @@
     finally { restoreTheme(); document.body.inert = false; clearReceiptOutput(); }
   }
 
-  async function outputThermalSlip() {
+  async function outputThermalSlip(savePDF = false) {
     if (!receiptSelection || document.body.inert) return;
+    const selection = { ...receiptSelection };
     $('receipt-status').textContent = '';
     await document.fonts.ready;
     if (window.HisaabThermal) window.HisaabThermal.prepareThermalOutput();
@@ -1919,8 +1923,13 @@
     }
     document.body.inert = true;
     try {
-      const result = await window.electronAPI.previewPDF({ landscape: false });
-      $('receipt-status').textContent = result?.status === 'busy' ? 'پہلی PDF مکمل ہونے دیں۔' : result?.status === 'error' ? 'تھرمل سلپ نہیں بن سکی؛ دوبارہ کوشش کریں۔' : '';
+      const cleanBranch = (selection.branch || 'بغیر-پارٹی').replace(/[<>:"/\\|?*\x00-\x1f]/g, '-');
+      const filename = cleanBranch + '_' + selection.date + '_تھرمل-سلپ-' + selection.serial + '.pdf';
+      const result = savePDF
+        ? await window.electronAPI.savePDF(filename, { landscape: false })
+        : await window.electronAPI.previewPDF({ landscape: false });
+      if (result?.status === 'saved' && result.filePath) recordSavedPdf(result.filePath);
+      $('receipt-status').textContent = result?.status === 'saved' ? '✓ تھرمل سلپ PDF محفوظ ہو گئی' : result?.status === 'busy' ? 'پہلی PDF مکمل ہونے دیں۔' : result?.status === 'error' ? 'تھرمل سلپ نہیں بن سکی؛ دوبارہ کوشش کریں۔' : '';
     } catch {
       $('receipt-status').textContent = 'تھرمل سلپ نہیں بن سکی؛ دوبارہ کوشش کریں۔';
     } finally {
@@ -1931,7 +1940,11 @@
   }
 
   $('receipt-preview').onclick = () => outputReceipt();
-  $('receipt-save').onclick = () => outputReceipt(true);
+  $('receipt-save').onclick = () => {
+    const isThermal = $('tab-receipt-thermal')?.classList.contains('active');
+    if (isThermal) outputThermalSlip(true);
+    else outputReceipt(true);
+  };
   if ($('receipt-thermal-btn')) $('receipt-thermal-btn').onclick = () => outputThermalSlip();
 
   /* FIX-25 & FIX-26: preparePrint ensures clean span removal and caps printed rows */

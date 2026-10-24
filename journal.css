@@ -6,6 +6,8 @@ body.journal-view .top-nav-start>:not(.brand-mini),body.journal-view .top-nav-ce
 body.journal-view .top-nav{grid-template-columns:auto 1fr}
 body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justify-content:flex-end}
 .journal-card{background:white;border:1px solid #d3dfd5;border-radius:16px;overflow:hidden;box-shadow:0 5px 22px #234b3408}
+.journal-card{box-shadow:0 18px 44px rgba(18,75,53,.10),0 2px 8px rgba(18,75,53,.04)}
+.journal-card:hover{box-shadow:0 22px 54px rgba(18,75,53,.14),0 3px 10px rgba(18,75,53,.05)}
 .journal-heading{padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:1px solid #e2eae3}
 .journal-title-block{width:100%;text-align:center}
 .journal-heading h1,.journal-title{margin:0;font-family:'Bombay Black Unicode','Noto Nastaliq Urdu',serif;font-size:28px;font-weight:900;letter-spacing:0.5px;color:#134d38;line-height:1.8}
@@ -46,10 +48,15 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 .is-banam,.journal-table td.is-banam,.journal-table tfoot td.is-banam{color:#dc2626!important}
 .is-banam .bal-tag{background:#fee2e2;color:#991b1b!important;border:1px solid #fca5a5}
 .journal-table tfoot th{height:52px;line-height:2.2}
-.journal-description{position:relative}
-.journal-delete{position:absolute;left:8px;top:50%;transform:translateY(-50%);font:18px Arial,sans-serif!important;width:26px!important;min-width:26px!important;height:26px!important;min-height:26px!important;padding:0!important;background:transparent!important;border:1px solid transparent!important;border-radius:7px!important;color:#9ca3af!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;cursor:pointer;opacity:0.35;transition:all .16s ease!important;box-shadow:none!important}
+.journal-description{position:relative!important;display:flex!important;align-items:center!important;gap:8px;padding:6px 8px!important;vertical-align:middle!important;direction:ltr}
+.journal-description textarea{order:2;flex:1 1 auto;width:auto!important;min-width:0}
+.journal-delete{order:1;position:static!important;z-index:5;transform:none!important;flex:0 0 26px;font:18px Arial,sans-serif!important;width:26px!important;min-width:26px!important;height:26px!important;min-height:26px!important;padding:0!important;background:rgba(248,252,249,.92)!important;border:1px solid #b7d4c1!important;border-radius:7px!important;color:#b94a52!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;cursor:pointer;opacity:0.9;visibility:visible;transition:all .16s ease!important;box-shadow:0 2px 5px rgba(16,56,41,.16)!important}
 .journal-table tr:hover .journal-delete,.journal-table tr:focus-within .journal-delete{opacity:0.85}
-.journal-delete:hover{opacity:1!important;color:#ef4444!important;background:rgba(239,68,68,0.12)!important;border-color:rgba(239,68,68,0.3)!important;transform:translateY(-50%) scale(1.1)!important}
+.journal-delete:hover{opacity:1!important;color:#ef4444!important;background:rgba(239,68,68,0.12)!important;border-color:rgba(239,68,68,0.3)!important;transform:scale(1.1)!important}
+.journal-table tr:not(.journal-draft) .journal-delete,
+.journal-table tr[data-journal-populated="true"] .journal-delete{visibility:visible;display:inline-flex!important;opacity:.9}
+.journal-table tbody tr:not(.journal-draft):hover td{background:#f0f8f3}
+.journal-table tbody tr:focus-within td{background:#e9f6ee;box-shadow:inset 0 0 0 1px #76b694}
 .journal-draft{background:#f7faf4}.journal-draft .journal-delete{visibility:hidden;display:none!important}
 .journal-foot{display:flex;justify-content:space-between;padding:10px 22px;font-size:10px;color:#6d8372}.journal-help{font-size:11px;color:#627d69;line-height:2.5}.journal-print-value{display:none}
 @media screen and (max-width:700px){.workspace-nav{padding:8px 12px}.workspace-nav button{flex:1;min-width:0}.journal-heading{padding:14px;gap:10px}.journal-tools{gap:8px}.journal-heading h1{font-size:23px}body.journal-view .top-nav{grid-template-columns:1fr}body.journal-view .top-nav-end{grid-row:2;grid-column:1;display:flex}.journal-opening-line{padding:10px 14px}}

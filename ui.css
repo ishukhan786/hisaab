@@ -1,5 +1,10 @@
 /* App controls only: exported receipts and printed pages keep their own layout. */
 #office-switcher[hidden]{display:none!important}
+
+/* Keep the login portal as the first visible frame during Electron startup. */
+body.auth-startup-pending > :not(#auth-overlay) { visibility:hidden; }
+body.auth-startup-pending #auth-overlay[hidden] { display:flex !important; }
+body.auth-startup-pending #auth-login-card[hidden] { display:flex !important; }
 @media screen {
 body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f1 100%);color:#203d35;min-height:100vh}
 .app-shell button,.app-shell summary.btn-nav{min-height:44px;border-radius:12px;font-size:12px;font-weight:600;line-height:2.3;background:linear-gradient(180deg,#ffffff 0%,#f3f8f5 100%);border:1px solid #c6dcd0;color:#1b4334;box-shadow:0 1px 3px rgba(16,56,41,0.06),0 1px 2px rgba(16,56,41,0.04),inset 0 1px 0 rgba(255,255,255,0.92);transition:background .2s cubic-bezier(.22,1,.36,1),border-color .2s,box-shadow .2s,transform .15s cubic-bezier(.22,1,.36,1),color .15s}
@@ -359,6 +364,154 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 }
 
 @media screen{.app-shell .paper th.col-pkr{width:10%}.app-shell #total-pkr{white-space:pre;overflow-wrap:normal}}
+
+/* Premium visual layer: subtle depth without changing the accounting workflow. */
+@media screen {
+  body.app-shell {
+    background:
+      radial-gradient(circle at 92% 8%, rgba(62, 155, 112, .13), transparent 28rem),
+      radial-gradient(circle at 6% 42%, rgba(45, 117, 155, .08), transparent 24rem),
+      linear-gradient(180deg, #e9f4ee 0%, #f5f9f6 48%, #edf4f0 100%);
+  }
+  .app-shell .top-nav {
+    background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(247,252,249,.92));
+    box-shadow: 0 10px 30px rgba(17, 74, 52, .08), 0 1px 0 rgba(255,255,255,.9) inset;
+  }
+  .app-shell .paper,
+  .app-shell .journal-card,
+  .app-shell .khata-card {
+    border-color: rgba(144, 185, 161, .62);
+    box-shadow: 0 18px 46px rgba(18, 75, 53, .09), 0 2px 8px rgba(18, 75, 53, .04);
+  }
+  .app-shell .paper:hover,
+  .app-shell .journal-card:hover,
+  .app-shell .khata-card:hover {
+    box-shadow: 0 22px 56px rgba(18, 75, 53, .13), 0 3px 10px rgba(18, 75, 53, .05);
+  }
+  .app-shell .workspace-nav,
+  .app-shell .summary-tabs,
+  .app-shell .party-tabs-bar {
+    box-shadow: 0 8px 20px rgba(18, 75, 53, .08), inset 0 1px 0 rgba(255,255,255,.8);
+  }
+  .app-shell .paper thead th,
+  .app-shell .journal-table th,
+  .app-shell .khata-dir-table th {
+    background: linear-gradient(180deg, #f4faf6 0%, #e8f2eb 100%);
+  }
+  .app-shell .paper tbody tr:hover,
+  .app-shell .journal-table tbody tr:hover,
+  .app-shell .khata-dir-table tbody tr:hover {
+    box-shadow: inset 4px 0 #2a9a70, 0 2px 10px rgba(23, 99, 76, .07);
+  }
+}
+
+html[data-theme="dark"] body.app-shell {
+  background:
+    radial-gradient(circle at 88% 12%, rgba(16, 185, 129, .12), transparent 30rem),
+    radial-gradient(circle at 8% 48%, rgba(30, 64, 175, .10), transparent 24rem),
+    linear-gradient(180deg, #08140f 0%, #0c1d15 55%, #09150f 100%);
+}
+
+html[data-theme="dark"] .app-shell .paper,
+html[data-theme="dark"] .app-shell .journal-card,
+html[data-theme="dark"] .app-shell .khata-card {
+  box-shadow: 0 20px 55px rgba(0,0,0,.28), 0 0 0 1px rgba(79, 174, 124, .06);
+}
+
+/* Glassmorphism controls for both themes. */
+@media screen {
+  .app-shell :is(button, summary.btn-nav):not(.journal-delete):not(.delete) {
+    background: linear-gradient(135deg, rgba(255,255,255,.78), rgba(224,244,233,.56)) !important;
+    border: 1px solid rgba(117, 177, 142, .62) !important;
+    color: #174b38 !important;
+    box-shadow: 0 7px 18px rgba(23, 99, 76, .12), inset 0 1px 0 rgba(255,255,255,.88), inset 0 -1px 0 rgba(105,166,130,.12) !important;
+    backdrop-filter: blur(12px) saturate(125%);
+    -webkit-backdrop-filter: blur(12px) saturate(125%);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease !important;
+  }
+  .app-shell :is(button, summary.btn-nav):not(.journal-delete):not(.delete):hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(197,238,213,.78)) !important;
+    border-color: rgba(42, 145, 99, .86) !important;
+    color: #0d5139 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px rgba(23, 99, 76, .19), 0 0 0 3px rgba(71, 170, 119, .10), inset 0 1px 0 rgba(255,255,255,.95) !important;
+  }
+  .app-shell :is(.primary, .btn-add-primary, .add, #add, #add-party-tab, #btn-new-khata-top, #btn-new-khata-ledger) {
+    background: linear-gradient(135deg, rgba(38, 157, 113, .90), rgba(11, 91, 64, .86)) !important;
+    border-color: rgba(122, 226, 170, .68) !important;
+    color: #fff !important;
+    box-shadow: 0 9px 24px rgba(16, 112, 77, .28), inset 0 1px 0 rgba(255,255,255,.35) !important;
+  }
+  .app-shell :is(.primary, .btn-add-primary, .add, #add, #add-party-tab, #btn-new-khata-top, #btn-new-khata-ledger):hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(54, 184, 132, .96), rgba(12, 108, 75, .93)) !important;
+    box-shadow: 0 14px 30px rgba(16, 112, 77, .38), 0 0 0 3px rgba(52, 211, 153, .14), inset 0 1px 0 rgba(255,255,255,.48) !important;
+  }
+}
+
+@media screen {
+  html[data-theme="dark"] .app-shell :is(button, summary.btn-nav):not(.journal-delete):not(.delete) {
+    background: linear-gradient(135deg, rgba(38, 73, 57, .72), rgba(15, 37, 27, .66)) !important;
+    border-color: rgba(92, 171, 126, .48) !important;
+    color: #d9f8e6 !important;
+    box-shadow: 0 8px 22px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.13), inset 0 -1px 0 rgba(89,174,125,.12) !important;
+  }
+  html[data-theme="dark"] .app-shell :is(button, summary.btn-nav):not(.journal-delete):not(.delete):hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(52, 108, 80, .86), rgba(19, 57, 40, .82)) !important;
+    border-color: rgba(110, 231, 163, .78) !important;
+    color: #f0fff6 !important;
+    box-shadow: 0 13px 30px rgba(0,0,0,.38), 0 0 0 3px rgba(52, 211, 153, .13), inset 0 1px 0 rgba(255,255,255,.18) !important;
+  }
+  html[data-theme="dark"] .app-shell :is(.primary, .btn-add-primary, .add, #add, #add-party-tab, #btn-new-khata-top, #btn-new-khata-ledger) {
+    background: linear-gradient(135deg, rgba(16, 185, 129, .88), rgba(4, 92, 64, .88)) !important;
+    border-color: rgba(110, 231, 163, .7) !important;
+    color: #fff !important;
+  }
+}
+
+/* Final UI polish: clearer hierarchy, calmer scanning, and accessible interaction states. */
+@media screen {
+  .app-shell {
+    color-scheme: light;
+    scrollbar-color: #9fc3ae #edf4ef;
+  }
+  .app-shell ::selection { background: #bde7cf; color: #0b4935; }
+  .app-shell .workspace-nav button,
+  .app-shell .party-tab,
+  .app-shell .summary-tab { letter-spacing: .05px; }
+  .app-shell .paper-head,
+  .app-shell .journal-heading,
+  .app-shell .khata-dir-header-card,
+  .app-shell .khata-profile-card { position: relative; }
+  .app-shell .paper-head::after,
+  .app-shell .journal-heading::after,
+  .app-shell .khata-dir-header-card::after,
+  .app-shell .khata-profile-card::after {
+    content: "";
+    position: absolute;
+    inset-inline: 24px;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #62ad88 22%, #176b52 50%, #62ad88 78%, transparent);
+    opacity: .34;
+    pointer-events: none;
+  }
+  .app-shell .paper thead th,
+  .app-shell .journal-table th,
+  .app-shell .khata-dir-table th { letter-spacing: .1px; }
+  .app-shell .paper tbody tr,
+  .app-shell .journal-table tbody tr,
+  .app-shell .khata-dir-table tbody tr { transition: background-color .16s ease, box-shadow .16s ease; }
+  .app-shell :is(input, textarea, select)::placeholder { color: #789184; opacity: .82; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *, .app-shell *::before, .app-shell *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
 @media screen and (max-width:600px){.app-shell .top-nav-end .workspace-nav{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;margin-inline:0}.app-shell .top-nav-end .workspace-nav button{min-height:44px;white-space:nowrap;line-height:2.5;font-size:12px}}
 
 @media screen and (max-width:600px){.app-shell .duplicate-warning{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px}.app-shell .duplicate-warning>span{grid-column:1/-1;min-width:0;font-size:11px;line-height:2.2}.app-shell .duplicate-warning>button{width:100%;min-height:44px;padding:4px 7px;white-space:normal}}
@@ -4020,10 +4173,11 @@ html[data-theme="dark"] .receipt-tab-btn.active {
   padding: 16px 14px 20px;
   border-radius: 8px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.06);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Nastaliq Urdu', sans-serif;
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Segoe UI', Arial, sans-serif !important;
   box-sizing: border-box;
   text-align: right;
   direction: rtl;
+  line-height: 1.8;
 }
 html[data-theme="dark"] .thermal-slip-sheet {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
@@ -4034,16 +4188,19 @@ html[data-theme="dark"] .thermal-slip-sheet {
   margin-bottom: 4px;
 }
 .thermal-slip-brand {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 900;
   color: #0b3d2e !important;
   letter-spacing: 0.5px;
   margin-bottom: 2px;
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', serif !important;
+  line-height: 1.6;
 }
 .thermal-slip-title {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   color: #333333 !important;
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif !important;
 }
 
 .thermal-slip-divider {
@@ -4064,13 +4221,15 @@ html[data-theme="dark"] .thermal-slip-sheet {
   justify-content: space-between;
   align-items: baseline;
   font-size: 12.5px;
-  line-height: 1.4;
+  line-height: 1.8;
   gap: 8px;
 }
 .thermal-lbl {
-  color: #4b5563 !important;
-  font-size: 11.5px;
+  color: #374151 !important;
+  font-size: 12px;
+  font-weight: 600;
   white-space: nowrap;
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif !important;
 }
 .thermal-val {
   font-weight: 700;
@@ -4081,6 +4240,15 @@ html[data-theme="dark"] .thermal-slip-sheet {
 }
 .thermal-val:not(.font-mono) {
   direction: rtl;
+  text-align: right;
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif !important;
+}
+.thermal-val.font-mono,
+.thermal-sum,
+.font-mono {
+  font-family: 'Consolas', 'Courier New', Calibri, 'Segoe UI', monospace !important;
+  direction: ltr;
+  text-align: left;
 }
 
 /* Amount Highlight Card */
@@ -4093,10 +4261,11 @@ html[data-theme="dark"] .thermal-slip-sheet {
   text-align: center;
 }
 .thermal-amount-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: #17634c !important;
   margin-bottom: 4px;
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif !important;
 }
 .thermal-amount-big {
   display: flex;
@@ -4109,13 +4278,14 @@ html[data-theme="dark"] .thermal-slip-sheet {
   font-size: 26px;
   font-weight: 900;
   color: #000000 !important;
-  font-family: 'Consolas', 'Courier New', monospace;
+  font-family: 'Consolas', 'Courier New', monospace !important;
   letter-spacing: 0.5px;
 }
 .thermal-curr {
   font-size: 13px;
   font-weight: 700;
   color: #222222 !important;
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif !important;
 }
 .thermal-sub-amounts {
   border-top: 1px dotted #a3c2b5;
@@ -4145,11 +4315,12 @@ html[data-theme="dark"] .thermal-slip-sheet {
   display: block;
 }
 .thermal-qr-hint {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  color: #555555 !important;
+  color: #444444 !important;
   margin-top: 6px;
   text-align: center;
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif !important;
 }
 
 /* Footer Section */
@@ -4158,15 +4329,17 @@ html[data-theme="dark"] .thermal-slip-sheet {
   padding-top: 2px;
 }
 .thermal-thanks {
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 700;
   color: #111111 !important;
   margin-bottom: 2px;
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', serif !important;
 }
 .thermal-note {
-  font-size: 10.5px;
+  font-size: 11px;
   color: #555555 !important;
   margin-bottom: 4px;
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif !important;
 }
 .thermal-tag {
   font-size: 9.5px;
@@ -4224,6 +4397,9 @@ html[data-theme="dark"] .app-shell #receipt-thermal-btn {
     color: #000000 !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
+    font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Segoe UI', Arial, sans-serif !important;
+    direction: rtl !important;
+    line-height: 1.8 !important;
   }
   #receipt-print .thermal-slip-amount-card {
     background: #ffffff !important;
@@ -4234,6 +4410,13 @@ html[data-theme="dark"] .app-shell #receipt-thermal-btn {
   #receipt-print .thermal-thanks,
   #receipt-print .thermal-slip-brand {
     color: #000000 !important;
+    font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', serif !important;
+  }
+  #receipt-print .thermal-slip-title,
+  #receipt-print .thermal-lbl,
+  #receipt-print .thermal-note,
+  #receipt-print .thermal-qr-hint {
+    font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif !important;
   }
   #receipt-print .thermal-slip-divider {
     border-top: 1.5px dashed #000000 !important;

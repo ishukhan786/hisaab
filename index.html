@@ -18,11 +18,11 @@
   <script src="theme-init.js?v=1.4.19"></script>
   <link rel="stylesheet" href="style.css?v=1.4.19">
   <link rel="stylesheet" href="ui.css?v=1.4.19">
-  <link rel="stylesheet" href="journal.css?v=1.4.19">
+  <link rel="stylesheet" href="journal.css?v=1.4.20">
   <link rel="stylesheet" href="khata.css?v=1.4.19">
   <link rel="stylesheet" href="receipt-export.css?v=1.4.19">
 </head>
-<body class="app-shell">
+<body class="app-shell auth-startup-pending">
   <header class="top-nav no-print">
     <div class="top-nav-start">
       <div class="brand-mini">
@@ -310,6 +310,8 @@
           <div class="khata-dir-search-wrap">
             <span class="khata-search-icon" aria-hidden="true">🔍</span>
             <input id="khata-dir-search" class="khata-search-input" type="search" placeholder="کھاتے دار تلاش کریں (نام، کوڈ، موبائل، پتہ)..." autocomplete="off" aria-label="کھاتہ تلاش کریں">
+            <button id="khata-dir-search-clear" class="khata-search-clear" type="button" aria-label="تلاش صاف کریں" title="تلاش صاف کریں" hidden>×</button>
+            <span id="khata-dir-search-summary" class="khata-search-summary" role="status" aria-live="polite"></span>
           </div>
           <div class="khata-dir-header-actions">
             <button id="btn-khata-dir-print" class="btn-khata-action" type="button" title="کسٹمرز کھاتے یا وصولی و ادائیگی رپورٹ پرنٹ / PDF بنائیں">
@@ -1043,14 +1045,13 @@
       </header>
       <hr class="thermal-slip-divider">
       <div class="thermal-slip-meta">
-        <div class="thermal-row"><span class="thermal-lbl">پرچی نمبر:</span><strong data-thermal="serial" class="thermal-val font-mono"></strong></div>
+        <div class="thermal-row"><span class="thermal-lbl">رسید نمبر:</span><strong data-thermal="serial" class="thermal-val font-mono"></strong></div>
         <div class="thermal-row"><span class="thermal-lbl">تاریخ:</span><span data-thermal="date" class="thermal-val"></span></div>
         <div class="thermal-row"><span class="thermal-lbl">وقت:</span><span data-thermal="time" class="thermal-val font-mono"></span></div>
         <div class="thermal-row"><span class="thermal-lbl">کیشئیر / آپریٹر:</span><span data-thermal="operator" class="thermal-val"></span></div>
       </div>
       <hr class="thermal-slip-divider">
       <div class="thermal-slip-parties">
-        <div class="thermal-row"><span class="thermal-lbl">پارٹی / کھاتہ:</span><strong data-thermal="branch" class="thermal-val"></strong></div>
         <div class="thermal-row"><span class="thermal-lbl">ارسال کنندہ:</span><span data-thermal="sender" class="thermal-val"></span></div>
         <div class="thermal-row"><span class="thermal-lbl">موبائل نمبر:</span><span data-thermal="mobile" class="thermal-val font-mono"></span></div>
         <div class="thermal-row"><span class="thermal-lbl">وصول کنندہ:</span><span data-thermal="receiver" class="thermal-val"></span></div>
@@ -1064,8 +1065,8 @@
           <small data-thermal="currency" class="thermal-curr"></small>
         </div>
         <div class="thermal-sub-amounts">
-          <div class="thermal-row" data-thermal-wrap="aed"><span class="thermal-lbl">درہم (AED):</span><span data-thermal="aed" class="thermal-val font-mono"></span></div>
-          <div class="thermal-row" data-thermal-wrap="balance"><span class="thermal-lbl">سابقہ بقایا:</span><span data-thermal="balance" class="thermal-val font-mono"></span></div>
+          <div class="thermal-row" data-thermal-wrap="aed"><span class="thermal-lbl">درہم (AED):</span><strong data-thermal="aed" class="thermal-val font-mono"></strong></div>
+          <div class="thermal-row" data-thermal-wrap="pkr"><span class="thermal-lbl">پاکستانی روپے (PKR):</span><strong data-thermal="pkr-sub" class="thermal-val font-mono"></strong></div>
         </div>
       </div>
       <hr class="thermal-slip-divider">
@@ -1123,7 +1124,7 @@
   <!-- ========================================================
        Desktop Authentication Overlay — Glassmorphic Edition
        ======================================================== -->
-  <div id="auth-overlay" class="auth-overlay no-print" hidden>
+  <div id="auth-overlay" class="auth-overlay no-print">
     <!-- Background Animated Mesh & Ambient Orbs -->
     <div class="auth-ambient-wrapper" aria-hidden="true">
       <div class="auth-space-base"></div>
@@ -1241,7 +1242,7 @@
       </div>
 
       <!-- 2. Normal Login Card -->
-      <div id="auth-login-card" class="auth-card glass-card" dir="ltr" hidden>
+      <div id="auth-login-card" class="auth-card glass-card" dir="ltr">
         <!-- Top Shimmer Line -->
         <div class="auth-shimmer-line"></div>
 
@@ -1437,7 +1438,7 @@
   <!-- FIX-3: Universal dialog backdrop-click fallback polyfill -->
   <script src="dialog-fallback.js?v=1.4.19"></script>
   <script src="excel-export.js?v=1.4.19"></script>
-  <script src="journal.js?v=1.4.19"></script>
+  <script src="journal.js?v=1.4.20"></script>
   <script src="khata.js?v=1.4.19"></script>
   <!-- FIX-6 & FIX-27: html2canvas with SRI integrity verification and deferred non-blocking load -->
   <script src="assets/html2canvas.min.js?v=1.4.1" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" defer></script>

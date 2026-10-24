@@ -32,7 +32,7 @@
   },
   "build": {
     "appId": "com.ishtiaquddin.hisaab",
-    "productName": "حساب",
+    "productName": "Hisaab",
     "copyright": "Copyright © 2026 Ishtiaq Uddin",
     "directories": {
       "output": "dist"
