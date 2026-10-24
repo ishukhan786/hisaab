@@ -3261,38 +3261,44 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
 
 /* ========================================================
    Desktop Username & Password Authentication Overlay
+   (Compact, Modern, Luxury Obsidian Emerald Edition)
    ======================================================== */
 .auth-overlay {
   position: fixed;
   inset: 0;
   z-index: 10000;
-  background: radial-gradient(circle at 50% 36%, rgba(18, 62, 47, 0.94) 0%, rgba(7, 24, 18, 0.98) 100%);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  display: grid;
-  place-items: center;
-  padding: 24px 16px;
+  background: radial-gradient(circle at 50% 36%, rgba(13, 50, 37, 0.95) 0%, rgba(5, 18, 14, 0.98) 100%);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
   overflow-y: auto;
+  box-sizing: border-box;
   animation: pin-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .auth-card {
   position: relative;
-  background: linear-gradient(180deg, #ffffff 0%, #f6faf7 100%);
-  border: 1px solid rgba(180, 215, 196, 0.9);
-  border-radius: 26px;
-  padding: 32px 30px 28px;
+  direction: ltr;
+  text-align: left;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8f5 100%);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 20px;
+  padding: 22px 24px 20px;
   width: 100%;
   max-width: 440px;
-  box-shadow: 0 25px 60px -10px rgba(5, 26, 18, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.85) inset;
+  max-height: calc(100vh - 32px);
+  box-shadow: 0 20px 50px -10px rgba(3, 25, 17, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  text-align: right;
-  gap: 12px;
+  gap: 10px;
   box-sizing: border-box;
   animation: pin-card-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", system-ui, sans-serif;
 }
 
 .auth-card::before {
@@ -3301,12 +3307,19 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   top: 0;
   left: 0;
   right: 0;
-  height: 5px;
-  background: linear-gradient(90deg, #10b981 0%, #059669 50%, #047857 100%);
+  height: 4px;
+  background: linear-gradient(90deg, #10b981 0%, #059669 50%, #34d399 100%);
 }
 
 .auth-card.auth-shake {
   animation: pin-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.auth-header {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding-bottom: 2px;
 }
 
 .auth-brand-wrap {
@@ -3314,72 +3327,108 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   align-items: center;
   justify-content: center;
   position: relative;
-  margin: 0 auto 6px;
-  width: 58px;
-  height: 58px;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
 }
 
 .auth-logo {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   background: linear-gradient(135deg, #10b981 0%, #047857 100%);
   color: #fff;
-  border-radius: 16px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 800;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
 }
 
 .auth-shield-icon {
   position: absolute;
-  bottom: -4px;
-  left: -4px;
-  font-size: 16px;
+  bottom: -3px;
+  right: -3px;
+  font-size: 11px;
   background: #ffffff;
   border: 1px solid #cce5d7;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   display: grid;
   place-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.14);
+}
+
+.auth-header-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .auth-title {
   margin: 0;
-  text-align: center;
-  font-size: 22px;
+  font-size: 17.5px;
   font-weight: 800;
-  color: #0f3d2e;
+  color: #0d2e23;
+  line-height: 1.25;
 }
 
 .auth-subtitle {
-  margin: 0 0 4px;
-  text-align: center;
-  font-size: 13px;
-  color: #4b6358;
-  line-height: 1.5;
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: #4b6859;
+  line-height: 1.35;
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
+  width: 100%;
+}
+
+.auth-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
   width: 100%;
 }
 
 .auth-field {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
 .auth-field label {
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 700;
-  color: #1a4234;
+  color: #164031;
+  display: flex;
+  align-items: center;
+  letter-spacing: 0.2px;
+}
+
+.auth-field label .req {
+  color: #e11d48;
+  margin-left: 2px;
+  font-weight: 800;
+}
+
+.auth-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auth-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  letter-spacing: 0.3px;
 }
 
 .auth-input-container {
@@ -3391,24 +3440,31 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
 
 .auth-input-icon {
   position: absolute;
-  right: 12px;
-  font-size: 16px;
+  left: 11px;
+  display: grid;
+  place-items: center;
+  color: #628876;
   pointer-events: none;
-  opacity: 0.7;
+  z-index: 1;
 }
 
 .auth-input-container input,
 .auth-field input {
   width: 100%;
-  padding: 10px 38px 10px 42px;
-  font-size: 14px;
-  border-radius: 12px;
+  height: 38px;
+  padding: 8px 36px 8px 34px;
+  font-size: 13px;
+  border-radius: 10px;
   border: 1px solid #b7d6c6;
   background: #ffffff;
   color: #112920;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   box-sizing: border-box;
+}
+
+.auth-field input:not(.auth-input-container input) {
+  padding: 8px 12px;
 }
 
 .auth-input-container input:focus,
@@ -3419,45 +3475,42 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
 
 .auth-eye-btn {
   position: absolute;
-  left: 8px;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
   background: transparent;
   border: none;
-  padding: 6px;
-  border-radius: 8px;
-  color: #52796a;
+  padding: 5px;
+  border-radius: 6px;
+  color: #628876;
   cursor: pointer;
   display: grid;
   place-items: center;
-  transition: color 0.15s;
+  transition: color 0.15s, background-color 0.15s;
 }
 
 .auth-eye-btn:hover {
   color: #047857;
-  background: rgba(16, 185, 129, 0.08);
+  background: rgba(16, 185, 129, 0.12);
 }
 
 .auth-hint {
-  font-size: 11px;
+  font-size: 10.5px;
   color: #5c7569;
-  line-height: 1.4;
-}
-
-.auth-help-row {
-  display: flex;
-  justify-content: flex-start;
-  margin-top: -4px;
+  line-height: 1.35;
+  margin-top: 1px;
 }
 
 .auth-link-btn {
   background: transparent;
   border: none;
   color: #047857;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 0;
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 2px;
 }
 
 .auth-link-btn:hover {
@@ -3466,58 +3519,98 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
 
 .auth-error {
   margin: 0;
-  font-size: 12px;
-  color: #dc2626;
+  font-size: 11.5px;
+  color: #e11d48;
   font-weight: 700;
   text-align: center;
-  min-height: 18px;
+  min-height: 16px;
+  line-height: 1.3;
 }
 
 .auth-actions {
   display: flex;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .auth-submit-btn {
   flex: 1;
-  padding: 12px;
-  border-radius: 12px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #10b981 0%, #047857 100%);
   color: #ffffff;
   border: none;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.35);
-  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(4, 120, 87, 0.32);
+  transition: all 0.18s ease;
 }
 
 .auth-submit-btn:hover {
+  background: linear-gradient(135deg, #12c98d 0%, #058f68 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(4, 120, 87, 0.42);
+  box-shadow: 0 6px 16px rgba(4, 120, 87, 0.4);
+}
+
+.auth-submit-btn:active {
+  transform: translateY(0);
+}
+
+.auth-btn-icon {
+  font-size: 13px;
+  transition: transform 0.15s ease;
+}
+
+.auth-submit-btn:hover .auth-btn-icon {
+  transform: translateX(3px);
 }
 
 .auth-cancel-btn {
-  padding: 10px 18px;
-  border-radius: 12px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
   background: #e2ede6;
   color: #1e4536;
   border: 1px solid #c4dbcd;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.auth-cancel-btn:hover {
+  background: #d5e5db;
 }
 
 .auth-dialog {
-  border-radius: 20px;
-  padding: 24px 28px;
-  max-width: 460px;
+  border-radius: 18px;
+  padding: 20px 24px;
+  max-width: 440px;
   width: 90%;
   border: 1px solid var(--surface-line);
   background: var(--surface);
   box-shadow: var(--popup-shadow);
   color: var(--surface-ink);
+  direction: ltr;
+  text-align: left;
+}
+
+.auth-dialog .dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.auth-dialog .dialog-head h2 {
+  font-size: 16px;
+  margin: 0;
 }
 
 .auth-field-divider {
@@ -3529,8 +3622,8 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
 /* Dark Mode Support for Auth */
 html[data-theme="dark"] .auth-card {
   background: linear-gradient(180deg, #11221b 0%, #0c1813 100%);
-  border-color: rgba(22, 77, 56, 0.85);
-  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  border-color: rgba(34, 197, 94, 0.28);
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 }
 
 html[data-theme="dark"] .auth-title {
@@ -3538,16 +3631,21 @@ html[data-theme="dark"] .auth-title {
 }
 
 html[data-theme="dark"] .auth-subtitle {
-  color: #9cb5a8;
+  color: #8faea1;
 }
 
 html[data-theme="dark"] .auth-field label {
-  color: #c9e3d4;
+  color: #b7d6c7;
+}
+
+html[data-theme="dark"] .auth-pill {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
 }
 
 html[data-theme="dark"] .auth-input-container input,
 html[data-theme="dark"] .auth-field input {
-  background: #172d24;
+  background: #152920;
   border-color: #274b3d;
   color: #eafaf1;
 }
@@ -3555,11 +3653,21 @@ html[data-theme="dark"] .auth-field input {
 html[data-theme="dark"] .auth-input-container input:focus,
 html[data-theme="dark"] .auth-field input:focus {
   border-color: #10b981;
-  background: #193328;
+  background: #183025;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.28);
+}
+
+html[data-theme="dark"] .auth-input-icon {
+  color: #6f9584;
 }
 
 html[data-theme="dark"] .auth-eye-btn {
-  color: #79a894;
+  color: #729b89;
+}
+
+html[data-theme="dark"] .auth-eye-btn:hover {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.18);
 }
 
 html[data-theme="dark"] .auth-link-btn {
@@ -3567,12 +3675,16 @@ html[data-theme="dark"] .auth-link-btn {
 }
 
 html[data-theme="dark"] .auth-hint {
-  color: #7ea391;
+  color: #779b8a;
 }
 
 html[data-theme="dark"] .auth-cancel-btn {
   background: #1d362c;
   color: #c5dfd2;
   border-color: #294c3d;
+}
+
+html[data-theme="dark"] .auth-cancel-btn:hover {
+  background: #254639;
 }
 

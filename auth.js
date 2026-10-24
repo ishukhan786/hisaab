@@ -65,7 +65,7 @@
     if (inactivityTimer) clearTimeout(inactivityTimer);
     if (sessionUnlocked) {
       inactivityTimer = setTimeout(() => {
-        lockApp('طویل غیر حاضری (15 منٹ) کی وجہ سے سیکیورٹی کے لیے ایپ لاک کر دی گئی ہے۔');
+        lockApp('App locked due to 15 minutes of inactivity.');
       }, INACTIVITY_TIMEOUT_MS);
     }
   }
@@ -92,7 +92,7 @@
     });
   }
 
-  function lockApp(reason = 'جاری رکھنے کے لیے اپنا یوزر نیم اور پاس ورڈ درج کریں') {
+  function lockApp(reason = 'Enter your credentials to continue') {
     sessionUnlocked = false;
     if (inactivityTimer) clearTimeout(inactivityTimer);
 
@@ -158,35 +158,36 @@
       const isPass = input.type === 'password';
       input.type = isPass ? 'text' : 'password';
       btn.setAttribute('aria-pressed', String(isPass));
-      btn.title = isPass ? 'پاس ورڈ چھپائیں' : 'پاس ورڈ دکھائیں';
+      btn.title = isPass ? 'Hide password' : 'Show password';
+      btn.setAttribute('aria-label', btn.title);
       btn.innerHTML = isPass
-        ? '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'
-        : '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'
+        : '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
     });
   }
 
   async function executeSetup(username, password, confirmPass, recoveryPin) {
     const errEl = $('auth-setup-error');
     if (!username) {
-      if (errEl) errEl.textContent = 'براہ کرم یوزر نیم درج کریں۔';
+      if (errEl) errEl.textContent = 'Please enter a username.';
       shakeCard('auth-setup-card');
       $('setup-username')?.focus();
       return { success: false, error: 'username' };
     }
     if (password.length < 4) {
-      if (errEl) errEl.textContent = 'پاس ورڈ کم از کم 4 حروف یا ہندسوں پر مشتمل ہونا چاہیے۔';
+      if (errEl) errEl.textContent = 'Password must be at least 4 characters.';
       shakeCard('auth-setup-card');
       $('setup-password')?.focus();
       return { success: false, error: 'password_length' };
     }
     if (password !== confirmPass) {
-      if (errEl) errEl.textContent = 'پاس ورڈ اور تصدیقی پاس ورڈ ایک جیسے نہیں ہیں۔';
+      if (errEl) errEl.textContent = 'Passwords do not match.';
       shakeCard('auth-setup-card');
       $('setup-password-confirm')?.focus();
       return { success: false, error: 'password_mismatch' };
     }
     if (!/^\d{4,8}$/.test(recoveryPin)) {
-      if (errEl) errEl.textContent = 'ریکوری پن کوڈ صرف 4 سے 8 ہندسوں پر مشتمل ہونا چاہیے۔';
+      if (errEl) errEl.textContent = 'Recovery PIN must be 4 to 8 digits.';
       shakeCard('auth-setup-card');
       $('setup-recovery-pin')?.focus();
       return { success: false, error: 'pin_format' };
@@ -226,20 +227,20 @@
     }
 
     if (!username || !password) {
-      if (errEl) errEl.textContent = 'براہ کرم یوزر نیم اور پاس ورڈ دونوں درج کریں۔';
+      if (errEl) errEl.textContent = 'Please enter both username and password.';
       shakeCard('auth-login-card');
       return { success: false, error: 'empty_fields' };
     }
 
     if (username.toLowerCase() !== (auth.username || '').toLowerCase()) {
-      if (errEl) errEl.textContent = 'غلط یوزر نیم یا پاس ورڈ۔ دوبارہ کوشش کریں۔';
+      if (errEl) errEl.textContent = 'Invalid username or password.';
       shakeCard('auth-login-card');
       return { success: false, error: 'invalid_credentials' };
     }
 
     const hash = await hashPassword(password, auth.salt);
     if (hash !== auth.passwordHash) {
-      if (errEl) errEl.textContent = 'پاس ورڈ درست نہیں۔ براہ کرم دوبارہ کوشش کریں۔';
+      if (errEl) errEl.textContent = 'Incorrect password. Please try again.';
       shakeCard('auth-login-card');
       $('login-password')?.focus();
       return { success: false, error: 'invalid_password' };
@@ -258,28 +259,28 @@
     }
 
     if (username.toLowerCase() !== (auth.username || '').toLowerCase()) {
-      if (errEl) errEl.textContent = 'درج شدہ یوزر نیم ریکارڈ سے مماثلت نہیں رکھتا۔';
+      if (errEl) errEl.textContent = 'Username does not match our records.';
       shakeCard('auth-recovery-card');
       return { success: false, error: 'invalid_username' };
     }
 
     const pinHash = await hashPassword(pin, auth.recoverySalt || auth.salt);
     if (pinHash !== auth.recoveryPinHash) {
-      if (errEl) errEl.textContent = 'ریکوری پن کوڈ درست نہیں ہے۔';
+      if (errEl) errEl.textContent = 'Incorrect Recovery PIN.';
       shakeCard('auth-recovery-card');
       $('recovery-pin')?.focus();
       return { success: false, error: 'invalid_pin' };
     }
 
     if (newPass.length < 4) {
-      if (errEl) errEl.textContent = 'نیا پاس ورڈ کم از کم 4 حروف کا ہونا چاہیے۔';
+      if (errEl) errEl.textContent = 'New password must be at least 4 characters.';
       shakeCard('auth-recovery-card');
       $('recovery-new-password')?.focus();
       return { success: false, error: 'password_length' };
     }
 
     if (newPass !== confirmPass) {
-      if (errEl) errEl.textContent = 'نیا پاس ورڈ اور تصدیق آپس میں نہیں ملتے۔';
+      if (errEl) errEl.textContent = 'New password and confirmation do not match.';
       shakeCard('auth-recovery-card');
       $('recovery-new-password-confirm')?.focus();
       return { success: false, error: 'password_mismatch' };
@@ -351,7 +352,7 @@
     });
 
     $('lock-app-now-btn')?.addEventListener('click', () => {
-      lockApp('ایپلی کیشن صارف کی جانب سے لاک کی گئی ہے۔');
+      lockApp('App locked by user.');
     });
 
     $('account-settings-btn')?.addEventListener('click', () => {
@@ -387,7 +388,7 @@
       if (oldHash !== auth.passwordHash) {
         if (msgEl) {
           msgEl.className = 'pin-msg error';
-          msgEl.textContent = 'موجودہ پاس ورڈ درست نہیں ہے۔';
+          msgEl.textContent = 'Current password is incorrect.';
         }
         $('acc-old-password')?.focus();
         return;
@@ -399,7 +400,7 @@
         if (newPass.length < 4) {
           if (msgEl) {
             msgEl.className = 'pin-msg error';
-            msgEl.textContent = 'نیا پاس ورڈ کم از کم 4 حروف کا ہونا چاہیے۔';
+            msgEl.textContent = 'New password must be at least 4 characters.';
           }
           return;
         }
@@ -412,7 +413,7 @@
         if (!/^\d{4,8}$/.test(newPin)) {
           if (msgEl) {
             msgEl.className = 'pin-msg error';
-            msgEl.textContent = 'نیا ریکوری پن 4 سے 8 ہندسے ہونا چاہیے۔';
+            msgEl.textContent = 'New Recovery PIN must be 4 to 8 digits.';
           }
           return;
         }
@@ -429,7 +430,7 @@
 
       if (msgEl) {
         msgEl.className = 'pin-msg success';
-        msgEl.textContent = '✓ اکاؤنٹ سیٹنگز کامیابی سے محفوظ ہو گئیں!';
+        msgEl.textContent = '✓ Account settings saved successfully!';
       }
       setTimeout(() => $('account-settings-dialog')?.close(), 1500);
     });

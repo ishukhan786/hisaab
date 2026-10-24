@@ -1072,36 +1072,40 @@
     </form>
   </dialog>
 
-  <dialog id="account-settings-dialog" class="auth-dialog no-print">
+  <dialog id="account-settings-dialog" class="auth-dialog no-print" dir="ltr">
     <div class="dialog-head">
-      <h2>👤 لاگ ان اکاؤنٹ و پاس ورڈ سیٹنگز</h2>
-      <button id="btn-close-account-settings" type="button" aria-label="بند کریں">✕</button>
+      <h2>👤 Account &amp; Password Settings</h2>
+      <button id="btn-close-account-settings" type="button" aria-label="Close">✕</button>
     </div>
     <form id="account-settings-form" class="auth-form" novalidate>
-      <div class="auth-field">
-        <label for="acc-curr-username">موجودہ یوزر نیم</label>
-        <input id="acc-curr-username" type="text" readonly disabled>
-      </div>
-      <div class="auth-field">
-        <label for="acc-old-password">موجودہ پاس ورڈ (Current Password) *</label>
-        <input id="acc-old-password" type="password" required placeholder="موجودہ پاس ورڈ لکھیں">
+      <div class="auth-grid-2">
+        <div class="auth-field">
+          <label for="acc-curr-username">Current Username</label>
+          <input id="acc-curr-username" type="text" readonly disabled>
+        </div>
+        <div class="auth-field">
+          <label for="acc-old-password">Current Password <span class="req">*</span></label>
+          <input id="acc-old-password" type="password" required placeholder="Current password">
+        </div>
       </div>
       <hr class="auth-field-divider">
       <div class="auth-field">
-        <label for="acc-new-username">نیا یوزر نیم (اختیاری)</label>
-        <input id="acc-new-username" type="text" placeholder="نیا یوزر نیم لکھیں">
+        <label for="acc-new-username">New Username (Optional)</label>
+        <input id="acc-new-username" type="text" placeholder="Leave blank to keep current">
       </div>
-      <div class="auth-field">
-        <label for="acc-new-password">نیا پاس ورڈ (اختیاری)</label>
-        <input id="acc-new-password" type="password" placeholder="اگر تبدیل کرنا ہو تو نیا پاس ورڈ لکھیں">
-      </div>
-      <div class="auth-field">
-        <label for="acc-new-pin">نیا ریکوری پن کوڈ (اختیاری - 4 سے 8 ہندسے)</label>
-        <input id="acc-new-pin" type="password" inputmode="numeric" maxlength="8" placeholder="اگر تبدیل کرنا ہو تو نیا ریکوری پن لکھیں">
+      <div class="auth-grid-2">
+        <div class="auth-field">
+          <label for="acc-new-password">New Password (Optional)</label>
+          <input id="acc-new-password" type="password" placeholder="Min. 4 characters">
+        </div>
+        <div class="auth-field">
+          <label for="acc-new-pin">New Recovery PIN (Optional)</label>
+          <input id="acc-new-pin" type="password" inputmode="numeric" maxlength="8" placeholder="4 - 8 digits">
+        </div>
       </div>
       <p id="acc-settings-msg" role="status" class="auth-msg"></p>
       <div class="auth-actions">
-        <button type="submit" class="primary auth-submit-btn">✓ تبدیلیاں محفوظ کریں</button>
+        <button type="submit" class="primary auth-submit-btn">✓ Save Changes</button>
       </div>
     </form>
   </dialog>
@@ -1109,156 +1113,205 @@
   <!-- Username & Password Desktop Authentication Overlay -->
   <div id="auth-overlay" class="auth-overlay no-print" hidden>
     <!-- 1. Setup Card (First-time user) -->
-    <div id="auth-setup-card" class="auth-card" hidden>
-      <div class="auth-brand-wrap">
-        <div class="logo-mini auth-logo">ح</div>
-        <div class="auth-shield-icon" aria-hidden="true">✨</div>
+    <div id="auth-setup-card" class="auth-card" dir="ltr" hidden>
+      <div class="auth-header">
+        <div class="auth-brand-wrap">
+          <div class="logo-mini auth-logo">ح</div>
+          <div class="auth-shield-icon" aria-hidden="true">✨</div>
+        </div>
+        <div class="auth-header-text">
+          <h2 class="auth-title">Admin Account Setup</h2>
+          <p class="auth-subtitle">Create your username and password to secure your account</p>
+        </div>
       </div>
-      <h2 class="auth-title">نیا ایڈمن اکاؤنٹ بنائیں</h2>
-      <p class="auth-subtitle">ایپلی کیشن کو محفوظ بنانے کے لیے اپنا یوزر نیم اور پاس ورڈ مقرر کریں:</p>
 
       <form id="auth-setup-form" class="auth-form" novalidate>
         <div class="auth-field">
-          <label for="setup-username">یوزر نیم (Username) *</label>
+          <label for="setup-username">Username <span class="req">*</span></label>
           <div class="auth-input-container">
-            <span class="auth-input-icon" aria-hidden="true">👤</span>
-            <input id="setup-username" type="text" autocomplete="username" placeholder="مثلاً admin یا اپنا نام" required>
+            <span class="auth-input-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <input id="setup-username" type="text" autocomplete="username" placeholder="e.g. admin or your name" required>
+          </div>
+        </div>
+
+        <div class="auth-grid-2">
+          <div class="auth-field">
+            <label for="setup-password">Password <span class="req">*</span></label>
+            <div class="auth-input-container">
+              <span class="auth-input-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <input id="setup-password" type="password" autocomplete="new-password" placeholder="Min. 4 chars" required>
+              <button id="toggle-setup-pwd-btn" type="button" class="auth-eye-btn" title="Show password" aria-label="Show password" aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <label for="setup-password-confirm">Confirm Password <span class="req">*</span></label>
+            <div class="auth-input-container">
+              <span class="auth-input-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <input id="setup-password-confirm" type="password" autocomplete="new-password" placeholder="Re-enter password" required>
+              <button id="toggle-setup-confirm-btn" type="button" class="auth-eye-btn" title="Show password" aria-label="Show password" aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
           </div>
         </div>
 
         <div class="auth-field">
-          <label for="setup-password">پاس ورڈ (Password) *</label>
-          <div class="auth-input-container">
-            <span class="auth-input-icon" aria-hidden="true">🔒</span>
-            <input id="setup-password" type="password" autocomplete="new-password" placeholder="کم از کم 4 حروف یا ہندسے" required>
-            <button id="toggle-setup-pwd-btn" type="button" class="auth-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں" aria-pressed="false">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
+          <div class="auth-label-row">
+            <label for="setup-recovery-pin">Recovery PIN <span class="req">*</span></label>
+            <span class="auth-pill">4 - 8 Digits</span>
           </div>
-        </div>
-
-        <div class="auth-field">
-          <label for="setup-password-confirm">پاس ورڈ کی تصدیق (Confirm Password) *</label>
           <div class="auth-input-container">
-            <span class="auth-input-icon" aria-hidden="true">🔒</span>
-            <input id="setup-password-confirm" type="password" autocomplete="new-password" placeholder="پاس ورڈ دوبارہ درج کریں" required>
-            <button id="toggle-setup-confirm-btn" type="button" class="auth-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں" aria-pressed="false">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
+            <span class="auth-input-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5-3 3 1.5 1.5L9 14l-1.5-1.5L6 14l-4 4v4h4l4-4 1.5 1.5L14 17l-1.5-1.5 3-3 1.5 1.5 3.5-3.5a5.5 5.5 0 1 0-7.78-7.78z"/></svg>
+            </span>
+            <input id="setup-recovery-pin" type="password" inputmode="numeric" maxlength="8" placeholder="e.g. 5678" required>
           </div>
-        </div>
-
-        <div class="auth-field">
-          <label for="setup-recovery-pin">ریکوری پن کوڈ (Recovery PIN - 4 سے 8 ہندسے) *</label>
-          <div class="auth-input-container">
-            <span class="auth-input-icon" aria-hidden="true">🔑</span>
-            <input id="setup-recovery-pin" type="password" inputmode="numeric" maxlength="8" placeholder="مثلاً: 5678" required>
-          </div>
-          <small class="auth-hint">💡 اگر آپ پاس ورڈ بھول جائیں تو یہ پن کوڈ نیا پاس ورڈ بنانے کے لیے کام آئے گا۔</small>
+          <small class="auth-hint">Used to reset your password if you ever forget it.</small>
         </div>
 
         <p id="auth-setup-error" role="status" class="auth-error"></p>
 
         <div class="auth-actions">
-          <button type="submit" class="primary auth-submit-btn">✓ اکاؤنٹ بنائیں اور لاگ ان کریں</button>
+          <button type="submit" class="primary auth-submit-btn">
+            <span>Create Account &amp; Sign In</span>
+            <span class="auth-btn-icon">➜</span>
+          </button>
         </div>
       </form>
     </div>
 
     <!-- 2. Normal Login Card -->
-    <div id="auth-login-card" class="auth-card" hidden>
-      <div class="auth-brand-wrap">
-        <div class="logo-mini auth-logo">ح</div>
-        <div class="auth-shield-icon" aria-hidden="true">🔒</div>
+    <div id="auth-login-card" class="auth-card" dir="ltr" hidden>
+      <div class="auth-header">
+        <div class="auth-brand-wrap">
+          <div class="logo-mini auth-logo">ح</div>
+          <div class="auth-shield-icon" aria-hidden="true">🔒</div>
+        </div>
+        <div class="auth-header-text">
+          <h2 class="auth-title">Welcome Back</h2>
+          <p id="auth-login-reason" class="auth-subtitle">Enter your credentials to access your accounts</p>
+        </div>
       </div>
-      <h2 class="auth-title">حساب — لاگ ان</h2>
-      <p id="auth-login-reason" class="auth-subtitle">اپنے کاروباری ریکارڈ تک رسائی کے لیے لاگ ان کریں:</p>
 
       <form id="auth-login-form" class="auth-form" novalidate>
         <div class="auth-field">
-          <label for="login-username">یوزر نیم (Username)</label>
+          <label for="login-username">Username</label>
           <div class="auth-input-container">
-            <span class="auth-input-icon" aria-hidden="true">👤</span>
-            <input id="login-username" type="text" autocomplete="username" placeholder="یوزر نیم درج کریں" required>
+            <span class="auth-input-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <input id="login-username" type="text" autocomplete="username" placeholder="Enter username" required>
           </div>
         </div>
 
         <div class="auth-field">
-          <label for="login-password">پاس ورڈ (Password)</label>
+          <div class="auth-label-row">
+            <label for="login-password">Password</label>
+            <button type="button" id="btn-goto-recovery" class="auth-link-btn">Forgot Password?</button>
+          </div>
           <div class="auth-input-container">
-            <span class="auth-input-icon" aria-hidden="true">🔒</span>
-            <input id="login-password" type="password" autocomplete="current-password" placeholder="پاس ورڈ درج کریں" required>
-            <button id="toggle-login-pwd-btn" type="button" class="auth-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں" aria-pressed="false">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="auth-input-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+            <input id="login-password" type="password" autocomplete="current-password" placeholder="Enter password" required>
+            <button id="toggle-login-pwd-btn" type="button" class="auth-eye-btn" title="Show password" aria-label="Show password" aria-pressed="false">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </div>
-        </div>
-
-        <div class="auth-help-row">
-          <button type="button" id="btn-goto-recovery" class="auth-link-btn">🔑 پاس ورڈ بھول گئے؟</button>
         </div>
 
         <p id="auth-login-error" role="status" class="auth-error"></p>
 
         <div class="auth-actions">
-          <button type="submit" class="primary auth-submit-btn">لاگ ان کریں ➜</button>
+          <button type="submit" class="primary auth-submit-btn">
+            <span>Sign In</span>
+            <span class="auth-btn-icon">➜</span>
+          </button>
         </div>
       </form>
     </div>
 
     <!-- 3. Password Recovery Card -->
-    <div id="auth-recovery-card" class="auth-card" hidden>
-      <div class="auth-brand-wrap">
-        <div class="logo-mini auth-logo">ح</div>
-        <div class="auth-shield-icon" aria-hidden="true">🔑</div>
+    <div id="auth-recovery-card" class="auth-card" dir="ltr" hidden>
+      <div class="auth-header">
+        <div class="auth-brand-wrap">
+          <div class="logo-mini auth-logo">ح</div>
+          <div class="auth-shield-icon" aria-hidden="true">🔑</div>
+        </div>
+        <div class="auth-header-text">
+          <h2 class="auth-title">Reset Password</h2>
+          <p class="auth-subtitle">Verify your recovery PIN to set a new password</p>
+        </div>
       </div>
-      <h2 class="auth-title">پاس ورڈ ریکوری</h2>
-      <p class="auth-subtitle">اپنا یوزر نیم اور ریکوری پن درج کر کے نیا پاس ورڈ سیٹ کریں:</p>
 
       <form id="auth-recovery-form" class="auth-form" novalidate>
-        <div class="auth-field">
-          <label for="recovery-username">یوزر نیم (Username)</label>
-          <div class="auth-input-container">
-            <span class="auth-input-icon" aria-hidden="true">👤</span>
-            <input id="recovery-username" type="text" autocomplete="username" placeholder="یوزر نیم درج کریں" required>
+        <div class="auth-grid-2">
+          <div class="auth-field">
+            <label for="recovery-username">Username</label>
+            <div class="auth-input-container">
+              <span class="auth-input-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <input id="recovery-username" type="text" autocomplete="username" placeholder="Username" required>
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <label for="recovery-pin">Recovery PIN</label>
+            <div class="auth-input-container">
+              <span class="auth-input-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5-3 3 1.5 1.5L9 14l-1.5-1.5L6 14l-4 4v4h4l4-4 1.5 1.5L14 17l-1.5-1.5 3-3 1.5 1.5 3.5-3.5a5.5 5.5 0 1 0-7.78-7.78z"/></svg>
+              </span>
+              <input id="recovery-pin" type="password" inputmode="numeric" maxlength="8" placeholder="4 - 8 digits" required>
+            </div>
           </div>
         </div>
 
-        <div class="auth-field">
-          <label for="recovery-pin">ریکوری پن کوڈ (Recovery PIN)</label>
-          <div class="auth-input-container">
-            <span class="auth-input-icon" aria-hidden="true">🔑</span>
-            <input id="recovery-pin" type="password" inputmode="numeric" maxlength="8" placeholder="اکاؤنٹ بناتے وقت رکھا گیا پن کوڈ" required>
+        <div class="auth-grid-2">
+          <div class="auth-field">
+            <label for="recovery-new-password">New Password</label>
+            <div class="auth-input-container">
+              <span class="auth-input-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <input id="recovery-new-password" type="password" autocomplete="new-password" placeholder="Min. 4 chars" required>
+              <button id="toggle-rec-pwd-btn" type="button" class="auth-eye-btn" title="Show password" aria-label="Show password" aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div class="auth-field">
-          <label for="recovery-new-password">نیا پاس ورڈ (New Password)</label>
-          <div class="auth-input-container">
-            <span class="auth-input-icon" aria-hidden="true">🔒</span>
-            <input id="recovery-new-password" type="password" autocomplete="new-password" placeholder="کم از کم 4 حروف کا نیا پاس ورڈ" required>
-            <button id="toggle-rec-pwd-btn" type="button" class="auth-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں" aria-pressed="false">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="auth-field">
-          <label for="recovery-new-password-confirm">نئے پاس ورڈ کی تصدیق</label>
-          <div class="auth-input-container">
-            <span class="auth-input-icon" aria-hidden="true">🔒</span>
-            <input id="recovery-new-password-confirm" type="password" autocomplete="new-password" placeholder="نیا پاس ورڈ دوبارہ لکھیں" required>
-            <button id="toggle-rec-confirm-btn" type="button" class="auth-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں" aria-pressed="false">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
+          <div class="auth-field">
+            <label for="recovery-new-password-confirm">Confirm Password</label>
+            <div class="auth-input-container">
+              <span class="auth-input-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <input id="recovery-new-password-confirm" type="password" autocomplete="new-password" placeholder="Re-enter password" required>
+              <button id="toggle-rec-confirm-btn" type="button" class="auth-eye-btn" title="Show password" aria-label="Show password" aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
           </div>
         </div>
 
         <p id="auth-recovery-error" role="status" class="auth-error"></p>
 
         <div class="auth-actions">
-          <button type="submit" class="primary auth-submit-btn">✓ نیا پاس ورڈ محفوظ کریں</button>
-          <button type="button" id="btn-back-to-login" class="auth-cancel-btn">منسوخ کریں</button>
+          <button type="submit" class="primary auth-submit-btn">
+            <span>Save &amp; Sign In</span>
+            <span class="auth-btn-icon">➜</span>
+          </button>
+          <button type="button" id="btn-back-to-login" class="auth-cancel-btn">Cancel</button>
         </div>
       </form>
     </div>
