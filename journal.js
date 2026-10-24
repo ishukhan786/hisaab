@@ -178,6 +178,25 @@
     }
     $('journal-date-prev').onclick=()=>shiftDate(-1);
     $('journal-date-next').onclick=()=>shiftDate(1);
+    $('journal-print')?.addEventListener('click', () => output(false));
+    $('journal-pdf')?.addEventListener('click', async () => {
+      const btn = $('journal-pdf');
+      const original = btn ? btn.innerHTML : '';
+      if (btn) btn.disabled = true;
+      try {
+        const res = await output(true);
+        if (res?.status === 'saved') {
+          if (btn) btn.innerHTML = '<span aria-hidden="true">✓</span><span>محفوظ ہو گئی</span>';
+          if (res.filePath && window.recordSavedPdf) {
+            window.recordSavedPdf(res.filePath);
+          }
+          setTimeout(() => { if (btn) btn.innerHTML = original; }, 2500);
+        }
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    });
+    $('journal-excel')?.addEventListener('click', () => exportExcel());
     function add(){const row=ensureDraft();if(!nodes.has(row.id))addNode(row);nodes.get(row.id).querySelector('textarea').focus();}
     $('journal-undo').onclick=()=>{if(!undo)return;data().rows.splice(Math.min(undo.index,data().rows.length),0,undo.row);data().date=undo.row.date;undo=null;refresh();save(true);};
     function preparePrint(){recalculate();document.querySelectorAll('.journal-print-value').forEach(n=>n.remove());for(const tr of nodes.values())tr.querySelectorAll('input,textarea').forEach(input=>{const span=document.createElement('span');span.className='journal-print-value'+(input.dataset.journal==='detail'?'':' journal-money');span.textContent=input.value;input.after(span);});}

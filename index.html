@@ -206,7 +206,38 @@
   <!-- FIX-22: journal-page with hidden landmark and tabpanel role -->
   <main id="journal-page" role="tabpanel" aria-labelledby="view-journal" hidden>
     <section class="journal-card" aria-label="روزنامچہ">
-      <header class="journal-heading"><div><h1>روزنامچہ</h1><p id="journal-message" role="status">بقایا = پچھلا بقایا + جمع − بنام</p></div><div class="journal-tools no-print"><label for="journal-date">تاریخ</label><div class="journal-date-nav"><button id="journal-date-prev" type="button" title="پچھلا دن" aria-label="پچھلا دن">◀</button><input id="journal-date" type="date" min="0001-01-01" max="9999-12-31"><button id="journal-date-next" type="button" title="اگلا دن" aria-label="اگلا دن">▶</button></div><button id="journal-undo" type="button" hidden>حذف شدہ واپس لائیں</button></div><span id="journal-date-print"></span></header>
+      <header class="journal-heading">
+        <div>
+          <h1>روزنامچہ</h1>
+          <p id="journal-message" role="status">بقایا = پچھلا بقایا + جمع − بنام</p>
+        </div>
+        <div class="journal-tools no-print">
+          <div class="journal-date-group">
+            <label for="journal-date">تاریخ</label>
+            <div class="journal-date-nav">
+              <button id="journal-date-prev" type="button" title="پچھلا دن" aria-label="پچھلا دن">◀</button>
+              <input id="journal-date" type="date" min="0001-01-01" max="9999-12-31">
+              <button id="journal-date-next" type="button" title="اگلا دن" aria-label="اگلا دن">▶</button>
+            </div>
+          </div>
+          <div class="journal-actions-cluster" role="group" aria-label="روزنامچہ ایکشنز">
+            <button id="journal-print" class="btn-journal-action btn-journal-print" type="button" title="روزنامچہ پرنٹ کریں (Ctrl+P)">
+              <span aria-hidden="true">🖨</span>
+              <span>پرنٹ</span>
+            </button>
+            <button id="journal-pdf" class="btn-journal-action btn-journal-pdf" type="button" title="روزنامچہ PDF میں محفوظ کریں">
+              <span aria-hidden="true">📄</span>
+              <span>PDF محفوظ کریں</span>
+            </button>
+            <button id="journal-excel" class="btn-journal-action btn-journal-excel" type="button" title="روزنامچہ Excel فائل میں محفوظ کریں">
+              <span aria-hidden="true">📊</span>
+              <span>Excel</span>
+            </button>
+          </div>
+          <button id="journal-undo" type="button" hidden>حذف شدہ واپس لائیں</button>
+        </div>
+        <span id="journal-date-print"></span>
+      </header>
       <div class="journal-opening-line">سابقہ کیش <strong id="journal-opening">0</strong></div>
       <p class="table-scroll-hint no-print">↔ مزید کالم دیکھنے کے لیے جدول دائیں یا بائیں کھسکائیں</p>
       <div class="journal-table-wrap">

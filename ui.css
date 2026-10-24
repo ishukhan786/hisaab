@@ -2753,7 +2753,7 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   }
 
   /* 2. PRINT: ROYAL SAPPHIRE BLUE */
-  html body.app-shell :is(#print, #receipt-preview, #btn-khata-dir-print):not(#toggle-pwd-btn) {
+  html body.app-shell :is(#print, #receipt-preview, #btn-khata-dir-print, #journal-print):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 55%, #1d4ed8 100%) !important;
     color: #ffffff !important;
     border: 1px solid #1e40af !important;
@@ -2761,14 +2761,14 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
     box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
     text-shadow: 0 1px 2px rgba(30, 64, 175, 0.4);
   }
-  html body.app-shell :is(#print, #receipt-preview, #btn-khata-dir-print):not(#toggle-pwd-btn):hover:not(:disabled) {
+  html body.app-shell :is(#print, #receipt-preview, #btn-khata-dir-print, #journal-print):not(#toggle-pwd-btn):hover:not(:disabled) {
     background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 55%, #2563eb 100%) !important;
     box-shadow: 0 8px 24px rgba(37, 99, 235, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
     translate: 0 -2px !important;
   }
 
   /* 3. EXCEL: VIVID FOREST KELLY GREEN */
-  html body.app-shell :is(#export-open, #export-filtered, #export-all, #btn-khata-dir-excel):not(#toggle-pwd-btn) {
+  html body.app-shell :is(#export-open, #export-filtered, #export-all, #btn-khata-dir-excel, #journal-excel):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #16a34a 0%, #15803d 55%, #14532d 100%) !important;
     color: #ffffff !important;
     border: 1px solid #14532d !important;
@@ -2776,7 +2776,7 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
     box-shadow: 0 4px 14px rgba(22, 163, 74, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
     text-shadow: 0 1px 2px rgba(20, 83, 45, 0.4);
   }
-  html body.app-shell :is(#export-open, #export-filtered, #export-all, #btn-khata-dir-excel):not(#toggle-pwd-btn):hover:not(:disabled) {
+  html body.app-shell :is(#export-open, #export-filtered, #export-all, #btn-khata-dir-excel, #journal-excel):not(#toggle-pwd-btn):hover:not(:disabled) {
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 55%, #15803d 100%) !important;
     box-shadow: 0 8px 24px rgba(22, 163, 74, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
     translate: 0 -2px !important;
@@ -3007,14 +3007,14 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   }
 
   /* 18. PDF SAVE: CORAL ROSE */
-  html body.app-shell :is(#save-pdf, #summary-pdf, #receipt-save):not(#toggle-pwd-btn) {
+  html body.app-shell :is(#save-pdf, #summary-pdf, #receipt-save, #journal-pdf):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #fb7185 0%, #f43f5e 60%, #be123c 100%) !important;
     color: #ffffff !important;
     border: 1px solid #9f1239 !important;
     font-weight: 700 !important;
     box-shadow: 0 4px 14px rgba(244, 63, 94, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
   }
-  html body.app-shell :is(#save-pdf, #summary-pdf, #receipt-save):not(#toggle-pwd-btn):hover:not(:disabled) {
+  html body.app-shell :is(#save-pdf, #summary-pdf, #receipt-save, #journal-pdf):not(#toggle-pwd-btn):hover:not(:disabled) {
     background: linear-gradient(135deg, #fda4af 0%, #fb7185 60%, #e11d48 100%) !important;
     box-shadow: 0 8px 22px rgba(244, 63, 94, 0.52) !important;
     translate: 0 -2px !important;
@@ -3173,13 +3173,13 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
     color: #ffffff !important;
     box-shadow: 0 0 20px rgba(6, 182, 212, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
   }
-  html[data-theme="dark"] body.app-shell :is(#print, #receipt-preview, #btn-khata-dir-print):not(#toggle-pwd-btn) {
+  html[data-theme="dark"] body.app-shell :is(#print, #receipt-preview, #btn-khata-dir-print, #journal-print):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 60%, #1d4ed8 100%) !important;
     border-color: #60a5fa !important;
     color: #ffffff !important;
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
   }
-  html[data-theme="dark"] body.app-shell :is(#export-open, #export-filtered, #export-all, #btn-khata-dir-excel):not(#toggle-pwd-btn) {
+  html[data-theme="dark"] body.app-shell :is(#export-open, #export-filtered, #export-all, #btn-khata-dir-excel, #journal-excel):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #16a34a 0%, #15803d 60%, #14532d 100%) !important;
     border-color: #4ade80 !important;
     color: #ffffff !important;
@@ -3209,7 +3209,7 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
     color: #ffffff !important;
     box-shadow: 0 0 18px rgba(249, 115, 22, 0.45) !important;
   }
-  html[data-theme="dark"] body.app-shell :is(#save-pdf, #summary-pdf):not(#toggle-pwd-btn) {
+  html[data-theme="dark"] body.app-shell :is(#save-pdf, #summary-pdf, #journal-pdf):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
     border-color: #fda4af !important;
     color: #ffffff !important;

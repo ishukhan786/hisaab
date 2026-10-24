@@ -7,7 +7,12 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 .journal-card{background:white;border:1px solid #d3dfd5;border-radius:16px;overflow:hidden;box-shadow:0 5px 22px #234b3408}
 .journal-heading{padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:1px solid #e2eae3}
 .journal-heading h1{margin:0;font-size:26px}.journal-heading p{font-size:12px;margin:3px 0 0;color:#617b6a}.journal-heading p.error{color:#a3342e}
-.journal-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.journal-tools label{font-size:12px}.journal-tools input{font:14px Arial,sans-serif;direction:ltr;padding:10px;border:1px solid #cbdacf;border-radius:9px;height:44px}
+.journal-tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.journal-date-group{display:inline-flex;align-items:center;gap:8px}
+.journal-tools label{font-size:12px;font-weight:600}
+.journal-tools input{font:14px Arial,sans-serif;direction:ltr;padding:8px 10px;border:1px solid #cbdacf;border-radius:9px;height:40px}
+.journal-actions-cluster{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn-journal-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 15px;font-size:13px;font-weight:700;border-radius:9px;cursor:pointer;white-space:nowrap;transition:all .18s ease;border:1px solid transparent}
 #journal-date-print{display:none}
 .journal-opening-line{padding:10px 24px;background:#f5f9f3;display:flex;justify-content:space-between;align-items:center;font-size:13px;border-bottom:1px solid #dce6df}
 #journal-opening{font:700 17px Arial,sans-serif;direction:rtl}

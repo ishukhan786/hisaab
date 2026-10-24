@@ -2002,6 +2002,7 @@
     if ($('open-pdf')) $('open-pdf').hidden = false;
     if ($('open-pdf-folder')) $('open-pdf-folder').hidden = false;
   }
+  window.recordSavedPdf = recordSavedPdf;
   if ($('open-pdf')) $('open-pdf').onclick = () => { if (lastSavedPdfPath) window.electronAPI?.openFile?.(lastSavedPdfPath); };
   if ($('open-pdf-folder')) $('open-pdf-folder').onclick = () => { if (lastSavedPdfPath) window.electronAPI?.showInFolder?.(lastSavedPdfPath); };
 
