@@ -367,64 +367,69 @@
     },
 
     populateSlip(values) {
-      const slip = document.getElementById('thermal-slip-paper');
-      if (!slip) return;
+      try {
+        const slip = document.getElementById('thermal-slip-paper');
+        if (!slip) return;
 
-      const currentTime = this.formatTime();
-      const currentUser = window.HisaabAuth?.getCurrentUser()?.username || 'ایڈمن';
+        const currentTime = this.formatTime();
+        const currentUser = window.HisaabAuth?.getCurrentUser()?.username || 'ایڈمن';
 
-      // Map values
-      const thermalData = {
-        serial: this.formatSerial(values.serial),
-        date: values.date || '',
-        time: currentTime,
-        operator: currentUser,
-        branch: values.branch || '—',
-        sender: values.sender || '—',
-        mobile: values.mobile || '—',
-        receiver: values.receiver || '—',
-        place: values.place || '—',
-        pkr: values.pkr || '0',
-        currency: values.currency || 'روپیہ (PKR)',
-        aed: values.aed || '0',
-        balance: values.balance || '0'
-      };
+        // Map values
+        const thermalData = {
+          serial: this.formatSerial(values.serial),
+          date: values.date || '',
+          time: currentTime,
+          operator: currentUser,
+          branch: values.branch || '—',
+          sender: values.sender || '—',
+          mobile: values.mobile || '—',
+          receiver: values.receiver || '—',
+          place: values.place || '—',
+          pkr: values.pkr || '0',
+          currency: values.currency || 'روپیہ (PKR)',
+          aed: values.aed || '0',
+          balance: values.balance || '0'
+        };
 
-      for (const [key, val] of Object.entries(thermalData)) {
-        const el = slip.querySelector(`[data-thermal="${key}"]`);
-        if (el) el.textContent = val;
-      }
+        for (const [key, val] of Object.entries(thermalData)) {
+          const el = slip.querySelector(`[data-thermal="${key}"]`);
+          if (el) el.textContent = val;
+        }
 
-      // Hide optional sub-amounts if they are '0' or '—'
-      const aedWrap = slip.querySelector('[data-thermal-wrap="aed"]');
-      if (aedWrap) {
-        const isAedEmpty = !values.aed || values.aed === '0' || values.aed === '—';
-        aedWrap.hidden = isAedEmpty;
-      }
-      const balWrap = slip.querySelector('[data-thermal-wrap="balance"]');
-      if (balWrap) {
-        const isBalEmpty = !values.balance || values.balance === '0' || values.balance === '—';
-        balWrap.hidden = isBalEmpty;
-      }
+        // Hide optional sub-amounts if they are '0' or '—'
+        const aedWrap = slip.querySelector('[data-thermal-wrap="aed"]');
+        if (aedWrap) {
+          const isAedEmpty = !values.aed || values.aed === '0' || values.aed === '—';
+          aedWrap.hidden = isAedEmpty;
+        }
+        const balWrap = slip.querySelector('[data-thermal-wrap="balance"]');
+        if (balWrap) {
+          const isBalEmpty = !values.balance || values.balance === '0' || values.balance === '—';
+          balWrap.hidden = isBalEmpty;
+        }
 
-      // Generate Verification QR Code
-      const qrContainer = document.getElementById('thermal-slip-qr');
-      if (qrContainer) {
-        const verificationText = [
-          'HISAAB VERIFIED RECEIPT',
-          `Slip: ${thermalData.serial}`,
-          `Date: ${thermalData.date} ${thermalData.time}`,
-          `Party: ${thermalData.branch}`,
-          `Sender: ${thermalData.sender}`,
-          `Receiver: ${thermalData.receiver}`,
-          `Amount: ${thermalData.pkr} ${thermalData.currency}`,
-          `Auth: ${currentUser}`
-        ].join(' | ');
+        // Generate Verification QR Code
+        const qrContainer = document.getElementById('thermal-slip-qr');
+        if (qrContainer) {
+          try {
+            const verificationText = [
+              'HISAAB',
+              `Slip: ${thermalData.serial}`,
+              `Date: ${thermalData.date}`,
+              `Party: ${thermalData.branch}`,
+              `Amt: ${thermalData.pkr} ${thermalData.currency}`
+            ].join(' | ');
 
-        qrContainer.innerHTML = QRCode.toSVG(verificationText, {
-          margin: 1,
-          title: 'Hisaab Verified Receipt QR'
-        });
+            qrContainer.innerHTML = QRCode.toSVG(verificationText, {
+              margin: 1,
+              title: 'Hisaab Verified Receipt QR'
+            });
+          } catch (qrErr) {
+            console.warn('QR code generation notice:', qrErr);
+          }
+        }
+      } catch (err) {
+        console.warn('HisaabThermal.populateSlip notice:', err);
       }
     },
 

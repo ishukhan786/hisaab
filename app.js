@@ -1757,35 +1757,62 @@
 
   /* FIX-24: openReceipt safely formats numbers without null crashes */
   function openReceipt(row, serial) {
-    if (!canOutput([row], false)) return;
-    receiptSelection = { serial: String(serial), date: row.entryDate || state.date || today(), branch: row.branch || 'بغیر پارٹی' };
-    const safeFmt = v => { const n = integerAmount(v); return n !== null ? formatted(n) : (v || '0'); };
-    const values = {
-      title: state.title || 'اندراج رجسٹر',
-      serial: String(serial),
-      date: fmtDate(receiptSelection.date),
-      branch: receiptSelection.branch,
-      sender: row.sender || '—',
-      mobile: row.mobile || '—',
-      receiver: row.receiver || '—',
-      place: row.place || '—',
-      balance: safeFmt(row.balance),
-      aed: safeFmt(row.aed),
-      pkr: safeFmt(row.pkr),
-      currency: partyCurrency(row.branch) === 'afn' ? 'افغانی (AFN)' : 'روپیہ (PKR)'
-    };
-    for (const [field, value] of Object.entries(values)) {
-      const el = $('receipt-paper').querySelector('[data-receipt="' + field + '"]');
-      if (el) el.textContent = value;
+    try {
+      if (!canOutput([row], false)) return;
+      receiptSelection = { serial: String(serial), date: row.entryDate || state.date || today(), branch: row.branch || 'بغیر پارٹی' };
+      const safeFmt = v => { const n = integerAmount(v); return n !== null ? formatted(n) : (v || '0'); };
+      const values = {
+        title: state.title || 'اندراج رجسٹر',
+        serial: String(serial),
+        date: fmtDate(receiptSelection.date),
+        branch: receiptSelection.branch,
+        sender: row.sender || '—',
+        mobile: row.mobile || '—',
+        receiver: row.receiver || '—',
+        place: row.place || '—',
+        balance: safeFmt(row.balance),
+        aed: safeFmt(row.aed),
+        pkr: safeFmt(row.pkr),
+        currency: partyCurrency(row.branch) === 'afn' ? 'افغانی (AFN)' : 'روپیہ (PKR)'
+      };
+      const paper = $('receipt-paper');
+      if (paper) {
+        for (const [field, value] of Object.entries(values)) {
+          const el = paper.querySelector('[data-receipt="' + field + '"]');
+          if (el) el.textContent = value;
+        }
+      }
+      try {
+        if (window.HisaabThermal?.populateSlip) {
+          window.HisaabThermal.populateSlip(values);
+        }
+      } catch (thmErr) {
+        console.warn('Thermal slip notice:', thmErr);
+      }
+      try {
+        switchReceiptTab('standard');
+      } catch (_) {}
+      if ($('receipt-status')) $('receipt-status').textContent = '';
+      if ($('receipt-save')) $('receipt-save').hidden = false;
+      if ($('receipt-png')) $('receipt-png').hidden = false;
+      if ($('receipt-copy')) {
+        $('receipt-copy').hidden = false;
+        $('receipt-copy').disabled = !window.electronAPI?.copyReceiptPNG && !(window.ClipboardItem && navigator.clipboard?.write);
+        $('receipt-copy').title = $('receipt-copy').disabled ? 'اس براؤزر میں تصویر کاپی دستیاب نہیں؛ PNG ڈاؤن لوڈ کریں' : 'تصویر کاپی کریں';
+      }
+      const d = $('receipt-dialog');
+      if (d) {
+        try { if (d.open) d.close(); } catch (_) {}
+        d.showModal();
+      }
+    } catch (err) {
+      console.error('Failed to open receipt dialog:', err);
+      const d = $('receipt-dialog');
+      if (d) {
+        try { if (d.open) d.close(); } catch (_) {}
+        d.showModal();
+      }
     }
-    if (window.HisaabThermal) {
-      window.HisaabThermal.populateSlip(values);
-    }
-    switchReceiptTab('standard');
-    $('receipt-status').textContent = ''; $('receipt-save').hidden = false; $('receipt-png').hidden = false;
-    if ($('receipt-copy')) { $('receipt-copy').hidden = false; $('receipt-copy').disabled = !window.electronAPI?.copyReceiptPNG && !(window.ClipboardItem && navigator.clipboard?.write); $('receipt-copy').title = $('receipt-copy').disabled ? 'اس براؤزر میں تصویر کاپی دستیاب نہیں؛ PNG ڈاؤن لوڈ کریں' : 'تصویر کاپی کریں'; }
-    const d = $('receipt-dialog');
-    if (d && !d.open) d.showModal();
   }
 
   function switchReceiptTab(tab) {

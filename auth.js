@@ -78,6 +78,7 @@
   function shakeCard(cardId) {
     const el = $(cardId);
     if (!el) return;
+    el.style.transform = '';
     el.classList.remove('auth-shake');
     void el.offsetWidth;
     el.classList.add('auth-shake');
@@ -88,7 +89,10 @@
     const cards = ['auth-setup-card', 'auth-login-card', 'auth-recovery-card'];
     cards.forEach(id => {
       const el = $(id);
-      if (el) el.hidden = true;
+      if (el) {
+        el.hidden = true;
+        el.style.transform = '';
+      }
     });
   }
 
@@ -226,13 +230,33 @@
       return { success: false, error: 'no_auth' };
     }
 
+    const btnText = $('login-btn-text');
+    const spinner = $('login-spinner');
+    const submitBtn = $('login-submit-btn');
+
+    const setBusy = busy => {
+      if (!btnText || !spinner || !submitBtn) return;
+      if (busy) {
+        btnText.classList.add('hidden');
+        spinner.classList.remove('hidden');
+        submitBtn.disabled = true;
+      } else {
+        btnText.classList.remove('hidden');
+        spinner.classList.add('hidden');
+        submitBtn.disabled = false;
+      }
+    };
+
     if (!username || !password) {
       if (errEl) errEl.textContent = 'Please enter both username and password.';
       shakeCard('auth-login-card');
       return { success: false, error: 'empty_fields' };
     }
 
+    setBusy(true);
+
     if (username.toLowerCase() !== (auth.username || '').toLowerCase()) {
+      setBusy(false);
       if (errEl) errEl.textContent = 'Invalid username or password.';
       shakeCard('auth-login-card');
       return { success: false, error: 'invalid_credentials' };
@@ -240,12 +264,16 @@
 
     const hash = await hashPassword(password, auth.salt);
     if (hash !== auth.passwordHash) {
+      setBusy(false);
       if (errEl) errEl.textContent = 'Incorrect password. Please try again.';
       shakeCard('auth-login-card');
       $('login-password')?.focus();
       return { success: false, error: 'invalid_password' };
     }
 
+    // Success delay for smooth tactile satisfaction
+    await new Promise(r => setTimeout(r, 280));
+    setBusy(false);
     unlockApp();
     return { success: true };
   }
@@ -435,12 +463,191 @@
       setTimeout(() => $('account-settings-dialog')?.close(), 1500);
     });
 
+    setupGlassInteractivity();
+
     if (window.location.search.includes('test=true') || window.__DISABLE_AUTH__) {
       unlockApp();
       return;
     }
 
     lockApp();
+  }
+
+  function setupGlassInteractivity() {
+    const overlay = $('auth-overlay');
+    if (!overlay) return;
+
+    const cursorGlow = $('cursor-glow');
+    const orbs = document.querySelectorAll('.orb-item');
+
+    let ticking = false;
+
+    function getVisibleCard() {
+      const cards = ['auth-login-card', 'auth-setup-card', 'auth-recovery-card'];
+      for (const id of cards) {
+        const c = $(id);
+        if (c && !c.hidden) return c;
+      }
+      return null;
+    }
+
+    overlay.addEventListener('mousemove', e => {
+      const clientX = e.clientX;
+      const clientY = e.clientY;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+
+      // Update Cursor Ambient Glow
+      if (cursorGlow) {
+        cursorGlow.style.opacity = '1';
+        cursorGlow.style.left = clientX + 'px';
+        cursorGlow.style.top = clientY + 'px';
+      }
+
+      // Subtle Parallax on Background Orbs
+      orbs.forEach(orb => {
+        const depth = parseFloat(orb.getAttribute('data-depth') || '0.04');
+        const moveX = (clientX - centerX) * depth;
+        const moveY = (clientY - centerY) * depth;
+        orb.style.transform = `translate3d(${moveX.toFixed(1)}px, ${moveY.toFixed(1)}px, 0)`;
+      });
+
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        const targetCard = getVisibleCard();
+        if (!targetCard) return;
+
+        const rect = targetCard.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        const normX = Math.max(0, Math.min(1, x / rect.width));
+        const normY = Math.max(0, Math.min(1, y / rect.height));
+
+        // Specular sheen tracking
+        targetCard.style.setProperty('--mouse-x', `${(normX * 100).toFixed(1)}%`);
+        targetCard.style.setProperty('--mouse-y', `${(normY * 100).toFixed(1)}%`);
+
+        // Subtle 3D tilt if mouse is hovering near or on card
+        const isNear = (
+          clientX >= rect.left - 50 &&
+          clientX <= rect.right + 50 &&
+          clientY >= rect.top - 50 &&
+          clientY <= rect.bottom + 50
+        );
+
+        if (isNear && !targetCard.classList.contains('auth-shake')) {
+          const rotateX = ((normY - 0.5) * -7).toFixed(2);
+          const rotateY = ((normX - 0.5) * 8).toFixed(2);
+          targetCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`;
+        } else if (!targetCard.classList.contains('auth-shake')) {
+          targetCard.style.transform = '';
+        }
+      });
+    });
+
+    overlay.addEventListener('mouseleave', () => {
+      if (cursorGlow) cursorGlow.style.opacity = '0';
+      const card = getVisibleCard();
+      if (card && !card.classList.contains('auth-shake')) {
+        card.style.transform = '';
+        card.style.setProperty('--mouse-x', '50%');
+        card.style.setProperty('--mouse-y', '30%');
+      }
+    });
+
+    // Real-time username checkmark feedback
+    const usernameInput = $('login-username');
+    const userValidIcon = $('user-valid-icon');
+    if (usernameInput && userValidIcon) {
+      usernameInput.addEventListener('input', () => {
+        const val = usernameInput.value.trim();
+        const errEl = $('auth-login-error');
+        if (errEl) errEl.textContent = '';
+        if (val.length >= 3) {
+          userValidIcon.classList.remove('opacity-0');
+          userValidIcon.classList.add('opacity-100');
+        } else {
+          userValidIcon.classList.remove('opacity-100');
+          userValidIcon.classList.add('opacity-0');
+        }
+      });
+    }
+
+    // Real-time password strength meter
+    const passwordInput = $('login-password');
+    const strengthWrapper = $('strength-wrapper');
+    const strengthLabel = $('strength-label');
+    const strBars = [
+      $('str-bar-1'),
+      $('str-bar-2'),
+      $('str-bar-3'),
+      $('str-bar-4')
+    ];
+
+    if (passwordInput && strengthWrapper) {
+      passwordInput.addEventListener('input', () => {
+        const val = passwordInput.value;
+        const errEl = $('auth-login-error');
+        if (errEl) errEl.textContent = '';
+
+        if (!val || val.length === 0) {
+          strengthWrapper.classList.remove('active');
+          return;
+        }
+
+        strengthWrapper.classList.add('active');
+
+        let score = 0;
+        if (val.length >= 4) score++;
+        if (val.length >= 8) score++;
+        if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+        if (score === 0 && val.length > 0) score = 1;
+
+        const configs = [
+          { label: 'Weak', color: '#ef4444', text: '#f87171' },
+          { label: 'Fair', color: '#f59e0b', text: '#fbbf24' },
+          { label: 'Good', color: '#06b6d4', text: '#67e8f9' },
+          { label: 'Strong', color: '#10b981', text: '#6ee7b7' }
+        ];
+
+        const activeConfig = configs[score - 1];
+        if (strengthLabel) {
+          strengthLabel.textContent = activeConfig.label;
+          strengthLabel.style.color = activeConfig.text;
+        }
+
+        strBars.forEach((bar, idx) => {
+          if (!bar) return;
+          if (idx < score) {
+            bar.style.backgroundColor = activeConfig.color;
+          } else {
+            bar.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+          }
+        });
+      });
+    }
+
+    // Button ripple micro-interaction
+    document.querySelectorAll('.btn-primary-glow').forEach(button => {
+      button.addEventListener('click', function(e) {
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+
+        const ripple = document.createElement('span');
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        ripple.className = 'ripple-circle';
+
+        this.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 650);
+      });
+    });
   }
 
   window.HisaabAuth = {
