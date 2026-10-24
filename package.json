@@ -90,7 +90,8 @@
       "receipt-png.js",
       "receipt-export.css",
       "external-backup.cjs",
-      "external-backup-ui.js"
+      "external-backup-ui.js",
+      "auth.js"
     ]
   },
   "dependencies": {

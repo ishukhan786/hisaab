@@ -100,7 +100,7 @@
     let pinSalt = typeof source.pinSalt === 'string' ? source.pinSalt : '';
     /* FIX-10: Web-mode fallback preserved for test assertions */
     if (isWebMode && !pinCode && !pinCodeHash) pinCode = '1234';
-    return { journal: window.HisaabJournal.normalize(source.journal, source.date || today()), version: 4, title: titleVal, date: source.date || today(), pageNumber: Number.isInteger(source.pageNumber) && source.pageNumber > 0 ? source.pageNumber : 1, startSerial, partySerials, fontSize: Number.isInteger(source.fontSize) ? Math.max(10, Math.min(22, source.fontSize)) : 13, branches: registry, partyCurrencies, rows, trash, lastBackupAt: typeof source.lastBackupAt === 'string' && Number.isFinite(Date.parse(source.lastBackupAt)) ? source.lastBackupAt : null, lockedDates, pinCode, pinCodeHash, pinSalt, khatas: window.HisaabKhata ? window.HisaabKhata.normalize(source.khatas || []) : (Array.isArray(source.khatas) ? source.khatas : []) };
+    return { journal: window.HisaabJournal.normalize(source.journal, source.date || today()), version: 4, title: titleVal, date: source.date || today(), pageNumber: Number.isInteger(source.pageNumber) && source.pageNumber > 0 ? source.pageNumber : 1, startSerial, partySerials, fontSize: Number.isInteger(source.fontSize) ? Math.max(10, Math.min(22, source.fontSize)) : 13, branches: registry, partyCurrencies, rows, trash, lastBackupAt: typeof source.lastBackupAt === 'string' && Number.isFinite(Date.parse(source.lastBackupAt)) ? source.lastBackupAt : null, lockedDates, pinCode, pinCodeHash, pinSalt, khatas: window.HisaabKhata ? window.HisaabKhata.normalize(source.khatas || []) : (Array.isArray(source.khatas) ? source.khatas : []), auth: source.auth && typeof source.auth === 'object' ? source.auth : (window.HisaabAuth ? window.HisaabAuth.getAuth() : null) };
   }
   let cloudReady = !isWebMode;
   let mongoSaveTimer = null, pendingMongoSave = null;
@@ -2210,10 +2210,16 @@
   window.addEventListener('keydown', e => {
     if (!$('pin-lock-overlay')?.hidden) return;
     if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); $('print').click(); }
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'l' || e.key === 'L') && !e.shiftKey && (isWebMode || state.pinCode || state.pinCodeHash)) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'l' || e.key === 'L') && !e.shiftKey) {
       e.preventDefault();
-      requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔', false);
-      return;
+      if (window.HisaabAuth) {
+        window.HisaabAuth.lock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے لاگ ان کریں۔');
+        return;
+      }
+      if (isWebMode || state.pinCode || state.pinCodeHash) {
+        requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔', false);
+        return;
+      }
     }
     if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !e.shiftKey && !journalController?.isActive() && !khataController?.isActive()) {
       const active = document.activeElement;
@@ -2327,6 +2333,11 @@
   /* FIX-39: Avoid save() before initMongoWebState in web mode */
   if (!isWebMode) {
     save();
+  }
+  window.HisaabState = state;
+  window.HisaabSave = save;
+  if (state.auth && window.HisaabAuth && !window.HisaabAuth.getAuth()) {
+    window.HisaabAuth.setAuth(state.auth);
   }
   initDiskPersistence();
   initMongoWebState();

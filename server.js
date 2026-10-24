@@ -71,7 +71,8 @@ const ALLOWED_ROOT_FILES = new Set([
   'dialog-fallback.js',
   'excel-export.js',
   'receipt-png.js',
-  'external-backup-ui.js'
+  'external-backup-ui.js',
+  'auth.js'
 ]);
 
 function sendIndex(res) {
