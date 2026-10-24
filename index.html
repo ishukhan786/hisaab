@@ -107,7 +107,6 @@
           <button id="menu-theme-toggle" type="button">🌓 نائٹ موڈ (ڈارک تھیم)</button>
           <button id="manage-branches" type="button">🏢 پارٹیاں سنبھالیں</button>
           <button id="reset-filters" type="button">🔄 فلٹر صاف کریں</button>
-          <button id="pin-settings-btn" type="button">🔐 پن لاک (PIN سیٹنگز)</button>
           <button id="account-settings-btn" type="button">👤 لاگ ان اکاؤنٹ و پاس ورڈ</button>
           <button id="lock-app-now-btn" type="button">🔒 ابھی ایپ لاک کریں (Ctrl+L)</button>
           <hr class="menu-divider">
@@ -1026,52 +1025,6 @@
     </article>
   </dialog>
 
-  <dialog id="pin-dialog" class="pin-settings-dialog" aria-labelledby="pin-dialog-title">
-    <div class="dialog-head">
-      <div class="pin-dialog-title-wrap">
-        <span class="pin-dialog-badge-icon" aria-hidden="true">🔐</span>
-        <h2 id="pin-dialog-title">حفاظتی پن لاک (PIN Lock)</h2>
-      </div>
-      <button id="close-pin-dialog" type="button" aria-label="بند کریں">×</button>
-    </div>
-    <div id="pin-status-banner" class="pin-status-banner">
-      <span class="pin-status-indicator" id="pin-status-indicator" aria-hidden="true"></span>
-      <div class="pin-status-info">
-        <strong id="pin-status-badge">پن لاک غیر فعال ہے</strong>
-        <p id="pin-status-text">ایپ کھلتے وقت اور لاک شدہ تاریخ کو ان لاک کرتے وقت حفاظتی پن کوڈ مانگا جائے گا۔</p>
-      </div>
-    </div>
-    <!-- FIX-20: novalidate on PIN settings form -->
-    <form id="pin-form" class="pin-form" novalidate>
-      <div id="pin-current-wrap" class="pin-field-enhanced" hidden>
-        <label for="pin-current">موجودہ پن کوڈ (Current PIN)</label>
-        <div class="pin-input-container">
-          <input id="pin-current" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="موجودہ پن لکھیں">
-          <!-- FIX-17: aria-pressed toggle button state -->
-          <button id="toggle-pin-current-btn" type="button" class="pin-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں" aria-pressed="false">
-            <svg class="pin-eye-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="pin-field-enhanced">
-        <label for="pin-new">نیا پن کوڈ (4 سے 8 ہندسے)</label>
-        <div class="pin-input-container">
-          <input id="pin-new" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="مثلاً 1234">
-          <!-- FIX-17: aria-pressed toggle button state -->
-          <button id="toggle-pin-new-btn" type="button" class="pin-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں" aria-pressed="false">
-            <svg class="pin-eye-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-        <small class="pin-field-hint">4 سے 8 ہندسوں کا ایسا کوڈ مقرر کریں جو یاد رہے۔</small>
-      </div>
-      <p id="pin-form-msg" role="status" class="pin-msg"></p>
-      <div class="pin-actions">
-        <button type="submit" class="primary pin-save-btn">✓ پن محفوظ کریں</button>
-        <button type="button" id="pin-remove-btn" class="pin-remove-btn" hidden>🗑️ پن لاک ختم کریں</button>
-      </div>
-    </form>
-  </dialog>
-
   <dialog id="account-settings-dialog" class="auth-dialog no-print" dir="ltr">
     <div class="dialog-head">
       <h2>👤 Account &amp; Password Settings</h2>
@@ -1316,53 +1269,6 @@
       </form>
     </div>
   </div>
-
-  <div id="pin-lock-overlay" class="pin-lock-overlay no-print" hidden>
-    <!-- FIX-15 & FIX-29: method=dialog prevents default GET navigation and PIN leaks in URL -->
-    <form id="pin-unlock-form" class="pin-lock-card" method="dialog">
-      <div class="pin-lock-badge-wrap">
-        <div class="logo-mini pin-logo">ح</div>
-        <div class="pin-lock-shield-icon" aria-hidden="true">🔒</div>
-      </div>
-      <h2 id="pin-unlock-title">حساب لاک ہے</h2>
-      <p id="pin-unlock-reason">جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ درج کریں</p>
-
-      <div class="pin-input-container">
-        <!-- FIX-16: Removed static autofocus from hidden overlay; focused dynamically via pin-init.js -->
-        <input id="pin-unlock-input" type="password" maxlength="128" autocomplete="current-password" placeholder="••••" aria-label="حفاظتی پن کوڈ درج کریں">
-        <!-- FIX-17: Dynamic aria-pressed on toggle button -->
-        <button id="toggle-pwd-btn" type="button" class="pin-eye-btn" title="پاس ورڈ دکھائیں" aria-label="پاس ورڈ دکھائیں" aria-pressed="false">
-          <svg class="pin-eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-
-      <div class="pin-keypad" id="pin-keypad" aria-label="PIN Keypad">
-        <button type="button" class="pin-key" data-key="1">1</button>
-        <button type="button" class="pin-key" data-key="2">2</button>
-        <button type="button" class="pin-key" data-key="3">3</button>
-        <button type="button" class="pin-key" data-key="4">4</button>
-        <button type="button" class="pin-key" data-key="5">5</button>
-        <button type="button" class="pin-key" data-key="6">6</button>
-        <button type="button" class="pin-key" data-key="7">7</button>
-        <button type="button" class="pin-key" data-key="8">8</button>
-        <button type="button" class="pin-key" data-key="9">9</button>
-        <button type="button" class="pin-key pin-key-fn" data-key="clear" title="صاف کریں">C</button>
-        <button type="button" class="pin-key" data-key="0">0</button>
-        <button type="button" class="pin-key pin-key-fn" data-key="backspace" title="ایک ہندسہ مٹائیں">⌫</button>
-      </div>
-
-      <p id="pin-unlock-error" role="status" class="pin-error"></p>
-      <div class="pin-actions">
-        <button type="submit" class="primary pin-submit-btn">ان لاک کریں ➜</button>
-        <button type="button" id="pin-unlock-cancel" class="pin-cancel-btn" hidden>منسوخ کریں</button>
-      </div>
-      <p id="pin-default-hint" class="pin-hint-badge" hidden>💡 ابتدائی ڈیفالٹ پن: <strong>1234</strong> ہے (سیٹنگز سے تبدیل کر سکتے ہیں)</p>
-    </form>
-  </div>
-
-  <!-- FIX-4 & FIX-7: Zero-flash lock moved to external pin-init.js with safe overlay guard -->
-  <!-- Web PIN auto-lock: window.location.protocol.startsWith('http') -> ov.hidden = false; el.inert = true; moved to pin-init.js -->
-  <script src="pin-init.js?v=1.4.17"></script>
 
   <!-- FIX-21: Clean hidden semantics without redundant aria-hidden -->
   <section id="receipt-print" hidden></section>

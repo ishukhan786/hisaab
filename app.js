@@ -437,276 +437,25 @@
     btn.classList.toggle('is-locked', locked);
     btn.title = locked ? 'یہ تاریخ لاک ہے، ترمیم کے لیے کلک کر کے ان لاک کریں' : 'اس تاریخ کا رجسٹر لاک کریں تاکہ غلطی سے ترمیم نہ ہو';
   }
-  let pinUnlockResolve = null;
-  let allowCancelGlobal = false;
-  /* FIX-11: rate-limiting failed PIN attempts */
-  let failedPinAttempts = 0;
-  let pinLockoutUntil = 0;
-
-  function updatePinUI() {
-    const effectivePin=state.pinCode||(isWebMode?'1234':'');
-    if ($('pin-remove-btn')) $('pin-remove-btn').hidden=isWebMode||!state.pinCode;
-    const hasPin = isWebMode ? true : !!(state.pinCode || state.pinCodeHash);
-    if ($('lock-app-now-btn')) $('lock-app-now-btn').hidden = !hasPin;
-  }
-
-  /* FIX-9: Cryptographic salted SHA-256 hash helper */
-  async function computePinHash(pin, salt) {
-    if (!window.crypto?.subtle) return 'fallback:' + salt + ':' + pin;
-    const enc = new TextEncoder();
-    const data = enc.encode(salt + ':' + pin);
-    const hashBuf = await window.crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  async function verifyEnteredPin(val) {
-    const effectivePin = state.pinCode || (isWebMode ? '1234' : '');
-    if (state.pinCodeHash && state.pinSalt) {
-      const computed = await computePinHash(val, state.pinSalt);
-      return computed === state.pinCodeHash;
-    }
-    if (effectivePin && val === effectivePin) {
-      /* Auto-upgrade legacy plaintext PIN to salted hash */
-      try {
-        const salt = uid();
-        const hash = await computePinHash(val, salt);
-        state.pinSalt = salt;
-        state.pinCodeHash = hash;
-        state.pinCode = '';
-        save();
-      } catch (_) {}
-      return true;
-    }
-    return false;
-  }
-
-  const PIN_EYE_OPEN_SVG = '<svg class="pin-eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-  const PIN_EYE_CLOSED_SVG = '<svg class="pin-eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
-
-  function setupPinEyeToggle(btnId, inputId) {
-    const btn = $(btnId);
-    const input = $(inputId);
-    if (!btn || !input) return;
-    btn.onclick = () => {
-      const show = input.type === 'password';
-      input.type = show ? 'text' : 'password';
-      btn.innerHTML = show ? PIN_EYE_CLOSED_SVG : PIN_EYE_OPEN_SVG;
-      btn.title = show ? 'پاس ورڈ چھپائیں' : 'پاس ورڈ دکھائیں';
-      btn.setAttribute('aria-label', btn.title);
-      btn.setAttribute('aria-pressed', show ? 'true' : 'false');
-      input.focus();
+  if ($('lock-app-now-btn')) {
+    $('lock-app-now-btn').onclick = () => {
+      if (window.HisaabAuth) window.HisaabAuth.lock('App locked by user.');
     };
   }
 
-  function resetPinEyeToggle(btnId, inputId) {
-    const btn = $(btnId);
-    const input = $(inputId);
-    if (input) input.type = 'password';
-    if (btn) {
-      btn.innerHTML = PIN_EYE_OPEN_SVG;
-      btn.title = 'پاس ورڈ دکھائیں';
-      btn.setAttribute('aria-label', btn.title);
-      btn.setAttribute('aria-pressed', 'false');
-    }
-  }
-
-  function triggerPinShake() {
-    const card = $('pin-unlock-form');
-    if (!card) return;
-    card.classList.remove('shake');
-    void card.offsetWidth;
-    card.classList.add('shake');
-  }
-
-  /* FIX-8 & FIX-28: requestPinUnlock with safe inert isolation and escape handler */
-  function requestPinUnlock(reasonText = 'جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں', allowCancel = false) {
-    const effectivePin = state.pinCode || (isWebMode ? '1234' : '');
-    const hasAnyPin = !!(effectivePin || state.pinCodeHash);
-    if (!hasAnyPin) return Promise.resolve(true);
-    const overlay = $('pin-lock-overlay');
-    if (!overlay) return Promise.resolve(true);
-    allowCancelGlobal = allowCancel;
-    $('pin-unlock-title').textContent = 'حساب لاک ہے';
-    $('pin-unlock-reason').textContent = reasonText;
-    $('pin-unlock-error').textContent = '';
-    const card = $('pin-unlock-form');
-    if (card) card.classList.remove('shake');
-    resetPinEyeToggle('toggle-pwd-btn', 'pin-unlock-input');
-    if ($('pin-default-hint')) $('pin-default-hint').hidden = effectivePin !== '1234';
-    const input = $('pin-unlock-input');
-    input.value = '';
-    const cancelBtn = $('pin-unlock-cancel');
-    if (cancelBtn) cancelBtn.hidden = !allowCancel;
-    overlay.hidden = false;
-    document.querySelectorAll('body > :not(#pin-lock-overlay)').forEach(el => { el.inert = true; });
-    setTimeout(() => input.focus(), 20);
-    return new Promise(resolve => { pinUnlockResolve = resolve; });
-  }
-
-  function finishPinUnlock(unlocked) {
-    const overlay = $('pin-lock-overlay');
-    if (overlay) overlay.hidden = true;
-    const card = $('pin-unlock-form');
-    if (card) card.classList.remove('shake');
-    document.querySelectorAll('body > :not(#pin-lock-overlay)').forEach(el => { el.inert = false; });
-    if (pinUnlockResolve) { const fn = pinUnlockResolve; pinUnlockResolve = null; fn(unlocked); }
-  }
-
-  /* FIX-27: Escape key dismisses unlock dialog when allowCancel is enabled */
-  window.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !$('pin-lock-overlay')?.hidden) {
-      if (allowCancelGlobal) {
-        e.preventDefault();
-        finishPinUnlock(false);
-      }
-    }
-  });
-
-  if ($('pin-unlock-input')) {
-    $('pin-unlock-input').addEventListener('input', () => {
-      $('pin-unlock-error').textContent = '';
-    });
-  }
-  setupPinEyeToggle('toggle-pwd-btn', 'pin-unlock-input');
-  setupPinEyeToggle('toggle-pin-current-btn', 'pin-current');
-  setupPinEyeToggle('toggle-pin-new-btn', 'pin-new');
-
-  if ($('pin-keypad')) {
-    $('pin-keypad').addEventListener('click', e => {
-      const btn = e.target.closest('.pin-key');
-      if (!btn) return;
-      const key = btn.dataset.key;
-      const input = $('pin-unlock-input');
-      if (!input || !key) return;
-      if (key==='clear') {
-        input.value = '';
-      } else if (key==='backspace') {
-        input.value = input.value.slice(0, -1);
-      } else if (/^[0-9]$/.test(key)) {
-        if (input.value.length < 128) {
-          input.value += key;
-        }
-      }
-      $('pin-unlock-error').textContent = '';
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.focus();
-    });
-  }
-
-  /* FIX-11 & FIX-15: PIN submit with rate-limiting lockout and method=dialog guard */
-  if ($('pin-unlock-form')) {
-    $('pin-unlock-form').onsubmit = async e => {
-      e.preventDefault();
-      if (Date.now() < pinLockoutUntil) {
-        const secs = Math.ceil((pinLockoutUntil - Date.now()) / 1000);
-        $('pin-unlock-error').textContent = `غلط پن کوڈ! براہ کرم ${secs} سیکنڈ انتظار کریں۔`;
-        return;
-      }
-      const val = englishDigits($('pin-unlock-input').value).trim();
-      if (!val) return;
-
-      const ok = await verifyEnteredPin(val);
-      if (ok) {
-        failedPinAttempts = 0;
-        finishPinUnlock(true);
+  if ($('lock-day')) {
+    $('lock-day').onclick = () => {
+      const d = state.date || today();
+      if (!Array.isArray(state.lockedDates)) state.lockedDates = [];
+      if (state.lockedDates.includes(d)) {
+        state.lockedDates = state.lockedDates.filter(x => x !== d);
       } else {
-        failedPinAttempts++;
-        if (failedPinAttempts >= 5) {
-          pinLockoutUntil = Date.now() + 30000;
-          $('pin-unlock-error').textContent = '5 غلط کوششیں! 30 سیکنڈ کے لیے لاک کیا گیا۔';
-        } else {
-          $('pin-unlock-error').textContent = `غلط پن کوڈ! دوبارہ کوشش کریں (${5 - failedPinAttempts} کوششیں باقی)۔`;
-        }
-        triggerPinShake();
-        $('pin-unlock-input').select();
+        state.lockedDates.push(d);
       }
+      save();
+      applyFilter(true);
     };
   }
-  if ($('pin-unlock-cancel')) $('pin-unlock-cancel').onclick = () => finishPinUnlock(false);
-  if ($('lock-app-now-btn')) $('lock-app-now-btn').onclick = () => {
-    if (isWebMode || state.pinCode || state.pinCodeHash) requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔', false);
-  };
-
-  /* FIX-36: check !d.open before calling showModal */
-  function openPinSettings() {
-    const d = $('pin-dialog'); if (!d) return;
-    const hasPin = isWebMode ? true : !!(state.pinCode || state.pinCodeHash);
-    $('pin-current-wrap').hidden = !hasPin;
-    $('pin-remove-btn').hidden = isWebMode || !(state.pinCode || state.pinCodeHash);
-    $('pin-current').value = '';
-    $('pin-new').value = '';
-    resetPinEyeToggle('toggle-pin-current-btn', 'pin-current');
-    resetPinEyeToggle('toggle-pin-new-btn', 'pin-new');
-    $('pin-form-msg').textContent = '';
-    const banner = $('pin-status-banner');
-    if (banner) banner.classList.toggle('active', hasPin);
-    if ($('pin-status-badge')) {
-      $('pin-status-badge').textContent = hasPin ? 'حفاظتی پن لاک فعال ہے' : 'پن لاک غیر فعال ہے';
-    }
-    const currentPin = state.pinCode || (isWebMode ? '1234' : '');
-    $('pin-status-text').textContent = hasPin
-      ? (currentPin === '1234' && !state.pinCodeHash
-        ? 'ابھی ڈیفالٹ پن کوڈ (1234) فعال ہے۔ تبدیل کرنے کے لیے موجودہ پن 1234 لکھ کر نیا 4 سے 8 ہندسوں کا پن مقرر کریں۔'
-        : 'حفاظتی پن لاک آن ہے۔ پن تبدیل کرنے کے لیے پہلے موجودہ پن کوڈ درج کریں۔')
-      : 'ابھی کوئی پن لاک فعال نہیں ہے۔ پہلی بار 4 سے 8 ہندسوں کا نیا پن مقرر کریں۔';
-    if (!d.open) d.showModal();
-    setTimeout(() => $(hasPin ? 'pin-current' : 'pin-new').focus(), 20);
-  }
-  if ($('pin-settings-btn')) $('pin-settings-btn').onclick = openPinSettings;
-  if ($('close-pin-dialog')) $('close-pin-dialog').onclick = () => $('pin-dialog').close();
-
-  if ($('pin-form')) {
-    $('pin-form').onsubmit = async e => {
-      e.preventDefault();
-      const cur = englishDigits($('pin-current').value).trim();
-      const next = englishDigits($('pin-new').value).trim();
-      if (!next || next.length < 4 || next.length > 8 || !/^\d{4,8}$/.test(next)) {
-        $('pin-form-msg').textContent = 'نیا پن صرف 4 سے 8 ہندسوں کا ہونا چاہیے۔';
-        return;
-      }
-
-      const hasPin = isWebMode ? true : !!(state.pinCode || state.pinCodeHash);
-      if (hasPin) {
-        const ok = await verifyEnteredPin(cur);
-        if (!ok) { $('pin-form-msg').textContent = 'موجودہ پن کوڈ درست نہیں ہے۔'; return; }
-      }
-      const salt = uid();
-      state.pinSalt = salt;
-      state.pinCodeHash = await computePinHash(next, salt);
-      state.pinCode = '';
-      save(); updatePinUI();
-      $('pin-dialog').close();
-    };
-  }
-  if ($('pin-remove-btn')) {
-    $('pin-remove-btn').onclick = async () => {
-      const cur = englishDigits($('pin-current').value).trim();
-      const hasPin = !!(state.pinCode || state.pinCodeHash);
-      if (hasPin) {
-        const ok = await verifyEnteredPin(cur);
-        if (!ok) { $('pin-form-msg').textContent = 'پن ختم کرنے کے لیے پہلے موجودہ پن کوڈ لکھیں۔'; return; }
-      }
-      state.pinCode = '';
-      state.pinCodeHash = '';
-      state.pinSalt = '';
-      save(); updatePinUI();
-      $('pin-dialog').close();
-    };
-  }
-  if ($('lock-day')) $('lock-day').onclick = async () => {
-    const d = state.date || today();
-    if (!Array.isArray(state.lockedDates)) state.lockedDates = [];
-    if (state.lockedDates.includes(d)) {
-      const hasPin = isWebMode || !!(state.pinCode || state.pinCodeHash);
-      if (hasPin) {
-        const ok = await requestPinUnlock(`${fmtDate(d)} کا لاک کھولنے کے لیے اپنا پن کوڈ (PIN) درج کریں`, true);
-        if (!ok) return;
-      }
-      state.lockedDates = state.lockedDates.filter(x => x !== d);
-    } else state.lockedDates.push(d);
-    /* FIX-29: properly save and apply filter */
-    save(); applyFilter(true);
-  };
 
   /* FIX-32: recordHistory batches with row update without redundant immediate disk flush */
   function recordHistory(row, field, from, to) {
@@ -2208,16 +1957,11 @@
     new ResizeObserver(syncTopNavH).observe(topNavEl);
   }
   window.addEventListener('keydown', e => {
-    if (!$('pin-lock-overlay')?.hidden) return;
     if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); $('print').click(); }
     if ((e.ctrlKey || e.metaKey) && (e.key === 'l' || e.key === 'L') && !e.shiftKey) {
       e.preventDefault();
       if (window.HisaabAuth) {
-        window.HisaabAuth.lock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے لاگ ان کریں۔');
-        return;
-      }
-      if (isWebMode || state.pinCode || state.pinCodeHash) {
-        requestPinUnlock('ایپ لاک کر دی گئی ہے۔ کھولنے کے لیے پن کوڈ درج کریں۔', false);
+        window.HisaabAuth.lock('App locked by user.');
         return;
       }
     }
@@ -2292,11 +2036,6 @@
         cloudReady = true;
         render();
         savedStatus();
-        updatePinUI();
-        if ($('pin-default-hint')) {
-          const effectivePin = state.pinCode || (isWebMode ? '1234' : '');
-          $('pin-default-hint').hidden = effectivePin !== '1234';
-        }
       } else if (data.status === 'empty') {
         state = migrate(createEmptyOfficeState());
         state.date = today();
@@ -2322,10 +2061,6 @@
   }
 
   render();
-  updatePinUI();
-  if (isWebMode || state.pinCode) {
-    requestPinUnlock('جاری رکھنے کے لیے اپنا حفاظتی پن کوڈ (PIN) درج کریں', false);
-  }
   journalController = window.HisaabJournal.mount({ getState: () => state, save, today, exportSheet: (rows, name) => download(window.HisaabExcel.create(rows), name) });
   if (window.HisaabKhata) {
     khataController = window.HisaabKhata.mount({ getState: () => state, save, today, exportSheet: (rows, name) => download(window.HisaabExcel.create(rows), name), download });

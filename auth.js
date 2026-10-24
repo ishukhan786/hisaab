@@ -100,7 +100,7 @@
     if (!overlay) return;
 
     overlay.hidden = false;
-    document.querySelectorAll('body > :not(#auth-overlay):not(#pin-lock-overlay)').forEach(el => {
+    document.querySelectorAll('body > :not(#auth-overlay)').forEach(el => {
       el.inert = true;
     });
 
@@ -141,7 +141,7 @@
     const overlay = $('auth-overlay');
     if (overlay) overlay.hidden = true;
 
-    document.querySelectorAll('body > :not(#auth-overlay):not(#pin-lock-overlay)').forEach(el => {
+    document.querySelectorAll('body > :not(#auth-overlay)').forEach(el => {
       el.inert = false;
     });
 

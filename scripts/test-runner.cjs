@@ -10,7 +10,7 @@ const testSuites = [
   { name: 'External Backup Engine', script: 'tests/external-backup.cjs' },
   { name: 'Security, Asset Shield & OCC', script: 'tests/security-suite.cjs' },
   { name: 'Web Unified API & Open Access', script: 'tests/web-unified-api.cjs' },
-  { name: 'Web PIN Lock & Compulsory Security', script: 'tests/web-pin-flow.cjs' },
+  { name: 'Authentication & Access Security', script: 'tests/web-pin-flow.cjs' },
   { name: 'Dark Mode / Night Theme', script: 'tests/theme-test.cjs' },
   { name: 'Print & PDF Light Theme Assurance', script: 'tests/print-theme.cjs' },
   { name: 'Khata & Customer Ledger Engine', script: 'tests/khata.cjs' }
