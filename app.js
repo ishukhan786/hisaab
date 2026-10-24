@@ -1778,42 +1778,88 @@
       const el = $('receipt-paper').querySelector('[data-receipt="' + field + '"]');
       if (el) el.textContent = value;
     }
+    if (window.HisaabThermal) {
+      window.HisaabThermal.populateSlip(values);
+    }
+    switchReceiptTab('standard');
     $('receipt-status').textContent = ''; $('receipt-save').hidden = false; $('receipt-png').hidden = false;
     if ($('receipt-copy')) { $('receipt-copy').hidden = false; $('receipt-copy').disabled = !window.electronAPI?.copyReceiptPNG && !(window.ClipboardItem && navigator.clipboard?.write); $('receipt-copy').title = $('receipt-copy').disabled ? 'اس براؤزر میں تصویر کاپی دستیاب نہیں؛ PNG ڈاؤن لوڈ کریں' : 'تصویر کاپی کریں'; }
     const d = $('receipt-dialog');
     if (d && !d.open) d.showModal();
   }
+
+  function switchReceiptTab(tab) {
+    const isThermal = tab === 'thermal';
+    const tabStd = $('tab-receipt-standard');
+    const tabThm = $('tab-receipt-thermal');
+    const paperStd = $('receipt-paper');
+    const paperThm = $('thermal-slip-paper');
+    const btnPreview = $('receipt-preview');
+    const btnThermal = $('receipt-thermal-btn');
+    const btnSave = $('receipt-save');
+
+    if (tabStd) { tabStd.classList.toggle('active', !isThermal); tabStd.setAttribute('aria-selected', !isThermal); }
+    if (tabThm) { tabThm.classList.toggle('active', isThermal); tabThm.setAttribute('aria-selected', isThermal); }
+    if (paperStd) paperStd.hidden = isThermal;
+    if (paperThm) paperThm.hidden = !isThermal;
+    if (btnPreview) btnPreview.hidden = isThermal;
+    if (btnThermal) btnThermal.hidden = !isThermal;
+    if (btnSave) btnSave.hidden = isThermal;
+    if ($('receipt-status')) $('receipt-status').textContent = '';
+  }
+
+  if ($('tab-receipt-standard')) $('tab-receipt-standard').onclick = () => switchReceiptTab('standard');
+  if ($('tab-receipt-thermal')) $('tab-receipt-thermal').onclick = () => switchReceiptTab('thermal');
+
   $('receipt-png').onclick = async () => {
     if (!receiptSelection || document.body.inert) return;
     const selection = { ...receiptSelection }; const values = {};
     $('receipt-paper').querySelectorAll('[data-receipt]').forEach(el => { values[el.dataset.receipt] = el.textContent; });
+    const isThermal = $('tab-receipt-thermal')?.classList.contains('active');
     document.body.inert = true; $('receipt-status').textContent = 'تصویر تیار ہو رہی ہے…';
     try {
-      const filename = selection.branch + '_' + selection.date + '_رسید-' + selection.serial + '.png';
+      const suffix = isThermal ? '_تھرمل-سلپ-' : '_رسید-';
+      const filename = selection.branch + '_' + selection.date + suffix + selection.serial + '.png';
       let result;
-      if (window.electronAPI?.saveReceiptPNG) result = await window.electronAPI.saveReceiptPNG(values, filename);
-      else { const blob = await window.createReceiptPNG(values); download(blob, filename.replace(/[<>:"/\\|?*\x00-\x1f]/g, '-')); result = { status: 'saved' }; }
+      if (!isThermal && window.electronAPI?.saveReceiptPNG) {
+        result = await window.electronAPI.saveReceiptPNG(values, filename);
+      } else {
+        const blob = await window.createReceiptPNG(values, { isThermal });
+        download(blob, filename.replace(/[<>:"/\\|?*\x00-\x1f]/g, '-'));
+        result = { status: 'saved' };
+      }
       $('receipt-status').textContent = result.status === 'saved' ? '✓ PNG رسید محفوظ ہو گئی' : result.status === 'cancelled' ? '' : result.status === 'busy' ? 'پہلی تصویر مکمل ہونے دیں۔' : 'تصویر محفوظ نہیں ہو سکی؛ دوبارہ کوشش کریں۔';
     } catch { $('receipt-status').textContent = 'تصویر محفوظ نہیں ہو سکی؛ دوبارہ کوشش کریں۔'; }
     finally { document.body.inert = false; }
   };
+
   if ($('receipt-copy')) $('receipt-copy').onclick = async () => {
     if (!receiptSelection || document.body.inert) return;
     const values = {};
     $('receipt-paper').querySelectorAll('[data-receipt]').forEach(el => { values[el.dataset.receipt] = el.textContent; });
+    const isThermal = $('tab-receipt-thermal')?.classList.contains('active');
     document.body.inert = true; $('receipt-status').textContent = 'تصویر کاپی ہو رہی ہے…';
     try {
-      let result; if (window.electronAPI?.copyReceiptPNG) result = await window.electronAPI.copyReceiptPNG(values); else { const image = await window.createReceiptPNG(values); await navigator.clipboard.write([new ClipboardItem({ 'image/png': image })]); result = { status: 'copied' }; }
+      let result;
+      if (!isThermal && window.electronAPI?.copyReceiptPNG) {
+        result = await window.electronAPI.copyReceiptPNG(values);
+      } else {
+        const image = await window.createReceiptPNG(values, { isThermal });
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': image })]);
+        result = { status: 'copied' };
+      }
       $('receipt-status').textContent = result.status === 'copied' ? '✓ رسید کی تصویر کاپی ہو گئی (WhatsApp میں Ctrl+V کریں)' : result.status === 'busy' ? 'پہلی تصویر مکمل ہونے دیں۔' : 'تصویر کاپی نہیں ہو سکی؛ دوبارہ کوشش کریں۔';
     } catch { $('receipt-status').textContent = 'تصویر کاپی نہیں ہو سکی؛ دوبارہ کوشش کریں۔'; }
     finally { document.body.inert = false; }
   };
+
   function prepareReceiptOutput() {
     const sheet = $('receipt-paper').cloneNode(true); sheet.removeAttribute('id'); sheet.classList.add('receipt-export'); $('receipt-print').replaceChildren(sheet); document.body.classList.add('receipt-output');
   }
-  function clearReceiptOutput() { document.body.classList.remove('receipt-output', 'summary-output'); $('receipt-print').replaceChildren(); }
+  function clearReceiptOutput() { document.body.classList.remove('receipt-output', 'summary-output', 'thermal-output'); $('receipt-print').replaceChildren(); }
   $('close-receipt').onclick = () => $('receipt-dialog').close();
   $('receipt-dialog').addEventListener('close', () => { receiptSelection = null; clearReceiptOutput(); });
+
   async function outputReceipt(savePDF = false) {
     if (!receiptSelection || document.body.inert) return;
     const selection = { ...receiptSelection };
@@ -1833,7 +1879,33 @@
     } catch { $('receipt-status').textContent = 'رسید نہیں بن سکی؛ دوبارہ کوشش کریں۔'; }
     finally { restoreTheme(); document.body.inert = false; clearReceiptOutput(); }
   }
-  $('receipt-preview').onclick = () => outputReceipt(); $('receipt-save').onclick = () => outputReceipt(true);
+
+  async function outputThermalSlip() {
+    if (!receiptSelection || document.body.inert) return;
+    $('receipt-status').textContent = '';
+    await document.fonts.ready;
+    if (window.HisaabThermal) window.HisaabThermal.prepareThermalOutput();
+    const restoreTheme = prepareForPrintTheme();
+    if (!window.electronAPI?.previewPDF) {
+      try { window.print(); } finally { restoreTheme(); clearReceiptOutput(); }
+      return;
+    }
+    document.body.inert = true;
+    try {
+      const result = await window.electronAPI.previewPDF({ landscape: false });
+      $('receipt-status').textContent = result?.status === 'busy' ? 'پہلی PDF مکمل ہونے دیں۔' : result?.status === 'error' ? 'تھرمل سلپ نہیں بن سکی؛ دوبارہ کوشش کریں۔' : '';
+    } catch {
+      $('receipt-status').textContent = 'تھرمل سلپ نہیں بن سکی؛ دوبارہ کوشش کریں۔';
+    } finally {
+      restoreTheme();
+      document.body.inert = false;
+      clearReceiptOutput();
+    }
+  }
+
+  $('receipt-preview').onclick = () => outputReceipt();
+  $('receipt-save').onclick = () => outputReceipt(true);
+  if ($('receipt-thermal-btn')) $('receipt-thermal-btn').onclick = () => outputThermalSlip();
 
   /* FIX-25 & FIX-26: preparePrint ensures clean span removal and caps printed rows */
   function preparePrint() {

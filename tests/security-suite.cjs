@@ -225,6 +225,12 @@ async function runSecurityTests() {
       assert.equal(res.status, 200);
     });
 
+    await testAsync('GET /thermal-print.js serves thermal slip engine (status 200)', async () => {
+      const res = await fetchUrl('/thermal-print.js');
+      assert.equal(res.status, 200);
+      assert.equal(res.body.includes('HisaabThermal'), true);
+    });
+
     await testAsync('POST /api/backup validates input payload and rejects empty body with 400', async () => {
       const res = await new Promise((resolve, reject) => {
         const req = http.request({

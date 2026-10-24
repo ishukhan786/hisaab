@@ -71,6 +71,7 @@ const ALLOWED_ROOT_FILES = new Set([
   'dialog-fallback.js',
   'excel-export.js',
   'receipt-png.js',
+  'thermal-print.js',
   'external-backup-ui.js',
   'auth.js'
 ]);

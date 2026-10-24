@@ -15,20 +15,23 @@
   <title>حساب — روزانہ کھاتہ و رجسٹر (Hisaab)</title>
   <!-- FIX-4: Anti-FOUC theme preload moved to external theme-init.js -->
   <!-- localStorage.getItem('hisaab-theme') verification guard preserved -->
-  <script src="theme-init.js?v=1.4.17"></script>
-  <link rel="stylesheet" href="style.css?v=1.4.17">
-  <link rel="stylesheet" href="ui.css?v=1.4.17">
-  <link rel="stylesheet" href="journal.css?v=1.4.17">
-  <link rel="stylesheet" href="khata.css?v=1.4.17">
-  <link rel="stylesheet" href="receipt-export.css?v=1.4.17">
+  <script src="theme-init.js?v=1.4.18"></script>
+  <link rel="stylesheet" href="style.css?v=1.4.18">
+  <link rel="stylesheet" href="ui.css?v=1.4.18">
+  <link rel="stylesheet" href="journal.css?v=1.4.18">
+  <link rel="stylesheet" href="khata.css?v=1.4.18">
+  <link rel="stylesheet" href="receipt-export.css?v=1.4.18">
 </head>
 <body class="app-shell">
   <header class="top-nav no-print">
     <div class="top-nav-start">
       <div class="brand-mini">
         <img class="hisaab-logo" src="assets/hisaab-logo.svg" width="44" height="44" alt="">
-        <!-- FIX-23: lang="en" on brand name -->
-        <strong class="brand-title" lang="en">Hisaab</strong>
+        <div class="brand-titles">
+          <!-- FIX-23: lang="en" on brand name -->
+          <strong class="brand-title" lang="en">Hisaab</strong>
+          <span class="app-version-badge" title="سافٹ ویئر ورژن">v1.4.18</span>
+        </div>
       </div>
       <div class="top-date-wrap">
         <button id="prev-day-btn" type="button" class="btn-date-nav" title="پچھلا دن (1 دن پیچھے)" aria-label="پچھلا دن">◀</button>
@@ -1014,7 +1017,16 @@
 
   <dialog id="receipt-dialog" aria-labelledby="receipt-heading">
     <div class="dialog-head no-print"><h2 id="receipt-heading">انٹری کی رسید</h2><button id="close-receipt" type="button" aria-label="بند کریں">×</button></div>
-    <div class="receipt-actions no-print"><button id="receipt-preview" type="button" class="primary">رسید پرنٹ کریں</button><button id="receipt-save" type="button" hidden>PDF محفوظ کریں</button><button id="receipt-png" type="button" hidden>PNG محفوظ کریں</button><button id="receipt-copy" type="button" hidden>تصویر کاپی کریں</button><span id="receipt-status" role="status"></span></div>
+    <!-- Receipt Format Switcher Tabs -->
+    <div class="receipt-tabs no-print" role="tablist" aria-label="رسید فارمیٹ انتخاب">
+      <button id="tab-receipt-standard" type="button" role="tab" aria-selected="true" class="receipt-tab-btn active">
+        <span>📄</span> معیاری رسید (A4 / A5)
+      </button>
+      <button id="tab-receipt-thermal" type="button" role="tab" aria-selected="false" class="receipt-tab-btn">
+        <span>🧾</span> تھرمل سلپ (80mm POS)
+      </button>
+    </div>
+    <div class="receipt-actions no-print"><button id="receipt-preview" type="button" class="primary">رسید پرنٹ کریں</button><button id="receipt-thermal-btn" type="button" class="primary" hidden>🧾 تھرمل سلپ پرنٹ</button><button id="receipt-save" type="button" hidden>PDF محفوظ کریں</button><button id="receipt-png" type="button" hidden>PNG محفوظ کریں</button><button id="receipt-copy" type="button" hidden>تصویر کاپی کریں</button><span id="receipt-status" role="status"></span></div>
     <article id="receipt-paper" class="receipt-sheet" dir="rtl">
       <header class="receipt-header"><div><span class="receipt-kicker">حساب</span><h3 data-receipt="title"></h3></div><strong class="receipt-badge">انٹری رسید</strong></header>
       <div class="receipt-meta"><div><span>نمبر شمار</span><strong data-receipt="serial" class="receipt-number"></strong></div><div><span>تاریخ</span><strong data-receipt="date" class="receipt-number"></strong></div></div>
@@ -1023,11 +1035,56 @@
       <div class="receipt-amounts"><div><span>بقایا</span><strong data-receipt="balance" class="receipt-number"></strong></div><div><span>درہم</span><strong data-receipt="aed" class="receipt-number"></strong></div><div class="receipt-amount-main"><span data-receipt="currency"></span><strong data-receipt="pkr" class="receipt-number"></strong></div></div>
       <footer class="receipt-signatures"><span>تیار کنندہ</span><span>دستخط</span></footer>
     </article>
+    <!-- 80mm POS Thermal Slip Sheet -->
+    <article id="thermal-slip-paper" class="thermal-slip-sheet" dir="rtl" hidden>
+      <header class="thermal-slip-header">
+        <div class="thermal-slip-brand">حساب</div>
+        <div class="thermal-slip-title">کیش رسید / کسٹمر سلپ</div>
+      </header>
+      <hr class="thermal-slip-divider">
+      <div class="thermal-slip-meta">
+        <div class="thermal-row"><span class="thermal-lbl">پرچی نمبر:</span><strong data-thermal="serial" class="thermal-val font-mono"></strong></div>
+        <div class="thermal-row"><span class="thermal-lbl">تاریخ:</span><span data-thermal="date" class="thermal-val"></span></div>
+        <div class="thermal-row"><span class="thermal-lbl">وقت:</span><span data-thermal="time" class="thermal-val font-mono"></span></div>
+        <div class="thermal-row"><span class="thermal-lbl">کیشئیر / آپریٹر:</span><span data-thermal="operator" class="thermal-val"></span></div>
+      </div>
+      <hr class="thermal-slip-divider">
+      <div class="thermal-slip-parties">
+        <div class="thermal-row"><span class="thermal-lbl">پارٹی / کھاتہ:</span><strong data-thermal="branch" class="thermal-val"></strong></div>
+        <div class="thermal-row"><span class="thermal-lbl">ارسال کنندہ:</span><span data-thermal="sender" class="thermal-val"></span></div>
+        <div class="thermal-row"><span class="thermal-lbl">موبائل نمبر:</span><span data-thermal="mobile" class="thermal-val font-mono"></span></div>
+        <div class="thermal-row"><span class="thermal-lbl">وصول کنندہ:</span><span data-thermal="receiver" class="thermal-val"></span></div>
+        <div class="thermal-row"><span class="thermal-lbl">مقام:</span><span data-thermal="place" class="thermal-val"></span></div>
+      </div>
+      <hr class="thermal-slip-divider">
+      <div class="thermal-slip-amount-card">
+        <div class="thermal-amount-label">کل رقم کی ادائیگی</div>
+        <div class="thermal-amount-big">
+          <span data-thermal="pkr" class="thermal-sum"></span>
+          <small data-thermal="currency" class="thermal-curr"></small>
+        </div>
+        <div class="thermal-sub-amounts">
+          <div class="thermal-row" data-thermal-wrap="aed"><span class="thermal-lbl">درہم (AED):</span><span data-thermal="aed" class="thermal-val font-mono"></span></div>
+          <div class="thermal-row" data-thermal-wrap="balance"><span class="thermal-lbl">سابقہ بقایا:</span><span data-thermal="balance" class="thermal-val font-mono"></span></div>
+        </div>
+      </div>
+      <hr class="thermal-slip-divider">
+      <div class="thermal-slip-qr-box">
+        <div id="thermal-slip-qr" class="thermal-qr-container"></div>
+        <div class="thermal-qr-hint">اسکین کر کے رسید کی تصدیق کریں</div>
+      </div>
+      <hr class="thermal-slip-divider">
+      <footer class="thermal-slip-footer">
+        <div class="thermal-thanks">آپ کے کاروبار کا شکریہ!</div>
+        <div class="thermal-note">کمپیوٹرائزڈ رسید — دستخط کی ضرورت نہیں</div>
+        <div class="thermal-tag">Powered by Hisaab POS v1.4.18</div>
+      </footer>
+    </article>
   </dialog>
 
   <dialog id="account-settings-dialog" class="auth-dialog no-print" dir="ltr">
     <div class="dialog-head">
-      <h2>👤 Account &amp; Password Settings</h2>
+      <h2>👤 Account &amp; Password Settings <span class="dialog-version-pill">v1.4.18</span></h2>
       <button id="btn-close-account-settings" type="button" aria-label="Close">✕</button>
     </div>
     <form id="account-settings-form" class="auth-form" novalidate>
@@ -1150,7 +1207,7 @@
           <div class="auth-shield-icon" aria-hidden="true">🔒</div>
         </div>
         <div class="auth-header-text">
-          <h2 class="auth-title">Welcome Back</h2>
+          <h2 class="auth-title">Welcome Back <span class="auth-version-pill">v1.4.18</span></h2>
           <p id="auth-login-reason" class="auth-subtitle">Enter your credentials to access your accounts</p>
         </div>
       </div>
@@ -1276,16 +1333,17 @@
   <input id="file" type="file" accept="application/json,.json" hidden aria-label="بیک اَپ فائل منتخب کریں">
 
   <!-- FIX-3: Universal dialog backdrop-click fallback polyfill -->
-  <script src="dialog-fallback.js?v=1.4.17"></script>
-  <script src="excel-export.js?v=1.4.17"></script>
-  <script src="journal.js?v=1.4.17"></script>
-  <script src="khata.js?v=1.4.17"></script>
+  <script src="dialog-fallback.js?v=1.4.18"></script>
+  <script src="excel-export.js?v=1.4.18"></script>
+  <script src="journal.js?v=1.4.18"></script>
+  <script src="khata.js?v=1.4.18"></script>
   <!-- FIX-6 & FIX-27: html2canvas with SRI integrity verification and deferred non-blocking load -->
   <script src="assets/html2canvas.min.js?v=1.4.1" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" defer></script>
-  <script src="receipt-png.js?v=1.4.17"></script>
-  <script src="external-backup-ui.js?v=1.4.17"></script>
-  <script src="auth.js?v=1.4.17"></script>
-  <script src="app.js?v=1.4.17"></script>
-  <script src="ui.js?v=1.4.17"></script>
+  <script src="thermal-print.js?v=1.4.18"></script>
+  <script src="receipt-png.js?v=1.4.18"></script>
+  <script src="external-backup-ui.js?v=1.4.18"></script>
+  <script src="auth.js?v=1.4.18"></script>
+  <script src="app.js?v=1.4.18"></script>
+  <script src="ui.js?v=1.4.18"></script>
 </body>
 </html>

@@ -13,7 +13,8 @@ const testSuites = [
   { name: 'Authentication & Access Security', script: 'tests/web-pin-flow.cjs' },
   { name: 'Dark Mode / Night Theme', script: 'tests/theme-test.cjs' },
   { name: 'Print & PDF Light Theme Assurance', script: 'tests/print-theme.cjs' },
-  { name: 'Khata & Customer Ledger Engine', script: 'tests/khata.cjs' }
+  { name: 'Khata & Customer Ledger Engine', script: 'tests/khata.cjs' },
+  { name: 'Thermal Slip Printer (80mm POS)', script: 'tests/thermal-slip.cjs' }
 ];
 
 let failed = false;

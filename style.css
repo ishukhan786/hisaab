@@ -194,11 +194,13 @@ tfoot.register-totals .totals-row>th{font-size:calc(var(--entry-font) + 2px);fon
 .receipt-signatures{display:flex;justify-content:space-between;gap:45px;padding-top:35px;font-size:11px;color:#607969}.receipt-signatures span{width:42%;border-top:1px solid #a9bfae;text-align:center;padding-top:5px}
 @media(max-width:520px){#receipt-dialog{padding:14px}.receipt-sheet{padding:14px}.receipt-header h3{font-size:19px}.receipt-badge{font-size:13px;padding:3px 8px}.receipt-details>div{grid-template-columns:80px minmax(0,1fr);gap:10px}.receipt-meta>div{gap:8px}.receipt-amounts strong{font-size:15px}}
 @page receipt{size:A5 portrait;margin:10mm}
+@page thermal{size:80mm auto;margin:3mm 2mm}
 @page summary{size:A4 portrait;margin:10mm 10mm 14mm 10mm;@bottom-center{content:"صفحہ " counter(page);font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',Calibri,Arial,sans-serif;font-size:10pt;font-weight:700;color:#000;direction:rtl}}
 @media print{
-  body.receipt-output,body.summary-output{margin:0;background:#fff}
-  body.receipt-output>*,body.summary-output>*{display:none!important}
+  body.receipt-output,body.summary-output,body.thermal-output{margin:0;background:#fff}
+  body.receipt-output>*,body.summary-output>*,body.thermal-output>*{display:none!important}
   body.receipt-output>#receipt-print{display:block!important;page:receipt}
+  body.thermal-output>#receipt-print{display:block!important;page:thermal;width:76mm!important;max-width:76mm!important;margin:0 auto!important;padding:0!important}
   body.summary-output>#receipt-print{display:block!important;page:summary}
   #receipt-print .receipt-sheet{font-size:12px;padding:6mm;box-shadow:none}
   #receipt-print .receipt-header h3{font-size:20px}

@@ -1,7 +1,7 @@
 {
   "name": "hisaabApp",
   "productName": "حساب",
-  "version": "1.4.17",
+  "version": "1.4.18",
   "description": "حساب — آف لائن روزانہ کھاتہ، اندراج رجسٹر اور پرنٹ سسٹم",
   "main": "main.js",
   "scripts": {
@@ -88,6 +88,7 @@
       "khata.js",
       "khata.css",
       "receipt-png.js",
+      "thermal-print.js",
       "receipt-export.css",
       "external-backup.cjs",
       "external-backup-ui.js",

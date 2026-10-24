@@ -2568,7 +2568,8 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   .app-shell {--surface:#fff;--surface-soft:#f5f7f8;--surface-line:#d9e2e5;--surface-ink:#243c38;--surface-active:#176b55}
   html[data-theme="dark"] .app-shell {--surface:#16251f;--surface-soft:#1d3028;--surface-line:#395347;--surface-ink:#e0eee6;--surface-active:#257e61}
   body.app-shell {background:var(--surface-soft)}
-  .app-shell .top-nav {background:var(--surface);border-bottom-color:var(--surface-line);box-shadow:0 2px 8px #102a  .app-shell :is(button,summary.btn-nav):focus-visible {outline:3px solid var(--surface-active);outline-offset:3px}
+  .app-shell .top-nav {background:var(--surface);border-bottom-color:var(--surface-line);box-shadow:0 2px 8px #102a2108}
+  .app-shell :is(button,summary.btn-nav):focus-visible {outline:3px solid var(--surface-active);outline-offset:3px}
   .app-shell :is(.workspace-nav,.party-tabs-bar) {background:var(--surface-soft);border-color:var(--surface-line)}
   .app-shell .party-tabs-bar {border-radius:12px}
   .app-shell :is(.paper,.journal-card) {border-color:var(--surface-line);border-radius:12px;box-shadow:0 3px 14px #102a2108}
@@ -3687,4 +3688,341 @@ html[data-theme="dark"] .auth-cancel-btn {
 html[data-theme="dark"] .auth-cancel-btn:hover {
   background: #254639;
 }
+
+/* ==========================================================================
+   Receipt Tabs & Thermal Slip (80mm / POS) Styling
+   ========================================================================== */
+.receipt-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-surface-2, rgba(0, 0, 0, 0.04));
+  padding: 4px;
+  border-radius: 10px;
+  margin: 0 0 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+html[data-theme="dark"] .receipt-tabs {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.receipt-tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--ink-secondary, #4a6356);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.receipt-tab-btn:hover {
+  color: #17634c;
+  background: rgba(23, 99, 76, 0.08);
+}
+html[data-theme="dark"] .receipt-tab-btn {
+  color: #a4cdb8;
+}
+html[data-theme="dark"] .receipt-tab-btn:hover {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+}
+.receipt-tab-btn.active {
+  background: linear-gradient(135deg, #17634c 0%, #0d4635 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(23, 99, 76, 0.3);
+}
+html[data-theme="dark"] .receipt-tab-btn.active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* 80mm POS Thermal Slip Sheet (Screen preview) */
+.thermal-slip-sheet {
+  width: 76mm;
+  max-width: 320px;
+  margin: 10px auto 0;
+  background: #ffffff !important;
+  color: #111111 !important;
+  padding: 16px 14px 20px;
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Nastaliq Urdu', sans-serif;
+  box-sizing: border-box;
+  text-align: right;
+  direction: rtl;
+}
+html[data-theme="dark"] .thermal-slip-sheet {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.thermal-slip-header {
+  text-align: center;
+  margin-bottom: 4px;
+}
+.thermal-slip-brand {
+  font-size: 24px;
+  font-weight: 900;
+  color: #0b3d2e !important;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+.thermal-slip-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333333 !important;
+}
+
+.thermal-slip-divider {
+  border: none;
+  border-top: 1.5px dashed #444444;
+  margin: 10px 0;
+  height: 0;
+}
+
+.thermal-slip-meta,
+.thermal-slip-parties {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.thermal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12.5px;
+  line-height: 1.4;
+  gap: 8px;
+}
+.thermal-lbl {
+  color: #4b5563 !important;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.thermal-val {
+  font-weight: 700;
+  color: #111111 !important;
+  text-align: left;
+  direction: ltr;
+  overflow-wrap: anywhere;
+}
+.thermal-val:not(.font-mono) {
+  direction: rtl;
+}
+
+/* Amount Highlight Card */
+.thermal-slip-amount-card {
+  background: #f4f8f5 !important;
+  border: 1.5px solid #17634c;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 6px 0;
+  text-align: center;
+}
+.thermal-amount-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #17634c !important;
+  margin-bottom: 4px;
+}
+.thermal-amount-big {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+.thermal-sum {
+  font-size: 26px;
+  font-weight: 900;
+  color: #000000 !important;
+  font-family: 'Consolas', 'Courier New', monospace;
+  letter-spacing: 0.5px;
+}
+.thermal-curr {
+  font-size: 13px;
+  font-weight: 700;
+  color: #222222 !important;
+}
+.thermal-sub-amounts {
+  border-top: 1px dotted #a3c2b5;
+  padding-top: 6px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* QR Code Section */
+.thermal-slip-qr-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0;
+}
+.thermal-qr-container {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto;
+}
+.thermal-qr-container svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.thermal-qr-hint {
+  font-size: 10px;
+  font-weight: 600;
+  color: #555555 !important;
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* Footer Section */
+.thermal-slip-footer {
+  text-align: center;
+  padding-top: 2px;
+}
+.thermal-thanks {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #111111 !important;
+  margin-bottom: 2px;
+}
+.thermal-note {
+  font-size: 10.5px;
+  color: #555555 !important;
+  margin-bottom: 4px;
+}
+.thermal-tag {
+  font-size: 9.5px;
+  color: #777777 !important;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+/* Action button style for thermal print */
+.app-shell #receipt-thermal-btn {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+  border-color: #14b8a6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(13, 148, 136, 0.3) !important;
+}
+.app-shell #receipt-thermal-btn:hover {
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%) !important;
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.45) !important;
+}
+html[data-theme="dark"] .app-shell #receipt-thermal-btn {
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%) !important;
+  border-color: #2dd4bf !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 16px rgba(20, 184, 166, 0.45) !important;
+}
+
+/* Print Overrides for Thermal Slip */
+@media print {
+  body.thermal-output {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+  body.thermal-output > *:not(#receipt-print) {
+    display: none !important;
+  }
+  body.thermal-output > #receipt-print {
+    display: block !important;
+    page: thermal;
+    width: 76mm !important;
+    max-width: 76mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+  }
+  #receipt-print .thermal-slip-sheet,
+  #receipt-print .thermal-slip-export {
+    width: 76mm !important;
+    max-width: 76mm !important;
+    padding: 2mm 1mm !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  #receipt-print .thermal-slip-amount-card {
+    background: #ffffff !important;
+    border: 1.5px solid #000000 !important;
+  }
+  #receipt-print .thermal-amount-label,
+  #receipt-print .thermal-curr,
+  #receipt-print .thermal-thanks,
+  #receipt-print .thermal-slip-brand {
+    color: #000000 !important;
+  }
+  #receipt-print .thermal-slip-divider {
+    border-top: 1.5px dashed #000000 !important;
+  }
+  #receipt-print .thermal-qr-container {
+    width: 85px !important;
+    height: 85px !important;
+  }
+}
+
+/* ==========================================================================
+   Software Version Badges (Header, Login, and Dialogs)
+   ========================================================================== */
+.brand-titles {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.app-version-badge {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Consolas', 'Courier New', monospace;
+  letter-spacing: 0.3px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #e6f4ed 0%, #d1ebe0 100%);
+  color: #0d5c43;
+  border: 1px solid #9ccab2;
+  box-shadow: 0 1px 2px rgba(13, 92, 67, 0.08);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+html[data-theme="dark"] .app-version-badge {
+  background: linear-gradient(135deg, #13392c 0%, #0d2920 100%);
+  color: #5eead4;
+  border-color: #1f634e;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+.auth-version-pill,
+.dialog-version-pill {
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'Consolas', 'Courier New', monospace;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+html[data-theme="dark"] :is(.auth-version-pill, .dialog-version-pill) {
+  background: rgba(52, 211, 153, 0.15);
+  color: #6ee7b7;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
 
