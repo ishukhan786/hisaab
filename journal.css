@@ -1,3 +1,4 @@
+@font-face{font-family:'Bombay Black Unicode';src:local('Bombay Black Unicode'),local('Bombay Black'),url('assets/BombayBlackUnicode.ttf') format('truetype');font-weight:400 900;font-display:swap}
 .workspace-nav{display:inline-flex;align-items:center;gap:6px;padding:0;background:transparent;border:0}
 .workspace-nav button{background:#f5f8f5;border:1px solid #d3dfd5;min-width:0;padding:5px 14px;height:36px}
 .workspace-nav button.active{background:#17634c;color:white;border-color:#17634c}
@@ -6,7 +7,10 @@ body.journal-view .top-nav{grid-template-columns:auto 1fr}
 body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justify-content:flex-end}
 .journal-card{background:white;border:1px solid #d3dfd5;border-radius:16px;overflow:hidden;box-shadow:0 5px 22px #234b3408}
 .journal-heading{padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:1px solid #e2eae3}
-.journal-heading h1{margin:0;font-size:26px}.journal-heading p{font-size:12px;margin:3px 0 0;color:#617b6a}.journal-heading p.error{color:#a3342e}
+.journal-title-block{width:100%;text-align:center}
+.journal-heading h1,.journal-title{margin:0;font-family:'Bombay Black Unicode','Noto Nastaliq Urdu',serif;font-size:28px;font-weight:900;letter-spacing:0.5px;color:#134d38;line-height:1.8}
+.journal-heading p{font-size:12px;margin:3px 0 0;color:#617b6a}.journal-heading p.error{color:#a3342e}
+.journal-print-date-wrap{display:none}
 .journal-tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .journal-date-group{display:inline-flex;align-items:center;gap:8px}
 .journal-tools label{font-size:12px;font-weight:600}
@@ -50,7 +54,28 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 .journal-foot{display:flex;justify-content:space-between;padding:10px 22px;font-size:10px;color:#6d8372}.journal-help{font-size:11px;color:#627d69;line-height:2.5}.journal-print-value{display:none}
 @media screen and (max-width:700px){.workspace-nav{padding:8px 12px}.workspace-nav button{flex:1;min-width:0}.journal-heading{padding:14px;gap:10px}.journal-tools{gap:8px}.journal-heading h1{font-size:23px}body.journal-view .top-nav{grid-template-columns:1fr}body.journal-view .top-nav-end{grid-row:2;grid-column:1;display:flex}.journal-opening-line{padding:10px 14px}}
 @page journal{size:A4 portrait;margin:.5cm}
-@media print{body.journal-view #register-page{display:none!important}body.journal-view #journal-page{display:block!important;page:journal}.workspace-nav,.journal-help{display:none!important}.journal-card{border:0;border-radius:0;box-shadow:none;overflow:visible}.journal-heading{padding:0 0 12px;display:flex;flex-wrap:nowrap}.journal-heading p{display:none}#journal-date-print{display:block;font:14px Arial,sans-serif;direction:ltr}.journal-opening-line{padding:8px;border:1px solid #99aa9a;margin-bottom:8px}.journal-table-wrap{overflow:visible}.journal-table{min-width:0;width:100%}.journal-table thead{display:table-header-group}.journal-table th,.journal-table td{border-color:#99aa9a}.journal-table input,.journal-table textarea,.journal-draft{display:none!important}.journal-print-value{display:block;white-space:pre-wrap;overflow-wrap:anywhere;padding:2px 6px;line-height:1.6;font-size:var(--entry-font)}.journal-money{font-family:Calibri,'Segoe UI',Arial,sans-serif;font-weight:700;direction:ltr;text-align:center}.journal-table tr{break-inside:avoid}.journal-table tfoot{display:table-row-group}}
+@media print{
+  body.journal-view #register-page{display:none!important}
+  body.journal-view #journal-page{display:block!important;page:journal}
+  .workspace-nav,.journal-help{display:none!important}
+  .journal-card{border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important}
+  .journal-heading{padding:0 0 10px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;border:0!important;border-bottom:2px solid #174233!important;margin-bottom:8px!important}
+  .journal-heading .journal-title-block{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;width:100%!important;margin:0!important;padding:0!important}
+  .journal-heading h1,.journal-heading .journal-title{display:block!important;font-family:'Bombay Black Unicode','Noto Nastaliq Urdu',serif!important;font-size:32px!important;font-weight:900!important;line-height:1.6!important;letter-spacing:0.5px!important;color:#000000!important;text-align:center!important;margin:0!important;padding:0!important}
+  .journal-heading .journal-print-date-wrap{display:block!important;margin:2px 0 0 0!important;padding:0!important;text-align:center!important;direction:rtl!important}
+  .journal-heading .journal-print-date-urdu{display:inline-block!important;font-family:'Noto Nastaliq Urdu Print','Noto Nastaliq Urdu',serif!important;font-size:14pt!important;font-weight:700!important;line-height:2!important;color:#000000!important;direction:rtl!important;text-align:center!important}
+  .journal-heading p,.journal-heading #journal-date-print,.journal-tools{display:none!important}
+  .journal-opening-line{padding:8px;border:1px solid #99aa9a;margin-bottom:8px}
+  .journal-table-wrap{overflow:visible}
+  .journal-table{min-width:0;width:100%}
+  .journal-table thead{display:table-header-group}
+  .journal-table th,.journal-table td{border-color:#99aa9a}
+  .journal-table input,.journal-table textarea,.journal-draft{display:none!important}
+  .journal-print-value{display:block;white-space:pre-wrap;overflow-wrap:anywhere;padding:2px 6px;line-height:1.6;font-size:var(--entry-font)}
+  .journal-money{font-family:Calibri,'Segoe UI',Arial,sans-serif;font-weight:700;direction:ltr;text-align:center}
+  .journal-table tr{break-inside:avoid}
+  .journal-table tfoot{display:table-row-group}
+}
 /* Compact printed rows */
 @media print{.journal-table th{height:46px;line-height:2.4;padding:9px 6px 3px;font-size:var(--entry-font)}.journal-table thead th{background:#edf1eb}.journal-table tfoot th,.journal-table tfoot td{background:#e4eee2}.journal-table td{height:46px;vertical-align:middle}.journal-print-value{padding:9px 6px 3px;line-height:2.4;font-size:var(--entry-font)}.journal-table td.journal-serial,.journal-table .journal-balance,.journal-table tfoot td{padding-top:0;padding-bottom:0;font-size:var(--entry-font)}.journal-print-value.journal-money{padding:3px 6px;line-height:1.8}.journal-table .journal-balance,.journal-table tfoot td{padding:2px 6px}.journal-table th.journal-serial-th{background:#edf1eb;color:inherit;font-size:var(--entry-font);font-family:inherit;font-weight:inherit}.journal-table td.journal-serial{background:#fff!important;color:#000;font-size:var(--entry-font);font-family:Arial,sans-serif;font-weight:700;text-align:center;padding:2px 4px}}
 
@@ -109,7 +134,7 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 
 /* Center the journal title above its date controls and printed page. */
 .journal-heading>div:first-child{flex-basis:100%;width:100%;text-align:center}.journal-heading .journal-tools{margin-inline:auto}
-@media print{.journal-heading{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}.journal-heading>div:first-child{grid-column:2;grid-row:1;width:auto}.journal-heading #journal-date-print{grid-column:3;grid-row:1;justify-self:end}}
+@media print{.journal-heading{display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important}.journal-heading>div:first-child{width:100%!important}}
 
 /* Keep app money columns readable while giving descriptions the remaining space. */
 @media screen{.journal-table col.journal-serial-col{width:58px}.journal-table col.journal-detail-col{width:auto}.journal-table col.journal-money-col{width:clamp(112px,12vw,164px)}.journal-table col.journal-balance-col{width:clamp(150px,15vw,204px)}.journal-table .journal-money{font-variant-numeric:tabular-nums}.journal-table td.journal-balance,.journal-table #journal-closing{padding-left:42px!important;padding-right:10px!important}}
@@ -118,7 +143,7 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 @media screen {
   .app-shell .journal-card {border-radius:16px;box-shadow:0 4px 24px rgba(18,63,46,0.08);border:1px solid #cce0d3}
   .app-shell .journal-heading {padding:14px 24px;gap:12px;background:linear-gradient(180deg,#fbfdfc 0%,#f4f8f5 100%);border-bottom:1px solid #dce8e0}
-  .app-shell .journal-heading h1 {font-size:26px;font-weight:700;color:#134d38;line-height:1.9}
+  .app-shell .journal-heading h1 {font-family:'Bombay Black Unicode','Noto Nastaliq Urdu',serif;font-size:28px;font-weight:900;color:#134d38;line-height:1.9;letter-spacing:0.5px}
   .app-shell .journal-heading p {margin:2px 0 0;font-size:11.5px;color:#5a7667;line-height:2}
   .app-shell .journal-tools {gap:10px;justify-content:center;align-items:center}
   .app-shell .journal-tools label {font-size:12.5px;font-weight:700;color:#3d5a4a}

@@ -31,8 +31,21 @@
     const $=id=>document.getElementById(id),nodes=new Map();let undo=null;
     const data=()=>getState().journal;
     const active=()=>document.body.classList.contains('journal-view');
-    const selected=()=>data().rows.filter(r=>r.date===data().date&&hasData(r));
     const dateLabel=s=>s.split('-').reverse().join('/');
+    const formatUrduDate = s => {
+      if (!s || typeof s !== 'string') return '';
+      const parts = s.trim().split('-');
+      if (parts.length !== 3) return s;
+      const y = parts[0];
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      const urduMonths = [
+        'جنوری', 'فروری', 'مارچ', 'اپریل', 'مئی', 'جون',
+        'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر'
+      ];
+      const monthName = urduMonths[m - 1] || parts[1];
+      return `تاریخ: ${d} ${monthName} ${y}ء`;
+    };
     function ensureDraft(){let draft=data().rows.find(r=>r.date===data().date&&!hasData(r));if(!draft){draft={id:crypto.randomUUID(),date:data().date,detail:'',debit:'',credit:''};data().rows.push(draft);}return draft;}
     function renderBalance(el,val,valid,invalidText='—'){
       el.classList.remove('is-jama','is-banam');el.replaceChildren();
@@ -95,7 +108,10 @@
         difference.classList.add(delta<0n?'cash-short':delta>0n?'cash-extra':'cash-equal');
         difference.textContent=delta===0n?'حساب برابر ✓':format(delta<0n?-delta:delta)+(delta<0n?' کم ہے':' زیادہ ہے');
       }
-      $('journal-count').textContent=selected().length+' اندراجات';$('journal-date-print').textContent=dateLabel(data().date);
+      $('journal-count').textContent=selected().length+' اندراجات';
+      $('journal-date-print').textContent=dateLabel(data().date);
+      const urduDateEl = $('journal-print-date-urdu');
+      if (urduDateEl) urduDateEl.textContent = formatUrduDate(data().date);
       $('journal-undo').hidden=!undo;
       return valid&&count!==null;
     }
@@ -199,7 +215,11 @@
     $('journal-excel')?.addEventListener('click', () => exportExcel());
     function add(){const row=ensureDraft();if(!nodes.has(row.id))addNode(row);nodes.get(row.id).querySelector('textarea').focus();}
     $('journal-undo').onclick=()=>{if(!undo)return;data().rows.splice(Math.min(undo.index,data().rows.length),0,undo.row);data().date=undo.row.date;undo=null;refresh();save(true);};
-    function preparePrint(){recalculate();document.querySelectorAll('.journal-print-value').forEach(n=>n.remove());for(const tr of nodes.values())tr.querySelectorAll('input,textarea').forEach(input=>{const span=document.createElement('span');span.className='journal-print-value'+(input.dataset.journal==='detail'?'':' journal-money');span.textContent=input.value;input.after(span);});}
+    function preparePrint(){
+      recalculate();
+      const urduDateEl = $('journal-print-date-urdu');
+      if (urduDateEl) urduDateEl.textContent = formatUrduDate(data().date);
+      document.querySelectorAll('.journal-print-value').forEach(n=>n.remove());for(const tr of nodes.values())tr.querySelectorAll('input,textarea').forEach(input=>{const span=document.createElement('span');span.className='journal-print-value'+(input.dataset.journal==='detail'?'':' journal-money');span.textContent=input.value;input.after(span);});}
     async function output(pdf=false){if(!selected().length&&!data().cashCounts?.[data().date]?.trim()){alert('اس تاریخ پر کوئی انٹری موجود نہیں ہے۔');return;}if(!recalculate()){alert('پرنٹ سے پہلے روزنامچے کی رقم درست کریں۔');return;}await document.fonts.ready;preparePrint();const restoreTheme=window.prepareForPrintTheme?window.prepareForPrintTheme():null;if(!window.electronAPI?.previewPDF){try{window.print();}finally{restoreTheme?.();}return;}if(document.body.inert){restoreTheme?.();return;}document.body.inert=true;try{const result=pdf?await window.electronAPI.savePDF('روزنامچہ_'+data().date+'.pdf', { landscape: false }):await window.electronAPI.previewPDF({ landscape: false });if(result.status==='error')alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');return result;}catch{alert('روزنامچہ محفوظ یا پرنٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');}finally{document.body.inert=false;restoreTheme?.();}}
     function exportExcel(){
       if((!selected().length&&!data().cashCounts?.[data().date]?.trim())||!recalculate()){alert('ایکسپورٹ کے لیے درست انٹریاں منتخب کریں۔');return;}
