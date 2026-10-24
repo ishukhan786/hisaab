@@ -2716,108 +2716,120 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
     box-shadow: 0 1px 2px rgba(16, 56, 41, 0.15), inset 0 1px 2px rgba(16, 56, 41, 0.12) !important;
   }
 
-  /* 1. EMERALD JEWEL: Primary Actions (Add, Create, Submit, Confirm) */
-  html body.app-shell :is(#add, #journal-add, #add-party-tab, .btn-add-primary, .primary, #duplicate-keep, #receipt-copy, .btn-khata-new, .btn-khata-submit, #branch-form button[type="submit"], .pin-form button[type="submit"]):not(#toggle-pwd-btn) {
-    background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%) !important;
+  /* ==========================================================================
+     INDIVIDUAL UNIQUE BUTTON COLOR IDENTITIES
+     Every button has a distinct, recognizable jewel hue and glowing tactile feel
+     ========================================================================== */
+
+  /* 1. WORKSPACE NAV - EACH TAB HAS ITS OWN COLOR IDENTITY */
+  html body.app-shell #view-register.active {
+    background: linear-gradient(135deg, #059669 0%, #047857 55%, #064e3b 100%) !important;
     color: #ffffff !important;
-    border: 1px solid #047857 !important;
+    border: 1px solid #064e3b !important;
     font-weight: 700 !important;
-    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4), 0 1px 3px rgba(5, 150, 105, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
-    text-shadow: 0 1px 2px rgba(4, 78, 56, 0.35);
+    box-shadow: 0 4px 14px rgba(4, 120, 87, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    text-shadow: 0 1px 2px rgba(6, 78, 59, 0.4);
   }
-  html body.app-shell :is(#add, #journal-add, #add-party-tab, .btn-add-primary, .primary, #duplicate-keep, #receipt-copy, .btn-khata-new, .btn-khata-submit, #branch-form button[type="submit"], .pin-form button[type="submit"]):not(#toggle-pwd-btn):hover:not(:disabled) {
-    background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%) !important;
-    border-color: #047857 !important;
+  html body.app-shell #view-journal.active {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 55%, #312e81 100%) !important;
     color: #ffffff !important;
-    box-shadow: 0 8px 24px rgba(5, 150, 105, 0.52), 0 2px 6px rgba(5, 150, 105, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
-    translate: 0 -2px !important;
+    border: 1px solid #312e81 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    text-shadow: 0 1px 2px rgba(49, 46, 129, 0.4);
+  }
+  html body.app-shell #view-khata.active {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 55%, #155e75 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #155e75 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(8, 145, 178, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    text-shadow: 0 1px 2px rgba(21, 94, 117, 0.4);
+  }
+  html body.app-shell .workspace-nav {
+    background: #e2ede6 !important;
+    border: 1px solid #b6d3c2 !important;
+    box-shadow: inset 0 1.5px 3px rgba(13, 92, 67, 0.12), 0 1px 0 rgba(255, 255, 255, 0.9) !important;
   }
 
-  /* 2. SAPPHIRE BLUE JEWEL: Print & Print-Preview */
-  html body.app-shell :is(#print, #receipt-preview):not(#toggle-pwd-btn) {
+  /* 2. PRINT: ROYAL SAPPHIRE BLUE */
+  html body.app-shell :is(#print, #receipt-preview, #btn-khata-dir-print):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 55%, #1d4ed8 100%) !important;
     color: #ffffff !important;
     border: 1px solid #1e40af !important;
     font-weight: 700 !important;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38), 0 1px 3px rgba(37, 99, 235, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
     text-shadow: 0 1px 2px rgba(30, 64, 175, 0.4);
   }
-  html body.app-shell :is(#print, #receipt-preview):not(#toggle-pwd-btn):hover:not(:disabled) {
+  html body.app-shell :is(#print, #receipt-preview, #btn-khata-dir-print):not(#toggle-pwd-btn):hover:not(:disabled) {
     background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 55%, #2563eb 100%) !important;
-    border-color: #1d4ed8 !important;
-    color: #ffffff !important;
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.52), 0 2px 6px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
     translate: 0 -2px !important;
   }
 
-  /* 3. SPREADSHEET FOREST EMERALD: Excel Export */
-  html body.app-shell :is(#export-open, #export-filtered, #export-all):not(#toggle-pwd-btn) {
-    background: linear-gradient(135deg, #15803d 0%, #166534 55%, #14532d 100%) !important;
+  /* 3. EXCEL: VIVID FOREST KELLY GREEN */
+  html body.app-shell :is(#export-open, #export-filtered, #export-all, #btn-khata-dir-excel):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 55%, #14532d 100%) !important;
     color: #ffffff !important;
     border: 1px solid #14532d !important;
     font-weight: 700 !important;
-    box-shadow: 0 4px 14px rgba(21, 128, 61, 0.38), 0 1px 3px rgba(21, 128, 61, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
     text-shadow: 0 1px 2px rgba(20, 83, 45, 0.4);
   }
-  html body.app-shell :is(#export-open, #export-filtered, #export-all):not(#toggle-pwd-btn):hover:not(:disabled) {
+  html body.app-shell :is(#export-open, #export-filtered, #export-all, #btn-khata-dir-excel):not(#toggle-pwd-btn):hover:not(:disabled) {
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 55%, #15803d 100%) !important;
-    border-color: #14532d !important;
-    color: #ffffff !important;
-    box-shadow: 0 8px 24px rgba(22, 163, 74, 0.52), 0 2px 6px rgba(22, 163, 74, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    box-shadow: 0 8px 24px rgba(22, 163, 74, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
     translate: 0 -2px !important;
   }
 
-  /* 4. ROYAL AMETHYST PURPLE JEWEL: Summary & Date Overview */
-  html body.app-shell :is(#summary-open, #summary-tab-date, #duplicate-review):not(#toggle-pwd-btn) {
+  /* 4. SUMMARY (خلاصہ): ROYAL AMETHYST PURPLE */
+  html body.app-shell :is(#summary-open, #summary-tab-date):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 55%, #6d28d9 100%) !important;
     color: #ffffff !important;
     border: 1px solid #5b21b6 !important;
     font-weight: 700 !important;
-    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.38), 0 1px 3px rgba(124, 58, 237, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
     text-shadow: 0 1px 2px rgba(91, 33, 182, 0.4);
   }
-  html body.app-shell :is(#summary-open, #summary-tab-date, #duplicate-review):not(#toggle-pwd-btn):hover:not(:disabled) {
+  html body.app-shell :is(#summary-open, #summary-tab-date):not(#toggle-pwd-btn):hover:not(:disabled) {
     background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 55%, #7c3aed 100%) !important;
-    border-color: #5b21b6 !important;
-    color: #ffffff !important;
-    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.52), 0 2px 6px rgba(124, 58, 237, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
     translate: 0 -2px !important;
   }
 
-  /* 5. TWILIGHT SLATE & GOLD: Theme Toggle */
+  /* 5. THEME TOGGLE: MIDNIGHT OBSIDIAN & GOLD */
   html body.app-shell :is(#theme-toggle, .btn-theme-toggle):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
     color: #facc15 !important;
     border: 1px solid #334155 !important;
     font-weight: 700 !important;
-    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
   }
   html body.app-shell :is(#theme-toggle, .btn-theme-toggle):not(#toggle-pwd-btn):hover:not(:disabled) {
     background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
     border-color: #facc15 !important;
     color: #fef08a !important;
-    box-shadow: 0 6px 18px rgba(250, 204, 21, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    box-shadow: 0 6px 18px rgba(250, 204, 21, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
     translate: 0 -2px !important;
   }
 
-  /* 6. RUBY CRIMSON JEWEL: Destructive / Delete */
-  html body.app-shell :is(.delete, .journal-delete, .delete-party-btn, .btn-khata-delete, #logout-btn, #external-backup-disable, #pin-remove-btn):not(#toggle-pwd-btn) {
-    background: linear-gradient(180deg, #fff5f5 0%, #fee2e2 100%) !important;
-    color: #dc2626 !important;
-    border: 1px solid #fca5a5 !important;
+  /* 6. MORE MENU TRIGGER: STEEL GRAPHITE SLATE */
+  html body.app-shell .more-menu > summary {
+    background: linear-gradient(135deg, #475569 0%, #334155 100%) !important;
+    color: #f8fafc !important;
+    border: 1px solid #334155 !important;
     font-weight: 700 !important;
-    box-shadow: 0 2px 5px rgba(220, 38, 38, 0.12), inset 0 1px 0 #ffffff !important;
+    box-shadow: 0 3px 10px rgba(71, 85, 105, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   }
-  html body.app-shell :is(.delete, .journal-delete, .delete-party-btn, .btn-khata-delete, #logout-btn, #external-backup-disable, #pin-remove-btn):not(#toggle-pwd-btn):hover:not(:disabled) {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%) !important;
-    border-color: #991b1b !important;
-    color: #ffffff !important;
-    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.45), 0 2px 6px rgba(220, 38, 38, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+  html body.app-shell .more-menu > summary:hover {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+    border-color: #94a3b8 !important;
+    box-shadow: 0 6px 18px rgba(71, 85, 105, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
     translate: 0 -2px !important;
   }
 
-  /* 7. WARM HONEY AMBER: Today & Quick Time Controls */
-  html body.app-shell :is(#today-btn):not(#toggle-pwd-btn) {
+  /* 7. TODAY BUTTON: SUNBURST GOLDEN AMBER */
+  html body.app-shell #today-btn:not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 60%, #b45309 100%) !important;
     color: #ffffff !important;
     border: 1px solid #92400e !important;
@@ -2825,45 +2837,90 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
     box-shadow: 0 3px 10px rgba(217, 119, 6, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
     text-shadow: 0 1px 2px rgba(146, 64, 14, 0.4);
   }
-  html body.app-shell :is(#today-btn):not(#toggle-pwd-btn):hover:not(:disabled) {
+  html body.app-shell #today-btn:not(#toggle-pwd-btn):hover:not(:disabled) {
     background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 60%, #d97706 100%) !important;
     box-shadow: 0 6px 18px rgba(217, 119, 6, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
     translate: 0 -2px !important;
   }
 
-  /* 8. ROSE RUBY JEWEL: PDF Exports & Saves */
-  html body.app-shell :is(#save-pdf, #summary-pdf, #receipt-save):not(#toggle-pwd-btn) {
-    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 55%, #be123c 100%) !important;
-    color: #ffffff !important;
-    border: 1px solid #9f1239 !important;
-    font-weight: 700 !important;
-    box-shadow: 0 4px 14px rgba(225, 29, 72, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  /* 8. PREV/NEXT DAY BUTTONS: SKY ICE BLUE */
+  html body.app-shell :is(#prev-day-btn, #next-day-btn, #journal-date-prev, #journal-date-next):not(#toggle-pwd-btn) {
+    background: linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%) !important;
+    color: #0284c7 !important;
+    border: 1px solid #7dd3fc !important;
+    box-shadow: 0 2px 5px rgba(2, 132, 199, 0.12), inset 0 1px 0 #ffffff !important;
   }
-  html body.app-shell :is(#save-pdf, #summary-pdf, #receipt-save):not(#toggle-pwd-btn):hover:not(:disabled) {
-    background: linear-gradient(135deg, #fb7185 0%, #f43f5e 55%, #e11d48 100%) !important;
-    box-shadow: 0 8px 22px rgba(225, 29, 72, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.52) !important;
+  html body.app-shell :is(#prev-day-btn, #next-day-btn, #journal-date-prev, #journal-date-next):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%) !important;
+    border-color: #0284c7 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+    translate: 0 -1.5px !important;
+  }
+
+  /* 9. DATE RANGE TOGGLE: AQUAMARINE TEAL */
+  html body.app-shell :is(#toggle-range, .btn-range):not(#toggle-pwd-btn) {
+    background: linear-gradient(180deg, #ffffff 0%, #ccfbf1 100%) !important;
+    color: #0f766e !important;
+    border: 1px solid #5eead4 !important;
+    box-shadow: 0 2px 5px rgba(15, 118, 110, 0.12), inset 0 1px 0 #ffffff !important;
+  }
+  html body.app-shell :is(#toggle-range, .btn-range):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(180deg, #ffffff 0%, #99f6e4 100%) !important;
+    border-color: #14b8a6 !important;
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.22) !important;
+    translate: 0 -1.5px !important;
+  }
+  html body.app-shell :is(#toggle-range, .btn-range).active {
+    background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%) !important;
+    color: #ffffff !important;
+    border-color: #0f766e !important;
+    box-shadow: 0 4px 14px rgba(15, 118, 110, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  }
+
+  /* 10. ADD PARTY TAB (+ نئی پارٹی): RADIANT MINT EMERALD */
+  html body.app-shell #add-party-tab:not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #047857 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+    text-shadow: 0 1px 2px rgba(4, 78, 56, 0.35);
+  }
+  html body.app-shell #add-party-tab:not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
     translate: 0 -2px !important;
   }
 
-  /* 9. WORKSPACE & PARTY TABS ACTIVE STATES */
-  html body.app-shell :is(.workspace-nav button.active, .party-tab.active, .summary-tab.active):not(#toggle-pwd-btn) {
-    background: linear-gradient(135deg, #059669 0%, #047857 55%, #064e3b 100%) !important;
+  /* 11. MANAGE PARTIES TAB (⚙): TITANIUM CHROME */
+  html body.app-shell #manage-parties-tab:not(#toggle-pwd-btn) {
+    background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%) !important;
+    color: #334155 !important;
+    border: 1px solid #94a3b8 !important;
+    box-shadow: 0 2px 5px rgba(51, 65, 85, 0.1), inset 0 1px 0 #ffffff !important;
+  }
+  html body.app-shell #manage-parties-tab:not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+    border-color: #334155 !important;
     color: #ffffff !important;
-    border: 1px solid #064e3b !important;
+    box-shadow: 0 5px 15px rgba(51, 65, 85, 0.35) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 12. ACTIVE PARTY TAB: DARK JADE PINE */
+  html body.app-shell .party-tab.active:not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #134e4a !important;
     font-weight: 700 !important;
-    box-shadow: 0 4px 14px rgba(4, 120, 87, 0.42), 0 1px 3px rgba(4, 120, 87, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    text-shadow: 0 1px 2px rgba(6, 78, 59, 0.4);
+    box-shadow: 0 4px 14px rgba(15, 118, 110, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+    text-shadow: 0 1px 2px rgba(19, 78, 74, 0.4);
   }
-  html body.app-shell .workspace-nav {
-    background: #e2ede6 !important;
-    border: 1px solid #b6d3c2 !important;
-    box-shadow: inset 0 1.5px 3px rgba(13, 92, 67, 0.12), 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-  }
-  html body.app-shell .party-tab {
-    background: linear-gradient(180deg, #ffffff 0%, #f0f7f3 100%) !important;
+  html body.app-shell .party-tab:not(.active) {
+    background: linear-gradient(180deg, #ffffff 0%, #f0f7f4 100%) !important;
     border: 1px solid #b9d6c6 !important;
     color: #174735 !important;
-    box-shadow: 0 1px 3px rgba(18, 56, 40, 0.06), inset 0 1px 0 #ffffff !important;
   }
   html body.app-shell .party-tab:hover:not(.active) {
     background: linear-gradient(180deg, #ffffff 0%, #e1f2e8 100%) !important;
@@ -2873,43 +2930,272 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
     translate: 0 -1.5px !important;
   }
 
-  /* 10. DARK MODE JEWEL TONES GLOW */
+  /* 13. LOCK DAY BUTTON: TOPAZ GOLD */
+  html body.app-shell #lock-day:not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #eab308 0%, #ca8a04 60%, #a16207 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #854d0e !important;
+    font-weight: 700 !important;
+    box-shadow: 0 3px 10px rgba(202, 138, 4, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  }
+  html body.app-shell #lock-day:not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #facc15 0%, #eab308 60%, #ca8a04 100%) !important;
+    box-shadow: 0 6px 18px rgba(202, 138, 4, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 14. DELETE & DESTRUCTIVE: RUBY CRIMSON */
+  html body.app-shell :is(.delete, .journal-delete, .delete-party-btn, .btn-khata-delete, #logout-btn, #external-backup-disable, #pin-remove-btn):not(#toggle-pwd-btn) {
+    background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%) !important;
+    color: #e11d48 !important;
+    border: 1px solid #fda4af !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 5px rgba(225, 29, 72, 0.12), inset 0 1px 0 #ffffff !important;
+  }
+  html body.app-shell :is(.delete, .journal-delete, .delete-party-btn, .btn-khata-delete, #logout-btn, #external-backup-disable, #pin-remove-btn):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 55%, #991b1b 100%) !important;
+    border-color: #7f1d1d !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 15. RECEIPT VIEW / COPY: ELECTRIC CERULEAN */
+  html body.app-shell :is(.receipt-btn, #receipt-copy):not(#toggle-pwd-btn) {
+    background: linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%) !important;
+    color: #0369a1 !important;
+    border: 1px solid #7dd3fc !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 5px rgba(3, 105, 161, 0.12), inset 0 1px 0 #ffffff !important;
+  }
+  html body.app-shell :is(.receipt-btn, #receipt-copy):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+    border-color: #0369a1 !important;
+    color: #ffffff !important;
+    box-shadow: 0 5px 15px rgba(14, 165, 233, 0.38) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 16. HISTORY: OLIVE LIME */
+  html body.app-shell .history-btn:not(#toggle-pwd-btn) {
+    background: linear-gradient(180deg, #ffffff 0%, #ecfccb 100%) !important;
+    color: #3f6212 !important;
+    border: 1px solid #bef264 !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 5px rgba(63, 98, 18, 0.12), inset 0 1px 0 #ffffff !important;
+  }
+  html body.app-shell .history-btn:not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%) !important;
+    border-color: #3f6212 !important;
+    color: #ffffff !important;
+    box-shadow: 0 5px 15px rgba(132, 204, 22, 0.38) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 17. UNDO: SUNSET TANGERINE */
+  html body.app-shell :is(#undo, #journal-undo):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #fb923c 0%, #f97316 60%, #c2410c 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #9a3412 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  }
+  html body.app-shell :is(#undo, #journal-undo):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #fdba74 0%, #fb923c 60%, #ea580c 100%) !important;
+    box-shadow: 0 6px 18px rgba(249, 115, 22, 0.5) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 18. PDF SAVE: CORAL ROSE */
+  html body.app-shell :is(#save-pdf, #summary-pdf, #receipt-save):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #fb7185 0%, #f43f5e 60%, #be123c 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #9f1239 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(244, 63, 94, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+  html body.app-shell :is(#save-pdf, #summary-pdf, #receipt-save):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #fda4af 0%, #fb7185 60%, #e11d48 100%) !important;
+    box-shadow: 0 8px 22px rgba(244, 63, 94, 0.52) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 19. OPEN PDF & PNG EXPORT: CYAN TURQUOISE */
+  html body.app-shell :is(#open-pdf, #summary-png, #receipt-png):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 60%, #0e7490 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #155e75 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(6, 182, 212, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+  html body.app-shell :is(#open-pdf, #summary-png, #receipt-png):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 60%, #0891b2 100%) !important;
+    box-shadow: 0 8px 22px rgba(6, 182, 212, 0.52) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 20. FOLDER ACTIONS: COPPER CINNAMON */
+  html body.app-shell :is(#open-pdf-folder, #open-backup-folder-btn):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #b45309 0%, #92400e 60%, #78350f 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #451a03 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(180, 83, 9, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+  html body.app-shell :is(#open-pdf-folder, #open-backup-folder-btn):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 60%, #92400e 100%) !important;
+    box-shadow: 0 8px 22px rgba(180, 83, 9, 0.5) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* 21. DUPLICATE ACTIONS: FUCHSIA & BASIL */
+  html body.app-shell #duplicate-review:not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #e879f9 0%, #d946ef 60%, #a21caf 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #86198f !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(217, 70, 239, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+  html body.app-shell #duplicate-keep:not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 60%, #15803d 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #166534 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+
+  /* 22. MORE MENU ITEM DISTINCT COLORS */
+  html body.app-shell .more-menu .menu button#manage-backups {
+    background: linear-gradient(90deg, #eff6ff 0%, #dbeafe 100%) !important;
+    color: #1d4ed8 !important;
+    border-color: #bfdbfe !important;
+    font-weight: 600 !important;
+  }
+  html body.app-shell .more-menu .menu button#manage-backups:hover {
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
+    color: #ffffff !important;
+  }
+
+  html body.app-shell .more-menu .menu button#backup {
+    background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%) !important;
+    color: #b45309 !important;
+    border-color: #fde68a !important;
+    font-weight: 600 !important;
+  }
+  html body.app-shell .more-menu .menu button#backup:hover {
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important;
+    color: #ffffff !important;
+  }
+
+  html body.app-shell .more-menu .menu button#restore {
+    background: linear-gradient(90deg, #faf5ff 0%, #f3e8ff 100%) !important;
+    color: #7c3aed !important;
+    border-color: #e9d5ff !important;
+    font-weight: 600 !important;
+  }
+  html body.app-shell .more-menu .menu button#restore:hover {
+    background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%) !important;
+    color: #ffffff !important;
+  }
+
+  html body.app-shell .more-menu .menu button#pin-settings-btn {
+    background: linear-gradient(90deg, #eef2ff 0%, #e0e7ff 100%) !important;
+    color: #4338ca !important;
+    border-color: #c7d2fe !important;
+    font-weight: 600 !important;
+  }
+  html body.app-shell .more-menu .menu button#pin-settings-btn:hover {
+    background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+  }
+
+  html body.app-shell .more-menu .menu button#reset-filters {
+    background: linear-gradient(90deg, #fff1f2 0%, #ffe4e6 100%) !important;
+    color: #be123c !important;
+    border-color: #fecdd3 !important;
+    font-weight: 600 !important;
+  }
+  html body.app-shell .more-menu .menu button#reset-filters:hover {
+    background: linear-gradient(90deg, #f43f5e 0%, #e11d48 100%) !important;
+    color: #ffffff !important;
+  }
+
+  html body.app-shell .more-menu .menu button#manage-branches {
+    background: linear-gradient(90deg, #f0fdfa 0%, #ccfbf1 100%) !important;
+    color: #0f766e !important;
+    border-color: #99f6e4 !important;
+    font-weight: 600 !important;
+  }
+  html body.app-shell .more-menu .menu button#manage-branches:hover {
+    background: linear-gradient(90deg, #14b8a6 0%, #0d9488 100%) !important;
+    color: #ffffff !important;
+  }
+
+  /* 23. PRIMARY SUBMIT / FORM BUTTONS: PERSIAN EMERALD */
+  html body.app-shell :is(#add, #journal-add, .btn-add-primary, .primary, #branch-form button[type="submit"], .pin-form button[type="submit"]):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #047857 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+    text-shadow: 0 1px 2px rgba(4, 78, 56, 0.35);
+  }
+  html body.app-shell :is(#add, #journal-add, .btn-add-primary, .primary, #branch-form button[type="submit"], .pin-form button[type="submit"]):not(#toggle-pwd-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%) !important;
+    box-shadow: 0 8px 24px rgba(5, 150, 105, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    translate: 0 -2px !important;
+  }
+
+  /* ==========================================================================
+     DARK THEME: MATCHING DISTINCT LUMINOUS GLOWS FOR EVERY BUTTON
+     ========================================================================== */
   html[data-theme="dark"] body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item) {
     background: linear-gradient(180deg, #1b2e25 0%, #12211a 100%) !important;
     color: #d1fae5 !important;
     border: 1px solid #28543f !important;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
   }
-  html[data-theme="dark"] body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item):hover:not(:disabled) {
-    background: linear-gradient(180deg, #244235 0%, #172c23 100%) !important;
-    border-color: #34d399 !important;
-    color: #ffffff !important;
-    box-shadow: 0 0 16px rgba(52, 211, 153, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
-    translate: 0 -2px !important;
-  }
-  html[data-theme="dark"] body.app-shell :is(#add, #journal-add, #add-party-tab, .btn-add-primary, .primary, #duplicate-keep, #receipt-copy, .btn-khata-new, .btn-khata-submit, #branch-form button[type="submit"], .pin-form button[type="submit"]):not(#toggle-pwd-btn) {
+  html[data-theme="dark"] body.app-shell #view-register.active {
     background: linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%) !important;
     border-color: #34d399 !important;
     color: #ffffff !important;
     box-shadow: 0 0 20px rgba(16, 185, 129, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
   }
-  html[data-theme="dark"] body.app-shell :is(#print, #receipt-preview):not(#toggle-pwd-btn) {
+  html[data-theme="dark"] body.app-shell #view-journal.active {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 60%, #3730a3 100%) !important;
+    border-color: #a5b4fc !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+  html[data-theme="dark"] body.app-shell #view-khata.active {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 60%, #0e7490 100%) !important;
+    border-color: #67e8f9 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(#print, #receipt-preview, #btn-khata-dir-print):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 60%, #1d4ed8 100%) !important;
     border-color: #60a5fa !important;
     color: #ffffff !important;
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
   }
-  html[data-theme="dark"] body.app-shell :is(#export-open, #export-filtered, #export-all):not(#toggle-pwd-btn) {
+  html[data-theme="dark"] body.app-shell :is(#export-open, #export-filtered, #export-all, #btn-khata-dir-excel):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #16a34a 0%, #15803d 60%, #14532d 100%) !important;
     border-color: #4ade80 !important;
     color: #ffffff !important;
     box-shadow: 0 0 20px rgba(22, 163, 74, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
   }
-  html[data-theme="dark"] body.app-shell :is(#summary-open, #summary-tab-date, #duplicate-review):not(#toggle-pwd-btn) {
+  html[data-theme="dark"] body.app-shell :is(#summary-open, #summary-tab-date):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 60%, #6d28d9 100%) !important;
     border-color: #c084fc !important;
     color: #ffffff !important;
     box-shadow: 0 0 20px rgba(139, 92, 246, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+  html[data-theme="dark"] body.app-shell #today-btn:not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    border-color: #fde047 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
   }
   html[data-theme="dark"] body.app-shell :is(.delete, .journal-delete, .delete-party-btn, .btn-khata-delete, #logout-btn, #external-backup-disable, #pin-remove-btn):not(#toggle-pwd-btn) {
     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 60%, #7f1d1d 100%) !important;
@@ -2917,23 +3203,17 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
     color: #ffffff !important;
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
   }
-  html[data-theme="dark"] body.app-shell :is(.workspace-nav button.active, .party-tab.active, .summary-tab.active):not(#toggle-pwd-btn) {
-    background: linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%) !important;
-    border-color: #34d399 !important;
+  html[data-theme="dark"] body.app-shell #undo:not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+    border-color: #fdba74 !important;
     color: #ffffff !important;
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 0 18px rgba(249, 115, 22, 0.45) !important;
   }
-  html[data-theme="dark"] body.app-shell .workspace-nav {
-    background: #111e18 !important;
-    border-color: #233c30 !important;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3) !important;
-  }
-  html[data-theme="dark"] body.app-shell .workspace-nav button {
-    color: #8daea0 !important;
-  }
-  html[data-theme="dark"] body.app-shell .workspace-nav button:hover:not(.active) {
-    background: #1a2f25 !important;
-    color: #34d399 !important;
+  html[data-theme="dark"] body.app-shell :is(#save-pdf, #summary-pdf):not(#toggle-pwd-btn) {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+    border-color: #fda4af !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 18px rgba(244, 63, 94, 0.45) !important;
   }
 
   html body.app-shell button:disabled {
