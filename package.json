@@ -23,7 +23,7 @@
     "offline",
     "ledger"
   ],
-  "author": "ishukhan786",
+  "author": "Ishtiaq Uddin",
   "license": "ISC",
   "devDependencies": {
     "electron": "^34.0.0",
@@ -31,12 +31,17 @@
     "html2canvas": "^1.4.1"
   },
   "build": {
-    "appId": "com.ishukhan.hisaab",
+    "appId": "com.ishtiaquddin.hisaab",
     "productName": "حساب",
+    "copyright": "Copyright © 2026 Ishtiaq Uddin",
     "directories": {
       "output": "dist"
     },
     "win": {
+      "publisherName": [
+        "Ishtiaq Uddin"
+      ],
+      "legalTrademarks": "Ishtiaq Uddin",
       "target": [
         {
           "target": "nsis",
