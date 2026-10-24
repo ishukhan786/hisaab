@@ -2586,7 +2586,7 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
 }
 @media screen {
   html[data-theme="dark"] .app-shell :is(.top-nav,.top-date-field,.top-search-wrap,.top-serial-field) {background:var(--surface)!important;color:var(--surface-ink);border-color:var(--surface-line)}
-  html[data-theme="dark"] .app-shell :is(.party-tabs-bar,.workspace-nav) {background:var(--surface-soft)!important;border-color:var(--surface-line)}rtant}
+  html[data-theme="dark"] .app-shell :is(.party-tabs-bar,.workspace-nav) {background:var(--surface-soft)!important;border-color:var(--surface-line)}
   html[data-theme="dark"] .app-shell #rows tr.draft-row>td {background:var(--surface-soft)!important}
 }
 

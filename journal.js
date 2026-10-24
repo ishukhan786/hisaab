@@ -31,6 +31,7 @@
     const $=id=>document.getElementById(id),nodes=new Map();let undo=null;
     const data=()=>getState().journal;
     const active=()=>document.body.classList.contains('journal-view');
+    const selected=()=>data().rows.filter(r=>r.date===data().date&&hasData(r));
     const dateLabel=s=>s.split('-').reverse().join('/');
     const formatUrduDate = s => {
       if (!s || typeof s !== 'string') return '';
