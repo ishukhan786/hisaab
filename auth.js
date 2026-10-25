@@ -111,13 +111,8 @@
     const auth = getStoredAuth();
     hideAllCards();
 
-    if (!auth || !auth.passwordHash) {
-      const setupCard = $('auth-setup-card');
-      if (setupCard) {
-        setupCard.hidden = false;
-        $('setup-username')?.focus();
-      }
-    } else {
+    // Signup/setup is intentionally disabled for the web app. Always show login.
+    {
       const loginCard = $('auth-login-card');
       if (loginCard) {
         loginCard.hidden = false;
@@ -129,7 +124,7 @@
         const passInp = $('login-password');
         if (passInp) passInp.value = '';
         if (userInp) {
-          if (!userInp.value && auth.username) userInp.value = auth.username;
+          if (!userInp.value && auth?.username) userInp.value = auth.username;
           if (userInp.value) {
             passInp?.focus();
           } else {
@@ -226,10 +221,45 @@
   async function executeLogin(username, password) {
     const errEl = $('auth-login-error');
     const auth = getStoredAuth();
+    const isWebMode = window.location.protocol.startsWith('http');
+
+    if (isWebMode) {
+      if (!username || !password) {
+        if (errEl) errEl.textContent = 'Please enter both username and password.';
+        shakeCard('auth-login-card');
+        return { success: false, error: 'empty_fields' };
+      }
+      const submitBtn = $('login-submit-btn');
+      if (submitBtn) submitBtn.disabled = true;
+      try {
+        const response = await window.fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ username, password })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.status !== 'ok') {
+          if (errEl) errEl.textContent = response.status === 401 ? 'Invalid username or password.' : 'Login service unavailable.';
+          shakeCard('auth-login-card');
+          return { success: false, error: 'invalid_credentials' };
+        }
+        unlockApp();
+        return { success: true };
+      } catch (_) {
+        if (errEl) errEl.textContent = 'Server سے رابطہ نہیں ہو سکا۔';
+        shakeCard('auth-login-card');
+        return { success: false, error: 'network' };
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    }
+
     if (!auth || !auth.passwordHash) {
       lockApp();
       return { success: false, error: 'no_auth' };
     }
+    const activeAuth = auth;
 
     const btnText = $('login-btn-text');
     const spinner = $('login-spinner');
@@ -256,15 +286,15 @@
 
     setBusy(true);
 
-    if (username.toLowerCase() !== (auth.username || '').toLowerCase()) {
+    if (username.toLowerCase() !== (activeAuth.username || '').toLowerCase()) {
       setBusy(false);
       if (errEl) errEl.textContent = 'Invalid username or password.';
       shakeCard('auth-login-card');
       return { success: false, error: 'invalid_credentials' };
     }
 
-    const hash = await hashPassword(password, auth.salt);
-    if (hash !== auth.passwordHash) {
+    const hash = await hashPassword(password, activeAuth.salt);
+    if (hash !== activeAuth.passwordHash) {
       setBusy(false);
       if (errEl) errEl.textContent = 'Incorrect password. Please try again.';
       shakeCard('auth-login-card');
@@ -275,6 +305,14 @@
     // Success delay for smooth tactile satisfaction
     await new Promise(r => setTimeout(r, 280));
     setBusy(false);
+    if (!auth || !auth.passwordHash) {
+      activeAuth.createdAt = new Date().toISOString();
+      saveStoredAuth(activeAuth);
+      if (window.HisaabState) {
+        window.HisaabState.auth = activeAuth;
+        if (typeof window.HisaabSave === 'function') window.HisaabSave();
+      }
+    }
     unlockApp();
     return { success: true };
   }
@@ -282,7 +320,7 @@
   async function executeRecovery(username, pin, newPass, confirmPass) {
     const errEl = $('auth-recovery-error');
     const auth = getStoredAuth();
-    if (!auth) {
+    if (!auth || !auth.passwordHash) {
       lockApp();
       return { success: false, error: 'no_auth' };
     }
@@ -336,14 +374,18 @@
     setupEyeToggle('toggle-rec-pwd-btn', 'recovery-new-password');
     setupEyeToggle('toggle-rec-confirm-btn', 'recovery-new-password-confirm');
 
-    $('auth-setup-form')?.addEventListener('submit', async e => {
-      e.preventDefault();
-      const u = ($('setup-username')?.value || '').trim();
-      const p = ($('setup-password')?.value || '').trim();
-      const cp = ($('setup-password-confirm')?.value || '').trim();
-      const rp = ($('setup-recovery-pin')?.value || '').trim();
-      await executeSetup(u, p, cp, rp);
-    });
+    // Desktop may still use the local first-time setup; web never binds it.
+    if (!window.location.protocol.startsWith('http')) {
+      $('auth-setup-form')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        await executeSetup(
+          ($('setup-username')?.value || '').trim(),
+          ($('setup-password')?.value || '').trim(),
+          ($('setup-password-confirm')?.value || '').trim(),
+          ($('setup-recovery-pin')?.value || '').trim()
+        );
+      });
+    }
 
     $('auth-login-form')?.addEventListener('submit', async e => {
       e.preventDefault();
@@ -409,6 +451,31 @@
       const newPass = ($('acc-new-password')?.value || '').trim();
       const newPin = ($('acc-new-pin')?.value || '').trim();
       const msgEl = $('acc-settings-msg');
+
+      if (window.location.protocol.startsWith('http') && newPass) {
+        if (newPass.length < 4) {
+          if (msgEl) { msgEl.className = 'pin-msg error'; msgEl.textContent = 'New password must be at least 4 characters.'; }
+          return;
+        }
+        try {
+          const response = await window.fetch('/api/auth/change-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ currentPassword: oldPass, newPassword: newPass })
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.status !== 'ok') {
+            if (msgEl) { msgEl.className = 'pin-msg error'; msgEl.textContent = result.message || 'Password could not be changed.'; }
+            return;
+          }
+          if (msgEl) { msgEl.className = 'pin-msg success'; msgEl.textContent = '✓ Password changed successfully!'; }
+          setTimeout(() => $('account-settings-dialog')?.close(), 1500);
+        } catch (_) {
+          if (msgEl) { msgEl.className = 'pin-msg error'; msgEl.textContent = 'Server سے رابطہ نہیں ہو سکا۔'; }
+        }
+        return;
+      }
 
       const auth = getStoredAuth();
       if (!auth) return;

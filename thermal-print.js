@@ -328,7 +328,8 @@
     function toSVG(text, options = {}) {
       const matrix = generateMatrix(text);
       const size = matrix.length;
-      const margin = options.margin ?? 2;
+      // Four-module quiet zone is required by most phone/POS scanners.
+      const margin = options.margin ?? 4;
       const viewBoxSize = size + margin * 2;
       let path = '';
 
@@ -341,7 +342,7 @@
       }
 
       const title = options.title ? `<title>${options.title}</title>` : '';
-      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewBoxSize} ${viewBoxSize}" shape-rendering="crispEdges" width="100%" height="100%" class="${options.className || 'thermal-qr-svg'}" aria-label="QR Code">${title}<path fill="#000" d="${path}"/></svg>`;
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewBoxSize} ${viewBoxSize}" preserveAspectRatio="xMidYMid meet" shape-rendering="crispEdges" width="100%" height="100%" class="${options.className || 'thermal-qr-svg'}" role="img" aria-label="QR Code"><rect width="100%" height="100%" fill="#fff"/>${title}<path fill="#000" d="${path}"/></svg>`;
     }
 
     return { generateMatrix, toSVG };
@@ -413,15 +414,15 @@
         const qrContainer = document.getElementById('thermal-slip-qr');
         if (qrContainer) {
           try {
-            const verificationText = [
-              'HISAAB',
-              `Receipt: ${thermalData.serial}`,
-              `Date: ${thermalData.date}`,
-              `Amt: ${thermalData.pkr} ${thermalData.currency}`
-            ].join(' | ');
+            // Keep the payload compact ASCII: it improves compatibility with
+            // low-cost thermal scanners while still carrying the receipt data.
+            // Keep the QR at the lowest practical density for thermal printers.
+            // Full receipt details remain printed beside it; the QR only needs
+            // to identify this receipt reliably when scanned.
+            const verificationText = `HISAAB|${thermalData.serial}`;
 
             qrContainer.innerHTML = QRCode.toSVG(verificationText, {
-              margin: 1,
+              margin: 4,
               title: 'Hisaab Verified Receipt QR'
             });
           } catch (qrErr) {

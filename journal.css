@@ -221,3 +221,19 @@ html .app-shell .journal-table :is(.journal-balance,#journal-closing) .bal-tag {
 @media print {
   .journal-table button.journal-delete {display:none!important}
 }
+
+@media screen {
+  html[data-theme="dark"] .journal-opening-line,
+  html[data-theme="dark"] .journal-foot {
+    background: rgba(19, 48, 32, .76) !important;
+    border-color: #28533b !important;
+    color: #bfe8cd !important;
+  }
+  html[data-theme="dark"] .journal-table td {
+    border-color: #254936 !important;
+    color: #d9eee2 !important;
+  }
+  html[data-theme="dark"] .journal-table .journal-description {
+    background: rgba(13, 32, 22, .76) !important;
+  }
+}

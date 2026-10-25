@@ -1,10 +1,12 @@
 /* Shared receipt typography and dimensions for PDF and PNG exports. */
-.receipt-sheet.receipt-export{box-sizing:border-box;font-size:12px;padding:6mm;box-shadow:none;width:128mm;max-width:none;line-height:2.6}
+.receipt-sheet.receipt-export{box-sizing:border-box;font-size:12px;padding:8mm;box-shadow:none;width:128mm;max-width:none;line-height:2.45;background:#fff;color:#1d3328;border:1px solid #c8d9ce;border-radius:4mm}
 .receipt-export .receipt-header h3{font-size:20px}
 .receipt-export .receipt-badge{font-size:16px;padding:4px 14px}
-.receipt-export .receipt-details>div{grid-template-columns:100px minmax(0,1fr);gap:14px;padding:6px 0;break-inside:avoid}
+.receipt-export .receipt-details>div{grid-template-columns:100px minmax(0,1fr);gap:14px;padding:8px 0;break-inside:avoid;border-bottom:1px solid #e3ece6}
 .receipt-export .receipt-details dd{font-size:13px}
-.receipt-export .receipt-amounts strong{font-size:18px}
+.receipt-export .receipt-amounts{gap:6px;margin-top:10px}
+.receipt-export .receipt-amounts>div{border:1px solid #c8ded0;border-radius:3mm;padding:7px 5px;background:#f4faf6}
+.receipt-export .receipt-amounts strong{font-size:19px;color:#0b6245}
 .receipt-export .receipt-party strong{min-width:0;overflow-wrap:anywhere}
 .receipt-export-page{box-sizing:border-box;width:148mm;min-height:210mm;padding:10mm;background:#fff;color:#213e35;font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif;direction:rtl}
 .receipt-export .receipt-amounts{display:flex}.receipt-export .receipt-amounts>div{flex:1}

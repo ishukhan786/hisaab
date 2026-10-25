@@ -468,6 +468,75 @@ html[data-theme="dark"] .app-shell .khata-card {
   }
 }
 
+/* Night theme finishing pass: deeper surfaces, clearer hierarchy, emerald glow. */
+@media screen {
+  html[data-theme="dark"] body.app-shell {
+    color: #d9eee2;
+  }
+  html[data-theme="dark"] .app-shell .top-nav {
+    background: linear-gradient(180deg, rgba(13, 32, 23, .96), rgba(8, 22, 15, .92)) !important;
+    border-bottom-color: rgba(92, 171, 126, .28) !important;
+    box-shadow: 0 12px 30px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.06) !important;
+  }
+  html[data-theme="dark"] .app-shell .brand-title,
+  html[data-theme="dark"] .app-shell .paper-head #title,
+  html[data-theme="dark"] .app-shell .journal-title,
+  html[data-theme="dark"] .app-shell .khata-dir-main-title {
+    color: #ecfff3 !important;
+    text-shadow: 0 0 18px rgba(52, 211, 153, .16);
+  }
+  html[data-theme="dark"] .app-shell .top-date-field,
+  html[data-theme="dark"] .app-shell .top-search-wrap,
+  html[data-theme="dark"] .app-shell .top-serial-field,
+  html[data-theme="dark"] .app-shell .range-drawer,
+  html[data-theme="dark"] .app-shell .backup-banner {
+    background: rgba(17, 39, 28, .74) !important;
+    border-color: rgba(91, 165, 123, .32) !important;
+    color: #cce8d7 !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 5px 16px rgba(0,0,0,.18) !important;
+  }
+  html[data-theme="dark"] .app-shell .paper,
+  html[data-theme="dark"] .app-shell .journal-card,
+  html[data-theme="dark"] .app-shell .khata-card,
+  html[data-theme="dark"] .app-shell dialog {
+    background: linear-gradient(145deg, rgba(16, 36, 26, .97), rgba(9, 25, 17, .98)) !important;
+    border-color: rgba(82, 155, 113, .32) !important;
+    color: #d9eee2 !important;
+  }
+  html[data-theme="dark"] .app-shell .paper-head,
+  html[data-theme="dark"] .app-shell .journal-heading,
+  html[data-theme="dark"] .app-shell .khata-dir-header-card {
+    background: linear-gradient(180deg, rgba(25, 54, 38, .84), rgba(14, 34, 24, .72)) !important;
+    border-bottom-color: rgba(89, 164, 121, .26) !important;
+  }
+  html[data-theme="dark"] .app-shell :is(.paper thead th, .journal-table th, .khata-dir-table th) {
+    background: linear-gradient(180deg, #1a3a29, #122a1e) !important;
+    color: #b9f5cf !important;
+    border-color: #2d5b42 !important;
+  }
+  html[data-theme="dark"] .app-shell :is(.paper tbody tr, .journal-table tbody tr, .khata-dir-table tbody tr):hover {
+    background: rgba(36, 104, 70, .32) !important;
+    box-shadow: inset 4px 0 #34d399, 0 3px 16px rgba(0,0,0,.22) !important;
+  }
+  html[data-theme="dark"] .app-shell :is(input, textarea, select):focus {
+    background: #132c20 !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, .16), 0 0 18px rgba(52, 211, 153, .08) !important;
+  }
+  html[data-theme="dark"] .app-shell :is(input, textarea, select)::placeholder {
+    color: #719b83 !important;
+  }
+  html[data-theme="dark"] .app-shell .dialog-head {
+    background: rgba(14, 34, 24, .96) !important;
+    border-bottom-color: rgba(89, 164, 121, .25) !important;
+  }
+  html[data-theme="dark"] .app-shell .more-menu .menu {
+    background: rgba(12, 31, 21, .95) !important;
+    border-color: rgba(92, 171, 126, .38) !important;
+    box-shadow: 0 24px 60px rgba(0,0,0,.48), 0 0 30px rgba(16,185,129,.07) !important;
+  }
+}
+
 /* Final UI polish: clearer hierarchy, calmer scanning, and accessible interaction states. */
 @media screen {
   .app-shell {
@@ -3668,6 +3737,7 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   margin-top: 2px;
   background: linear-gradient(to right, #c4b5fd, #f472b6, #67e8f9);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -4088,6 +4158,7 @@ html body.app-shell .auth-card .glass-btn-back:hover,
 .floating-input:-webkit-autofill:focus, 
 .floating-input:-webkit-autofill:active {
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: #ffffff;
   transition: background-color 5000s ease-in-out 0s;
   box-shadow: inset 0 0 20px 20px transparent;
@@ -4177,7 +4248,7 @@ html[data-theme="dark"] .receipt-tab-btn.active {
   box-sizing: border-box;
   text-align: right;
   direction: rtl;
-  line-height: 1.8;
+  line-height: 2.15;
 }
 html[data-theme="dark"] .thermal-slip-sheet {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
@@ -4185,7 +4256,7 @@ html[data-theme="dark"] .thermal-slip-sheet {
 
 .thermal-slip-header {
   text-align: center;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 .thermal-slip-brand {
   font-size: 28px;
@@ -4206,7 +4277,7 @@ html[data-theme="dark"] .thermal-slip-sheet {
 .thermal-slip-divider {
   border: none;
   border-top: 1.5px dashed #444444;
-  margin: 10px 0;
+  margin: 13px 0;
   height: 0;
 }
 
@@ -4214,15 +4285,16 @@ html[data-theme="dark"] .thermal-slip-sheet {
 .thermal-slip-parties {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 9px;
 }
 .thermal-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
   font-size: 12.5px;
-  line-height: 1.8;
-  gap: 8px;
+  line-height: 2.15;
+  gap: 12px;
+  padding: 1px 0;
 }
 .thermal-lbl {
   color: #374151 !important;
@@ -4256,15 +4328,15 @@ html[data-theme="dark"] .thermal-slip-sheet {
   background: #f4f8f5 !important;
   border: 1.5px solid #17634c;
   border-radius: 8px;
-  padding: 10px 12px;
-  margin: 6px 0;
+  padding: 14px 12px 13px;
+  margin: 8px 0;
   text-align: center;
 }
 .thermal-amount-label {
   font-size: 13px;
   font-weight: 700;
   color: #17634c !important;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif !important;
 }
 .thermal-amount-big {
@@ -4272,7 +4344,7 @@ html[data-theme="dark"] .thermal-slip-sheet {
   align-items: baseline;
   justify-content: center;
   gap: 6px;
-  margin: 4px 0 8px;
+  margin: 6px 0 11px;
 }
 .thermal-sum {
   font-size: 26px;
@@ -4289,11 +4361,11 @@ html[data-theme="dark"] .thermal-slip-sheet {
 }
 .thermal-sub-amounts {
   border-top: 1px dotted #a3c2b5;
-  padding-top: 6px;
-  margin-top: 4px;
+  padding-top: 9px;
+  margin-top: 6px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 /* QR Code Section */
@@ -4302,12 +4374,18 @@ html[data-theme="dark"] .thermal-slip-sheet {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 6px 0;
+  padding: 10px 0 8px;
 }
 .thermal-qr-container {
-  width: 90px;
-  height: 90px;
+  width: 38mm;
+  height: 38mm;
+  min-width: 144px;
+  min-height: 144px;
   margin: 0 auto;
+  padding: 4px;
+  background: #fff !important;
+  border: 1px solid #d1d5d2;
+  box-sizing: border-box;
 }
 .thermal-qr-container svg {
   width: 100%;
@@ -4318,7 +4396,7 @@ html[data-theme="dark"] .thermal-slip-sheet {
   font-size: 11px;
   font-weight: 600;
   color: #444444 !important;
-  margin-top: 6px;
+  margin-top: 10px;
   text-align: center;
   font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif !important;
 }
@@ -4326,7 +4404,8 @@ html[data-theme="dark"] .thermal-slip-sheet {
 /* Footer Section */
 .thermal-slip-footer {
   text-align: center;
-  padding-top: 2px;
+  padding-top: 6px;
+  line-height: 2.15;
 }
 .thermal-thanks {
   font-size: 13.5px;
@@ -4399,8 +4478,16 @@ html[data-theme="dark"] .app-shell #receipt-thermal-btn {
     page-break-inside: avoid !important;
     font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Segoe UI', Arial, sans-serif !important;
     direction: rtl !important;
-    line-height: 1.8 !important;
+    line-height: 2.05 !important;
   }
+  #receipt-print .thermal-slip-meta,
+  #receipt-print .thermal-slip-parties { gap: 7px !important; }
+  #receipt-print .thermal-row { line-height: 2.05 !important; gap: 10px !important; padding: 1px 0 !important; }
+  #receipt-print .thermal-slip-divider { margin: 11px 0 !important; }
+  #receipt-print .thermal-slip-amount-card { padding: 11px 10px 10px !important; margin: 7px 0 !important; }
+  #receipt-print .thermal-sub-amounts { gap: 6px !important; padding-top: 7px !important; }
+  #receipt-print .thermal-slip-qr-box { padding: 8px 0 7px !important; }
+  #receipt-print .thermal-qr-hint { margin-top: 8px !important; }
   #receipt-print .thermal-slip-amount-card {
     background: #ffffff !important;
     border: 1.5px solid #000000 !important;
@@ -4422,8 +4509,12 @@ html[data-theme="dark"] .app-shell #receipt-thermal-btn {
     border-top: 1.5px dashed #000000 !important;
   }
   #receipt-print .thermal-qr-container {
-    width: 85px !important;
-    height: 85px !important;
+    width: 36mm !important;
+    height: 36mm !important;
+    min-width: 36mm !important;
+    min-height: 36mm !important;
+    padding: 1.5mm !important;
+    border: 0 !important;
   }
 }
 

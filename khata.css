@@ -3620,6 +3620,18 @@ html[data-theme="dark"] .khata-filter-badge {
   }
 }
 
+@media screen {
+  html[data-theme="dark"] .khata-dir-stats-grid .khata-stat-box:hover {
+    border-color: #6ee7a3 !important;
+    box-shadow: 0 0 22px rgba(52, 211, 153, .14), 0 10px 24px rgba(0,0,0,.28) !important;
+  }
+  html[data-theme="dark"] .khata-empty-icon-wrap {
+    background: linear-gradient(135deg, #173c2a, #10291d) !important;
+    border-color: #2c7650 !important;
+    box-shadow: 0 0 22px rgba(52, 211, 153, .12) !important;
+  }
+}
+
 /* Responsive Breakpoints */
 @media (min-width: 1024px) {
   .khata-customer-name {

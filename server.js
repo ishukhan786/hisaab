@@ -13,10 +13,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('node:path');
+const crypto = require('node:crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
+const AUTH_SECRET = process.env.HISAAB_AUTH_SECRET || 'change-this-hisaab-auth-secret';
+const OWNER_USERNAME = String(process.env.HISAAB_USERNAME || 'admin').trim();
+const OWNER_PASSWORD = String(process.env.HISAAB_PASSWORD || 'Hisaab@1234');
 
 // Middleware
 app.use(cors());
@@ -189,6 +193,96 @@ const backupSchema = new mongoose.Schema(
 );
 
 const HisaabBackup = mongoose.models.HisaabBackup || mongoose.model('HisaabBackup', backupSchema);
+
+const authUserSchema = new mongoose.Schema({
+  key: { type: String, default: 'owner', unique: true },
+  username: { type: String, required: true, unique: true, trim: true },
+  passwordHash: { type: String, required: true },
+  passwordSalt: { type: String, required: true },
+  updatedAt: { type: Date, default: Date.now }
+}, { minimize: false });
+const HisaabAuthUser = mongoose.models.HisaabAuthUser || mongoose.model('HisaabAuthUser', authUserSchema);
+
+function hashPassword(password, salt) {
+  return crypto.pbkdf2Sync(String(password), String(salt), 120000, 32, 'sha256').toString('hex');
+}
+function signSession(user) {
+  const payload = Buffer.from(JSON.stringify({ sub: String(user._id), username: user.username, exp: Date.now() + 8 * 60 * 60 * 1000 })).toString('base64url');
+  const sig = crypto.createHmac('sha256', AUTH_SECRET).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+function readSession(req) {
+  const raw = String(req.headers.cookie || '').split(';').map(v => v.trim()).find(v => v.startsWith('hisaab_session='));
+  if (!raw) return null;
+  const token = raw.slice('hisaab_session='.length);
+  const [payload, signature] = token.split('.');
+  if (!payload || !signature) return null;
+  const expected = crypto.createHmac('sha256', AUTH_SECRET).update(payload).digest('base64url');
+  if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    return data.exp > Date.now() ? data : null;
+  } catch (_) { return null; }
+}
+async function ensureOwnerUser() {
+  const existing = await HisaabAuthUser.findOne({ key: 'owner' });
+  if (existing) return existing;
+  const salt = crypto.randomBytes(16).toString('hex');
+  return HisaabAuthUser.create({ key: 'owner', username: OWNER_USERNAME, passwordSalt: salt, passwordHash: hashPassword(OWNER_PASSWORD, salt) });
+}
+function authCookie(res, token) {
+  res.setHeader('Set-Cookie', `hisaab_session=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=28800${process.env.VERCEL ? '; Secure' : ''}`);
+}
+function requireAuth(req, res, next) {
+  const session = readSession(req);
+  if (!session) return res.status(401).json({ status: 'unauthorized', message: 'Login required' });
+  req.auth = session;
+  next();
+}
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    await connectDb();
+    const user = await ensureOwnerUser();
+    const username = String(req.body?.username || '').trim();
+    const password = String(req.body?.password || '');
+    const candidate = hashPassword(password, user.passwordSalt);
+    const valid = username.toLowerCase() === user.username.toLowerCase() && crypto.timingSafeEqual(Buffer.from(candidate), Buffer.from(user.passwordHash));
+    if (!valid) return res.status(401).json({ status: 'error', message: 'Invalid username or password' });
+    authCookie(res, signSession(user));
+    res.json({ status: 'ok', username: user.username });
+  } catch (error) { res.status(500).json({ status: 'error', message: 'Authentication service unavailable' }); }
+});
+app.post('/api/auth/change-password', requireAuth, async (req, res) => {
+  try {
+    await connectDb();
+    const user = await HisaabAuthUser.findOne({ key: 'owner' });
+    const currentPassword = String(req.body?.currentPassword || '');
+    const newPassword = String(req.body?.newPassword || '');
+    if (!user || newPassword.length < 4) return res.status(400).json({ status: 'error', message: 'New password must be at least 4 characters.' });
+    const currentHash = hashPassword(currentPassword, user.passwordSalt);
+    if (currentHash !== user.passwordHash) return res.status(401).json({ status: 'error', message: 'Current password is incorrect.' });
+    const salt = crypto.randomBytes(16).toString('hex');
+    user.passwordSalt = salt;
+    user.passwordHash = hashPassword(newPassword, salt);
+    user.updatedAt = new Date();
+    await user.save();
+    res.json({ status: 'ok' });
+  } catch (error) { res.status(500).json({ status: 'error', message: 'Password could not be changed.' }); }
+});
+app.get('/api/auth/status', async (req, res) => {
+  const session = readSession(req);
+  res.json({ isAuthenticated: !!session, username: session?.username || null });
+});
+app.post('/api/auth/logout', (req, res) => {
+  res.setHeader('Set-Cookie', 'hisaab_session=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0');
+  res.json({ status: 'ok' });
+});
+
+app.use('/api/state', requireAuth);
+app.use('/api/save', requireAuth);
+app.use('/api/backup', requireAuth);
+app.use('/api/backups', requireAuth);
 
 // ======================== API Endpoints ========================
 
