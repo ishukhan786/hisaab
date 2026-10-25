@@ -1494,7 +1494,7 @@
           selectPartyTab(pName ? ('b:' + pName) : '__unassigned');
           $('summary-dialog').close();
         };
-        const tdParty = document.createElement('td'); tdParty.dir = 'rtl'; tdParty.textContent = label;
+        const tdParty = document.createElement('td'); tdParty.dir = 'rtl'; tdParty.className = 'summary-party-cell'; tdParty.textContent = label;
         const tdCount = document.createElement('td'); tdCount.textContent = String(pRows.length);
         const tdBal = document.createElement('td'); tdBal.textContent = formatted(bal);
         const tdAed = document.createElement('td'); tdAed.textContent = formatted(aed);

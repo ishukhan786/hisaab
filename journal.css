@@ -48,19 +48,21 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 .is-banam,.journal-table td.is-banam,.journal-table tfoot td.is-banam{color:#dc2626!important}
 .is-banam .bal-tag{background:#fee2e2;color:#991b1b!important;border:1px solid #fca5a5}
 .journal-table tfoot th{height:52px;line-height:2.2}
-.journal-description{position:relative!important;display:flex!important;align-items:center!important;gap:8px;padding:6px 8px!important;vertical-align:middle!important;direction:ltr}
-.journal-description textarea{order:2;flex:1 1 auto;width:auto!important;min-width:0}
-.journal-delete{order:1;position:static!important;z-index:5;transform:none!important;flex:0 0 26px;font:18px Arial,sans-serif!important;width:26px!important;min-width:26px!important;height:26px!important;min-height:26px!important;padding:0!important;background:rgba(248,252,249,.92)!important;border:1px solid #b7d4c1!important;border-radius:7px!important;color:#b94a52!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;cursor:pointer;opacity:0.9;visibility:visible;transition:all .16s ease!important;box-shadow:0 2px 5px rgba(16,56,41,.16)!important}
-.journal-table tr:hover .journal-delete,.journal-table tr:focus-within .journal-delete{opacity:0.85}
-.journal-delete:hover{opacity:1!important;color:#ef4444!important;background:rgba(239,68,68,0.12)!important;border-color:rgba(239,68,68,0.3)!important;transform:scale(1.1)!important}
-.journal-table tr:not(.journal-draft) .journal-delete,
-.journal-table tr[data-journal-populated="true"] .journal-delete{visibility:visible;display:inline-flex!important;opacity:.9}
-.journal-table tbody tr:not(.journal-draft):hover td{background:#f0f8f3}
-.journal-table tbody tr:focus-within td{background:#e9f6ee;box-shadow:inset 0 0 0 1px #76b694}
-.journal-draft{background:#f7faf4}.journal-draft .journal-delete{visibility:hidden;display:none!important}
+@media screen {
+  .journal-description{position:relative!important;display:flex!important;align-items:center!important;gap:8px;padding:6px 8px!important;vertical-align:middle!important;direction:ltr}
+  .journal-description textarea{order:2;flex:1 1 auto;width:auto!important;min-width:0}
+  .journal-delete{order:1;position:static!important;z-index:5;transform:none!important;flex:0 0 26px;font:18px Arial,sans-serif!important;width:26px!important;min-width:26px!important;height:26px!important;min-height:26px!important;padding:0!important;background:rgba(248,252,249,.92)!important;border:1px solid #b7d4c1!important;border-radius:7px!important;color:#b94a52!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;cursor:pointer;opacity:0.9;visibility:visible;transition:all .16s ease!important;box-shadow:0 2px 5px rgba(16,56,41,.16)!important}
+  .journal-table tr:hover .journal-delete,.journal-table tr:focus-within .journal-delete{opacity:0.85}
+  .journal-delete:hover{opacity:1!important;color:#ef4444!important;background:rgba(239,68,68,0.12)!important;border-color:rgba(239,68,68,0.3)!important;transform:scale(1.1)!important}
+  .journal-table tr:not(.journal-draft) .journal-delete,
+  .journal-table tr[data-journal-populated="true"] .journal-delete{visibility:visible;display:inline-flex!important;opacity:.9}
+  .journal-table tbody tr:not(.journal-draft):hover td{background:#f0f8f3}
+  .journal-table tbody tr:focus-within td{background:#e9f6ee;box-shadow:none}
+  .journal-draft{background:#f7faf4}.journal-draft .journal-delete{visibility:hidden;display:none!important}
+}
 .journal-foot{display:flex;justify-content:space-between;padding:10px 22px;font-size:10px;color:#6d8372}.journal-help{font-size:11px;color:#627d69;line-height:2.5}.journal-print-value{display:none}
 @media screen and (max-width:700px){.workspace-nav{padding:8px 12px}.workspace-nav button{flex:1;min-width:0}.journal-heading{padding:14px;gap:10px}.journal-tools{gap:8px}.journal-heading h1{font-size:23px}body.journal-view .top-nav{grid-template-columns:1fr}body.journal-view .top-nav-end{grid-row:2;grid-column:1;display:flex}.journal-opening-line{padding:10px 14px}}
-@page journal{size:A4 portrait;margin:.5cm}
+@page journal{size:A4 portrait;margin:.5cm;@top-left{content:none!important}@bottom-center{content:none!important}}
 @media print{
   body.journal-view #register-page{display:none!important}
   body.journal-view #journal-page{display:block!important;page:journal}
@@ -77,7 +79,7 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
   .journal-table{min-width:0;width:100%}
   .journal-table thead{display:table-header-group}
   .journal-table th,.journal-table td{border-color:#99aa9a}
-  .journal-table input,.journal-table textarea,.journal-draft{display:none!important}
+  .journal-table input,.journal-table textarea,.journal-draft,.journal-delete,button.journal-delete{display:none!important;visibility:hidden!important}
   .journal-print-value{display:block;white-space:pre-wrap;overflow-wrap:anywhere;padding:2px 6px;line-height:1.6;font-size:var(--entry-font)}
   .journal-money{font-family:Calibri,'Segoe UI',Arial,sans-serif;font-weight:700;direction:ltr;text-align:center}
   .journal-table tr{break-inside:avoid}
@@ -101,7 +103,7 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 #cash-summary-help{font-size:10px;color:#607769;margin:5px 0 0;line-height:2}#cash-count-print{display:none}
 @media screen and (max-width:900px){.cash-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.cash-summary-heading>span{display:none}}
 @media screen and (max-width:480px){.cash-summary{margin:10px 8px;padding:8px}.cash-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@page journal{size:A4 portrait;margin:8mm 8mm 14mm;@bottom-center{content:counter(page) " / " counter(pages);font:10px Arial,sans-serif;color:#333;direction:ltr}}
+@page journal{size:A4 portrait;margin:8mm 8mm 14mm;@top-left{content:none!important}@bottom-center{content:none!important}}
 @media print{
  .cash-summary{margin:10px 0 0;padding:0;border:1px solid #555;border-radius:0;background:#fff!important;break-inside:avoid;page-break-inside:avoid;color:#000}
  .cash-summary-heading{margin:0;padding:3px 8px;border-bottom:1px solid #555}.cash-summary-heading h2{font-size:12px;line-height:2.2;color:#000}.cash-summary-heading>span{display:none}
@@ -170,7 +172,7 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
   .app-shell .journal-table tbody tr:focus-within {background:#edf7f2!important}
   .app-shell .journal-table td {min-height:54px;vertical-align:middle;border-color:#e0ece3}
   .app-shell .journal-table textarea {font-family:"Noto Nastaliq Urdu Print","Noto Nastaliq Urdu",serif;line-height:2.5;min-height:54px;height:auto;padding-block:8px;padding-inline-start:10px;field-sizing:content}
-  .app-shell .journal-table :is(input,textarea):focus {box-shadow:inset 0 0 0 2px #176b55;background:#fff}
+  .app-shell .journal-table :is(input,textarea):is(:focus, :focus-visible) {box-shadow:inset 0 0 0 2px #10b981!important;outline:none!important;background:#fff!important}
   .app-shell .journal-table td input[data-journal="debit"] {color:#b91c1c;font-weight:700}
   .app-shell .journal-table td input[data-journal="credit"] {color:#047857;font-weight:700}
   .app-shell .journal-table .journal-draft td {background:#f8fbf6;border-bottom-style:dashed}
@@ -219,7 +221,33 @@ html .app-shell .journal-table :is(.journal-balance,#journal-closing) .bal-tag {
 }
 
 @media print {
-  .journal-table button.journal-delete {display:none!important}
+  .journal-delete,
+  button.journal-delete,
+  .journal-table .journal-delete,
+  .journal-table button.journal-delete,
+  .journal-table tr .journal-delete,
+  .journal-table tr:not(.journal-draft) .journal-delete,
+  .journal-table tr[data-journal-populated="true"] .journal-delete,
+  td.journal-description .journal-delete,
+  td.journal-description button {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    opacity: 0 !important;
+  }
+  .journal-table td.journal-description {
+    display: table-cell !important;
+    direction: rtl !important;
+    text-align: right !important;
+  }
 }
 
 @media screen {

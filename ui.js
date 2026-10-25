@@ -4,12 +4,36 @@
   const buttons={add:['add','نئی قطار'],print:['print','پرنٹ'], 'save-pdf':['file','PDF محفوظ کریں'],'open-pdf':['file','PDF کھولیں'],'open-pdf-folder':['folder','فولڈر'],'export-open':['grid','Excel'],'summary-open':['chart','خلاصہ'],'manage-branches':['people','پارٹیاں سنبھالیں'],'manage-backups':['shield','خودکار بیک اَپ'],'backup':['download','بیک اَپ ڈاؤن لوڈ'],'restore':['folder','بیک اَپ بحال کریں'],'auto-backup':['file','نئی پی سی ڈسک فائل بنائیں'],'link-disk-file':['folder','موجودہ پی سی فائل جوڑیں'],'reset-filters':['reset','فلٹر صاف کریں'],'add-party-tab':['add','نئی پارٹی'],'toggle-range':['calendar','دورانیہ فلٹر'],'receipt-preview':['print','رسید پرنٹ کریں'],'receipt-save':['file','PDF محفوظ کریں'],'receipt-png':['image','PNG محفوظ کریں (1:1)'],'receipt-copy':['copy','تصویر کاپی کریں'],'summary-pdf':['file','PDF محفوظ کریں'],'summary-png':['image','PNG محفوظ کریں']};
   for(const [id,[name,label]] of Object.entries(buttons)){const el=document.getElementById(id);if(!el)continue;const content=document.createElement('span');content.className='button-content';content.append(icon(name),document.createTextNode(label));el.replaceChildren(content);}
   const search=document.querySelector('.search-icon');if(search)search.replaceChildren(icon('search'));
-  document.getElementById('search').setAttribute('aria-label','نام، موبائل یا مقام تلاش کریں');
-  document.getElementById('manage-parties-tab').setAttribute('aria-label','پارٹیاں سنبھالیں');
+  const searchInput = document.getElementById('search');
+  if (searchInput) searchInput.setAttribute('aria-label','نام، موبائل یا مقام تلاش کریں');
+  const managePartiesTab = document.getElementById('manage-parties-tab');
+  if (managePartiesTab) managePartiesTab.setAttribute('aria-label','پارٹیاں سنبھالیں');
   const more=document.querySelector('.more-menu');
-  document.addEventListener('click',e=>{if(!more.contains(e.target))more.open=false;});
-  more.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('.font-tools'))more.open=false;});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&more.open){more.open=false;more.querySelector('summary').focus();}});
+  if (more) {
+    const moreSummary=more.querySelector(':scope > summary');
+    const morePanel=more.querySelector(':scope > .menu');
+    function positionMoreMenu(){
+      if(!more.open||!morePanel||!moreSummary)return;
+      const anchor=moreSummary.getBoundingClientRect();
+      const panelWidth=Math.min(Math.max(morePanel.offsetWidth,295),window.innerWidth-24);
+      const left=Math.max(12,Math.min(anchor.left,window.innerWidth-panelWidth-12));
+      morePanel.style.setProperty('position','fixed','important');
+      morePanel.style.setProperty('left',`${left}px`,'important');
+      morePanel.style.setProperty('right','auto','important');
+      morePanel.style.setProperty('top',`${Math.min(anchor.bottom+8,window.innerHeight-100)}px`,'important');
+      morePanel.style.setProperty('bottom','auto','important');
+      morePanel.style.setProperty('width',`${panelWidth}px`,'important');
+      morePanel.style.setProperty('max-width',`${window.innerWidth-24}px`,'important');
+      morePanel.style.setProperty('z-index','2000','important');
+      morePanel.style.setProperty('max-height',`${Math.max(160,window.innerHeight-anchor.bottom-24)}px`,'important');
+    }
+    more.addEventListener('toggle',positionMoreMenu);
+    window.addEventListener('resize',positionMoreMenu);
+    window.addEventListener('scroll',positionMoreMenu,true);
+    document.addEventListener('click',e=>{if(!more.contains(e.target))more.open=false;});
+    more.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('.font-tools'))more.open=false;});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&more.open){more.open=false;more.querySelector('summary')?.focus();}});
+  }
   if(!('closedBy' in HTMLDialogElement.prototype)){
     document.querySelectorAll('dialog').forEach(d=>{
       d.addEventListener('click',e=>{
@@ -100,8 +124,53 @@
   const output=document.createElement('details');output.className='output-menu';
   const trigger=document.createElement('summary');trigger.className='btn-nav';trigger.textContent='پرنٹ / ایکسپورٹ ▾';
   const panel=document.createElement('div');panel.className='output-panel';
-  for(const id of ['print','save-pdf','open-pdf','open-pdf-folder','export-open'])panel.append(document.getElementById(id));
-  output.append(trigger,panel);document.querySelector('.top-nav-end').prepend(output);
+  for(const id of ['print','save-pdf','open-pdf','open-pdf-folder','export-open']){
+    const btn=document.getElementById(id);
+    if(btn)panel.append(btn);
+  }
+  output.append(trigger,panel);
+  const endNav=document.querySelector('.top-nav-end');
+  if(endNav)endNav.prepend(output);
+
+  function positionOutputMenu(){
+    if(!output.open||!panel||!trigger)return;
+    if(window.innerWidth<=600){
+      panel.style.removeProperty('left');
+      panel.style.removeProperty('right');
+      panel.style.removeProperty('top');
+      panel.style.removeProperty('bottom');
+      panel.style.removeProperty('width');
+      panel.style.removeProperty('max-width');
+      return;
+    }
+    const anchor=trigger.getBoundingClientRect();
+    const panelWidth=Math.min(Math.max(panel.offsetWidth,230),window.innerWidth-24);
+    const isRTL=document.dir==='rtl'||document.documentElement.dir==='rtl'||getComputedStyle(document.body).direction==='rtl';
+    let left;
+    if(isRTL){
+      left=anchor.right-panelWidth;
+    }else{
+      left=anchor.left;
+    }
+    left=Math.max(12,Math.min(left,window.innerWidth-panelWidth-12));
+    panel.style.setProperty('position','fixed','important');
+    panel.style.setProperty('left',`${left}px`,'important');
+    panel.style.setProperty('right','auto','important');
+    panel.style.setProperty('top',`${Math.min(anchor.bottom+8,window.innerHeight-100)}px`,'important');
+    panel.style.setProperty('bottom','auto','important');
+    panel.style.setProperty('width',`${panelWidth}px`,'important');
+    panel.style.setProperty('max-width',`${window.innerWidth-24}px`,'important');
+    panel.style.setProperty('z-index','2000','important');
+    panel.style.setProperty('max-height',`${Math.max(160,window.innerHeight-anchor.bottom-24)}px`,'important');
+  }
+  output.addEventListener('toggle',positionOutputMenu);
+  output.addEventListener('click',e=>{
+    if(e.target.closest('summary')){
+      requestAnimationFrame(positionOutputMenu);
+    }
+  });
+  window.addEventListener('resize',positionOutputMenu);
+  window.addEventListener('scroll',positionOutputMenu,true);
   document.addEventListener('click',e=>{if(!output.contains(e.target))output.open=false;});
   panel.addEventListener('click',e=>{if(e.target.closest('button'))output.open=false;});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&output.open){output.open=false;trigger.focus();}});

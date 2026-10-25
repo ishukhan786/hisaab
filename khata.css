@@ -788,10 +788,12 @@ body.khata-view .top-nav-end {
   padding-inline: 10px;
 }
 
-.khata-table td input:focus,
-.khata-table td textarea:focus {
-  background: var(--khata-surface, #ffffff);
-  box-shadow: inset 0 0 0 2px var(--khata-emerald-500, #10b981), 0 0 0 3px rgba(16, 185, 129, 0.15);
+.khata-table td input:is(:focus, :focus-visible),
+.khata-table td textarea:is(:focus, :focus-visible) {
+  background: var(--khata-surface, #ffffff) !important;
+  box-shadow: inset 0 0 0 2px var(--khata-emerald-500, #10b981) !important;
+  outline: none !important;
+  outline-offset: 0 !important;
 }
 
 /* Invalid amount input highlight */
@@ -1580,7 +1582,7 @@ body:not(.khata-view) dialog.khata-directory-modal {
 .khata-dir-table tbody tr:focus-within td,
 .khata-dir-table tbody tr:focus-visible td {
   background: #e5f5eb !important;
-  box-shadow: inset 0 0 0 2px #5eaa82;
+  box-shadow: none !important;
 }
 
 /* Use the same customer-name face in directory, ledger, print output, and name fields. */
@@ -2118,6 +2120,8 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
 @page khata {
   size: A4 portrait;
   margin: 10mm 0.5cm 10mm 0.5cm;
+  @top-left { content: none !important; }
+  @bottom-center { content: none !important; }
 }
 
 @media print {
@@ -3713,3 +3717,598 @@ html[data-theme="dark"] .khata-filter-badge {
     min-height: 44px;
   }
 }
+
+/* ==========================================================================
+   UNIFIED TABLE DESIGN SYSTEM (Matched to Roznamcha / Journal Table)
+   Ensures Register, Khata Directory, Khata Ledger, Summary, Backup & History
+   tables share identical colors, typography, hover, focus & zebra striping.
+   ========================================================================== */
+
+@media screen {
+  /* --- 1. Table Containers / Cards (Light Mode) --- */
+  body.app-shell :is(.paper, .journal-card, .khata-card, .summary-wrap) {
+    border-radius: 16px !important;
+  }
+
+  /* --- 2. Table Headers (Light Mode) --- */
+  body.app-shell :is(
+    .paper thead th,
+    .journal-table thead th,
+    .khata-dir-table thead th,
+    .khata-dir-table th,
+    .khata-table thead th,
+    .khata-table th,
+    #summary-table thead th,
+    #backup-list-table thead th,
+    #history-table thead th
+  ) {
+    background: linear-gradient(180deg, #f4faf6 0%, #e8f2eb 100%) !important;
+    background-color: #edf4ed !important;
+    color: #174233 !important;
+    border-color: #d3e0d5 !important;
+    border-bottom: 2px solid #c2d8c9 !important;
+    border-inline-end: 1px solid #dce7df !important;
+    font-family: "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    line-height: 2.2 !important;
+    letter-spacing: 0.1px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  /* Header accent column lines (Light Mode) */
+  body.app-shell :is(.journal-table thead th:nth-child(3), .khata-table th.th-banam) {
+    border-bottom: 3px solid #ef4444 !important;
+    color: #991b1b !important;
+  }
+  body.app-shell :is(.journal-table thead th:nth-child(4), .khata-table th.th-jama, .paper thead th.col-aed) {
+    border-bottom: 3px solid #10b981 !important;
+    color: #065f46 !important;
+  }
+  body.app-shell :is(.journal-table thead th:nth-child(5), .khata-table th.th-baqaya, .paper thead th.col-balance) {
+    border-bottom: 3px solid #0ea5e9 !important;
+    color: #0369a1 !important;
+  }
+  body.app-shell .paper thead th.col-pkr {
+    border-bottom: 3px solid #059669 !important;
+    color: #047857 !important;
+  }
+
+  /* --- 3. Table Rows & Cells (Light Mode) --- */
+  body.app-shell :is(
+    #rows > tr,
+    #rows > tr > td,
+    .paper tbody tr,
+    .paper tbody td,
+    #journal-rows > tr,
+    #journal-rows > tr > td,
+    .journal-table tbody tr,
+    .journal-table tbody td,
+    .khata-dir-table tbody tr,
+    .khata-dir-table tbody td,
+    #khata-rows > tr,
+    #khata-rows > tr > td,
+    #khata-dir-rows > tr,
+    #khata-dir-rows > tr > td,
+    .khata-table tbody tr,
+    .khata-table tbody td,
+    #khata-entry-rows > tr,
+    #khata-entry-rows > tr > td,
+    #summary-table tbody tr,
+    #summary-table tbody td,
+    #summary-rows > tr,
+    #summary-rows > tr > td,
+    #backup-list-table tbody tr,
+    #backup-list-table tbody td,
+    #backup-list-rows > tr,
+    #backup-list-rows > tr > td,
+    #history-table tbody tr,
+    #history-table tbody td,
+    #history-rows > tr,
+    #history-rows > tr > td
+  ) {
+    background: #ffffff;
+    background-color: #ffffff;
+    border-color: #dfe8e1;
+    border-bottom: 1px solid #dfe8e1;
+    border-inline-end: 1px solid #edf1eb;
+    color: #111827;
+  }
+
+  /* Even row striping (Light Mode) */
+  body.app-shell :is(
+    #rows > tr:nth-child(even),
+    #rows > tr:nth-child(even) > td,
+    .paper tbody tr:nth-child(even),
+    .paper tbody tr:nth-child(even) > td,
+    #journal-rows > tr:nth-child(even),
+    #journal-rows > tr:nth-child(even) > td,
+    .journal-table tbody tr:nth-child(even),
+    .journal-table tbody tr:nth-child(even) > td,
+    .khata-dir-table tbody tr:nth-child(even),
+    .khata-dir-table tbody tr:nth-child(even) > td,
+    #khata-rows > tr:nth-child(even),
+    #khata-rows > tr:nth-child(even) > td,
+    #khata-dir-rows > tr:nth-child(even),
+    #khata-dir-rows > tr:nth-child(even) > td,
+    .khata-table tbody tr:nth-child(even):not(.khata-draft),
+    .khata-table tbody tr:nth-child(even):not(.khata-draft) > td,
+    #khata-entry-rows > tr:nth-child(even):not(.khata-draft),
+    #khata-entry-rows > tr:nth-child(even):not(.khata-draft) > td,
+    #summary-table tbody tr:nth-child(even),
+    #summary-table tbody tr:nth-child(even) > td,
+    #backup-list-table tbody tr:nth-child(even),
+    #backup-list-table tbody tr:nth-child(even) > td,
+    #history-table tbody tr:nth-child(even),
+    #history-table tbody tr:nth-child(even) > td
+  ) {
+    background: #fafcf9 !important;
+    background-color: #fafcf9 !important;
+  }
+
+  /* Row hover state (Light Mode) */
+  body.app-shell :is(
+    #rows > tr:hover,
+    #rows > tr:hover > td,
+    .paper tbody tr:hover,
+    .paper tbody tr:hover > td,
+    #journal-rows > tr:hover,
+    #journal-rows > tr:hover > td,
+    .journal-table tbody tr:hover,
+    .journal-table tbody tr:hover > td,
+    .khata-dir-table tbody tr:hover,
+    .khata-dir-table tbody tr:hover > td,
+    #khata-rows > tr:hover,
+    #khata-rows > tr:hover > td,
+    #khata-dir-rows > tr:hover,
+    #khata-dir-rows > tr:hover > td,
+    .khata-table tbody tr:hover,
+    .khata-table tbody tr:hover > td,
+    #khata-entry-rows > tr:hover,
+    #khata-entry-rows > tr:hover > td,
+    #summary-table tbody tr:hover,
+    #summary-table tbody tr:hover > td,
+    #backup-list-table tbody tr:hover,
+    #backup-list-table tbody tr:hover > td,
+    #history-table tbody tr:hover,
+    #history-table tbody tr:hover > td
+  ) {
+    background: #f0f8f3 !important;
+    background-color: #f0f8f3 !important;
+    box-shadow: none !important;
+  }
+
+  /* Row focus-within state (Light Mode) */
+  body.app-shell :is(
+    #rows tr:focus-within > td,
+    .paper tbody tr:focus-within > td,
+    #journal-rows > tr:focus-within > td,
+    .journal-table tbody tr:focus-within > td,
+    .khata-dir-table tbody tr:focus-within > td,
+    .khata-table tbody tr:focus-within > td,
+    #khata-entry-rows > tr:focus-within > td
+  ) {
+    background: #e9f6ee !important;
+    background-color: #e9f6ee !important;
+    box-shadow: none !important;
+  }
+
+  /* Serial / index column (Light Mode) */
+  body.app-shell :is(
+    td.journal-serial,
+    #rows td.number,
+    .paper td.number,
+    .khata-table td.td-serial,
+    .khata-dir-table tbody tr td:first-child
+  ) {
+    background: #f5f8f3 !important;
+    background-color: #f5f8f3 !important;
+    color: #5a7363 !important;
+    font-family: Arial, sans-serif !important;
+    font-weight: 700 !important;
+    text-align: center;
+  }
+  body.app-shell :is(
+    .journal-table tr:hover td.journal-serial,
+    .journal-table tr:focus-within td.journal-serial,
+    #rows tr:hover td.number,
+    #rows tr:focus-within td.number,
+    .khata-table tr:hover td.td-serial,
+    .khata-table tr:focus-within td.td-serial,
+    .khata-dir-table tbody tr:hover td:first-child
+  ) {
+    background: #e8f1e9 !important;
+    background-color: #e8f1e9 !important;
+    color: #17634c !important;
+  }
+
+  /* Table Totals / Footers (Light Mode) */
+  body.app-shell :is(
+    .journal-table tfoot th,
+    .journal-table tfoot td,
+    .paper tfoot th,
+    .paper tfoot td,
+    .register-totals .totals-row > th,
+    .register-totals .totals-row > td,
+    .khata-dir-table tfoot th,
+    .khata-dir-table tfoot td,
+    .khata-table tfoot th,
+    .khata-table tfoot td,
+    .khata-table tfoot tr.khata-totals-row > th,
+    .khata-table tfoot tr.khata-totals-row > td,
+    #summary-table tfoot th,
+    #summary-table tfoot td
+  ) {
+    background: linear-gradient(180deg, #edf4ed 0%, #e4eee2 100%) !important;
+    background-color: #e7f1ea !important;
+    border-top: 2px solid #237857 !important;
+    border-bottom: 2px solid #237857 !important;
+    border-color: #b7cdb6 !important;
+    color: #0e4a36 !important;
+    font-weight: 700 !important;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  /* Scrollbars (Light Mode) */
+  body.app-shell :is(.table-wrap, .journal-table-wrap, .khata-table-wrap, .khata-dir-table-wrap, .summary-wrap) {
+    scrollbar-color: #9fc3ae #edf4ef !important;
+  }
+}
+
+/* ==========================================================================
+   UNIFIED TABLE DESIGN SYSTEM (Dark Mode / Night Workspace)
+   Exact match to Roznamcha's deep emerald dark luxury table design
+   ========================================================================== */
+
+@media screen {
+  /* --- 1. Table Containers / Cards (Dark Mode) --- */
+  html[data-theme="dark"] body.app-shell :is(.paper, .journal-card, .khata-card, .summary-wrap) {
+    background: #111f18 !important;
+    background-color: #111f18 !important;
+    border: 1px solid #233e30 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Card Headings (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    .paper-head,
+    .journal-heading,
+    .khata-dir-header-card,
+    .khata-profile-card
+  ) {
+    background: linear-gradient(180deg, #162720 0%, #111f18 100%) !important;
+    border-bottom: 1px solid #233c2f !important;
+    box-shadow: none !important;
+  }
+
+  /* --- 2. Table Headers (Dark Mode) --- */
+  html[data-theme="dark"] body.app-shell :is(
+    .paper thead th,
+    .journal-table thead th,
+    .khata-dir-table thead th,
+    .khata-dir-table th,
+    .khata-table thead th,
+    .khata-table th,
+    #summary-table thead th,
+    #summary-table th,
+    #backup-list-table thead th,
+    #backup-list-table th,
+    #history-table thead th,
+    #history-table th
+  ) {
+    background: #172a21 !important;
+    background-color: #172a21 !important;
+    color: #9bc5b0 !important;
+    border-color: #264334 !important;
+    border-bottom: 2px solid #2d5541 !important;
+    border-inline-end: 1px solid #1e3529 !important;
+    font-family: "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    line-height: 2.2 !important;
+    letter-spacing: 0.1px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  /* Header accent column lines (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(.journal-table thead th:nth-child(3), .khata-table th.th-banam) {
+    border-bottom: 2px solid #ef4444 !important;
+    color: #fca5a5 !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(.journal-table thead th:nth-child(4), .khata-table th.th-jama, .paper thead th.col-aed) {
+    border-bottom: 2px solid #10b981 !important;
+    color: #6ee7b7 !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(.journal-table thead th:nth-child(5), .khata-table th.th-baqaya, .paper thead th.col-balance) {
+    border-bottom: 2px solid #06b6d4 !important;
+    color: #7dd3fc !important;
+  }
+  html[data-theme="dark"] body.app-shell .paper thead th.col-pkr {
+    border-bottom: 2px solid #34d399 !important;
+    color: #a7f3d0 !important;
+  }
+
+  /* --- 3. Table Rows & Cells (Dark Mode) --- */
+  html[data-theme="dark"] body.app-shell :is(
+    #rows > tr,
+    #rows > tr > td,
+    .paper tbody tr,
+    .paper tbody td,
+    #journal-rows > tr,
+    #journal-rows > tr > td,
+    .journal-table tbody tr,
+    .journal-table tbody td,
+    .khata-dir-table tbody tr,
+    .khata-dir-table tbody td,
+    #khata-rows > tr,
+    #khata-rows > tr > td,
+    #khata-dir-rows > tr,
+    #khata-dir-rows > tr > td,
+    .khata-table tbody tr,
+    .khata-table tbody td,
+    #khata-entry-rows > tr,
+    #khata-entry-rows > tr > td,
+    #summary-table tbody tr,
+    #summary-table tbody td,
+    #summary-rows > tr,
+    #summary-rows > tr > td,
+    #backup-list-table tbody tr,
+    #backup-list-table tbody td,
+    #backup-list-rows > tr,
+    #backup-list-rows > tr > td,
+    #history-table tbody tr,
+    #history-table tbody td,
+    #history-rows > tr,
+    #history-rows > tr > td
+  ) {
+    background: #111f18 !important;
+    background-color: #111f18 !important;
+    border-color: #1d3327 !important;
+    border-bottom: 1px solid #1d3327 !important;
+    border-inline-end: 1px solid #1b3025 !important;
+    color: #e5efe8 !important;
+  }
+
+  /* Even row striping (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    #rows > tr:nth-child(even),
+    #rows > tr:nth-child(even) > td,
+    .paper tbody tr:nth-child(even),
+    .paper tbody tr:nth-child(even) > td,
+    #journal-rows > tr:nth-child(even),
+    #journal-rows > tr:nth-child(even) > td,
+    .journal-table tbody tr:nth-child(even),
+    .journal-table tbody tr:nth-child(even) > td,
+    .khata-dir-table tbody tr:nth-child(even),
+    .khata-dir-table tbody tr:nth-child(even) > td,
+    #khata-rows > tr:nth-child(even),
+    #khata-rows > tr:nth-child(even) > td,
+    #khata-dir-rows > tr:nth-child(even),
+    #khata-dir-rows > tr:nth-child(even) > td,
+    .khata-table tbody tr:nth-child(even):not(.khata-draft),
+    .khata-table tbody tr:nth-child(even):not(.khata-draft) > td,
+    #khata-entry-rows > tr:nth-child(even):not(.khata-draft),
+    #khata-entry-rows > tr:nth-child(even):not(.khata-draft) > td,
+    #summary-table tbody tr:nth-child(even),
+    #summary-table tbody tr:nth-child(even) > td,
+    #backup-list-table tbody tr:nth-child(even),
+    #backup-list-table tbody tr:nth-child(even) > td,
+    #history-table tbody tr:nth-child(even),
+    #history-table tbody tr:nth-child(even) > td
+  ) {
+    background: #14251e !important;
+    background-color: #14251e !important;
+  }
+
+  /* Row hover state (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    #rows > tr:hover,
+    #rows > tr:hover > td,
+    .paper tbody tr:hover,
+    .paper tbody tr:hover > td,
+    #journal-rows > tr:hover,
+    #journal-rows > tr:hover > td,
+    .journal-table tbody tr:hover,
+    .journal-table tbody tr:hover > td,
+    .khata-dir-table tbody tr:hover,
+    .khata-dir-table tbody tr:hover > td,
+    #khata-rows > tr:hover,
+    #khata-rows > tr:hover > td,
+    #khata-dir-rows > tr:hover,
+    #khata-dir-rows > tr:hover > td,
+    .khata-table tbody tr:hover,
+    .khata-table tbody tr:hover > td,
+    #khata-entry-rows > tr:hover,
+    #khata-entry-rows > tr:hover > td,
+    #summary-table tbody tr:hover,
+    #summary-table tbody tr:hover > td,
+    #backup-list-table tbody tr:hover,
+    #backup-list-table tbody tr:hover > td,
+    #history-table tbody tr:hover,
+    #history-table tbody tr:hover > td
+  ) {
+    background: #193427 !important;
+    background-color: #193427 !important;
+    box-shadow: none !important;
+  }
+
+  /* Row focus-within state (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    #rows tr:focus-within,
+    #rows tr:focus-within > td,
+    .paper tbody tr:focus-within,
+    .paper tbody tr:focus-within > td,
+    #journal-rows > tr:focus-within,
+    #journal-rows > tr:focus-within > td,
+    .journal-table tbody tr:focus-within,
+    .journal-table tbody tr:focus-within > td,
+    .khata-dir-table tbody tr:focus-within,
+    .khata-dir-table tbody tr:focus-within > td,
+    .khata-table tbody tr:focus-within,
+    .khata-table tbody tr:focus-within > td,
+    #khata-entry-rows > tr:focus-within,
+    #khata-entry-rows > tr:focus-within > td
+  ) {
+    background: #162f23 !important;
+    background-color: #162f23 !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(
+    #rows tr:focus-within,
+    .paper tbody tr:focus-within,
+    #journal-rows > tr:focus-within,
+    .journal-table tbody tr:focus-within,
+    .khata-dir-table tbody tr:focus-within,
+    .khata-table tbody tr:focus-within,
+    #khata-entry-rows > tr:focus-within
+  ) {
+    box-shadow: inset -4px 0 #34d399 !important;
+  }
+
+  /* Serial / index column (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    td.journal-serial,
+    #rows td.number,
+    .paper td.number,
+    .khata-table td.td-serial,
+    .khata-dir-table tbody tr td:first-child
+  ) {
+    background: #13221a !important;
+    background-color: #13221a !important;
+    color: #729683 !important;
+    font-family: Arial, sans-serif !important;
+    font-weight: 700 !important;
+    text-align: center;
+  }
+  html[data-theme="dark"] body.app-shell :is(
+    .journal-table tr:hover td.journal-serial,
+    .journal-table tr:focus-within td.journal-serial,
+    #rows tr:hover td.number,
+    #rows tr:focus-within td.number,
+    .khata-table tr:hover td.td-serial,
+    .khata-table tr:focus-within td.td-serial,
+    .khata-dir-table tbody tr:hover td:first-child
+  ) {
+    background: #182e24 !important;
+    background-color: #182e24 !important;
+    color: #4eedb7 !important;
+  }
+
+  /* Draft / New entry row (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    .journal-table .journal-draft,
+    .journal-table .journal-draft td,
+    #rows tr.draft-row > td,
+    .draft-row td,
+    .khata-table tr.khata-draft td,
+    .khata-draft td
+  ) {
+    background: #0f1c15 !important;
+    background-color: #0f1c15 !important;
+    border-bottom: 1px dashed #233e30 !important;
+  }
+
+  /* Cell inputs / textareas (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    .journal-table td input,
+    .journal-table td textarea,
+    #rows td input,
+    #rows td textarea,
+    #rows td select,
+    .khata-table td input,
+    .khata-table td textarea
+  ) {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #e5efe8 !important;
+    caret-color: #34d399;
+  }
+  html[data-theme="dark"] body.app-shell :is(
+    .journal-table td input:focus,
+    .journal-table td textarea:focus,
+    #rows td input:focus,
+    #rows td textarea:focus,
+    #rows td select:focus,
+    .khata-table td input:focus,
+    .khata-table td textarea:focus
+  ) {
+    background: #1d3a2e !important;
+    background-color: #1d3a2e !important;
+    color: #ffffff !important;
+    outline: none !important;
+    box-shadow: inset 0 0 0 2px #34d399 !important;
+  }
+
+  /* Delete buttons (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(.journal-delete, .delete, .btn-delete-row) {
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+    color: #8daea0 !important;
+    opacity: 0.35;
+  }
+  html[data-theme="dark"] body.app-shell :is(tr:hover, tr:focus-within) :is(.journal-delete, .delete, .btn-delete-row) {
+    opacity: 0.85;
+  }
+  html[data-theme="dark"] body.app-shell :is(.journal-delete:hover, .delete:hover, .btn-delete-row:hover) {
+    opacity: 1 !important;
+    color: #f87171 !important;
+    background: rgba(239, 68, 68, 0.2) !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+  }
+
+  /* Table Totals / Footers (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    .journal-table tfoot th,
+    .journal-table tfoot td,
+    .paper tfoot th,
+    .paper tfoot td,
+    .register-totals .totals-row > th,
+    .register-totals .totals-row > td,
+    .khata-dir-table tfoot th,
+    .khata-dir-table tfoot td,
+    .khata-table tfoot th,
+    .khata-table tfoot td,
+    .khata-table tfoot tr.khata-totals-row > th,
+    .khata-table tfoot tr.khata-totals-row > td,
+    #summary-table tfoot th,
+    #summary-table tfoot td
+  ) {
+    background: linear-gradient(180deg, #182e24 0%, #13241c 100%) !important;
+    background-color: #15271f !important;
+    border-top: 2px solid #2d5541 !important;
+    border-bottom: 2px solid #2d5541 !important;
+    border-color: #2d5541 !important;
+    color: #e5efe8 !important;
+    font-weight: 700 !important;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  /* Totals numbers highlight */
+  html[data-theme="dark"] body.app-shell :is(
+    #total-balance,
+    #total-aed,
+    #total-pkr,
+    #journal-closing,
+    .journal-table .journal-balance,
+    #khata-foot-baqaya,
+    #summary-balance,
+    #summary-aed,
+    #summary-pkr
+  ) {
+    color: #4eedb7 !important;
+    font-weight: 700 !important;
+  }
+
+  /* Scrollbars (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(.table-wrap, .journal-table-wrap, .khata-table-wrap, .khata-dir-table-wrap, .summary-wrap) {
+    scrollbar-color: #2a523e #122119 !important;
+  }
+}
+

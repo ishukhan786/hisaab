@@ -546,86 +546,6 @@
     const overlay = $('auth-overlay');
     if (!overlay) return;
 
-    const cursorGlow = $('cursor-glow');
-    const orbs = document.querySelectorAll('.orb-item');
-
-    let ticking = false;
-
-    function getVisibleCard() {
-      const cards = ['auth-login-card', 'auth-setup-card', 'auth-recovery-card'];
-      for (const id of cards) {
-        const c = $(id);
-        if (c && !c.hidden) return c;
-      }
-      return null;
-    }
-
-    overlay.addEventListener('mousemove', e => {
-      const clientX = e.clientX;
-      const clientY = e.clientY;
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-
-      // Update Cursor Ambient Glow
-      if (cursorGlow) {
-        cursorGlow.style.opacity = '1';
-        cursorGlow.style.left = clientX + 'px';
-        cursorGlow.style.top = clientY + 'px';
-      }
-
-      // Subtle Parallax on Background Orbs
-      orbs.forEach(orb => {
-        const depth = parseFloat(orb.getAttribute('data-depth') || '0.04');
-        const moveX = (clientX - centerX) * depth;
-        const moveY = (clientY - centerY) * depth;
-        orb.style.transform = `translate3d(${moveX.toFixed(1)}px, ${moveY.toFixed(1)}px, 0)`;
-      });
-
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        ticking = false;
-        const targetCard = getVisibleCard();
-        if (!targetCard) return;
-
-        const rect = targetCard.getBoundingClientRect();
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
-        const normX = Math.max(0, Math.min(1, x / rect.width));
-        const normY = Math.max(0, Math.min(1, y / rect.height));
-
-        // Specular sheen tracking
-        targetCard.style.setProperty('--mouse-x', `${(normX * 100).toFixed(1)}%`);
-        targetCard.style.setProperty('--mouse-y', `${(normY * 100).toFixed(1)}%`);
-
-        // Subtle 3D tilt if mouse is hovering near or on card
-        const isNear = (
-          clientX >= rect.left - 50 &&
-          clientX <= rect.right + 50 &&
-          clientY >= rect.top - 50 &&
-          clientY <= rect.bottom + 50
-        );
-
-        if (isNear && !targetCard.classList.contains('auth-shake')) {
-          const rotateX = ((normY - 0.5) * -7).toFixed(2);
-          const rotateY = ((normX - 0.5) * 8).toFixed(2);
-          targetCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`;
-        } else if (!targetCard.classList.contains('auth-shake')) {
-          targetCard.style.transform = '';
-        }
-      });
-    });
-
-    overlay.addEventListener('mouseleave', () => {
-      if (cursorGlow) cursorGlow.style.opacity = '0';
-      const card = getVisibleCard();
-      if (card && !card.classList.contains('auth-shake')) {
-        card.style.transform = '';
-        card.style.setProperty('--mouse-x', '50%');
-        card.style.setProperty('--mouse-y', '30%');
-      }
-    });
-
     // Real-time username checkmark feedback
     const usernameInput = $('login-username');
     const userValidIcon = $('user-valid-icon');
@@ -644,58 +564,12 @@
       });
     }
 
-    // Real-time password strength meter
+    // Clear login error on password input
     const passwordInput = $('login-password');
-    const strengthWrapper = $('strength-wrapper');
-    const strengthLabel = $('strength-label');
-    const strBars = [
-      $('str-bar-1'),
-      $('str-bar-2'),
-      $('str-bar-3'),
-      $('str-bar-4')
-    ];
-
-    if (passwordInput && strengthWrapper) {
+    if (passwordInput) {
       passwordInput.addEventListener('input', () => {
-        const val = passwordInput.value;
         const errEl = $('auth-login-error');
         if (errEl) errEl.textContent = '';
-
-        if (!val || val.length === 0) {
-          strengthWrapper.classList.remove('active');
-          return;
-        }
-
-        strengthWrapper.classList.add('active');
-
-        let score = 0;
-        if (val.length >= 4) score++;
-        if (val.length >= 8) score++;
-        if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
-        if (/[^A-Za-z0-9]/.test(val)) score++;
-        if (score === 0 && val.length > 0) score = 1;
-
-        const configs = [
-          { label: 'Weak', color: '#ef4444', text: '#f87171' },
-          { label: 'Fair', color: '#f59e0b', text: '#fbbf24' },
-          { label: 'Good', color: '#06b6d4', text: '#67e8f9' },
-          { label: 'Strong', color: '#10b981', text: '#6ee7b7' }
-        ];
-
-        const activeConfig = configs[score - 1];
-        if (strengthLabel) {
-          strengthLabel.textContent = activeConfig.label;
-          strengthLabel.style.color = activeConfig.text;
-        }
-
-        strBars.forEach((bar, idx) => {
-          if (!bar) return;
-          if (idx < score) {
-            bar.style.backgroundColor = activeConfig.color;
-          } else {
-            bar.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-          }
-        });
       });
     }
 

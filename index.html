@@ -15,12 +15,12 @@
   <title>حساب — روزانہ کھاتہ و رجسٹر (Hisaab)</title>
   <!-- FIX-4: Anti-FOUC theme preload moved to external theme-init.js -->
   <!-- localStorage.getItem('hisaab-theme') verification guard preserved -->
-  <script src="theme-init.js?v=1.4.20"></script>
-  <link rel="stylesheet" href="style.css?v=1.4.20">
-  <link rel="stylesheet" href="ui.css?v=1.4.20">
-  <link rel="stylesheet" href="journal.css?v=1.4.20">
-  <link rel="stylesheet" href="khata.css?v=1.4.20">
-  <link rel="stylesheet" href="receipt-export.css?v=1.4.20">
+  <script src="theme-init.js?v=1.4.22"></script>
+  <link rel="stylesheet" href="style.css?v=1.4.24">
+  <link rel="stylesheet" href="ui.css?v=1.4.26">
+  <link rel="stylesheet" href="journal.css?v=1.4.23">
+  <link rel="stylesheet" href="khata.css?v=1.4.23">
+  <link rel="stylesheet" href="receipt-export.css?v=1.4.22">
 </head>
 <body class="app-shell auth-startup-pending">
   <header class="top-nav no-print">
@@ -30,7 +30,7 @@
         <div class="brand-titles">
           <!-- FIX-23: lang="en" on brand name -->
           <strong class="brand-title" lang="en">Hisaab</strong>
-          <span class="app-version-badge" title="سافٹ ویئر ورژن">v1.4.20</span>
+          <span class="app-version-badge" title="سافٹ ویئر ورژن">v1.4.22</span>
         </div>
       </div>
       <div class="top-date-wrap">
@@ -155,11 +155,14 @@
     <section class="paper" aria-label="اندراج رجسٹر">
       <div class="paper-head">
         <div class="head-party"><span class="party-label">پارٹی:</span><strong id="branch-heading"><bdi>پارٹی</bdi></strong><span class="view-note" id="view-note"></span></div>
-        <div class="head-center"><input id="title" aria-label="رجسٹر کا عنوان" maxlength="100" value="Hisaab Register" lang="en"><span id="title-print" class="title-print" aria-hidden="true" lang="en">Hisaab Register</span></div>
+        <div class="head-center">
+          <input id="title" aria-label="رجسٹر کا عنوان" maxlength="100" value="Hisaab Register" lang="en">
+          <span id="title-print" class="title-print" aria-hidden="true" lang="en">Hisaab Register</span>
+          <div class="date-print-line" id="date-print-line"><span class="date-print-label">تاریخ:</span> <span class="date-print-val" id="date-print-val"></span></div>
+        </div>
         <div class="date-block">
           <button id="lock-day" class="btn-lock no-print" type="button" title="اس تاریخ کا رجسٹر لاک یا ان لاک کریں">🔓 دن کھلا ہے</button>
           <span class="date-screen-badge" id="date-screen-badge"></span>
-          <div class="date-print-line"><span class="date-print-label">تاریخ:</span><span class="date-print-val" id="date-print-val"></span></div>
           <!-- FIX-25: Add pattern to page-no-input -->
           <div class="page-no-line" id="page-no-line"><span class="page-no-label">صفحہ نمبر:</span><input id="page-no-input" class="page-no-input no-print" type="text" inputmode="numeric" pattern="[0-9]*" value="1" maxlength="6" aria-label="صفحہ نمبر" title="صفحہ نمبر تبدیل کریں"><span class="page-no-val" id="page-no-val">1</span></div>
         </div>
@@ -1078,14 +1081,14 @@
       <footer class="thermal-slip-footer">
         <div class="thermal-thanks">آپ کے کاروبار کا شکریہ!</div>
         <div class="thermal-note">کمپیوٹرائزڈ رسید — دستخط کی ضرورت نہیں</div>
-        <div class="thermal-tag">Powered by Hisaab POS v1.4.20</div>
+        <div class="thermal-tag">Powered by Hisaab POS v1.4.22</div>
       </footer>
     </article>
   </dialog>
 
   <dialog id="account-settings-dialog" class="auth-dialog no-print" dir="ltr">
     <div class="dialog-head">
-      <h2>👤 Account &amp; Password Settings <span class="dialog-version-pill">v1.4.20</span></h2>
+      <h2>👤 Account &amp; Password Settings <span class="dialog-version-pill">v1.4.22</span></h2>
       <button id="btn-close-account-settings" type="button" aria-label="Close">✕</button>
     </div>
     <form id="account-settings-form" class="auth-form" novalidate>
@@ -1162,7 +1165,7 @@
           <div class="text-center mb-6">
             <div class="auth-portal-badge">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span>First-Time Setup <span class="auth-version-pill">v1.4.20</span></span>
+              <span>First-Time Setup <span class="auth-version-pill">v1.4.22</span></span>
             </div>
             <h1 class="auth-display-title">
               Admin Setup
@@ -1251,7 +1254,7 @@
           <div class="text-center mb-6">
             <div class="auth-portal-badge">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span>Secure Portal <span class="auth-version-pill">v1.4.20</span></span>
+              <span>Secure Portal <span class="auth-version-pill">v1.4.22</span></span>
             </div>
             <h1 class="auth-display-title">
               Welcome Back
@@ -1291,20 +1294,6 @@
                 <button type="button" id="toggle-login-pwd-btn" class="glass-eye-btn" title="Show password" aria-label="Show password" aria-pressed="false">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
-              </div>
-
-              <!-- Real-time Password Security Meter -->
-              <div id="strength-wrapper" class="glass-strength-wrapper">
-                <div class="glass-strength-header">
-                  <span class="text-slate-400">Password Security</span>
-                  <span id="strength-label" class="font-medium text-slate-400">Too Short</span>
-                </div>
-                <div class="glass-strength-bars">
-                  <div id="str-bar-1" class="glass-str-bar"></div>
-                  <div id="str-bar-2" class="glass-str-bar"></div>
-                  <div id="str-bar-3" class="glass-str-bar"></div>
-                  <div id="str-bar-4" class="glass-str-bar"></div>
-                </div>
               </div>
             </div>
 
@@ -1436,17 +1425,17 @@
   <input id="file" type="file" accept="application/json,.json" hidden aria-label="بیک اَپ فائل منتخب کریں">
 
   <!-- FIX-3: Universal dialog backdrop-click fallback polyfill -->
-  <script src="dialog-fallback.js?v=1.4.20"></script>
-  <script src="excel-export.js?v=1.4.20"></script>
-  <script src="journal.js?v=1.4.20"></script>
-  <script src="khata.js?v=1.4.20"></script>
+  <script src="dialog-fallback.js?v=1.4.22"></script>
+  <script src="excel-export.js?v=1.4.22"></script>
+  <script src="journal.js?v=1.4.22"></script>
+  <script src="khata.js?v=1.4.22"></script>
   <!-- FIX-6 & FIX-27: html2canvas with SRI integrity verification and deferred non-blocking load -->
   <script src="assets/html2canvas.min.js?v=1.4.1" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" defer></script>
-  <script src="thermal-print.js?v=1.4.20"></script>
-  <script src="receipt-png.js?v=1.4.20"></script>
-  <script src="external-backup-ui.js?v=1.4.20"></script>
-  <script src="auth.js?v=1.4.20"></script>
-  <script src="app.js?v=1.4.20"></script>
-  <script src="ui.js?v=1.4.20"></script>
+  <script src="thermal-print.js?v=1.4.22"></script>
+  <script src="receipt-png.js?v=1.4.22"></script>
+  <script src="external-backup-ui.js?v=1.4.22"></script>
+  <script src="auth.js?v=1.4.22"></script>
+  <script src="app.js?v=1.4.22"></script>
+  <script src="ui.js?v=1.4.22"></script>
 </body>
 </html>

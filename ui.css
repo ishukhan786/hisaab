@@ -6,104 +6,131 @@ body.auth-startup-pending > :not(#auth-overlay) { visibility:hidden; }
 body.auth-startup-pending #auth-overlay[hidden] { display:flex !important; }
 body.auth-startup-pending #auth-login-card[hidden] { display:flex !important; }
 @media screen {
-body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f1 100%);color:#203d35;min-height:100vh}
-.app-shell button,.app-shell summary.btn-nav{min-height:44px;border-radius:12px;font-size:12px;font-weight:600;line-height:2.3;background:linear-gradient(180deg,#ffffff 0%,#f3f8f5 100%);border:1px solid #c6dcd0;color:#1b4334;box-shadow:0 1px 3px rgba(16,56,41,0.06),0 1px 2px rgba(16,56,41,0.04),inset 0 1px 0 rgba(255,255,255,0.92);transition:background .2s cubic-bezier(.22,1,.36,1),border-color .2s,box-shadow .2s,transform .15s cubic-bezier(.22,1,.36,1),color .15s}
-.app-shell button:hover,.app-shell summary.btn-nav:hover{background:linear-gradient(180deg,#ffffff 0%,#eaf5ef 100%);border-color:#68ab90;color:#0e4733;box-shadow:0 6px 16px -3px rgba(20,90,66,0.16),0 2px 6px -1px rgba(20,90,66,0.08),inset 0 1px 0 #fff;transform:translateY(-1.5px)}
+body.app-shell{background:radial-gradient(at 0% 0%, rgba(209, 250, 229, 0.45) 0px, transparent 55%), radial-gradient(at 100% 0%, rgba(224, 242, 254, 0.45) 0px, transparent 50%), linear-gradient(180deg, #f8faf9 0%, #f1f5f3 350px, #edf2ef 100%);color:#1e3a31;min-height:100vh}
+.app-shell button,.app-shell summary.btn-nav{min-height:44px;border-radius:12px;font-size:12px;font-weight:600;line-height:2.3;background:linear-gradient(180deg,#ffffff 0%,#f4f8f5 100%);border:1px solid #c2dbcd;color:#164634;box-shadow:0 1px 3px rgba(16,56,41,0.05),0 1px 2px rgba(16,56,41,0.03),inset 0 1px 0 rgba(255,255,255,0.95);transition:background .2s cubic-bezier(.22,1,.36,1),border-color .2s,box-shadow .2s,transform .15s cubic-bezier(.22,1,.36,1),color .15s}
+.app-shell button:hover,.app-shell summary.btn-nav:hover{background:linear-gradient(180deg,#ffffff 0%,#eaf6ef 100%);border-color:#58a786;color:#0b412e;box-shadow:0 6px 16px -3px rgba(16,90,64,0.16),0 2px 6px -1px rgba(16,90,64,0.08),inset 0 1px 0 #fff;transform:translateY(-1.5px)}
 .app-shell button:active,.app-shell summary.btn-nav:active{transform:translateY(0.5px) scale(0.985);box-shadow:0 1px 3px rgba(16,56,41,0.1),inset 0 1px 2px rgba(16,56,41,0.06)}
-.app-shell :is(button,summary,input,select,textarea):focus-visible{outline:2.5px solid #17644e;outline-offset:2px;box-shadow:0 0 0 4px #17644e20}
+.app-shell :is(button,summary,input,select,textarea):focus-visible{outline:2.5px solid #10b981;outline-offset:2px;box-shadow:0 0 0 4px rgba(16,185,129,0.18)}
 .app-shell button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
 .ui-icon{width:18px;height:18px;flex:0 0 18px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s cubic-bezier(.22,1,.36,1)}
 .app-shell button:hover .ui-icon,.app-shell summary.btn-nav:hover .ui-icon{transform:scale(1.1)}
 .button-content{display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
-.app-shell .top-nav{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,340px);gap:12px 24px;padding:14px 24px 12px;position:sticky;top:0;background:rgba(255,255,255,0.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 4px 22px rgba(18,58,42,0.06);border-bottom:1px solid rgba(212,226,217,0.9);z-index:40}
+.app-shell .top-nav{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,340px);gap:12px 24px;padding:14px 24px 12px;position:sticky;top:0;background:rgba(255,255,255,0.88);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);box-shadow:0 4px 24px rgba(16,52,38,0.06);border-bottom:1px solid rgba(206,224,214,0.9);z-index:40}
 .app-shell .top-nav-start{min-width:0;gap:12px;flex-wrap:wrap}
 .app-shell .top-nav-center{margin:0;max-width:none;min-width:0;width:auto;order:initial}
-.app-shell .top-nav-end{grid-column:1/-1;flex-wrap:wrap;gap:8px;border-top:1px solid #e8f0eb;padding-top:12px;min-width:0}
-.app-shell .brand-mini{padding-inline-end:15px;margin-inline-end:0;border-inline-end:1px solid #dfe8e1;gap:10px}
-.app-shell .logo-mini{width:40px;height:40px;border-radius:12px;font-size:24px;line-height:1.6;box-shadow:0 4px 12px rgba(23,100,78,0.28),inset 0 1px 0 rgba(255,255,255,0.3);background:linear-gradient(135deg,#208767 0%,#15674e 55%,#0e4c39 100%);transition:transform .2s cubic-bezier(.22,1,.36,1)}
+.app-shell .top-nav-end{grid-column:1/-1;flex-wrap:wrap;gap:8px;border-top:1px solid #e5ede7;padding-top:12px;min-width:0}
+.app-shell .brand-mini{padding-inline-end:15px;margin-inline-end:0;border-inline-end:1px solid #d8e5dd;gap:10px}
+.app-shell .logo-mini{width:40px;height:40px;border-radius:12px;font-size:24px;line-height:1.6;box-shadow:0 4px 14px rgba(5,150,105,0.35),inset 0 1px 0 rgba(255,255,255,0.35);background:linear-gradient(135deg,#10b981 0%,#059669 55%,#047857 100%);transition:transform .2s cubic-bezier(.22,1,.36,1)}
 .app-shell .logo-mini:hover{transform:rotate(5deg) scale(1.06)}
-.app-shell .brand-title{font-size:23px;font-weight:700;letter-spacing:-.3px}
-.app-shell .top-date-field,.app-shell .top-search-wrap,.app-shell .top-serial-field{height:44px;border-radius:12px;background:#f8faf9;border:1px solid #cfe0d6;box-shadow:inset 0 1px 2px rgba(16,56,41,0.03);transition:border-color .15s,box-shadow .15s,background .15s}
-.app-shell .top-search-wrap{padding:0 14px;gap:10px}
-.app-shell .top-search-wrap:focus-within{background:#fff;border-color:#3e8c6e;box-shadow:0 0 0 3px #17644e18}
+.app-shell .brand-title{font-size:23px;font-weight:800;color:#0d3d2c;letter-spacing:-.4px}
+.app-shell .top-date-field,.app-shell .top-search-wrap,.app-shell .top-serial-field{height:44px;border-radius:12px;background:#ffffff;border:1.5px solid #cfe0d6;box-shadow:0 1px 3px rgba(16,56,41,0.04);transition:border-color .15s,box-shadow .15s,background .15s}
+.app-shell .top-search-wrap{border-radius:9999px;padding:0 16px;gap:10px}
+.app-shell .top-search-wrap:focus-within{background:#fff;border-color:#10b981;box-shadow:0 0 0 3.5px rgba(16,185,129,0.16),0 2px 8px rgba(16,185,129,0.08)}
 .app-shell .top-search-wrap input{height:100%;min-width:0;font-size:12.5px;line-height:2.6}
 .app-shell .top-date-field{padding-inline:12px;gap:10px}
-.app-shell .top-date-field:hover,.app-shell .top-serial-field:hover{border-color:#8cb8a2;background:#fff}
+.app-shell .top-date-field:hover,.app-shell .top-serial-field:hover{border-color:#10b981;background:#fff}
 .app-shell .top-serial-field{order:8;margin-inline-start:auto;padding-inline:12px;gap:7px}
 .app-shell .top-serial-field input{width:45px}
 .app-shell .btn-nav,.app-shell .btn-add-primary,.app-shell .btn-range{height:auto;min-height:44px;padding:5px 16px;display:inline-flex;align-items:center;justify-content:center}
-.app-shell .btn-add-primary,.app-shell .primary{background:linear-gradient(135deg,#228d6b 0%,#166b51 55%,#0f4f3b 100%);border-color:#0e4a37;color:#fff;box-shadow:0 4px 14px rgba(19,102,75,0.3),0 1px 3px rgba(19,102,75,0.18),inset 0 1px 0 rgba(255,255,255,0.28)}
-.app-shell .btn-add-primary:hover,.app-shell .primary:hover{background:linear-gradient(135deg,#269e78 0%,#19785b 55%,#125c45 100%);border-color:#0b3e2e;color:#fff;box-shadow:0 8px 20px -2px rgba(19,102,75,0.4),0 3px 7px -1px rgba(19,102,75,0.22),inset 0 1px 0 rgba(255,255,255,0.38)}
-.app-shell #print{background:linear-gradient(180deg,#f1fbf5 0%,#dff2e7 100%);color:#0f573f;border-color:#9dd0b3;box-shadow:0 2px 6px rgba(18,92,69,0.08),inset 0 1px 0 rgba(255,255,255,0.9)}
-.app-shell #print:hover{background:linear-gradient(180deg,#e7f8ee 0%,#d1ecdd 100%);border-color:#5ea882;color:#0a4531;box-shadow:0 6px 16px -2px rgba(18,92,69,0.18),inset 0 1px 0 #fff}
-.app-shell #save-state{order:9;margin:0;padding:4px 14px;line-height:2.2;background:linear-gradient(180deg,#f0faf4 0%,#e2f2e9 100%);border:1px solid #b8dec6;color:#14583d;font-weight:700;border-radius:999px;font-size:10.5px;max-width:190px;white-space:normal;display:inline-flex;align-items:center;gap:5px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.85)}
+.app-shell .btn-add-primary,.app-shell .primary{background:linear-gradient(135deg,#10b981 0%,#059669 55%,#047857 100%);border-color:#047857;color:#fff;box-shadow:0 4px 14px rgba(5,150,105,0.35),0 1px 3px rgba(5,150,105,0.2),inset 0 1px 0 rgba(255,255,255,0.35)}
+.app-shell .btn-add-primary:hover,.app-shell .primary:hover{background:linear-gradient(135deg,#34d399 0%,#10b981 55%,#059669 100%);border-color:#065f46;color:#fff;box-shadow:0 8px 22px -2px rgba(5,150,105,0.45),0 3px 8px -1px rgba(5,150,105,0.25),inset 0 1px 0 rgba(255,255,255,0.45);transform:translateY(-1.5px)}
+.app-shell #print{background:linear-gradient(180deg,#f3fbf6 0%,#e1f2e8 100%);color:#0d4f39;border-color:#92cdab;box-shadow:0 2px 6px rgba(18,92,69,0.08),inset 0 1px 0 rgba(255,255,255,0.95)}
+.app-shell #print:hover{background:linear-gradient(180deg,#e8f8ee 0%,#d2eedf 100%);border-color:#48a374;color:#083d2b;box-shadow:0 6px 16px -2px rgba(18,92,69,0.18),inset 0 1px 0 #fff;transform:translateY(-1.5px)}
+.app-shell #save-state{order:9;margin:0;padding:4px 14px;line-height:2.2;background:linear-gradient(180deg,#f0faf4 0%,#e2f2e9 100%);border:1px solid #b2dac1;color:#125239;font-weight:700;border-radius:999px;font-size:10.5px;max-width:190px;white-space:normal;display:inline-flex;align-items:center;gap:5px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.9)}
 .app-shell #retry-save,.app-shell #reconnect-disk-file{order:10}
-.app-shell .all-dates-toggle{height:auto;min-height:44px;font-size:11px;margin:0;gap:8px;border-radius:12px;background:linear-gradient(180deg,#ffffff 0%,#f3f8f5 100%);border:1px solid #c6dcd0;box-shadow:0 1px 3px rgba(16,56,41,0.05),inset 0 1px 0 #fff;transition:all .18s ease}
-.app-shell .all-dates-toggle:hover{border-color:#68ab90;background:linear-gradient(180deg,#ffffff 0%,#eaf5ef 100%);box-shadow:0 4px 12px rgba(20,90,66,0.1)}
-.app-shell .range-drawer{padding:14px 24px;background:#f8fbf8;box-shadow:none}
+.app-shell .all-dates-toggle{height:auto;min-height:44px;font-size:11px;margin:0;gap:8px;border-radius:12px;background:linear-gradient(180deg,#ffffff 0%,#f3f8f5 100%);border:1px solid #c2dbcd;box-shadow:0 1px 3px rgba(16,56,41,0.05),inset 0 1px 0 #fff;transition:all .18s ease}
+.app-shell .all-dates-toggle:hover{border-color:#58a786;background:linear-gradient(180deg,#ffffff 0%,#eaf6ef 100%);box-shadow:0 4px 12px rgba(16,90,64,0.12)}
+.app-shell .range-drawer{padding:14px 24px;background:#f8fbf9;box-shadow:none}
 .app-shell .range-drawer-inner{gap:10px 14px}.app-shell .range-drawer input{min-height:40px}
 .app-shell main{max-width:100%;padding:0 18px;margin:18px auto}
 .app-shell .backup-banner{padding:9px 14px;margin-bottom:14px;border-radius:12px;font-size:11px;line-height:2.4;background:#f7faf6;border-color:#dbe7d9}
 .app-shell .backup-banner.backup-due{background:#fff9ed;border-color:#ebd9b2;color:#765923}
 .app-shell .backup-banner button{flex-shrink:0;min-height:36px;padding:3px 13px;font-size:11px}
-.app-shell .workspace-nav{display:inline-flex;align-items:center;gap:4px;padding:4px;margin-inline-end:4px;background:#e3efe8;border:1px solid #c6dbd0;border-radius:14px;box-shadow:inset 0 1px 3px rgba(15,55,40,0.08),0 1px 0 rgba(255,255,255,0.8)}
-.app-shell .workspace-nav button{background:transparent;border:1px solid transparent;min-width:0;min-height:36px;padding:4px 16px;border-radius:10px;color:#2e5645;font-size:12px;font-weight:600;box-shadow:none}
-.app-shell .workspace-nav button:hover{background:rgba(255,255,255,0.68);border-color:rgba(180,210,193,0.6);color:#104a36;transform:none;box-shadow:0 1px 3px rgba(16,56,41,0.06)}
-.app-shell .workspace-nav button.active{background:linear-gradient(135deg,#228d6b 0%,#15674e 55%,#0f4f3b 100%);color:#fff;border-color:#0e4a37;font-weight:700;box-shadow:0 3px 10px rgba(18,88,65,0.28),inset 0 1px 0 rgba(255,255,255,0.28)}
-.app-shell .party-tabs-bar{display:flex;align-items:flex-start;padding:7px 12px;background:rgba(229,238,232,0.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid #cadcd0;border-radius:16px;margin:0 0 16px;gap:10px;position:sticky;top:var(--top-nav-h,118px);z-index:35;box-shadow:0 4px 14px rgba(18,56,40,0.08),inset 0 1px 0 rgba(255,255,255,0.65)}
+.app-shell .workspace-nav{display:inline-flex;align-items:center;gap:4px;padding:4px;margin-inline-end:4px;background:#e2ede5;border:1px solid #c2dbcd;border-radius:9999px;box-shadow:inset 0 1px 3px rgba(15,50,36,0.08),0 1px 0 rgba(255,255,255,0.85)}
+.app-shell .workspace-nav button{background:transparent;border:1px solid transparent;min-width:0;min-height:36px;padding:4px 18px;border-radius:9999px;color:#24523e;font-size:12.5px;font-weight:600;box-shadow:none;transition:all .16s ease}
+.app-shell .workspace-nav button:hover{background:rgba(255,255,255,0.72);border-color:rgba(180,212,195,0.6);color:#0d4632;transform:none;box-shadow:0 1px 3px rgba(16,56,41,0.06)}
+.app-shell .workspace-nav button.active{background:linear-gradient(135deg,#10b981 0%,#059669 60%,#047857 100%);color:#fff;border-color:#047857;font-weight:700;box-shadow:0 3px 12px rgba(5,150,105,0.35),inset 0 1px 0 rgba(255,255,255,0.32)}
+.app-shell .party-tabs-bar{display:flex;align-items:flex-start;padding:8px 14px;background:rgba(232,242,236,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid #c5dccf;border-radius:16px;margin:0 0 16px;gap:10px;position:sticky;top:var(--top-nav-h,118px);z-index:35;box-shadow:0 4px 18px rgba(16,52,38,0.06),inset 0 1px 0 rgba(255,255,255,0.75)}
 .app-shell .party-tabs-scroll{display:flex;align-items:center;padding:2px 0;gap:6px;flex-wrap:wrap;overflow:visible;flex:1;min-width:0}
-.app-shell .party-tab{min-height:41px;border-radius:11px;border:1px solid rgba(255,255,255,0.65);padding:5px 15px;font-size:12px;font-weight:600;line-height:2.2;background:rgba(255,255,255,0.58);color:#2f5443;box-shadow:0 1px 2px rgba(18,56,40,0.04);transition:all .18s cubic-bezier(.22,1,.36,1);white-space:normal;max-width:100%;overflow-wrap:anywhere}
-.app-shell .party-tab:hover{background:rgba(255,255,255,0.95);border-color:#98c5ad;color:#0f4c37;transform:translateY(-1.5px);box-shadow:0 4px 10px rgba(22,63,48,0.1)}
-.app-shell .party-tab.active{background:linear-gradient(180deg,#ffffff 0%,#f2faf5 100%);border-color:#74b596;color:#0d4a36;font-weight:700;box-shadow:0 4px 12px rgba(17,82,62,0.15),inset 0 -2.5px 0 #1b755b,inset 0 1px 0 #fff}
+.app-shell .party-tab{min-height:41px;border-radius:12px;border:1px solid rgba(195,220,207,0.9);padding:5px 16px;font-size:12px;font-weight:600;line-height:2.2;background:rgba(255,255,255,0.7);color:#244e3b;box-shadow:0 1px 2px rgba(18,56,40,0.04);transition:all .18s cubic-bezier(.22,1,.36,1);white-space:normal;max-width:100%;overflow-wrap:anywhere}
+.app-shell .party-tab:hover{background:#ffffff;border-color:#7fbe9d;color:#0b4330;transform:translateY(-1.5px);box-shadow:0 4px 12px rgba(18,70,50,0.1)}
+.app-shell .party-tab.active{background:#ffffff;border-color:#55ac81;color:#093f2d;font-weight:700;box-shadow:0 4px 14px rgba(16,75,55,0.14),inset 0 -3px 0 #10b981,inset 0 1px 0 #ffffff}
 .app-shell .party-tabs-actions{display:flex;align-items:center;padding:2px 0;gap:8px;flex-shrink:0}
-.app-shell .tab-add-btn{background:linear-gradient(180deg,#f5fcf8 0%,#e3f3ea 100%);border:1px solid #96c7ab;color:#11573f;font-weight:700;border-radius:11px;padding:5px 15px;min-height:41px;box-shadow:0 2px 5px rgba(17,87,63,0.08),inset 0 1px 0 #fff}
-.app-shell .tab-add-btn:hover{background:linear-gradient(135deg,#228d6b 0%,#146148 100%);border-color:#11523d;color:#fff;box-shadow:0 5px 14px rgba(19,102,75,0.28),inset 0 1px 0 rgba(255,255,255,0.28)}
-.app-shell .tab-manage-btn{width:41px;min-width:41px;min-height:41px;border-radius:11px;background:linear-gradient(180deg,#ffffff 0%,#f0f6f2 100%);border:1px solid #b5d0c0;color:#355948;padding:0;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(16,56,41,0.06),inset 0 1px 0 #fff}
-.app-shell .tab-manage-btn:hover{background:linear-gradient(180deg,#ffffff 0%,#e4f2ea 100%);border-color:#68ab90;color:#0f4c37;transform:translateY(-1.5px) rotate(25deg)}
-.app-shell .paper{border-radius:18px;border:1px solid #d4e2d7;background:#fff;box-shadow:0 4px 20px rgba(18,63,46,0.06),0 1px 4px rgba(0,0,0,0.03);overflow:hidden;transition:box-shadow .2s ease}
-.app-shell .paper:hover{box-shadow:0 8px 30px rgba(18,63,46,0.08),0 2px 6px rgba(0,0,0,0.04)}
-.app-shell .paper-head{padding:16px 24px;gap:16px;background:linear-gradient(180deg,#fbfdfc 0%,#f4f8f5 100%);border-bottom:1px solid #dce8e0}
-.app-shell .head-party{gap:8px}.app-shell .head-party #branch-heading{font-size:15px;font-weight:700;color:#125440}.app-shell .party-label{color:#647d6f;font-size:12px;font-weight:600}
-.app-shell .paper-head #title{font-size:23px;font-weight:700;color:#144937;min-width:160px;max-width:360px;background:transparent;border:1px solid transparent;border-radius:8px;padding:2px 8px;transition:border-color .15s,background-color .15s}
-.app-shell .paper-head #title:hover{background:rgba(255,255,255,0.8);border-color:#c9dbcf}
-.app-shell .paper-head #title:focus{background:#fff;border-color:#3e8c6e;box-shadow:0 0 0 3px rgba(23,100,78,0.15)}
+.app-shell .tab-add-btn{background:linear-gradient(180deg,#f5fcf8 0%,#e3f3ea 100%);border:1px solid #91c5a7;color:#0e523b;font-weight:700;border-radius:12px;padding:5px 16px;min-height:41px;box-shadow:0 2px 5px rgba(16,80,58,0.08),inset 0 1px 0 #fff}
+.app-shell .tab-add-btn:hover{background:linear-gradient(135deg,#10b981 0%,#059669 100%);border-color:#047857;color:#fff;box-shadow:0 5px 16px rgba(5,150,105,0.32),inset 0 1px 0 rgba(255,255,255,0.32);transform:translateY(-1.5px)}
+.app-shell .tab-manage-btn{width:41px;min-width:41px;min-height:41px;border-radius:12px;background:linear-gradient(180deg,#ffffff 0%,#f0f6f2 100%);border:1px solid #b2d0bd;color:#2e5241;padding:0;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(16,56,41,0.06),inset 0 1px 0 #fff}
+.app-shell .tab-manage-btn:hover{background:linear-gradient(180deg,#ffffff 0%,#e3f3ea 100%);border-color:#58a786;color:#0b412e;transform:translateY(-1.5px) rotate(25deg)}
+.app-shell .paper{border-radius:18px;border:1px solid #d0e2d6;background:#ffffff;box-shadow:0 4px 20px -2px rgba(15,45,34,0.06),0 2px 6px -1px rgba(15,45,34,0.03);overflow:hidden;transition:box-shadow .2s ease}
+.app-shell .paper:hover{box-shadow:0 8px 30px -4px rgba(15,45,34,0.09),0 3px 8px -1px rgba(15,45,34,0.04)}
+.app-shell .paper-head{padding:16px 24px;gap:16px;background:linear-gradient(180deg,#fcfdfc 0%,#f3f8f5 100%);border-bottom:1px solid #d9e6de}
+.app-shell .head-party{gap:8px}.app-shell .head-party #branch-heading{font-size:15px;font-weight:700;color:#0e4a37}.app-shell .party-label{color:#587465;font-size:12px;font-weight:600}
+.app-shell .paper-head #title{font-size:23px;font-weight:800;color:#0d4230;min-width:160px;max-width:360px;background:transparent;border:1px solid transparent;border-radius:10px;padding:2px 8px;transition:border-color .15s,background-color .15s}
+.app-shell .paper-head #title:hover{background:rgba(255,255,255,0.85);border-color:#c4d8cb}
+.app-shell .paper-head #title:focus{background:#fff;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,0.18)}
 .app-shell .date-block{padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px}
-.app-shell .btn-lock{min-height:34px;margin:0;padding:2px 14px;font-size:11px;font-weight:700;border-radius:999px;background:linear-gradient(180deg,#f4fbf7 0%,#e3f1ea 100%);border:1px solid #a9cfb9;color:#145740;box-shadow:0 1px 3px rgba(18,84,64,0.08),inset 0 1px 0 #fff;transition:all .18s cubic-bezier(.22,1,.36,1)}
-.app-shell .btn-lock:hover{background:linear-gradient(180deg,#e9f7ef 0%,#d5ebe0 100%);border-color:#68ab90;color:#0c4430;box-shadow:0 4px 10px rgba(18,84,64,0.15),inset 0 1px 0 #fff}
-.app-shell .date-screen-badge{font-size:11px;color:#728477}
+.app-shell .btn-lock{min-height:34px;margin:0;padding:2px 14px;font-size:11px;font-weight:700;border-radius:999px;background:linear-gradient(180deg,#f4fbf7 0%,#e1f2e9 100%);border:1px solid #a1cbb2;color:#0f523b;box-shadow:0 1px 3px rgba(16,75,55,0.08),inset 0 1px 0 #fff;transition:all .18s cubic-bezier(.22,1,.36,1)}
+.app-shell .btn-lock:hover{background:linear-gradient(180deg,#e8f7ee 0%,#d2ebe0 100%);border-color:#58a786;color:#083d2a;box-shadow:0 4px 10px rgba(16,75,55,0.15),inset 0 1px 0 #fff;transform:translateY(-1px)}
+.app-shell .date-screen-badge{font-size:11px;color:#6b8073}
 .app-shell .page-no-line{margin-top:2px;gap:5px}
 .app-shell .paper .table-wrap{scrollbar-width:thin}
 .app-shell .paper table{width:100%;min-width:1100px;max-width:none}
 .app-shell .paper col.serial{width:6.93%}.app-shell .paper col.remove{width:3.5%}
-.app-shell .paper thead th{background:#ecf3ee;color:#274d3d;font-weight:700;line-height:2.4;padding:6px 6px;font-size:13px;height:1.5cm;border-bottom:2px solid #c2d8c9}
+.app-shell .paper thead th{background:linear-gradient(180deg,#f5faf7 0%,#e8f3ec 100%);color:#123e2e;font-weight:700;line-height:2.4;padding:6px 6px;font-size:13px;height:1.5cm;border-bottom:2px solid #b2d5bf}
 .app-shell #rows>tr{transition:background-color .12s ease}
-.app-shell #rows>tr:nth-child(even){background:#fafcfb}
-.app-shell #rows>tr:hover{background:#f1f8f4!important}
-.app-shell #rows tr:focus-within{background:#ebf5ee!important;box-shadow:inset -4px 0 #1b755b}
-.app-shell #rows>tr>td{border-color:#e2ebe4;height:1.25cm;min-height:0;padding:0;vertical-align:middle}
-.app-shell #rows td textarea{padding:4px 8px;line-height:2.0;min-height:0;height:1.25cm;box-sizing:border-box;color:#183329;text-align:center}
+.app-shell #rows>tr:nth-child(even){background:#f8fbf9}
+.app-shell #rows>tr:hover{background:#edf8f2!important}
+.app-shell #rows tr:focus-within{background:#e6f6ec!important;box-shadow:inset -4px 0 #10b981}
+.app-shell #rows>tr>td{border-color:#e0ece3;height:1.25cm;min-height:0;padding:0;vertical-align:middle}
+.app-shell #rows td textarea{padding:4px 8px;line-height:2.0;min-height:0;height:1.25cm;box-sizing:border-box;color:#133327;text-align:center}
 .app-shell #rows td.col-place textarea{padding-top:8px}
-.app-shell #rows td input{padding:4px 8px;height:1.25cm;box-sizing:border-box;color:#183329;text-align:center}
-.app-shell #rows td textarea:focus,.app-shell #rows td input:focus{background:#fff;outline:none;box-shadow:inset 0 0 0 2px #1b755b}
-.app-shell #rows td.number{background:#f7faf8;font-family:Arial,sans-serif;font-variant-numeric:tabular-nums;font-size:13.5px;font-weight:600}
+.app-shell #rows td input{padding:4px 8px;height:1.25cm;box-sizing:border-box;color:#133327;text-align:center}
+.app-shell :is(#rows, .journal-table, .khata-table) td :is(input, textarea):is(:focus, :focus-visible){background:#fff!important;outline:none!important;outline-offset:0!important;box-shadow:inset 0 0 0 2px #10b981!important}
+.app-shell #rows td.number{background:#f2f7f4;color:#3b5f4c;font-family:Arial,sans-serif;font-variant-numeric:tabular-nums;font-size:13.5px;font-weight:700}
 .app-shell .serial-cell{gap:4px;padding:2px 4px;align-content:center;justify-content:center}
-.app-shell .serial-num{font:bold 12.5px Arial,sans-serif;min-width:18px;color:#4b6b58}
-.app-shell #rows td.col-receipt{background:#fafcf9;padding:2px 4px}
-.app-shell .receipt-btn{min-height:30px;padding:3px 12px;font-size:11px;font-weight:700;border-radius:999px;background:linear-gradient(180deg,#f3fbf6 0%,#e2f2e9 100%);color:#11593f;border:1px solid #a8d2b9;box-shadow:0 1px 2px rgba(17,89,63,0.08),inset 0 1px 0 #fff;white-space:nowrap;transition:all .18s cubic-bezier(.22,1,.36,1)}
-.app-shell .receipt-btn:hover{background:linear-gradient(135deg,#228d6b 0%,#146148 100%);color:#fff;border-color:#11523d;box-shadow:0 4px 12px rgba(20,97,68,0.28),inset 0 1px 0 rgba(255,255,255,0.28);transform:translateY(-1.5px)}
-.app-shell .history-btn{min-height:26px;min-width:26px;padding:1px;font-size:11px;border-radius:8px;background:linear-gradient(180deg,#ffffff 0%,#edf4ef 100%);border:1px solid #c5d9cd;color:#4a6b5a;box-shadow:0 1px 2px rgba(16,56,41,0.05),inset 0 1px 0 #fff;transition:all .16s ease}
-.app-shell .history-btn:hover{background:linear-gradient(180deg,#f2faf5 0%,#dff0e6 100%);color:#11553b;border-color:#7fb599;box-shadow:0 3px 8px rgba(18,84,64,0.14)}
-.app-shell .delete{min-height:30px;width:30px;min-width:30px;padding:0;font:18px Arial,sans-serif;color:#a86b66;background:transparent;border-radius:9px;border:1px solid transparent;box-shadow:none;transition:all .16s cubic-bezier(.22,1,.36,1)}
+.app-shell .serial-num{font:bold 12.5px Arial,sans-serif;min-width:18px;color:#3b5f4c}
+.app-shell #rows td.col-receipt{background:#f9fcfb;padding:2px 4px}
+.app-shell .receipt-btn{min-height:30px;padding:3px 12px;font-size:11px;font-weight:700;border-radius:999px;background:linear-gradient(180deg,#f3fbf6 0%,#e0f2e8 100%);color:#0d523a;border:1px solid #9ecfb3;box-shadow:0 1px 2px rgba(16,80,58,0.08),inset 0 1px 0 #fff;white-space:nowrap;transition:all .18s cubic-bezier(.22,1,.36,1)}
+.app-shell .receipt-btn:hover{background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;border-color:#047857;box-shadow:0 4px 12px rgba(5,150,105,0.32),inset 0 1px 0 rgba(255,255,255,0.32);transform:translateY(-1.5px)}
+.app-shell .history-btn{min-height:26px;min-width:26px;padding:1px;font-size:11px;border-radius:8px;background:linear-gradient(180deg,#ffffff 0%,#ebf4ef 100%);border:1px solid #bed6c7;color:#3c5f4d;box-shadow:0 1px 2px rgba(16,56,41,0.05),inset 0 1px 0 #fff;transition:all .16s ease}
+.app-shell .history-btn:hover{background:linear-gradient(180deg,#f1faf4 0%,#dbeeec 100%);color:#0b4e36;border-color:#6eb18e;box-shadow:0 3px 8px rgba(16,75,55,0.14)}
+.app-shell .delete{min-height:30px;width:30px;min-width:30px;padding:0;font:18px Arial,sans-serif;color:#a85a54;background:transparent;border-radius:9px;border:1px solid transparent;box-shadow:none;transition:all .16s cubic-bezier(.22,1,.36,1)}
 .app-shell .delete:hover{color:#dc2626;border-color:#fca5a5;background:linear-gradient(180deg,#fff5f5 0%,#fee2e2 100%);box-shadow:0 3px 8px rgba(220,38,38,0.14),inset 0 1px 0 #fff;transform:scale(1.08)}
-.app-shell .register-totals .totals-row{height:1.5cm;background:#edf5ef;border-top:2px solid #b2d2be}
-.app-shell .register-totals .totals-row>th{font-size:15px;color:#154e3a;font-weight:700;vertical-align:middle;padding:6px 12px}
-.app-shell .register-totals .totals-row>td{font-family:Arial,sans-serif;font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;color:#124d38;vertical-align:middle;padding:6px 8px}
-.app-shell .paper-foot{padding:12px 24px;border-top:1px solid #e2ebe4;font-size:11px;color:#587363;font-weight:600}
-.app-shell .help{padding:14px 6px;gap:16px;color:#6b8273;line-height:2.4}
-.app-shell .more-menu .menu{min-width:295px;padding:12px;gap:6px;border-radius:18px;border:1px solid #c6dcd0;background:rgba(255,255,255,0.97);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 20px 50px -8px rgba(15,51,38,0.22),0 6px 16px -4px rgba(15,51,38,0.08);max-height:70vh;overflow:auto}
+.app-shell .register-totals .totals-row{height:1.5cm;background:linear-gradient(180deg,#e8f4ec 0%,#dcf0e2 100%);border-top:2.5px solid #10b981;box-shadow:0 -2px 10px rgba(16,70,50,0.08)}
+.app-shell .register-totals .totals-row>th{font-size:15px;color:#0c4330;font-weight:700;vertical-align:middle;padding:6px 12px}
+.app-shell .register-totals .totals-row>td{font-family:Arial,sans-serif;font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;color:#0a3e2c;vertical-align:middle;padding:6px 8px}
+.app-shell .paper-foot{padding:12px 24px;border-top:1px solid #dce8e0;font-size:11px;color:#4f6d5c;font-weight:600}
+.app-shell .help{padding:14px 6px;gap:16px;color:#617b6b;line-height:2.4}
+.app-shell .more-menu .menu{min-width:295px;padding:12px;gap:6px;border-radius:18px;border:1px solid #c2dbcd;background:rgba(255,255,255,0.98);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 20px 50px -8px rgba(15,51,38,0.2),0 6px 16px -4px rgba(15,51,38,0.08);max-height:70vh;overflow:auto}
+.app-shell .more-menu{position:relative;z-index:120}
+.app-shell .more-menu .menu{max-width:min(360px, calc(100vw - 36px))}
+html[data-theme="dark"] .app-shell .more-menu .menu{
+  background:rgba(10, 25, 29, .94) !important;
+  border-color:rgba(94, 234, 212, .34) !important;
+  box-shadow:0 24px 70px rgba(0,0,0,.62), 0 0 32px rgba(45,212,191,.12) !important;
+  backdrop-filter:blur(24px) saturate(160%);
+  -webkit-backdrop-filter:blur(24px) saturate(160%);
+}
+/* Anchor the menus after ui.js arranges them into the top nav header. */
+html body.app-shell .workspace-header .more-menu,
+html body.app-shell .workspace-tools .output-menu { position: relative !important; z-index: 1200 !important; }
+html body.app-shell .top-nav:is(:has(.more-menu[open]), :has(.output-menu[open])) {
+  z-index: 1400 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+html body.app-shell .workspace-header .more-menu[open],
+html body.app-shell .workspace-tools .output-menu[open] { z-index: 1401 !important; }
+html body.app-shell .workspace-header .more-menu .menu,
+html body.app-shell .workspace-tools .output-menu .output-panel,
+html body.app-shell .output-panel { position: fixed !important; z-index: 2000 !important; }
 .app-shell .more-menu .menu button{padding:6px 14px;min-height:42px;background:linear-gradient(180deg,#fafcfb 0%,#f2f7f4 100%);border:1px solid #e2ede6;border-radius:10px;text-align:start;color:#1e4235;font-weight:600;box-shadow:inset 0 1px 0 #fff;transition:all .16s cubic-bezier(.22,1,.36,1)}
 .app-shell .more-menu .menu button:hover{background:linear-gradient(90deg,#e4f4eb 0%,#f1f9f4 100%);border-color:#8cc2a6;color:#0c4632;box-shadow:0 4px 10px rgba(18,84,64,0.1),inset 0 1px 0 #fff;transform:translateX(-3px)}
 .app-shell .more-menu .menu .button-content{justify-content:flex-start}
+.app-shell .more-menu .backup-menu-group .menu-heading {
+  font-family: 'Bombay Black Unicode', 'Noto Nastaliq Urdu', serif !important;
+  font-weight: 400;
+  line-height: 1.8;
+}
 .app-shell .font-tools button{width:34px;min-height:34px;height:34px;padding:0;line-height:1}
 .app-shell dialog{border-radius:20px;border:1px solid #d0e0d5;padding:0 24px 22px;max-height:88vh;width:760px;max-width:calc(100vw - 32px);background:#fff;box-shadow:0 25px 60px -10px rgba(14,46,33,0.32);scrollbar-width:thin}
 .app-shell dialog::backdrop{background:rgba(16,42,32,0.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
@@ -134,6 +161,15 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
 .app-shell #summary-table tbody tr:nth-child(even){background:#f7faf8}
 .app-shell #summary-table tbody tr:hover{background:#e8f4ec}
 .app-shell #summary-table td:first-child{color:#15803d;font-weight:700}
+.app-shell :is(#summary-table, .summary-print-table) :is(.summary-party-cell, td.summary-party-cell, td[dir="rtl"]),
+.app-shell :is(#summary-table, .summary-print-table) th#summary-first-heading {
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', serif !important;
+  font-size: 14px !important;
+  line-height: 1.8 !important;
+  direction: rtl !important;
+  text-align: center !important;
+  letter-spacing: 0 !important;
+}
 .app-shell #summary-table tfoot th,
 .app-shell #summary-table tfoot td{background:#e7f1ea;color:#0e4a36;border-top:2px solid #237857;border-bottom:0;font-size:13.5px;font-weight:700;padding:11px 12px;line-height:1.6;text-align:center;position:static}
 .app-shell #summary-hint{margin:12px 0 0;padding:9px 14px;background:#edf5ef;border:1px solid #d0e4d7;border-radius:10px;font-size:12px;font-weight:600;color:#21543d;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center}
@@ -401,7 +437,7 @@ body.app-shell{background:linear-gradient(180deg,#e9f1ed 0%,#f0f5f2 400px,#eef3f
   .app-shell .paper tbody tr:hover,
   .app-shell .journal-table tbody tr:hover,
   .app-shell .khata-dir-table tbody tr:hover {
-    box-shadow: inset 4px 0 #2a9a70, 0 2px 10px rgba(23, 99, 76, .07);
+    box-shadow: none !important;
   }
 }
 
@@ -516,7 +552,7 @@ html[data-theme="dark"] .app-shell .khata-card {
   }
   html[data-theme="dark"] .app-shell :is(.paper tbody tr, .journal-table tbody tr, .khata-dir-table tbody tr):hover {
     background: rgba(36, 104, 70, .32) !important;
-    box-shadow: inset 4px 0 #34d399, 0 3px 16px rgba(0,0,0,.22) !important;
+    box-shadow: none !important;
   }
   html[data-theme="dark"] .app-shell :is(input, textarea, select):focus {
     background: #132c20 !important;
@@ -580,6 +616,105 @@ html[data-theme="dark"] .app-shell .khata-card {
     scroll-behavior: auto !important;
     transition-duration: .01ms !important;
   }
+}
+
+/* Foreground glass surfaces for the night workspace. */
+html[data-theme="dark"] body.app-shell :is(.paper, .journal-card, .khata-card, .summary-wrap, .dialog-card, .receipt-sheet, .thermal-slip-sheet) {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(145deg, rgba(16, 34, 40, .78), rgba(8, 18, 28, .62)) !important;
+  border: 1px solid rgba(148, 240, 218, .18) !important;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 -1px 0 rgba(52, 211, 153, .06) !important;
+  backdrop-filter: blur(22px) saturate(145%);
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  transition: border-color .28s ease, box-shadow .28s ease, transform .28s ease;
+}
+html[data-theme="dark"] body.app-shell :is(.paper, .journal-card, .khata-card, .summary-wrap):hover,
+html[data-theme="dark"] body.app-shell :is(.paper, .journal-card, .khata-card, .summary-wrap):focus-within {
+  border-color: rgba(94, 234, 212, .42) !important;
+  box-shadow: 0 26px 65px rgba(0, 0, 0, .36), 0 0 30px rgba(45, 212, 191, .08), inset 0 1px 0 rgba(255, 255, 255, .16) !important;
+}
+html[data-theme="dark"] body.app-shell :is(.paper-head, .journal-heading, .khata-dir-header-card, .dialog-head) {
+  background: linear-gradient(135deg, rgba(30, 65, 68, .56), rgba(10, 30, 36, .3)) !important;
+  border-color: rgba(148, 240, 218, .16) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 10px 28px rgba(0, 0, 0, .12);
+}
+html[data-theme="dark"] body.app-shell :is(.register-summary, .cash-summary, .backup-banner, .range-drawer, .party-tabs-bar) {
+  background: linear-gradient(135deg, rgba(20, 52, 55, .66), rgba(8, 25, 32, .52)) !important;
+  border-color: rgba(94, 234, 212, .2) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .2), inset 0 1px 0 rgba(255, 255, 255, .09);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] body.app-shell :is(.paper, .journal-card, .khata-card, .summary-wrap) { transition: none; }
+}
+
+/* Full workspace night ambience: animated portal-style glows behind every page. */
+html[data-theme="dark"] body.app-shell {
+  position: relative;
+  isolation: isolate;
+  overflow-x: hidden;
+  background-color: #050711 !important;
+  background-image:
+    radial-gradient(circle at 12% 10%, rgba(124, 58, 237, 0.24), transparent 30%),
+    radial-gradient(circle at 90% 35%, rgba(6, 182, 212, 0.18), transparent 28%),
+    radial-gradient(circle at 50% 110%, rgba(219, 39, 119, 0.16), transparent 34%),
+    linear-gradient(145deg, #030510 0%, #080b1c 52%, #12051b 100%) !important;
+  background-attachment: fixed;
+}
+html[data-theme="dark"] body.app-shell::before,
+html[data-theme="dark"] body.app-shell::after {
+  content: "";
+  position: fixed;
+  inset: -18%;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(70px);
+  opacity: 0.7;
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+html[data-theme="dark"] body.app-shell::before {
+  background-image:
+    radial-gradient(circle at 18% 14%, rgba(124, 58, 237, 0.42) 0 8%, transparent 25%),
+    radial-gradient(circle at 86% 52%, rgba(6, 182, 212, 0.3) 0 7%, transparent 23%);
+  animation: workspace-orb-drift 18s ease-in-out infinite alternate;
+}
+html[data-theme="dark"] body.app-shell::after {
+  opacity: 0.48;
+  background-image:
+    radial-gradient(circle at 58% 104%, rgba(219, 39, 119, 0.32) 0 8%, transparent 26%),
+    radial-gradient(circle at 72% 18%, rgba(37, 99, 235, 0.22) 0 6%, transparent 22%);
+  animation: workspace-orb-drift-reverse 22s ease-in-out infinite alternate;
+}
+@keyframes workspace-orb-drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to { transform: translate3d(3%, 2%, 0) scale(1.08); }
+}
+@keyframes workspace-orb-drift-reverse {
+  from { transform: translate3d(2%, 1%, 0) scale(1.06); }
+  to { transform: translate3d(-3%, -2%, 0) scale(0.98); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] body.app-shell::before,
+  html[data-theme="dark"] body.app-shell::after { animation: none; }
+}
+
+/* Ensure every action inside the More menu keeps a readable night palette. */
+html[data-theme="dark"] body.app-shell .workspace-header .more-menu .menu button,
+html[data-theme="dark"] body.app-shell .more-menu .menu button {
+  background: linear-gradient(135deg, #173b3b 0%, #102c37 100%) !important;
+  color: #e5fff3 !important;
+  border: 1px solid #326a62 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 4px 12px rgba(0,0,0,.24) !important;
+}
+html[data-theme="dark"] body.app-shell .workspace-header .more-menu .menu button:hover:not(:disabled),
+html[data-theme="dark"] body.app-shell .more-menu .menu button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1b5a4a 0%, #14505c 100%) !important;
+  color: #ffffff !important;
+  border-color: #5eead4 !important;
+  box-shadow: 0 7px 18px rgba(0,0,0,.32), 0 0 16px rgba(45,212,191,.2) !important;
 }
 @media screen and (max-width:600px){.app-shell .top-nav-end .workspace-nav{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;margin-inline:0}.app-shell .top-nav-end .workspace-nav button{min-height:44px;white-space:nowrap;line-height:2.5;font-size:12px}}
 
@@ -1300,6 +1435,327 @@ dialog.pin-settings-dialog .dialog-head {
   border-color: #f87171;
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.18);
   transform: translateY(-1.5px);
+}
+
+/* ==========================================================================
+   5. ACCOUNT & PASSWORD SETTINGS MODAL (#account-settings-dialog)
+   Refined luxury compact width, harmonious form layout & responsive styling
+   ========================================================================== */
+
+.app-shell dialog#account-settings-dialog {
+  width: min(470px, calc(100vw - 32px)) !important;
+  max-width: 470px !important;
+  border-radius: 22px !important;
+  border: 1px solid #d2e4d8 !important;
+  padding: 0 24px 24px !important;
+  background: #ffffff !important;
+  box-shadow: 0 25px 70px -10px rgba(12, 45, 32, 0.28), 0 0 0 1px rgba(16, 185, 129, 0.08) !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+#account-settings-dialog .dialog-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 18px 0 14px !important;
+  margin-bottom: 16px !important;
+  border-bottom: 1px solid #e2ede6 !important;
+  background: transparent !important;
+}
+
+#account-settings-dialog .dialog-head h2 {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #124534 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  line-height: 1.3 !important;
+}
+
+#account-settings-dialog .dialog-version-pill {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 2px 9px !important;
+  border-radius: 9999px !important;
+  background: #e8f5ed !important;
+  color: #0c6144 !important;
+  border: 1px solid #b7dfc7 !important;
+  letter-spacing: 0.3px !important;
+}
+
+#account-settings-dialog .dialog-head button#btn-close-account-settings {
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  border-radius: 11px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 16px !important;
+  color: #4b6b5a !important;
+  background: #f1f6f3 !important;
+  border: 1px solid #d1e2d7 !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+#account-settings-dialog .dialog-head button#btn-close-account-settings:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+  color: #dc2626 !important;
+  transform: rotate(90deg) scale(1.08) !important;
+}
+
+#account-settings-dialog .auth-form {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+#account-settings-dialog .auth-grid-2 {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+}
+
+@media (max-width: 440px) {
+  #account-settings-dialog .auth-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+}
+
+#account-settings-dialog .auth-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  text-align: left !important;
+}
+
+#account-settings-dialog .auth-field label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #244b39 !important;
+  letter-spacing: 0.15px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+#account-settings-dialog .auth-field label .req {
+  color: #ef4444 !important;
+  font-weight: 700 !important;
+}
+
+#account-settings-dialog .auth-field input {
+  width: 100% !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  border-radius: 10px !important;
+  border: 1.5px solid #cce0d4 !important;
+  background: #fbfdfc !important;
+  color: #123829 !important;
+  font-size: 13.5px !important;
+  padding: 0 13px !important;
+  box-sizing: border-box !important;
+  transition: all 0.18s ease !important;
+  box-shadow: inset 0 1px 2px rgba(16, 56, 41, 0.04) !important;
+}
+
+#account-settings-dialog .auth-field input::placeholder {
+  color: #8da497 !important;
+  font-size: 12.5px !important;
+}
+
+#account-settings-dialog .auth-field input:focus {
+  background: #ffffff !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18), inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  outline: none !important;
+}
+
+#account-settings-dialog .auth-field input:disabled,
+#account-settings-dialog .auth-field input[readonly] {
+  background: #edf3ef !important;
+  border-color: #d6e4dc !important;
+  color: #4a6a5b !important;
+  cursor: not-allowed !important;
+  font-weight: 600 !important;
+  user-select: none !important;
+}
+
+#account-settings-dialog .auth-field-divider {
+  border: none !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, rgba(207, 224, 214, 0.1), #cfdfd5 25%, #cfdfd5 75%, rgba(207, 224, 214, 0.1)) !important;
+  margin: 4px 0 !important;
+}
+
+#account-settings-dialog #acc-settings-msg {
+  margin: 0 !important;
+  min-height: 0 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  display: none;
+  text-align: center !important;
+}
+
+#account-settings-dialog #acc-settings-msg:not(:empty),
+#account-settings-dialog #acc-settings-msg.error,
+#account-settings-dialog #acc-settings-msg.success,
+#account-settings-dialog #acc-settings-msg.pin-msg.error,
+#account-settings-dialog #acc-settings-msg.pin-msg.success {
+  display: block !important;
+  padding: 8px 12px !important;
+  margin-top: 4px !important;
+}
+
+#account-settings-dialog #acc-settings-msg.error,
+#account-settings-dialog #acc-settings-msg.pin-msg.error {
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca !important;
+}
+
+#account-settings-dialog #acc-settings-msg.success,
+#account-settings-dialog #acc-settings-msg.pin-msg.success {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+#account-settings-dialog .auth-actions {
+  margin-top: 4px !important;
+}
+
+#account-settings-dialog .auth-actions button.auth-submit-btn {
+  width: 100% !important;
+  min-height: 44px !important;
+  height: 44px !important;
+  border-radius: 12px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.2px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  border: 1px solid #047857 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35) !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+#account-settings-dialog .auth-actions button.auth-submit-btn:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
+#account-settings-dialog .auth-actions button.auth-submit-btn:active {
+  transform: translateY(0) scale(0.99) !important;
+}
+
+/* Dark mode for Account & Password Settings */
+html[data-theme="dark"] .app-shell dialog#account-settings-dialog {
+  background: #112019 !important;
+  border-color: #274836 !important;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7), 0 0 25px rgba(16, 185, 129, 0.08) !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .dialog-head {
+  border-bottom-color: #203a2c !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .dialog-head h2 {
+  color: #e6f6ee !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .dialog-version-pill {
+  background: #163628 !important;
+  color: #6ee7b7 !important;
+  border-color: #28543f !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .dialog-head button#btn-close-account-settings {
+  background: #172d23 !important;
+  border-color: #284c3b !important;
+  color: #8daea0 !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .dialog-head button#btn-close-account-settings:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-color: #ef4444 !important;
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .auth-field label {
+  color: #a3c7b6 !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .auth-field input {
+  background: #0d1913 !important;
+  border-color: #234333 !important;
+  color: #e8f5ef !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .auth-field input::placeholder {
+  color: #587968 !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .auth-field input:focus {
+  background: #12241b !important;
+  border-color: #34d399 !important;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.22) !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .auth-field input:disabled,
+html[data-theme="dark"] #account-settings-dialog .auth-field input[readonly] {
+  background: #09120e !important;
+  border-color: #1a3226 !important;
+  color: #628675 !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .auth-field-divider {
+  background: linear-gradient(90deg, transparent, #223f30 20%, #223f30 80%, transparent) !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog #acc-settings-msg.error,
+html[data-theme="dark"] #account-settings-dialog #acc-settings-msg.pin-msg.error {
+  background: rgba(220, 38, 38, 0.18) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog #acc-settings-msg.success,
+html[data-theme="dark"] #account-settings-dialog #acc-settings-msg.pin-msg.success {
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .auth-actions button.auth-submit-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border-color: #10b981 !important;
+  color: #04261a !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3) !important;
+}
+
+html[data-theme="dark"] #account-settings-dialog .auth-actions button.auth-submit-btn:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
+  box-shadow: 0 6px 22px rgba(52, 211, 153, 0.4) !important;
 }
 
 /* ==========================================================================
@@ -2286,6 +2742,10 @@ html[data-theme="dark"] .app-shell :is(#summary-table, #history-table, #backup-l
 html[data-theme="dark"] #summary-table td:first-child {
   color: #4ade80 !important;
 }
+html[data-theme="dark"] .app-shell :is(#summary-table, .summary-print-table) :is(.summary-party-cell, td.summary-party-cell, td[dir="rtl"]),
+html[data-theme="dark"] .app-shell :is(#summary-table, .summary-print-table) th#summary-first-heading {
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', serif !important;
+}
 
 html[data-theme="dark"] #summary-table tfoot th,
 html[data-theme="dark"] #summary-table tfoot td {
@@ -2852,9 +3312,50 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   .workspace-tools .top-nav-center {flex:1;min-width:200px}
   .app-shell .top-serial-field {margin:0;order:initial}
   .app-shell .workspace-header #theme-toggle {display:inline-flex}
-  .output-menu {position:relative}
-  .output-panel {position:absolute;inset-inline-end:0;top:calc(100% + 8px);z-index:60;display:grid;gap:8px;width:220px;padding:12px;background:var(--surface);border:1px solid var(--surface-line);border-radius:12px;box-shadow:var(--popup-shadow)}
-  .output-menu:not([open])>.output-panel {display:none}
+  .output-menu { position: relative; }
+  .output-panel {
+    position: fixed !important;
+    z-index: 2000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 7px !important;
+    min-width: 230px !important;
+    padding: 10px !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 1px solid #c6dcd0 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 50px -8px rgba(15, 51, 38, 0.22), 0 6px 18px -4px rgba(15, 51, 38, 0.12) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .output-menu:not([open]) > .output-panel { display: none !important; }
+
+  html[data-theme="dark"] .output-panel {
+    background: rgba(10, 26, 20, 0.97) !important;
+    border: 1px solid #234d3c !important;
+    box-shadow: 0 20px 50px -8px rgba(0, 0, 0, 0.75), 0 0 24px rgba(45, 212, 191, 0.12) !important;
+  }
+
+  .output-panel button:not([hidden]) {
+    width: 100% !important;
+    min-height: 42px !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: start !important;
+    padding: 6px 14px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    box-sizing: border-box !important;
+    transition: all .18s cubic-bezier(.22, 1, .36, 1) !important;
+  }
+  .output-panel button[hidden] {
+    display: none !important;
+  }
+  .output-panel button:hover:not(:disabled) {
+    transform: translateX(-3px) !important;
+  }
   .app-shell .paper-head {display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:12px}
   .app-shell .paper-head .date-block {display:flex;align-items:center;flex-wrap:wrap;gap:8px}
   .app-shell .paper-head .head-center {flex:0 1 260px}
@@ -3287,71 +3788,63 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
     box-shadow: 0 4px 14px rgba(34, 197, 94, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
   }
 
-  /* 22. MORE MENU ITEM DISTINCT COLORS */
-  html body.app-shell .more-menu .menu button#manage-backups {
-    background: linear-gradient(90deg, #eff6ff 0%, #dbeafe 100%) !important;
-    color: #1d4ed8 !important;
-    border-color: #bfdbfe !important;
-    font-weight: 600 !important;
-  }
-  html body.app-shell .more-menu .menu button#manage-backups:hover {
-    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
-    color: #ffffff !important;
-  }
-
-  html body.app-shell .more-menu .menu button#backup {
-    background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%) !important;
-    color: #b45309 !important;
-    border-color: #fde68a !important;
-    font-weight: 600 !important;
-  }
-  html body.app-shell .more-menu .menu button#backup:hover {
-    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important;
-    color: #ffffff !important;
-  }
-
+  /* 22. MORE MENU ITEM COLORS: MATCHED TO NIGHT MODE TRIGGER BUTTON (MIDNIGHT OBSIDIAN & GOLD) */
+  html body.app-shell .more-menu .menu button,
+  html body.app-shell .more-menu .menu button#menu-theme-toggle,
+  html body.app-shell .more-menu .menu button#manage-branches,
+  html body.app-shell .more-menu .menu button#reset-filters,
+  html body.app-shell .more-menu .menu button:is(#account-settings-btn, #pin-settings-btn),
+  html body.app-shell .more-menu .menu button#lock-app-now-btn,
+  html body.app-shell .more-menu .menu button#manage-backups,
+  html body.app-shell .more-menu .menu button#backup,
   html body.app-shell .more-menu .menu button#restore {
-    background: linear-gradient(90deg, #faf5ff 0%, #f3e8ff 100%) !important;
-    color: #7c3aed !important;
-    border-color: #e9d5ff !important;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    color: #f8fafc !important;
+    border: 1px solid #334155 !important;
     font-weight: 600 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+    transition: all .18s cubic-bezier(.22, 1, .36, 1) !important;
   }
-  html body.app-shell .more-menu .menu button#restore:hover {
-    background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%) !important;
-    color: #ffffff !important;
+  html body.app-shell .more-menu .menu button#menu-theme-toggle {
+    color: #facc15 !important;
   }
 
-  html body.app-shell .more-menu .menu button#pin-settings-btn {
-    background: linear-gradient(90deg, #eef2ff 0%, #e0e7ff 100%) !important;
-    color: #4338ca !important;
-    border-color: #c7d2fe !important;
-    font-weight: 600 !important;
-  }
-  html body.app-shell .more-menu .menu button#pin-settings-btn:hover {
-    background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%) !important;
-    color: #ffffff !important;
-  }
-
-  html body.app-shell .more-menu .menu button#reset-filters {
-    background: linear-gradient(90deg, #fff1f2 0%, #ffe4e6 100%) !important;
-    color: #be123c !important;
-    border-color: #fecdd3 !important;
-    font-weight: 600 !important;
-  }
-  html body.app-shell .more-menu .menu button#reset-filters:hover {
-    background: linear-gradient(90deg, #f43f5e 0%, #e11d48 100%) !important;
-    color: #ffffff !important;
+  html body.app-shell .more-menu .menu button:hover:not(:disabled),
+  html body.app-shell .more-menu .menu button#menu-theme-toggle:hover:not(:disabled),
+  html body.app-shell .more-menu .menu button#manage-branches:hover:not(:disabled),
+  html body.app-shell .more-menu .menu button#reset-filters:hover:not(:disabled),
+  html body.app-shell .more-menu .menu button:is(#account-settings-btn, #pin-settings-btn):hover:not(:disabled),
+  html body.app-shell .more-menu .menu button#lock-app-now-btn:hover:not(:disabled),
+  html body.app-shell .more-menu .menu button#manage-backups:hover:not(:disabled),
+  html body.app-shell .more-menu .menu button#backup:hover:not(:disabled),
+  html body.app-shell .more-menu .menu button#restore:hover:not(:disabled) {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+    border-color: #facc15 !important;
+    color: #fef08a !important;
+    box-shadow: 0 6px 18px rgba(250, 204, 21, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    transform: translateX(-4px) !important;
   }
 
-  html body.app-shell .more-menu .menu button#manage-branches {
-    background: linear-gradient(90deg, #f0fdfa 0%, #ccfbf1 100%) !important;
-    color: #0f766e !important;
-    border-color: #99f6e4 !important;
-    font-weight: 600 !important;
+  /* Font Tool Buttons */
+  html body.app-shell .more-menu .font-tools button,
+  html body.app-shell .more-menu .font-tools button#font-smaller,
+  html body.app-shell .more-menu .font-tools button#font-larger {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    color: #facc15 !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+    transition: all .18s cubic-bezier(.22, 1, .36, 1) !important;
   }
-  html body.app-shell .more-menu .menu button#manage-branches:hover {
-    background: linear-gradient(90deg, #14b8a6 0%, #0d9488 100%) !important;
-    color: #ffffff !important;
+  html body.app-shell .more-menu .font-tools button:hover:not(:disabled),
+  html body.app-shell .more-menu .font-tools button#font-smaller:hover:not(:disabled),
+  html body.app-shell .more-menu .font-tools button#font-larger:hover:not(:disabled) {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+    border-color: #facc15 !important;
+    color: #fef08a !important;
+    box-shadow: 0 4px 12px rgba(250, 204, 21, 0.3) !important;
   }
 
   /* 23. PRIMARY SUBMIT / FORM BUTTONS: PERSIAN EMERALD */
@@ -3372,7 +3865,7 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   /* ==========================================================================
      DARK THEME: MATCHING DISTINCT LUMINOUS GLOWS FOR EVERY BUTTON
      ========================================================================== */
-  html[data-theme="dark"] body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.place-suggest-item) {
+  html[data-theme="dark"] body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.glass-eye-btn):not(.place-suggest-item):not(.auth-overlay *):not(.auth-card *) {
     background: linear-gradient(180deg, #1b2e25 0%, #12211a 100%) !important;
     color: #d1fae5 !important;
     border: 1px solid #28543f !important;
@@ -3572,18 +4065,9 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   animation: float-fast 8s ease-in-out infinite 2s;
 }
 
-/* Interactive Cursor Follower Glow */
+/* Interactive Cursor Follower Glow - Disabled */
 .auth-cursor-glow {
-  position: absolute;
-  width: 280px;
-  height: 280px;
-  border-radius: 50%;
-  background: rgba(139, 92, 246, 0.16);
-  filter: blur(80px);
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  transition: opacity 0.5s ease;
-  opacity: 0;
+  display: none !important;
 }
 
 /* Dot Grid & Vignette Overlay */
@@ -3685,6 +4169,10 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   text-align: left;
 }
 
+.auth-card:not(.auth-shake) {
+  transform: none !important;
+}
+
 .auth-card.auth-shake {
   animation: pin-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
@@ -3707,6 +4195,14 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
 }
 
 /* Header & Typography */
+.auth-card .text-center {
+  text-align: center !important;
+}
+
+.auth-card .text-center .auth-portal-badge {
+  margin-inline: auto !important;
+}
+
 .auth-portal-badge {
   display: inline-flex;
   align-items: center;
@@ -3732,6 +4228,11 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   margin: 0;
 }
 
+#auth-login-card .auth-display-title,
+#auth-setup-card .auth-display-title {
+  text-align: center !important;
+}
+
 .auth-title-gradient {
   display: block;
   margin-top: 2px;
@@ -3739,6 +4240,7 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-align: inherit;
 }
 
 .auth-subtitle {
@@ -3746,6 +4248,11 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   font-size: 13px;
   margin: 6px 0 0;
   line-height: 1.4;
+}
+
+#auth-login-card .auth-subtitle,
+#auth-setup-card .auth-subtitle {
+  text-align: center !important;
 }
 
 /* --- Frosted Input Group & Floating Labels --- */
@@ -3760,6 +4267,10 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
+}
+
+#user-input-box {
+  margin-bottom: 0.2cm !important;
 }
 
 .glass-input-group:hover {
@@ -3846,24 +4357,37 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   transform: scale(1);
 }
 
+html body.app-shell .glass-eye-btn,
+html[data-theme="dark"] body.app-shell .glass-eye-btn,
+html[data-theme="light"] body.app-shell .glass-eye-btn,
 .glass-eye-btn {
   background: transparent !important;
+  background-color: transparent !important;
   border: none !important;
+  border-color: transparent !important;
   box-shadow: none !important;
-  padding: 6px !important;
-  border-radius: 10px;
+  outline: none !important;
+  padding: 4px !important;
+  border-radius: 0 !important;
   color: #94a3b8 !important;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: all 0.15s;
+  transition: color 0.18s ease;
 }
 
+html body.app-shell .glass-eye-btn:hover,
+html[data-theme="dark"] body.app-shell .glass-eye-btn:hover,
+html[data-theme="light"] body.app-shell .glass-eye-btn:hover,
 .glass-eye-btn:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
   color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.12) !important;
 }
 
 /* Real-time Password Strength Meter */
@@ -4177,6 +4701,79 @@ html[data-theme="light"] .auth-card {
     rgba(255, 255, 255, 0.015) 100%
   ) !important;
   border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Night theme keeps the same animated login background, with deeper contrast
+   so the violet/cyan/pink effects remain visible behind the glass card. */
+html[data-theme="dark"] .auth-overlay,
+html[data-theme="dark"] .auth-space-base {
+  background:
+    radial-gradient(circle at 16% 12%, rgba(79, 70, 229, 0.18), transparent 34%),
+    radial-gradient(circle at 86% 78%, rgba(6, 182, 212, 0.14), transparent 32%),
+    linear-gradient(145deg, #030510 0%, #080b1c 52%, #12051b 100%) !important;
+}
+html[data-theme="dark"] .auth-bg-vignette {
+  background: radial-gradient(circle at center, transparent 10%, rgba(1, 3, 12, 0.84) 100%);
+  opacity: 0.72;
+}
+html[data-theme="dark"] .auth-bg-noise {
+  opacity: 0.82;
+  background-size: 22px 22px;
+}
+html[data-theme="dark"] .auth-card {
+  box-shadow:
+    0 30px 70px -12px rgba(0, 0, 0, 0.78),
+    0 0 55px rgba(99, 102, 241, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Match the complete night workspace to the login portal background. */
+html[data-theme="dark"] body.app-shell {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(79, 70, 229, 0.16), transparent 30%),
+    radial-gradient(circle at 90% 72%, rgba(6, 182, 212, 0.11), transparent 28%),
+    radial-gradient(circle at 48% 108%, rgba(192, 38, 211, 0.1), transparent 32%),
+    linear-gradient(145deg, #030510 0%, #080b1c 52%, #12051b 100%) !important;
+  background-attachment: fixed;
+}
+html[data-theme="dark"] body.app-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.34;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+html[data-theme="dark"] body.app-shell > .top-nav {
+  position: sticky !important;
+  z-index: 40 !important;
+}
+html[data-theme="dark"] body.app-shell > main,
+html[data-theme="dark"] body.app-shell > section {
+  position: relative;
+  z-index: 1;
+}
+html body.app-shell .top-nav:is(:has(.more-menu[open]), :has(.output-menu[open])) {
+  z-index: 1400 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+html[data-theme="dark"] body.app-shell .more-menu .menu button {
+  background: linear-gradient(135deg, rgba(23, 48, 48, .9), rgba(13, 31, 39, .86)) !important;
+  border-color: rgba(111, 210, 185, .25) !important;
+  color: #d9f3e8 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 4px 14px rgba(0,0,0,.18) !important;
+  backdrop-filter: blur(12px) saturate(135%);
+  -webkit-backdrop-filter: blur(12px) saturate(135%);
+}
+html[data-theme="dark"] body.app-shell .more-menu .menu button:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(26, 91, 73, .96), rgba(16, 58, 65, .94)) !important;
+  border-color: rgba(94, 234, 212, .68) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 22px rgba(0,0,0,.3), 0 0 20px rgba(45,212,191,.16), inset 0 1px 0 rgba(255,255,255,.16) !important;
+  transform: translateX(-2px);
 }
 
 /* ==========================================================================
@@ -4563,6 +5160,705 @@ html[data-theme="dark"] :is(.auth-version-pill, .dialog-version-pill) {
   background: rgba(52, 211, 153, 0.15);
   color: #6ee7b7;
   border-color: rgba(52, 211, 153, 0.3);
+}
+
+/* Final night ambience override: keep animated portal effects above theme defaults. */
+html[data-theme="dark"] body.app-shell {
+  position: relative;
+  isolation: isolate;
+  overflow-x: hidden;
+  background-color: #050711 !important;
+  background-image: radial-gradient(circle at 12% 10%, rgba(124,58,237,.24), transparent 30%), radial-gradient(circle at 90% 35%, rgba(6,182,212,.18), transparent 28%), radial-gradient(circle at 50% 110%, rgba(219,39,119,.16), transparent 34%), linear-gradient(145deg,#030510 0%,#080b1c 52%,#12051b 100%) !important;
+  background-attachment: fixed;
+}
+html[data-theme="dark"] body.app-shell::before,
+html[data-theme="dark"] body.app-shell::after {
+  content: "";
+  position: fixed;
+  inset: -18%;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(70px);
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+html[data-theme="dark"] body.app-shell::before {
+  opacity: .7;
+  background-image: radial-gradient(circle at 18% 14%,rgba(124,58,237,.42) 0 8%,transparent 25%), radial-gradient(circle at 86% 52%,rgba(6,182,212,.3) 0 7%,transparent 23%);
+  animation: workspace-orb-drift 18s ease-in-out infinite alternate;
+}
+html[data-theme="dark"] body.app-shell::after {
+  opacity: .48;
+  background-image: radial-gradient(circle at 58% 104%,rgba(219,39,119,.32) 0 8%,transparent 26%), radial-gradient(circle at 72% 18%,rgba(37,99,235,.22) 0 6%,transparent 22%);
+  animation: workspace-orb-drift-reverse 22s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] body.app-shell::before,
+  html[data-theme="dark"] body.app-shell::after { animation: none; }
+}
+
+/* Last-in-cascade night colors for More menu controls. */
+html[data-theme="dark"] body.app-shell .more-menu .menu button {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  transition: all .18s cubic-bezier(.22, 1, .36, 1) !important;
+}
+html[data-theme="dark"] body.app-shell .more-menu .menu button:hover:not(:disabled) {
+  transform: translateX(-4px) !important;
+}
+
+/* Unified More menu buttons in Dark Mode: Matched to Night Mode Trigger Button (Midnight Obsidian & Gold) */
+html[data-theme="dark"] body.app-shell .more-menu .menu button,
+html[data-theme="dark"] body.app-shell .more-menu .menu button#menu-theme-toggle,
+html[data-theme="dark"] body.app-shell .more-menu .menu button#manage-branches,
+html[data-theme="dark"] body.app-shell .more-menu .menu button#reset-filters,
+html[data-theme="dark"] body.app-shell .more-menu .menu button:is(#account-settings-btn, #pin-settings-btn),
+html[data-theme="dark"] body.app-shell .more-menu .menu button#lock-app-now-btn,
+html[data-theme="dark"] body.app-shell .more-menu .menu button#manage-backups,
+html[data-theme="dark"] body.app-shell .more-menu .menu button#backup,
+html[data-theme="dark"] body.app-shell .more-menu .menu button#restore {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+  transition: all .18s cubic-bezier(.22, 1, .36, 1) !important;
+}
+html[data-theme="dark"] body.app-shell .more-menu .menu button#menu-theme-toggle {
+  color: #facc15 !important;
+}
+html[data-theme="dark"] body.app-shell .more-menu .menu button:hover:not(:disabled),
+html[data-theme="dark"] body.app-shell .more-menu .menu button#menu-theme-toggle:hover:not(:disabled),
+html[data-theme="dark"] body.app-shell .more-menu .menu button#manage-branches:hover:not(:disabled),
+html[data-theme="dark"] body.app-shell .more-menu .menu button#reset-filters:hover:not(:disabled),
+html[data-theme="dark"] body.app-shell .more-menu .menu button:is(#account-settings-btn, #pin-settings-btn):hover:not(:disabled),
+html[data-theme="dark"] body.app-shell .more-menu .menu button#lock-app-now-btn:hover:not(:disabled),
+html[data-theme="dark"] body.app-shell .more-menu .menu button#manage-backups:hover:not(:disabled),
+html[data-theme="dark"] body.app-shell .more-menu .menu button#backup:hover:not(:disabled),
+html[data-theme="dark"] body.app-shell .more-menu .menu button#restore:hover:not(:disabled) {
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+  border-color: #facc15 !important;
+  color: #fef08a !important;
+  box-shadow: 0 6px 18px rgba(250, 204, 21, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+  transform: translateX(-4px) !important;
+}
+
+/* Font Tool Buttons (Matched to Night Mode Trigger Button) */
+html[data-theme="dark"] body.app-shell .more-menu .font-tools button,
+html[data-theme="dark"] body.app-shell .more-menu .font-tools button#font-smaller,
+html[data-theme="dark"] body.app-shell .more-menu .font-tools button#font-larger {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  color: #facc15 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  transition: all .18s cubic-bezier(.22, 1, .36, 1) !important;
+}
+html[data-theme="dark"] body.app-shell .more-menu .font-tools button:hover:not(:disabled),
+html[data-theme="dark"] body.app-shell .more-menu .font-tools button#font-smaller:hover:not(:disabled),
+html[data-theme="dark"] body.app-shell .more-menu .font-tools button#font-larger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+  border-color: #facc15 !important;
+  color: #fef08a !important;
+  box-shadow: 0 4px 12px rgba(250, 204, 21, 0.3) !important;
+}
+
+/* ==========================================================================
+   UNIFIED TABLE DESIGN SYSTEM (Matched to Roznamcha / Journal Table)
+   Ensures Register, Khata Directory, Khata Ledger, Summary, Backup & History
+   tables share identical colors, typography, hover, focus & zebra striping.
+   ========================================================================== */
+
+@media screen {
+  /* --- 1. Table Containers / Cards (Light Mode) --- */
+  body.app-shell :is(.paper, .journal-card, .khata-card, .summary-wrap) {
+    border-radius: 16px !important;
+  }
+
+  /* --- 2. Table Headers (Light Mode) --- */
+  body.app-shell :is(
+    .paper thead th,
+    .journal-table thead th,
+    .khata-dir-table thead th,
+    .khata-dir-table th,
+    .khata-table thead th,
+    .khata-table th,
+    #summary-table thead th,
+    #backup-list-table thead th,
+    #history-table thead th
+  ) {
+    background: linear-gradient(180deg, #f4faf6 0%, #e8f2eb 100%) !important;
+    background-color: #edf4ed !important;
+    color: #174233 !important;
+    border-color: #d3e0d5 !important;
+    border-bottom: 2px solid #c2d8c9 !important;
+    border-inline-end: 1px solid #dce7df !important;
+    font-family: "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    line-height: 2.2 !important;
+    letter-spacing: 0.1px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  /* Header accent column lines (Light Mode) */
+  body.app-shell :is(.journal-table thead th:nth-child(3), .khata-table th.th-banam) {
+    border-bottom: 3px solid #ef4444 !important;
+    color: #991b1b !important;
+  }
+  body.app-shell :is(.journal-table thead th:nth-child(4), .khata-table th.th-jama, .paper thead th.col-aed) {
+    border-bottom: 3px solid #10b981 !important;
+    color: #065f46 !important;
+  }
+  body.app-shell :is(.journal-table thead th:nth-child(5), .khata-table th.th-baqaya, .paper thead th.col-balance) {
+    border-bottom: 3px solid #0ea5e9 !important;
+    color: #0369a1 !important;
+  }
+  body.app-shell .paper thead th.col-pkr {
+    border-bottom: 3px solid #059669 !important;
+    color: #047857 !important;
+  }
+
+  /* --- 3. Table Rows & Cells (Light Mode) --- */
+  body.app-shell :is(
+    #rows > tr,
+    #rows > tr > td,
+    .paper tbody tr,
+    .paper tbody td,
+    #journal-rows > tr,
+    #journal-rows > tr > td,
+    .journal-table tbody tr,
+    .journal-table tbody td,
+    .khata-dir-table tbody tr,
+    .khata-dir-table tbody td,
+    #khata-rows > tr,
+    #khata-rows > tr > td,
+    #khata-dir-rows > tr,
+    #khata-dir-rows > tr > td,
+    .khata-table tbody tr,
+    .khata-table tbody td,
+    #khata-entry-rows > tr,
+    #khata-entry-rows > tr > td,
+    #summary-table tbody tr,
+    #summary-table tbody td,
+    #summary-rows > tr,
+    #summary-rows > tr > td,
+    #backup-list-table tbody tr,
+    #backup-list-table tbody td,
+    #backup-list-rows > tr,
+    #backup-list-rows > tr > td,
+    #history-table tbody tr,
+    #history-table tbody td,
+    #history-rows > tr,
+    #history-rows > tr > td
+  ) {
+    background: #ffffff;
+    background-color: #ffffff;
+    border-color: #dfe8e1;
+    border-bottom: 1px solid #dfe8e1;
+    border-inline-end: 1px solid #edf1eb;
+    color: #111827;
+  }
+
+  /* Even row striping (Light Mode) */
+  body.app-shell :is(
+    #rows > tr:nth-child(even),
+    #rows > tr:nth-child(even) > td,
+    .paper tbody tr:nth-child(even),
+    .paper tbody tr:nth-child(even) > td,
+    #journal-rows > tr:nth-child(even),
+    #journal-rows > tr:nth-child(even) > td,
+    .journal-table tbody tr:nth-child(even),
+    .journal-table tbody tr:nth-child(even) > td,
+    .khata-dir-table tbody tr:nth-child(even),
+    .khata-dir-table tbody tr:nth-child(even) > td,
+    #khata-rows > tr:nth-child(even),
+    #khata-rows > tr:nth-child(even) > td,
+    #khata-dir-rows > tr:nth-child(even),
+    #khata-dir-rows > tr:nth-child(even) > td,
+    .khata-table tbody tr:nth-child(even):not(.khata-draft),
+    .khata-table tbody tr:nth-child(even):not(.khata-draft) > td,
+    #khata-entry-rows > tr:nth-child(even):not(.khata-draft),
+    #khata-entry-rows > tr:nth-child(even):not(.khata-draft) > td,
+    #summary-table tbody tr:nth-child(even),
+    #summary-table tbody tr:nth-child(even) > td,
+    #backup-list-table tbody tr:nth-child(even),
+    #backup-list-table tbody tr:nth-child(even) > td,
+    #history-table tbody tr:nth-child(even),
+    #history-table tbody tr:nth-child(even) > td
+  ) {
+    background: #f8fbf9 !important;
+    background-color: #f8fbf9 !important;
+  }
+
+  /* Row hover state (Light Mode) */
+  body.app-shell :is(
+    #rows > tr:hover,
+    #rows > tr:hover > td,
+    .paper tbody tr:hover,
+    .paper tbody tr:hover > td,
+    #journal-rows > tr:hover,
+    #journal-rows > tr:hover > td,
+    .journal-table tbody tr:hover,
+    .journal-table tbody tr:hover > td,
+    .khata-dir-table tbody tr:hover,
+    .khata-dir-table tbody tr:hover > td,
+    #khata-rows > tr:hover,
+    #khata-rows > tr:hover > td,
+    #khata-dir-rows > tr:hover,
+    #khata-dir-rows > tr:hover > td,
+    .khata-table tbody tr:hover,
+    .khata-table tbody tr:hover > td,
+    #khata-entry-rows > tr:hover,
+    #khata-entry-rows > tr:hover > td,
+    #summary-table tbody tr:hover,
+    #summary-table tbody tr:hover > td,
+    #backup-list-table tbody tr:hover,
+    #backup-list-table tbody tr:hover > td,
+    #history-table tbody tr:hover,
+    #history-table tbody tr:hover > td
+  ) {
+    background: #edf8f2 !important;
+    background-color: #edf8f2 !important;
+    box-shadow: none !important;
+  }
+
+  /* Row focus-within state (Light Mode) */
+  body.app-shell :is(
+    #rows tr:focus-within > td,
+    .paper tbody tr:focus-within > td,
+    #journal-rows > tr:focus-within > td,
+    .journal-table tbody tr:focus-within > td,
+    .khata-dir-table tbody tr:focus-within > td,
+    .khata-table tbody tr:focus-within > td,
+    #khata-entry-rows > tr:focus-within > td
+  ) {
+    background: #e6f6ec !important;
+    background-color: #e6f6ec !important;
+    box-shadow: none !important;
+  }
+
+  /* Serial / index column (Light Mode) */
+  body.app-shell :is(
+    td.journal-serial,
+    #rows td.number,
+    .paper td.number,
+    .khata-table td.td-serial,
+    .khata-dir-table tbody tr td:first-child
+  ) {
+    background: #f2f7f4 !important;
+    background-color: #f2f7f4 !important;
+    color: #3b5f4c !important;
+    font-family: Arial, sans-serif !important;
+    font-weight: 700 !important;
+    text-align: center;
+  }
+  body.app-shell :is(
+    .journal-table tr:hover td.journal-serial,
+    .journal-table tr:focus-within td.journal-serial,
+    #rows tr:hover td.number,
+    #rows tr:focus-within td.number,
+    .khata-table tr:hover td.td-serial,
+    .khata-table tr:focus-within td.td-serial,
+    .khata-dir-table tbody tr:hover td:first-child
+  ) {
+    background: #e4efe8 !important;
+    background-color: #e4efe8 !important;
+    color: #0d4e38 !important;
+  }
+
+  /* Table Totals / Footers (Light Mode) */
+  body.app-shell :is(
+    .journal-table tfoot th,
+    .journal-table tfoot td,
+    .paper tfoot th,
+    .paper tfoot td,
+    .register-totals .totals-row > th,
+    .register-totals .totals-row > td,
+    .khata-dir-table tfoot th,
+    .khata-dir-table tfoot td,
+    .khata-table tfoot th,
+    .khata-table tfoot td,
+    .khata-table tfoot tr.khata-totals-row > th,
+    .khata-table tfoot tr.khata-totals-row > td,
+    #summary-table tfoot th,
+    #summary-table tfoot td
+  ) {
+    background: linear-gradient(180deg, #e8f4ec 0%, #dcf0e2 100%) !important;
+    background-color: #e2f1e7 !important;
+    border-top: 2.5px solid #10b981 !important;
+    border-bottom: 2px solid #10b981 !important;
+    border-color: #a7d0b8 !important;
+    color: #0c4330 !important;
+    font-weight: 700 !important;
+    text-align: center;
+    vertical-align: middle;
+    box-shadow: 0 -2px 10px rgba(16, 70, 50, 0.08) !important;
+  }
+
+  /* Scrollbars (Light Mode) */
+  body.app-shell :is(.table-wrap, .journal-table-wrap, .khata-table-wrap, .khata-dir-table-wrap, .summary-wrap) {
+    scrollbar-color: #92cdab #edf4ef !important;
+  }
+}
+
+/* ==========================================================================
+   UNIFIED TABLE DESIGN SYSTEM (Dark Mode / Night Workspace)
+   Exact match to Roznamcha's deep emerald dark luxury table design
+   ========================================================================== */
+
+@media screen {
+  /* --- 1. Table Containers / Cards (Dark Mode) --- */
+  html[data-theme="dark"] body.app-shell :is(.paper, .journal-card, .khata-card, .summary-wrap) {
+    background: #111f18 !important;
+    background-color: #111f18 !important;
+    border: 1px solid #233e30 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Card Headings (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    .paper-head,
+    .journal-heading,
+    .khata-dir-header-card,
+    .khata-profile-card
+  ) {
+    background: linear-gradient(180deg, #162720 0%, #111f18 100%) !important;
+    border-bottom: 1px solid #233c2f !important;
+    box-shadow: none !important;
+  }
+
+  /* --- 2. Table Headers (Dark Mode) --- */
+  html[data-theme="dark"] body.app-shell :is(
+    .paper thead th,
+    .journal-table thead th,
+    .khata-dir-table thead th,
+    .khata-dir-table th,
+    .khata-table thead th,
+    .khata-table th,
+    #summary-table thead th,
+    #summary-table th,
+    #backup-list-table thead th,
+    #backup-list-table th,
+    #history-table thead th,
+    #history-table th
+  ) {
+    background: #172a21 !important;
+    background-color: #172a21 !important;
+    color: #9bc5b0 !important;
+    border-color: #264334 !important;
+    border-bottom: 2px solid #2d5541 !important;
+    border-inline-end: 1px solid #1e3529 !important;
+    font-family: "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    line-height: 2.2 !important;
+    letter-spacing: 0.1px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  /* Header accent column lines (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(.journal-table thead th:nth-child(3), .khata-table th.th-banam) {
+    border-bottom: 2px solid #ef4444 !important;
+    color: #fca5a5 !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(.journal-table thead th:nth-child(4), .khata-table th.th-jama, .paper thead th.col-aed) {
+    border-bottom: 2px solid #10b981 !important;
+    color: #6ee7b7 !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(.journal-table thead th:nth-child(5), .khata-table th.th-baqaya, .paper thead th.col-balance) {
+    border-bottom: 2px solid #06b6d4 !important;
+    color: #7dd3fc !important;
+  }
+  html[data-theme="dark"] body.app-shell .paper thead th.col-pkr {
+    border-bottom: 2px solid #34d399 !important;
+    color: #a7f3d0 !important;
+  }
+
+  /* --- 3. Table Rows & Cells (Dark Mode) --- */
+  html[data-theme="dark"] body.app-shell :is(
+    #rows > tr,
+    #rows > tr > td,
+    .paper tbody tr,
+    .paper tbody td,
+    #journal-rows > tr,
+    #journal-rows > tr > td,
+    .journal-table tbody tr,
+    .journal-table tbody td,
+    .khata-dir-table tbody tr,
+    .khata-dir-table tbody td,
+    #khata-rows > tr,
+    #khata-rows > tr > td,
+    #khata-dir-rows > tr,
+    #khata-dir-rows > tr > td,
+    .khata-table tbody tr,
+    .khata-table tbody td,
+    #khata-entry-rows > tr,
+    #khata-entry-rows > tr > td,
+    #summary-table tbody tr,
+    #summary-table tbody td,
+    #summary-rows > tr,
+    #summary-rows > tr > td,
+    #backup-list-table tbody tr,
+    #backup-list-table tbody td,
+    #backup-list-rows > tr,
+    #backup-list-rows > tr > td,
+    #history-table tbody tr,
+    #history-table tbody td,
+    #history-rows > tr,
+    #history-rows > tr > td
+  ) {
+    background: #111f18 !important;
+    background-color: #111f18 !important;
+    border-color: #1d3327 !important;
+    border-bottom: 1px solid #1d3327 !important;
+    border-inline-end: 1px solid #1b3025 !important;
+    color: #e5efe8 !important;
+  }
+
+  /* Even row striping (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    #rows > tr:nth-child(even),
+    #rows > tr:nth-child(even) > td,
+    .paper tbody tr:nth-child(even),
+    .paper tbody tr:nth-child(even) > td,
+    #journal-rows > tr:nth-child(even),
+    #journal-rows > tr:nth-child(even) > td,
+    .journal-table tbody tr:nth-child(even),
+    .journal-table tbody tr:nth-child(even) > td,
+    .khata-dir-table tbody tr:nth-child(even),
+    .khata-dir-table tbody tr:nth-child(even) > td,
+    #khata-rows > tr:nth-child(even),
+    #khata-rows > tr:nth-child(even) > td,
+    #khata-dir-rows > tr:nth-child(even),
+    #khata-dir-rows > tr:nth-child(even) > td,
+    .khata-table tbody tr:nth-child(even):not(.khata-draft),
+    .khata-table tbody tr:nth-child(even):not(.khata-draft) > td,
+    #khata-entry-rows > tr:nth-child(even):not(.khata-draft),
+    #khata-entry-rows > tr:nth-child(even):not(.khata-draft) > td,
+    #summary-table tbody tr:nth-child(even),
+    #summary-table tbody tr:nth-child(even) > td,
+    #backup-list-table tbody tr:nth-child(even),
+    #backup-list-table tbody tr:nth-child(even) > td,
+    #history-table tbody tr:nth-child(even),
+    #history-table tbody tr:nth-child(even) > td
+  ) {
+    background: #14251e !important;
+    background-color: #14251e !important;
+  }
+
+  /* Row hover state (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    #rows > tr:hover,
+    #rows > tr:hover > td,
+    .paper tbody tr:hover,
+    .paper tbody tr:hover > td,
+    #journal-rows > tr:hover,
+    #journal-rows > tr:hover > td,
+    .journal-table tbody tr:hover,
+    .journal-table tbody tr:hover > td,
+    .khata-dir-table tbody tr:hover,
+    .khata-dir-table tbody tr:hover > td,
+    #khata-rows > tr:hover,
+    #khata-rows > tr:hover > td,
+    #khata-dir-rows > tr:hover,
+    #khata-dir-rows > tr:hover > td,
+    .khata-table tbody tr:hover,
+    .khata-table tbody tr:hover > td,
+    #khata-entry-rows > tr:hover,
+    #khata-entry-rows > tr:hover > td,
+    #summary-table tbody tr:hover,
+    #summary-table tbody tr:hover > td,
+    #backup-list-table tbody tr:hover,
+    #backup-list-table tbody tr:hover > td,
+    #history-table tbody tr:hover,
+    #history-table tbody tr:hover > td
+  ) {
+    background: #193427 !important;
+    background-color: #193427 !important;
+    box-shadow: none !important;
+  }
+
+  /* Row focus-within state (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    #rows tr:focus-within,
+    #rows tr:focus-within > td,
+    .paper tbody tr:focus-within,
+    .paper tbody tr:focus-within > td,
+    #journal-rows > tr:focus-within,
+    #journal-rows > tr:focus-within > td,
+    .journal-table tbody tr:focus-within,
+    .journal-table tbody tr:focus-within > td,
+    .khata-dir-table tbody tr:focus-within,
+    .khata-dir-table tbody tr:focus-within > td,
+    .khata-table tbody tr:focus-within,
+    .khata-table tbody tr:focus-within > td,
+    #khata-entry-rows > tr:focus-within,
+    #khata-entry-rows > tr:focus-within > td
+  ) {
+    background: #162f23 !important;
+    background-color: #162f23 !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(
+    #rows tr:focus-within,
+    .paper tbody tr:focus-within,
+    #journal-rows > tr:focus-within,
+    .journal-table tbody tr:focus-within,
+    .khata-dir-table tbody tr:focus-within,
+    .khata-table tbody tr:focus-within,
+    #khata-entry-rows > tr:focus-within
+  ) {
+    box-shadow: inset -4px 0 #34d399 !important;
+  }
+
+  /* Serial / index column (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    td.journal-serial,
+    #rows td.number,
+    .paper td.number,
+    .khata-table td.td-serial,
+    .khata-dir-table tbody tr td:first-child
+  ) {
+    background: #13221a !important;
+    background-color: #13221a !important;
+    color: #729683 !important;
+    font-family: Arial, sans-serif !important;
+    font-weight: 700 !important;
+    text-align: center;
+  }
+  html[data-theme="dark"] body.app-shell :is(
+    .journal-table tr:hover td.journal-serial,
+    .journal-table tr:focus-within td.journal-serial,
+    #rows tr:hover td.number,
+    #rows tr:focus-within td.number,
+    .khata-table tr:hover td.td-serial,
+    .khata-table tr:focus-within td.td-serial,
+    .khata-dir-table tbody tr:hover td:first-child
+  ) {
+    background: #182e24 !important;
+    background-color: #182e24 !important;
+    color: #4eedb7 !important;
+  }
+
+  /* Draft / New entry row (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    .journal-table .journal-draft,
+    .journal-table .journal-draft td,
+    #rows tr.draft-row > td,
+    .draft-row td,
+    .khata-table tr.khata-draft td,
+    .khata-draft td
+  ) {
+    background: #0f1c15 !important;
+    background-color: #0f1c15 !important;
+    border-bottom: 1px dashed #233e30 !important;
+  }
+
+  /* Cell inputs / textareas (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    .journal-table td input,
+    .journal-table td textarea,
+    #rows td input,
+    #rows td textarea,
+    #rows td select,
+    .khata-table td input,
+    .khata-table td textarea
+  ) {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #e5efe8 !important;
+    caret-color: #34d399;
+  }
+  html[data-theme="dark"] body.app-shell :is(
+    .journal-table td input:is(:focus, :focus-visible),
+    .journal-table td textarea:is(:focus, :focus-visible),
+    #rows td input:is(:focus, :focus-visible),
+    #rows td textarea:is(:focus, :focus-visible),
+    #rows td select:is(:focus, :focus-visible),
+    .khata-table td input:is(:focus, :focus-visible),
+    .khata-table td textarea:is(:focus, :focus-visible)
+  ) {
+    background: #1d3a2e !important;
+    background-color: #1d3a2e !important;
+    color: #ffffff !important;
+    outline: none !important;
+    outline-offset: 0 !important;
+    box-shadow: inset 0 0 0 2px #34d399 !important;
+  }
+
+  /* Delete buttons (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(.journal-delete, .delete, .btn-delete-row) {
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+    color: #8daea0 !important;
+    opacity: 0.35;
+  }
+  html[data-theme="dark"] body.app-shell :is(tr:hover, tr:focus-within) :is(.journal-delete, .delete, .btn-delete-row) {
+    opacity: 0.85;
+  }
+  html[data-theme="dark"] body.app-shell :is(.journal-delete:hover, .delete:hover, .btn-delete-row:hover) {
+    opacity: 1 !important;
+    color: #f87171 !important;
+    background: rgba(239, 68, 68, 0.2) !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+  }
+
+  /* Table Totals / Footers (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(
+    .journal-table tfoot th,
+    .journal-table tfoot td,
+    .paper tfoot th,
+    .paper tfoot td,
+    .register-totals .totals-row > th,
+    .register-totals .totals-row > td,
+    .khata-dir-table tfoot th,
+    .khata-dir-table tfoot td,
+    .khata-table tfoot th,
+    .khata-table tfoot td,
+    .khata-table tfoot tr.khata-totals-row > th,
+    .khata-table tfoot tr.khata-totals-row > td,
+    #summary-table tfoot th,
+    #summary-table tfoot td
+  ) {
+    background: linear-gradient(180deg, #182e24 0%, #13241c 100%) !important;
+    background-color: #15271f !important;
+    border-top: 2px solid #2d5541 !important;
+    border-bottom: 2px solid #2d5541 !important;
+    border-color: #2d5541 !important;
+    color: #e5efe8 !important;
+    font-weight: 700 !important;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  /* Totals numbers highlight */
+  html[data-theme="dark"] body.app-shell :is(
+    #total-balance,
+    #total-aed,
+    #total-pkr,
+    #journal-closing,
+    .journal-table .journal-balance,
+    #khata-foot-baqaya,
+    #summary-balance,
+    #summary-aed,
+    #summary-pkr
+  ) {
+    color: #4eedb7 !important;
+    font-weight: 700 !important;
+  }
+
+  /* Scrollbars (Dark Mode) */
+  html[data-theme="dark"] body.app-shell :is(.table-wrap, .journal-table-wrap, .khata-table-wrap, .khata-dir-table-wrap, .summary-wrap) {
+    scrollbar-color: #2a523e #122119 !important;
+  }
 }
 
 

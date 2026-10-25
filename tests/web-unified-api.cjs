@@ -60,10 +60,14 @@ async function run() {
     assert.equal(index.raw.includes('clerk-login-panel'), false);
     console.log('  ✓ GET / serves index.html without login barrier or branch elements');
 
-    // 3. Removed obsolete endpoints return 404
+    // 3. Auth endpoint rejects invalid credentials with 401
     const loginRes = await request('POST', '/api/auth/login', { password: 'test' });
-    assert.equal(loginRes.status, 404);
-    console.log('  ✓ POST /api/auth/login is completely removed (404)');
+    assert.equal(loginRes.status, 401);
+    console.log('  ✓ POST /api/auth/login protects access with 401 on invalid credentials');
+
+    const clerkLoginRes = await request('POST', '/api/clerk/login', { password: 'test' });
+    assert.equal(clerkLoginRes.status, 404);
+    console.log('  ✓ POST /api/clerk/login is completely removed (404)');
 
     const branchRes = await request('GET', '/api/branches');
     assert.equal(branchRes.status, 404);
