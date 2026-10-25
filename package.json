@@ -92,7 +92,9 @@
       "receipt-export.css",
       "external-backup.cjs",
       "external-backup-ui.js",
-      "auth.js"
+      "auth.js",
+      "theme-init.js",
+      "dialog-fallback.js"
     ]
   },
   "dependencies": {

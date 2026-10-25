@@ -224,11 +224,25 @@ function readSession(req) {
     return data.exp > Date.now() ? data : null;
   } catch (_) { return null; }
 }
+let inMemoryOwner = null;
+
 async function ensureOwnerUser() {
-  const existing = await HisaabAuthUser.findOne({ key: 'owner' });
-  if (existing) return existing;
-  const salt = crypto.randomBytes(16).toString('hex');
-  return HisaabAuthUser.create({ key: 'owner', username: OWNER_USERNAME, passwordSalt: salt, passwordHash: hashPassword(OWNER_PASSWORD, salt) });
+  if (mongoose.connection.readyState === 1) {
+    const existing = await HisaabAuthUser.findOne({ key: 'owner' });
+    if (existing) return existing;
+    const salt = crypto.randomBytes(16).toString('hex');
+    return HisaabAuthUser.create({ key: 'owner', username: OWNER_USERNAME, passwordSalt: salt, passwordHash: hashPassword(OWNER_PASSWORD, salt) });
+  }
+  if (!inMemoryOwner) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    inMemoryOwner = {
+      _id: 'in-memory-owner',
+      username: OWNER_USERNAME,
+      passwordSalt: salt,
+      passwordHash: hashPassword(OWNER_PASSWORD, salt)
+    };
+  }
+  return inMemoryOwner;
 }
 function authCookie(res, token) {
   res.setHeader('Set-Cookie', `hisaab_session=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=28800${process.env.VERCEL ? '; Secure' : ''}`);
@@ -242,10 +256,19 @@ function requireAuth(req, res, next) {
 
 app.post('/api/auth/login', async (req, res) => {
   try {
-    await connectDb();
-    const user = await ensureOwnerUser();
     const username = String(req.body?.username || '').trim();
     const password = String(req.body?.password || '');
+    if (!username || !password) {
+      return res.status(401).json({ status: 'error', message: 'Invalid username or password' });
+    }
+
+    try {
+      if (process.env.MONGODB_URI || MONGODB_URI) {
+        await connectDb();
+      }
+    } catch (_) {}
+
+    const user = await ensureOwnerUser();
     const candidate = hashPassword(password, user.passwordSalt);
     const valid = username.toLowerCase() === user.username.toLowerCase() && crypto.timingSafeEqual(Buffer.from(candidate), Buffer.from(user.passwordHash));
     if (!valid) return res.status(401).json({ status: 'error', message: 'Invalid username or password' });
@@ -255,8 +278,12 @@ app.post('/api/auth/login', async (req, res) => {
 });
 app.post('/api/auth/change-password', requireAuth, async (req, res) => {
   try {
-    await connectDb();
-    const user = await HisaabAuthUser.findOne({ key: 'owner' });
+    try {
+      if (process.env.MONGODB_URI || MONGODB_URI) {
+        await connectDb();
+      }
+    } catch (_) {}
+    const user = await ensureOwnerUser();
     const currentPassword = String(req.body?.currentPassword || '');
     const newPassword = String(req.body?.newPassword || '');
     if (!user || newPassword.length < 4) return res.status(400).json({ status: 'error', message: 'New password must be at least 4 characters.' });
@@ -266,7 +293,9 @@ app.post('/api/auth/change-password', requireAuth, async (req, res) => {
     user.passwordSalt = salt;
     user.passwordHash = hashPassword(newPassword, salt);
     user.updatedAt = new Date();
-    await user.save();
+    if (typeof user.save === 'function') {
+      await user.save();
+    }
     res.json({ status: 'ok' });
   } catch (error) { res.status(500).json({ status: 'error', message: 'Password could not be changed.' }); }
 });
