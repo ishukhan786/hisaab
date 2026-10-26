@@ -2183,8 +2183,11 @@
   }
   window.HisaabState = state;
   window.HisaabSave = save;
-  if (state.auth && window.HisaabAuth && !window.HisaabAuth.getAuth()) {
-    window.HisaabAuth.setAuth(state.auth);
+  if (state.auth && window.HisaabAuth) {
+    const currAuth = window.HisaabAuth.getAuth();
+    if (!currAuth || currAuth.isDefault) {
+      window.HisaabAuth.setAuth(state.auth);
+    }
   }
   initDiskPersistence();
   initMongoWebState();

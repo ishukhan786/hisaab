@@ -39,12 +39,30 @@
 
   const STORAGE_KEY = 'hisaab-auth-v1';
 
+  // Default credentials for fresh installations on any PC or laptop
+  // Username: admin, Password: admin, Recovery PIN: 1234 (PBKDF2 20,000 iter SHA-256)
+  const DEFAULT_AUTH = Object.freeze({
+    username: 'admin',
+    passwordHash: 'e63959f656cbaa9d9d1ae2b8a7f3988d65241de210729c810399fddf93ae7f34',
+    salt: 'hisaab_default_salt_2026',
+    recoveryPinHash: '00a1e5c902149afeaf0774cd416656cb23579b68aec1ea35b21c74577c888bc9',
+    recoverySalt: 'hisaab_default_rec_salt_2026',
+    isDefault: true,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  });
+
   function getStoredAuth() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.passwordHash) return parsed;
+      }
     } catch (_) {}
-    return null;
+    if (window.HisaabState?.auth && window.HisaabState.auth.passwordHash) {
+      return window.HisaabState.auth;
+    }
+    return { ...DEFAULT_AUTH };
   }
 
   function saveStoredAuth(auth) {
@@ -117,7 +135,11 @@
       if (loginCard) {
         loginCard.hidden = false;
         const reasonEl = $('auth-login-reason');
-        if (reasonEl) reasonEl.textContent = reason;
+        if (reasonEl) {
+          reasonEl.textContent = auth?.isDefault
+            ? 'Sign in with credentials (Default: admin / admin)'
+            : reason;
+        }
         const errEl = $('auth-login-error');
         if (errEl) errEl.textContent = '';
         const userInp = $('login-username');
@@ -125,6 +147,7 @@
         if (passInp) passInp.value = '';
         if (userInp) {
           if (!userInp.value && auth?.username) userInp.value = auth.username;
+          else if (!userInp.value) userInp.value = 'admin';
           if (userInp.value) {
             passInp?.focus();
           } else {
@@ -356,6 +379,7 @@
     const newSalt = makeSalt();
     auth.passwordHash = await hashPassword(newPass, newSalt);
     auth.salt = newSalt;
+    auth.isDefault = false;
     saveStoredAuth(auth);
 
     if (window.HisaabState) {
@@ -518,6 +542,7 @@
         auth.recoverySalt = recSalt;
       }
 
+      auth.isDefault = false;
       saveStoredAuth(auth);
       if (window.HisaabState) {
         window.HisaabState.auth = auth;

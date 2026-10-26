@@ -41,6 +41,16 @@ assert.ok(appJsContent.includes('window.HisaabAuth.lock'), 'app.js must route Ct
 assert.ok(serverJsContent.includes('/api/state') && serverJsContent.includes('/api/save'), 'Server persistence routes available');
 console.log('  ✓ app.js and server persistence fully synchronized with authentication system');
 
+// 5. Verify default admin/admin credentials for fresh installs on other PCs/laptops
+const crypto = require('node:crypto');
+assert.ok(authJsContent.includes('DEFAULT_AUTH'), 'auth.js must provide default credentials');
+assert.ok(authJsContent.includes("username: 'admin'"), 'auth.js default username must be admin');
+const expectedAdminHash = crypto.pbkdf2Sync('admin', 'hisaab_default_salt_2026', 20000, 32, 'sha256').toString('hex');
+assert.ok(authJsContent.includes(expectedAdminHash), 'auth.js must include verified PBKDF2 hash for password admin');
+assert.ok(serverJsContent.includes("process.env.HISAAB_PASSWORD || 'admin'"), 'server.js default password must be admin');
+assert.ok(serverJsContent.includes("process.env.HISAAB_USERNAME || 'admin'"), 'server.js default username must be admin');
+console.log('  ✓ default credentials (admin / admin) verified for fresh PC/laptop installs');
+
 console.log('\n========================================');
 console.log('🎉 All Authentication & Access Shield verifications passed!');
 console.log('========================================\n');

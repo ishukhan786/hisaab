@@ -6,7 +6,7 @@ if (process.platform === 'win32') {
   try {
     const dns = require('node:dns');
     dns.setServers(['8.8.8.8', '1.1.1.1']);
-  } catch (_) {}
+  } catch (_) { }
 }
 
 const express = require('express');
@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 const AUTH_SECRET = process.env.HISAAB_AUTH_SECRET || 'change-this-hisaab-auth-secret';
 const OWNER_USERNAME = String(process.env.HISAAB_USERNAME || 'admin').trim();
-const OWNER_PASSWORD = String(process.env.HISAAB_PASSWORD || 'Hisaab@1234');
+const OWNER_PASSWORD = String(process.env.HISAAB_PASSWORD || 'admin');
 
 // Middleware
 app.use(cors());
@@ -266,7 +266,7 @@ app.post('/api/auth/login', async (req, res) => {
       if (process.env.MONGODB_URI || MONGODB_URI) {
         await connectDb();
       }
-    } catch (_) {}
+    } catch (_) { }
 
     const user = await ensureOwnerUser();
     const candidate = hashPassword(password, user.passwordSalt);
@@ -282,7 +282,7 @@ app.post('/api/auth/change-password', requireAuth, async (req, res) => {
       if (process.env.MONGODB_URI || MONGODB_URI) {
         await connectDb();
       }
-    } catch (_) {}
+    } catch (_) { }
     const user = await ensureOwnerUser();
     const currentPassword = String(req.body?.currentPassword || '');
     const newPassword = String(req.body?.newPassword || '');
