@@ -51,7 +51,7 @@
    * @returns {string}
    */
   const formatAllah = v => String(v).replace(
-    /(^|[\s\u060C\u06D4()\-]|عبد|ء|و|ب)الل[\u0651\u0670]*[ہه](?=$|[\s\u060C\u06D4()\-]|)/g,
+    /(^|[\s\u060C\u06D4()\-]|عبد|ء|و|ب)الل[\u0651\u0670]*[ہه](?=$|[\s\u060C\u06D4()\-])/g,
     '$1\uFDF2'
   );
 
@@ -68,6 +68,9 @@
     return rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + last3;
   }
 
+  const nfIN = typeof Intl !== 'undefined' && Intl.NumberFormat ? new Intl.NumberFormat('en-IN') : null;
+  const parseAmountCache = new Map();
+
   /**
    * Parses user input string into BigInt minor units (paisa/fils).
    * Enforces up to 12 integer digits and up to 2 decimal digits in minor units.
@@ -75,19 +78,43 @@
    * @returns {bigint|null}
    */
   function parseAmount(v) {
-    if (v === null || v === undefined) return null;
+    if (v === null || v === undefined || v === '') return null;
+    if (typeof v === 'string') {
+      const cached = parseAmountCache.get(v);
+      if (cached !== undefined) return cached;
+    }
     const s = digits(v).trim().replace(/[,\s٬]/g, '');
-    if (!s || s.startsWith('-')) return null;
+    if (!s || s.startsWith('-')) {
+      if (typeof v === 'string') {
+        if (parseAmountCache.size > 4096) parseAmountCache.clear();
+        parseAmountCache.set(v, null);
+      }
+      return null;
+    }
     const clean = s.startsWith('+') ? s.slice(1) : s;
-    if (!clean) return null;
+    if (!clean) {
+      if (typeof v === 'string') parseAmountCache.set(v, null);
+      return null;
+    }
     const match = clean.match(/^(\d{1,12})(?:\.(\d{0,2}))?$/);
-    if (!match) return null;
+    if (!match) {
+      if (typeof v === 'string') {
+        if (parseAmountCache.size > 4096) parseAmountCache.clear();
+        parseAmountCache.set(v, null);
+      }
+      return null;
+    }
     const intPart = match[1];
     let fracPart = match[2] || '';
     if (fracPart.length === 1) fracPart += '0';
     else if (fracPart.length === 0) fracPart = '00';
     try {
-      return BigInt(intPart) * 100n + BigInt(fracPart);
+      const res = BigInt(intPart) * 100n + BigInt(fracPart);
+      if (typeof v === 'string') {
+        if (parseAmountCache.size > 4096) parseAmountCache.clear();
+        parseAmountCache.set(v, res);
+      }
+      return res;
     } catch {
       return null;
     }
@@ -134,7 +161,7 @@
     const fracVal = absN % 100n;
     let intStr;
     try {
-      intStr = intVal.toLocaleString('en-IN');
+      intStr = nfIN ? nfIN.format(intVal) : intVal.toLocaleString('en-IN');
     } catch {
       intStr = groupIN(intVal.toString());
     }
@@ -153,7 +180,7 @@
   function formatCount(n) {
     if (n === null || n === undefined) return '0';
     try {
-      return Number(n).toLocaleString('en-IN');
+      return nfIN ? nfIN.format(Number(n)) : Number(n).toLocaleString('en-IN');
     } catch {
       return groupIN(String(n));
     }
@@ -319,14 +346,22 @@
       recalculate(getActiveKhata());
     }
 
-    let directoryFilter = 'all'; // 'all' | 'receivables' | 'payables'
+    let directoryFilter = 'all'; // 'all' | 'receivables' | 'payables' | 'overdue'
+
+    function computeDaysOld(lastDateStr, todayStr) {
+      if (!lastDateStr || !todayStr || !validDate(lastDateStr) || !validDate(todayStr)) return 0;
+      const diffMs = Date.parse(todayStr + 'T00:00:00Z') - Date.parse(lastDateStr + 'T00:00:00Z');
+      const days = Math.floor(diffMs / 86400000);
+      return days > 0 ? days : 0;
+    }
 
     function setDirectoryFilter(filter) {
       directoryFilter = filter || 'all';
       const tabs = [
         { id: 'tab-khata-all', val: 'all' },
         { id: 'tab-khata-receivables', val: 'receivables' },
-        { id: 'tab-khata-payables', val: 'payables' }
+        { id: 'tab-khata-payables', val: 'payables' },
+        { id: 'tab-khata-overdue', val: 'overdue' }
       ];
       tabs.forEach(t => {
         const el = $(t.id);
@@ -457,13 +492,14 @@
         const inFilter = !hasFilter || (hasData(r) && r.date && r.date >= minDate && r.date <= maxDate);
 
         if (tr) {
+          const els = tr._els;
           tr.hidden = hasFilter ? !inFilter : false;
           tr.classList.toggle('khata-draft', isDraft);
-          const sCell = tr.querySelector('.td-serial');
+          const sCell = els ? els.sCell : tr.querySelector('.td-serial');
           if (sCell) sCell.textContent = isDraft ? '＋' : (inFilter ? formatCount(serial++) : '—');
 
-          const banamInput = tr.querySelector('td:nth-child(4) input');
-          const jamaInput = tr.querySelector('td:nth-child(5) input');
+          const banamInput = els ? els.banamInput : tr.querySelector('td:nth-child(4) input');
+          const jamaInput = els ? els.jamaInput : tr.querySelector('td:nth-child(5) input');
 
           if (dStr) {
             if (numD === null) banamInput?.classList.add('is-invalid');
@@ -495,7 +531,8 @@
           }
 
           if (tr) {
-            const bCell = tr.querySelector('.td-baqaya');
+            const els = tr._els;
+            const bCell = els ? els.bCell : tr.querySelector('.td-baqaya');
             if (bCell) {
               const absVal = running < 0n ? -running : running;
               const formattedAbs = formatAmount(absVal, { withDecimals: hasDecimals });
@@ -507,10 +544,10 @@
               bCell.classList.toggle('is-banam', isBanam);
               bCell.classList.toggle('is-jama', isJama);
 
-              let numSpan = bCell.querySelector('.khata-screen-bal');
-              let tag = bCell.querySelector('.khata-screen-bal-tag');
-              let amtSpan = bCell.querySelector('.khata-bal-amount');
-              let sideSpan = bCell.querySelector('.khata-bal-side');
+              let numSpan = bCell._numSpan || bCell.querySelector('.khata-screen-bal');
+              let tag = bCell._tag || bCell.querySelector('.khata-screen-bal-tag');
+              let amtSpan = bCell._amtSpan || bCell.querySelector('.khata-bal-amount');
+              let sideSpan = bCell._sideSpan || bCell.querySelector('.khata-bal-side');
 
               if (!numSpan || !tag || !amtSpan || !sideSpan) {
                 bCell.replaceChildren();
@@ -526,6 +563,10 @@
                 sideSpan.className = 'khata-bal-side';
                 printBal.append(amtSpan, sideSpan);
                 bCell.append(numSpan, tag, printBal);
+                bCell._numSpan = numSpan;
+                bCell._tag = tag;
+                bCell._amtSpan = amtSpan;
+                bCell._sideSpan = sideSpan;
               }
 
               if (numSpan.textContent !== formattedAbs) numSpan.textContent = formattedAbs;
@@ -535,20 +576,21 @@
             }
 
             // Sync static print text for other cells
-            const pvDate = tr.querySelector('.td-date .khata-print-val');
-            const pvDetail = tr.querySelector('.td-detail .khata-print-val');
-            const pvBanam = tr.querySelector('.td-banam .khata-print-val');
-            const pvJama = tr.querySelector('.td-jama .khata-print-val');
+            const pvDate = els ? els.pvDate : tr.querySelector('.td-date .khata-print-val');
+            const pvDetail = els ? els.pvDetail : tr.querySelector('.td-detail .khata-print-val');
+            const pvBanam = els ? els.pvBanam : tr.querySelector('.td-banam .khata-print-val');
+            const pvJama = els ? els.pvJama : tr.querySelector('.td-jama .khata-print-val');
             if (pvDate) pvDate.textContent = r.date || '';
             if (pvDetail) pvDetail.textContent = r.detail || '';
             if (pvBanam) pvBanam.textContent = r.debit || '';
             if (pvJama) pvJama.textContent = r.credit || '';
           }
         } else if (tr) {
-          const bCell = tr.querySelector('.td-baqaya');
+          const bCell = tr._els ? tr._els.bCell : tr.querySelector('.td-baqaya');
           if (bCell) {
             bCell.classList.remove('is-jama', 'is-banam');
             bCell.replaceChildren();
+            bCell._numSpan = bCell._tag = bCell._amtSpan = bCell._sideSpan = null;
           }
         }
       }
@@ -720,13 +762,17 @@
       printDetail.className = 'khata-print-val khata-print-detail';
       printDetail.textContent = inDetail.value;
       inDetail.oninput = () => {
-        inDetail.value = formatAllah(inDetail.value);
+        const formattedVal = formatAllah(inDetail.value);
+        if (formattedVal !== inDetail.value) inDetail.value = formattedVal;
         printDetail.textContent = inDetail.value;
         const wasDraft = !hasData(r);
         r.detail = inDetail.value;
-        recalculate(khata);
-        if (wasDraft && hasData(r)) {
-          ensureDraft(khata, { appendNode: true });
+        const nowDraft = !hasData(r);
+        if (wasDraft !== nowDraft || /سابقہ|opening/i.test(r.detail)) {
+          recalculate(khata);
+          if (wasDraft && !nowDraft) {
+            ensureDraft(khata, { appendNode: true });
+          }
         }
         save();
       };
@@ -894,6 +940,17 @@
       tdBaqaya.className = 'td-baqaya';
       tr.append(tdBaqaya);
 
+      tr._els = {
+        sCell: tdSerial,
+        banamInput: inBanam,
+        jamaInput: inJama,
+        bCell: tdBaqaya,
+        pvDate: printDate,
+        pvDetail: printDetail,
+        pvBanam: printBanam,
+        pvJama: printJama
+      };
+
       // 7. Delete Row
       const tdDelete = document.createElement('td');
       tdDelete.className = 'td-delete no-print';
@@ -1012,16 +1069,19 @@
       if (!tbody) return;
       tbody.replaceChildren();
 
-      // 1. Calculate running balance and decimal flag for each customer
+      // 1. Calculate running balance, decimal flag, and receivables aging for each customer
       let totReceivables = 0n; // sum of positive balances (بنام - لینا ہے)
       let totPayables = 0n;    // sum of negative balances as positive amount (جمع - دینا ہے)
       let recCount = 0;
       let payCount = 0;
+      let overdueCount = 0;
       let hasAnyDec = false;
+      const todayStr = getToday();
 
       const evaluatedList = list.map(k => {
         let running = 0n;
         let hasDec = false;
+        let lastDate = '';
         for (const r of k.rows) {
           if (hasData(r)) {
             const nd = parseAmount(r.debit) || 0n;
@@ -1031,25 +1091,31 @@
               hasAnyDec = true;
             }
             running += (nd - nc);
+            if (r.date && r.date > lastDate) lastDate = r.date;
           }
         }
+        const daysOld = running > 0n && lastDate ? computeDaysOld(lastDate, todayStr) : 0;
+        const isOverdue = running > 0n && daysOld >= 30;
         if (running > 0n) {
           totReceivables += running;
           recCount++;
+          if (isOverdue) overdueCount++;
         } else if (running < 0n) {
           totPayables += (-running);
           payCount++;
         }
-        return { khata: k, running, hasDec };
+        return { khata: k, running, hasDec, lastDate, daysOld, isOverdue };
       });
 
       // Update Badges on Category Tabs
       const badgeAll = $('badge-khata-all-count');
       const badgeRec = $('badge-khata-receivables-count');
       const badgePay = $('badge-khata-payables-count');
+      const badgeOverdue = $('badge-khata-overdue-count');
       if (badgeAll) badgeAll.textContent = formatCount(list.length);
       if (badgeRec) badgeRec.textContent = formatCount(recCount);
       if (badgePay) badgePay.textContent = formatCount(payCount);
+      if (badgeOverdue) badgeOverdue.textContent = formatCount(overdueCount);
 
       // Update Overview Stats Grid
       const statCount = $('khata-dir-total-count');
@@ -1087,6 +1153,8 @@
           filterDesc.textContent = `صرف قابلِ وصول (لینا ہے) کھاتے دکھائے جا رہے ہیں (${formatCount(recCount)})`;
         } else if (directoryFilter === 'payables') {
           filterDesc.textContent = `صرف واجب الادا (دینا ہے) کھاتے دکھائے جا رہے ہیں (${formatCount(payCount)})`;
+        } else if (directoryFilter === 'overdue') {
+          filterDesc.textContent = `30 دن یا اس سے پرانی بقایا وصولیاں دکھائی جا رہی ہیں (${formatCount(overdueCount)})`;
         } else {
           filterDesc.textContent = `تمام کسٹمرز کھاتہ داروں کی فہرست دکھائی جا رہی ہے (${formatCount(list.length)})`;
         }
@@ -1098,6 +1166,8 @@
         filtered = evaluatedList.filter(item => item.running > 0n);
       } else if (directoryFilter === 'payables') {
         filtered = evaluatedList.filter(item => item.running < 0n);
+      } else if (directoryFilter === 'overdue') {
+        filtered = evaluatedList.filter(item => item.isOverdue);
       }
 
       // Filter based on search query
@@ -1206,6 +1276,9 @@
         } else if (directoryFilter === 'payables') {
           title.textContent = 'کوئی واجب الادا کھاتہ نہیں ملا';
           sub.textContent = 'اس وقت تمام کسٹمرز کی ادائیگیاں صفر یا مکمل ہیں۔';
+        } else if (directoryFilter === 'overdue') {
+          title.textContent = 'کوئی 30+ دن پرانی وصولی موجود نہیں ہے';
+          sub.textContent = 'تمام قابلِ وصول کھاتوں میں حالیہ دنوں میں لین دین ہوا ہے۔';
         } else {
           title.textContent = 'کوئی ریکارڈ موجود نہیں ہے';
           sub.textContent = 'فہرست دوبارہ دیکھنے کے لیے فلٹر ری سیٹ کریں۔';
@@ -1242,6 +1315,7 @@
           const absVal = running < 0n ? -running : running;
 
           const tr = document.createElement('tr');
+          if (item.isOverdue) tr.classList.add('is-overdue-row');
           tr.onclick = e => {
             if (e.target?.closest?.('.btn-open-khata')) return; // Handled by button
             showLedgerView(k.id);
@@ -1259,7 +1333,18 @@
 
           const tdName = document.createElement('td');
           tdName.style.fontWeight = '700';
-          tdName.textContent = k.name;
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = k.name;
+          tdName.append(nameSpan);
+          if (running > 0n && item.daysOld >= 15) {
+            const ageBadge = document.createElement('span');
+            ageBadge.className = 'khata-aging-badge ' + (item.daysOld >= 30 ? 'is-overdue-30' : 'is-aging-15');
+            ageBadge.title = `آخری اندراج: ${formatDisplayDate(item.lastDate)} (${item.daysOld} دن پہلے)`;
+            ageBadge.textContent = item.daysOld >= 30
+              ? `⏰ ${formatCount(item.daysOld)} دن پرانا`
+              : `⏳ ${formatCount(item.daysOld)} دن`;
+            tdName.append(ageBadge);
+          }
 
           const tdMobile = document.createElement('td');
           tdMobile.className = 'eng-num';
@@ -1303,7 +1388,7 @@
         // Update Table Headers and Footer based on filter
         const thBal = $('khata-dir-th-bal');
         if (thBal) {
-          if (directoryFilter === 'receivables') {
+          if (directoryFilter === 'receivables' || directoryFilter === 'overdue') {
             thBal.textContent = 'قابلِ وصول رقم (لینا ہے)';
           } else if (directoryFilter === 'payables') {
             thBal.textContent = 'واجب الادا رقم (دینا ہے)';
@@ -1316,6 +1401,8 @@
         if (tfootLabel) {
           if (directoryFilter === 'receivables') {
             tfootLabel.textContent = 'کل قابلِ وصول میزان:';
+          } else if (directoryFilter === 'overdue') {
+            tfootLabel.textContent = 'کل پرانی وصولیوں کا میزان:';
           } else if (directoryFilter === 'payables') {
             tfootLabel.textContent = 'کل واجب الادا میزان:';
           } else {
@@ -1635,6 +1722,11 @@
         typeTitle = '';
         subTitle = 'جن گاہکوں سے رقم وصول کرنی ہے (بنام بیلنس پوزیشن)';
         fileType = 'قابل_وصول';
+      } else if (directoryFilter === 'overdue') {
+        mainTitle = 'کسٹمرز کھاتے — پرانی وصولیاں (30+ دن)';
+        typeTitle = '';
+        subTitle = 'جن گاہکوں کی بقایا وصولی کو 30 دن یا اس سے زیادہ عرصہ گزر چکا ہے';
+        fileType = 'پرانی_وصولیاں_30دن';
       } else if (directoryFilter === 'payables') {
         mainTitle = 'کسٹمرز کھاتے — واجب الادا رپورٹ';
         typeTitle = '';
@@ -1682,7 +1774,7 @@
       const periodBlock = document.querySelector('#khata-dir-print-dossier .khata-print-period-block');
       if (periodBlock) periodBlock.style.visibility = 'hidden';
 
-      if (directoryFilter === 'receivables') {
+      if (directoryFilter === 'receivables' || directoryFilter === 'overdue') {
         if (cardRec) cardRec.style.display = '';
         if (cardPay) cardPay.style.display = 'none';
         if (cardBal) cardBal.style.display = 'none';
@@ -1697,7 +1789,7 @@
       }
 
       document.body.classList.add('khata-dir-printing');
-      if (directoryFilter === 'receivables') {
+      if (directoryFilter === 'receivables' || directoryFilter === 'overdue') {
         document.body.classList.add('print-filter-receivables');
       } else if (directoryFilter === 'payables') {
         document.body.classList.add('print-filter-payables');
@@ -1759,19 +1851,24 @@
 
       let totReceivables = 0n;
       let totPayables = 0n;
+      const todayStr = getToday();
 
       const evaluated = list.map(k => {
         let running = 0n;
+        let lastDate = '';
         for (const r of k.rows) {
           if (hasData(r)) {
             const nd = parseAmount(r.debit) || 0n;
             const nc = parseAmount(r.credit) || 0n;
             running += (nd - nc);
+            if (r.date && r.date > lastDate) lastDate = r.date;
           }
         }
+        const daysOld = running > 0n && lastDate ? computeDaysOld(lastDate, todayStr) : 0;
+        const isOverdue = running > 0n && daysOld >= 30;
         if (running > 0n) totReceivables += running;
         else if (running < 0n) totPayables += (-running);
-        return { khata: k, running };
+        return { khata: k, running, lastDate, daysOld, isOverdue };
       });
 
       let filtered = evaluated;
@@ -1782,6 +1879,10 @@
         filtered = evaluated.filter(item => item.running > 0n);
         reportType = 'فہرست قابلِ وصول کسٹمرز کھاتے (لینا ہے)';
         filterSlug = 'قابل_وصول';
+      } else if (directoryFilter === 'overdue') {
+        filtered = evaluated.filter(item => item.isOverdue);
+        reportType = 'فہرست پرانی بقایا وصولیاں (30+ دن)';
+        filterSlug = 'پرانی_وصولیاں_30دن';
       } else if (directoryFilter === 'payables') {
         filtered = evaluated.filter(item => item.running < 0n);
         reportType = 'فہرست واجب الادا کسٹمرز کھاتے (دینا ہے)';
@@ -1807,7 +1908,9 @@
         const running = item.running;
         displayedNet += running;
         const absVal = running < 0n ? -running : running;
-        const side = running > 0n ? 'بنام (لینا ہے)' : running < 0n ? 'جمع (دینا ہے)' : 'برابر';
+        const side = running > 0n
+          ? (item.daysOld >= 30 ? `بنام (${item.daysOld} دن پرانا)` : 'بنام (لینا ہے)')
+          : running < 0n ? 'جمع (دینا ہے)' : 'برابر';
 
         return [
           idx + 1,
@@ -1985,10 +2088,11 @@
     $('btn-khata-dir-print')?.addEventListener('click', () => printDirectoryReport());
     $('btn-khata-dir-excel')?.addEventListener('click', () => exportDirectoryExcel());
 
-    // Receivables & Payables Category Filter Tabs
+    // Receivables, Payables & Overdue Category Filter Tabs
     $('tab-khata-all')?.addEventListener('click', () => setDirectoryFilter('all'));
     $('tab-khata-receivables')?.addEventListener('click', () => setDirectoryFilter('receivables'));
     $('tab-khata-payables')?.addEventListener('click', () => setDirectoryFilter('payables'));
+    $('tab-khata-overdue')?.addEventListener('click', () => setDirectoryFilter('overdue'));
 
     // Directory Overview Stat Card Clickable Filters
     ['stat-card-khata-all', 'stat-card-khata-receivables', 'stat-card-khata-payables'].forEach(id => {

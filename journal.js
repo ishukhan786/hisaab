@@ -1,11 +1,13 @@
 (() => {
   'use strict';
+  const nfIN=new Intl.NumberFormat('en-IN');
+  const validDateSet=new Set();
   const digits=v=>String(v).replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)).replace(/٬/g,',');
   const formatAllah=v=>String(v).replace(/(^|[\s\u060C\u06D4()\-]|\u0639\u0628\u062F|\u0621)\u0627\u0644\u0644[\u0651\u0670]*[\u06C1\u0647](?=$|[\s\u060C\u06D4()\-])/g,'$1\uFDF2');
   const amount=v=>{const s=digits(v).replace(/[,\s]/g,'');return !s?0n:/^\d{1,12}$/.test(s)?BigInt(s):null;};
-  const format=n=>n.toLocaleString('en-IN');
+  const format=n=>nfIN.format(n);
   const hasData=r=>[r.detail,r.debit,r.credit].some(v=>v.trim());
-  const validDate=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&!isNaN(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s;
+  const validDate=s=>{if(typeof s!=='string')return false;if(validDateSet.has(s))return true;if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;const t=Date.parse(s);if(isNaN(t)||new Date(t).toISOString().slice(0,10)!==s)return false;if(validDateSet.size>4096)validDateSet.clear();validDateSet.add(s);return true;};
   function normalize(raw,fallback){
     if(raw===undefined)return {date:fallback,rows:[]};
     if(!raw||!validDate(raw.date)||!Array.isArray(raw.rows)||raw.rows.length>10001)throw Error('Invalid journal');
@@ -47,8 +49,12 @@
       const monthName = urduMonths[m - 1] || parts[1];
       return `تاریخ: ${d} ${monthName} ${y}ء`;
     };
+    let cachedOpeningDate=null,cachedOpeningResult=null;
     function ensureDraft(){let draft=data().rows.find(r=>r.date===data().date&&!hasData(r));if(!draft){draft={id:crypto.randomUUID(),date:data().date,detail:'',debit:'',credit:''};data().rows.push(draft);}return draft;}
     function renderBalance(el,val,valid,invalidText='—'){
+      const bKey=valid?String(val):'inv:'+invalidText;
+      if(el._balKey===bKey)return;
+      el._balKey=bKey;
       el.classList.remove('is-jama','is-banam');el.replaceChildren();
       if(!valid){el.textContent=invalidText;return;}
       const abs=val<0n?-val:val,numSpan=document.createElement('span');
@@ -61,7 +67,9 @@
     }
     const fmtBalText=b=>b>0n?`${format(b)} جمع`:b<0n?`${format(-b)} بنام`:'0';
     function openingBalance(){
-      const date=data().date,counts=data().cashCounts||{};
+      const date=data().date;
+      if(cachedOpeningDate===date&&cachedOpeningResult)return cachedOpeningResult;
+      const counts=data().cashCounts||{};
       const last=Object.keys(counts).filter(d=>d<date&&counts[d].trim()).sort().at(-1);
       let value=last?amount(counts[last]):0n,valid=value!==null;
       if(value===null)value=0n;
@@ -70,7 +78,9 @@
         const debit=amount(r.debit),credit=amount(r.credit);
         if(debit===null||credit===null)valid=false;else value+=credit-debit;
       }
-      return {value,valid,source:last};
+      cachedOpeningDate=date;
+      cachedOpeningResult={value,valid,source:last};
+      return cachedOpeningResult;
     }
     function recalculate(){
       const prior=openingBalance(),opening=prior.value;
@@ -78,17 +88,21 @@
       $('journal-opening').title=prior.source?'موجودہ نقد بیلنس ('+dateLabel(prior.source)+') اور اس کے بعد کی انٹریوں سے':'پچھلی انٹریوں کے حساب سے؛ موجودہ نقد بیلنس ابھی درج نہیں ہوئی';
       const openingValid=valid;
       renderBalance($('journal-opening'),opening,valid,'رقم درست کریں');let balance=opening;
-      for(const r of data().rows.filter(r=>r.date===data().date)){
-        const d=amount(r.debit),c=amount(r.credit),tr=nodes.get(r.id);if(!tr)continue;
+      let populatedCount=0;
+      const activeDate=data().date;
+      for(const r of data().rows){
+        if(r.date!==activeDate)continue;
         const populated=hasData(r);
+        if(populated)populatedCount++;
+        const d=amount(r.debit),c=amount(r.credit),tr=nodes.get(r.id);if(!tr)continue;
         tr.classList.toggle('journal-draft',!populated);
         tr.dataset.journalPopulated = String(populated);
-        const sCell=tr.querySelector('.journal-serial');
+        const sCell=tr._sTd||tr.querySelector('.journal-serial');
         if(sCell)sCell.textContent=populated?String(serial++):'＋';
-        for(const k of ['debit','credit']){const input=tr.querySelector('[data-journal="'+k+'"]');input.setCustomValidity(amount(r[k])===null?'صرف مثبت مکمل رقم لکھیں':'');input.setAttribute('aria-invalid',String(amount(r[k])===null));}
+        for(const k of ['debit','credit']){const input=tr._inputs?.[k]||tr.querySelector('[data-journal="'+k+'"]');const inv= (k==='debit'?d:c)===null;input.setCustomValidity(inv?'صرف مثبت مکمل رقم لکھیں':'');input.setAttribute('aria-invalid',String(inv));}
         if(d===null||c===null){valid=false;dayValid=false;}else{balance+=c-d;debit+=d;credit+=c;}
-        const balCell=tr.querySelector('.journal-balance');
-        if(!populated){balCell.classList.remove('is-jama','is-banam');balCell.replaceChildren();}
+        const balCell=tr._balTd||tr.querySelector('.journal-balance');
+        if(!populated){if(balCell._balKey!=='empty'){balCell._balKey='empty';balCell.classList.remove('is-jama','is-banam');balCell.replaceChildren();}}
         else renderBalance(balCell,balance,valid,'—');
       }
       $('journal-total-debit').textContent=dayValid?format(debit):'—';$('journal-total-credit').textContent=dayValid?format(credit):'—';
@@ -98,7 +112,7 @@
       $('cash-credit').textContent=dayValid?format(credit):'—';
       $('cash-debit').textContent=dayValid?format(debit):'—';
       $('cash-expected').textContent=valid?format(balance):'—';
-      const cashInput=$('journal-cash-count'),raw=data().cashCounts?.[data().date]||'',count=amount(raw),entered=!!raw.trim();
+      const cashInput=$('journal-cash-count'),raw=data().cashCounts?.[activeDate]||'',count=amount(raw),entered=!!raw.trim();
       cashInput.setAttribute('aria-invalid',String(count===null));
       cashInput.setCustomValidity(count===null?'صرف مثبت مکمل رقم لکھیں':'');
       $('cash-count-print').textContent=entered?(count===null?'رقم درست کریں':format(count)):'درج نہیں کیا';
@@ -110,20 +124,22 @@
         difference.classList.add(delta<0n?'cash-short':delta>0n?'cash-extra':'cash-equal');
         difference.textContent=delta===0n?'حساب برابر ✓':format(delta<0n?-delta:delta)+(delta<0n?' کم ہے':' زیادہ ہے');
       }
-      $('journal-count').textContent=selected().length+' اندراجات';
-      $('journal-date-print').textContent=dateLabel(data().date);
+      $('journal-count').textContent=populatedCount+' اندراجات';
+      $('journal-date-print').textContent=dateLabel(activeDate);
       const urduDateEl = $('journal-print-date-urdu');
-      if (urduDateEl) urduDateEl.textContent = formatUrduDate(data().date);
+      if (urduDateEl) urduDateEl.textContent = formatUrduDate(activeDate);
       $('journal-undo').hidden=!undo;
       return valid&&count!==null;
     }
     function addNode(r, container = null){
       const tr=document.createElement('tr');tr.dataset.journalId=r.id;nodes.set(r.id,tr);
       const sTd=document.createElement('td');sTd.className='journal-serial number';tr.append(sTd);
+      tr._sTd=sTd;tr._inputs={};
       for(const key of ['detail','debit','credit']){
         const td=document.createElement('td');const input=document.createElement(key==='detail'?'textarea':'input');input.dataset.journal=key;input.value=r[key];input.setAttribute('aria-label',key==='detail'?'تفصیل':key==='debit'?'بنام':'جمع');input.autocomplete='off';
+        tr._inputs[key]=input;
         if(key==='detail'){input.rows=1;input.maxLength=2000;input.placeholder='تفصیل لکھیں…';}else{input.inputMode='numeric';input.className='journal-money';input.maxLength=30;input.placeholder='0';}
-        input.addEventListener('input',e=>{if(e.isComposing)return;if(key!=='detail')input.value=digits(input.value);else{const v=formatAllah(input.value);if(v!==input.value){const pos=input.selectionStart,diff=v.length-input.value.length;input.value=v;if(pos!==null){const np=Math.max(0,pos+diff);input.setSelectionRange(np,np);}}}r[key]=input.value;const draft=ensureDraft();if(!nodes.has(draft.id))addNode(draft);recalculate();save();});
+        input.addEventListener('input',e=>{if(e.isComposing)return;const wasPopulated=hasData(r);if(key!=='detail')input.value=digits(input.value);else{const v=formatAllah(input.value);if(v!==input.value){const pos=input.selectionStart,diff=v.length-input.value.length;input.value=v;if(pos!==null){const np=Math.max(0,pos+diff);input.setSelectionRange(np,np);}}}r[key]=input.value;const draft=ensureDraft();if(!nodes.has(draft.id))addNode(draft);if(key!=='detail'||wasPopulated!==hasData(r))recalculate();save();});
         input.addEventListener('paste', e => {
           const pasteData = (e.clipboardData || window.clipboardData)?.getData('text');
           if (pasteData === undefined || pasteData === null) return;
@@ -169,9 +185,9 @@
         }
         tr.append(td);
       }
-      const balance=document.createElement('td');balance.className='journal-balance';tr.append(balance);(container||$('journal-rows')).append(tr);
+      const balance=document.createElement('td');balance.className='journal-balance';tr._balTd=balance;tr.append(balance);(container||$('journal-rows')).append(tr);
     }
-    function refresh(){if(!data())getState().journal={date:today(),rows:[]};$('journal-date').value=data().date;$('journal-cash-count').value=data().cashCounts?.[data().date]||'';ensureDraft();nodes.clear();$('journal-rows').replaceChildren();const fragment=document.createDocumentFragment();data().rows.filter(r=>r.date===data().date).forEach(r=>addNode(r,fragment));$('journal-rows').append(fragment);recalculate();}
+    function refresh(){cachedOpeningDate=null;cachedOpeningResult=null;if(!data())getState().journal={date:today(),rows:[]};$('journal-date').value=data().date;$('journal-cash-count').value=data().cashCounts?.[data().date]||'';ensureDraft();nodes.clear();$('journal-rows').replaceChildren();const fragment=document.createDocumentFragment();data().rows.filter(r=>r.date===data().date).forEach(r=>addNode(r,fragment));$('journal-rows').append(fragment);recalculate();}
     function setPage(journal){document.body.classList.toggle('journal-view',journal);document.body.classList.remove('khata-view');$('register-page').hidden=journal;$('journal-page').hidden=!journal;const khataPage=$('khata-page');if(khataPage)khataPage.hidden=true;const viewKhata=$('view-khata');if(viewKhata){viewKhata.setAttribute('aria-pressed','false');viewKhata.setAttribute('aria-selected','false');viewKhata.classList.remove('active');}$('range-drawer').hidden=true;for(const [id,sel] of [['view-register',!journal],['view-journal',journal]]){$(id).setAttribute('aria-pressed',String(sel));$(id).setAttribute('aria-selected',String(sel));$(id).classList.toggle('active',sel);}if(journal){if(data())data().date=today();refresh();}try{localStorage.setItem('hisaab-workspace',journal?'journal':'register');}catch{}}
     $('journal-cash-count').addEventListener('input',e=>{
       const input=e.target;input.value=digits(input.value);

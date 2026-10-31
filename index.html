@@ -15,12 +15,12 @@
   <title>حساب — روزانہ کھاتہ و رجسٹر (Hisaab)</title>
   <!-- FIX-4: Anti-FOUC theme preload moved to external theme-init.js -->
   <!-- localStorage.getItem('hisaab-theme') verification guard preserved -->
-  <script src="theme-init.js?v=1.4.22"></script>
-  <link rel="stylesheet" href="style.css?v=1.4.24">
-  <link rel="stylesheet" href="ui.css?v=1.4.26">
-  <link rel="stylesheet" href="journal.css?v=1.4.23">
-  <link rel="stylesheet" href="khata.css?v=1.4.23">
-  <link rel="stylesheet" href="receipt-export.css?v=1.4.22">
+  <script src="theme-init.js?v=1.4.33"></script>
+  <link rel="stylesheet" href="style.css?v=1.4.33">
+  <link rel="stylesheet" href="ui.css?v=1.4.33">
+  <link rel="stylesheet" href="journal.css?v=1.4.33">
+  <link rel="stylesheet" href="khata.css?v=1.4.33">
+  <link rel="stylesheet" href="receipt-export.css?v=1.4.33">
 </head>
 <body class="app-shell auth-startup-pending">
   <header class="top-nav no-print">
@@ -30,7 +30,7 @@
         <div class="brand-titles">
           <!-- FIX-23: lang="en" on brand name -->
           <strong class="brand-title" lang="en">Hisaab</strong>
-          <span class="app-version-badge" title="سافٹ ویئر ورژن">v1.4.22</span>
+          <span class="app-version-badge" title="سافٹ ویئر ورژن">v1.4.33</span>
         </div>
       </div>
       <div class="top-date-wrap">
@@ -43,10 +43,10 @@
         <button id="next-day-btn" type="button" class="btn-date-nav" title="اگلا دن (1 دن آگے)" aria-label="اگلا دن">▶</button>
         <button id="today-btn" type="button" class="btn-date-today" title="آج کی تاریخ پر جائیں">آج</button>
       </div>
-      <label class="all-dates-toggle" title="تمام تاریخوں کی انٹریاں دکھائیں">
+      <label class="all-dates-toggle" hidden title="تمام تاریخوں کی انٹریاں دکھائیں">
         <input id="all-dates" type="checkbox"> تمام تاریخیں
       </label>
-      <button id="toggle-range" type="button" class="btn-range" title="تاریخ کا دورانیہ فلٹر">
+      <button id="toggle-range" type="button" class="btn-range" hidden title="تاریخ کا دورانیہ فلٹر">
         <span>📅 دورانیہ فلٹر ▾</span>
       </button>
     </div>
@@ -123,6 +123,7 @@
         </div>
       </details>
 
+      <button id="cloud-sync-pill" class="cloud-sync-pill no-print" type="button" data-backup-state="disabled" title="کلاؤڈ / Google Drive / OneDrive خودکار بیک اَپ سیٹنگز کھولیں">☁️ کلاؤڈ بیک اَپ</button>
       <span id="save-state" class="save-badge" role="status">محفوظ ہے</span>
     </div>
   </header>
@@ -147,6 +148,7 @@
     <div class="party-tabs-bar no-print" id="party-tabs-bar" role="navigation" aria-label="پارٹی کھاتے">
       <div class="party-tabs-scroll" id="party-tabs" role="tablist"></div>
       <div class="party-tabs-actions">
+        <button id="party-date-filter-btn" class="tab-date-filter-btn no-print" type="button" title="اس پارٹی کا تاریخ فلٹر و پرنٹ">📅 تاریخ فلٹر</button>
         <button id="add-party-tab" class="tab-add-btn" type="button" title="نئی پارٹی بنائیں">＋ نئی پارٹی</button>
         <button id="manage-parties-tab" class="tab-manage-btn" type="button" title="پارٹیاں سنبھالیں">⚙</button>
       </div>
@@ -158,7 +160,7 @@
         <div class="head-center">
           <input id="title" aria-label="رجسٹر کا عنوان" maxlength="100" value="Hisaab Register" lang="en">
           <span id="title-print" class="title-print" aria-hidden="true" lang="en">Hisaab Register</span>
-          <div class="date-print-line" id="date-print-line"><span class="date-print-label">تاریخ:</span> <span class="date-print-val" id="date-print-val"></span></div>
+          <div class="date-print-line" id="date-print-line"><span class="date-print-label" id="date-print-label">تاریخ:</span> <span class="date-print-val" id="date-print-val"></span><span class="period-print-wrap" id="period-print-wrap" hidden><span class="period-print-sep">|</span><span class="date-print-label" id="period-print-label">دورانیہ:</span> <span class="period-print-val" id="period-print-val"></span></span></div>
         </div>
         <div class="date-block">
           <button id="lock-day" class="btn-lock no-print" type="button" title="اس تاریخ کا رجسٹر لاک یا ان لاک کریں">🔓 دن کھلا ہے</button>
@@ -182,28 +184,90 @@
               <th class="money col-balance" scope="col">بقایا</th>
               <th class="money col-aed" scope="col">درہم</th>
               <th id="th-currency" class="money col-pkr" scope="col">روپیہ</th>
+              <th class="col-words print-only" scope="col">لفظوں</th>
               <th class="col-receipt no-print" scope="col">رسید</th>
               <th class="remove no-print" scope="col"><span class="sr-only">حذف</span></th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
-          <!-- FIX-14: Clean totals row alignment matching 8-col print structure -->
+          <!-- FIX-14: Clean totals row alignment matching print structure -->
           <tfoot class="register-totals">
             <tr class="totals-gap" aria-hidden="true">
-              <td colspan="5"></td><td class="col-branch no-print"></td><td colspan="3"></td><td class="col-receipt no-print"></td><td class="no-print"></td>
+              <td colspan="5"></td><td class="col-branch no-print"></td><td colspan="3"></td><td class="col-words print-only"></td><td class="col-receipt no-print"></td><td class="no-print"></td>
             </tr>
             <tr class="totals-row">
-              <th colspan="5" scope="row"><div class="totals-title-wrap"><span>کل مجموعہ حساب</span><span id="total-orders-count" class="orders-count-badge" title="منتخب آرڈرز کی کل تعداد">آرڈرز تعداد: 0</span><span id="total-net-aed" class="net-aed-badge">موجودہ درہم: 0</span></div></th>
+              <th colspan="5" scope="row"><div class="totals-title-wrap"><span class="total-bombay-black">کل مجموعہ حساب</span><span id="total-orders-count" class="orders-count-badge total-bombay-black" title="منتخب آرڈرز کی کل تعداد">آرڈرز تعداد: 0</span><span id="total-net-aed" class="net-aed-badge total-bombay-black">موجودہ درہم: 0</span></div></th>
               <td class="col-branch no-print"></td>
-              <td id="total-balance">0</td>
-              <td id="total-aed">0</td>
-              <td id="total-pkr">(0)</td>
+              <td id="total-balance" class="total-bombay-black">0</td>
+              <td id="total-aed" class="total-bombay-black">0</td>
+              <td id="total-pkr" class="total-bombay-black">(0)</td>
+              <td class="col-words print-only"><span class="total-words-label total-bombay-black">کل پاکستانی</span></td>
               <td class="col-receipt no-print"></td>
               <td class="no-print"></td>
             </tr>
           </tfoot>
         </table>
       </div>
+      <!-- Audit & Rate Verification (جانچ پڑتال) — Screen Only (no-print) -->
+      <section id="register-audit-panel" class="register-audit-card no-print" aria-label="اندراج جانچ پڑتال">
+        <div class="audit-card-header">
+          <div class="audit-title-wrap">
+            <span class="audit-icon" aria-hidden="true">🔍</span>
+            <div class="audit-heading-text">
+              <strong class="audit-main-title">جانچ پڑتال و ریٹ تصدیق</strong>
+              <span class="audit-subtitle">فی انٹری 10 درہم فیس منہائی اور ریٹ کے مطابق خودکار حساب</span>
+            </div>
+          </div>
+          <div class="audit-quick-controls">
+            <label class="audit-field-group" for="audit-rate-input">
+              <span class="audit-field-label">ریٹ (Rate):</span>
+              <input id="audit-rate-input" type="number" step="any" min="0" placeholder="ریٹ درج کریں..." autocomplete="off" inputmode="decimal">
+            </label>
+            <label class="audit-field-group" for="audit-fee-input" title="فی انٹری فیس (درہم)">
+              <span class="audit-field-label">فیس / انٹری:</span>
+              <div class="audit-fee-wrapper">
+                <input id="audit-fee-input" type="number" step="any" min="0" value="10" placeholder="10">
+                <span class="audit-fee-unit">درہم</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="audit-metrics-grid">
+          <div class="audit-metric-chip" title="کل منتخب شدہ اندراجات">
+            <span class="metric-label">کل انٹریاں</span>
+            <strong id="audit-entries-count" class="metric-value">0</strong>
+          </div>
+          <div class="audit-metric-chip" title="منہا کی گئی کل فیس">
+            <span class="metric-label">منہا شدہ فیس</span>
+            <strong id="audit-total-fee" class="metric-value">0 درہم</strong>
+          </div>
+          <div class="audit-metric-chip" title="رجسٹر میں موجود کل درہم">
+            <span class="metric-label">کل درہم</span>
+            <strong id="audit-total-aed" class="metric-value">0</strong>
+          </div>
+          <div class="audit-metric-chip highlight" title="فیس نکالنے کے بعد خالص درہم">
+            <span class="metric-label">خالص درہم (Net)</span>
+            <strong id="audit-net-aed" class="metric-value">0</strong>
+          </div>
+          <div class="audit-metric-chip audit-chip-calculated" title="خالص درہم × ریٹ">
+            <span class="metric-label">حسابی رقم (روپیہ)</span>
+            <strong id="audit-calculated-pkr" class="metric-value">—</strong>
+          </div>
+          <div class="audit-metric-chip" title="رجسٹر کے روپیہ کالم کا کل مجموعہ">
+            <span class="metric-label">رجسٹر کل روپیہ</span>
+            <strong id="audit-actual-pkr" class="metric-value">0 روپیہ</strong>
+          </div>
+        </div>
+
+        <div id="audit-result-banner" class="audit-status-banner neutral">
+          <div class="status-main">
+            <span id="audit-status-icon" class="status-icon" aria-hidden="true">ℹ️</span>
+            <span id="audit-status-text" class="status-text">جانچ پڑتال مکمل کرنے کے لیے اوپر ریٹ (Rate) درج کریں۔</span>
+          </div>
+          <span id="audit-diff-badge" class="diff-badge" hidden>فرق: 0</span>
+        </div>
+      </section>
       <div class="paper-foot no-print"><span id="count">0 اندراجات</span><span lang="en">Hisaab · Daily Register</span></div>
     </section>
     <footer class="help"><span>نئی انٹری اوپر والی "رپورٹ کی تاریخ" پر محفوظ ہوتی ہے • Enter / Tab سے اگلا خانہ • Shift+Tab سے پچھلا خانہ • Ctrl+D اوپر سے کاپی • Alt+1..9 پارٹی • Ctrl+P پرنٹ • Ctrl+Z واپس</span><span id="storage-help">ڈیٹا اسی براؤزر میں محفوظ ہوتا ہے؛ "مزید" میں خودکار بیک اَپ اور پن لاک (PIN) فعال کریں۔</span></footer>
@@ -365,6 +429,11 @@
               <span class="tab-dot dot-payable" aria-hidden="true"></span>
               <span class="tab-label">واجب الادا (دینا ہے)</span>
               <span id="badge-khata-payables-count" class="tab-badge eng-num">0</span>
+            </button>
+            <button type="button" id="tab-khata-overdue" class="khata-dir-tab is-overdue" role="tab" aria-selected="false" title="30 دن یا اس سے پرانی بقایا وصولیاں">
+              <span class="tab-dot dot-overdue" aria-hidden="true"></span>
+              <span class="tab-label">⏰ پرانی وصولیاں (30+ دن)</span>
+              <span id="badge-khata-overdue-count" class="tab-badge eng-num">0</span>
             </button>
           </div>
           <div class="khata-dir-filter-info">
@@ -893,7 +962,7 @@
           </div>
         </div>
         <div class="khata-dir-search-wrap">
-          <input type="search" id="khata-dir-search" class="khata-search-input" placeholder="🔍 کھاتہ تلاش کریں (نام، کوڈ، موبائل)..." aria-label="ڈائریکٹری میں کھاتہ تلاش کریں">
+          <input type="search" id="khata-dir-modal-search" class="khata-search-input" placeholder="🔍 کھاتہ تلاش کریں (نام، کوڈ، موبائل)..." aria-label="ڈائریکٹری میں کھاتہ تلاش کریں">
         </div>
         <div class="khata-dir-top-actions">
           <button id="btn-new-khata-dir" type="button" class="btn-khata-new" style="padding: 6px 14px; font-size: 0.9rem;">
@@ -922,11 +991,11 @@
               <th scope="col" class="dir-th-bal">بقایا بیلنس</th>
             </tr>
           </thead>
-          <tbody id="khata-dir-rows"></tbody>
+          <tbody id="khata-dir-modal-rows"></tbody>
         </table>
       </div>
       <div class="khata-modal-actions khata-dir-footer">
-        <div class="khata-dir-count-badge" id="khata-dir-count"></div>
+        <div class="khata-dir-count-badge" id="khata-dir-modal-count"></div>
         <button id="btn-footer-close-dir-khata" type="button" class="btn-khata-cancel" data-close-dialog>بند کریں</button>
       </div>
     </dialog>
@@ -941,25 +1010,111 @@
     <p id="branch-error" role="status"></p><div id="branch-list"></div>
   </dialog>
 
+  <dialog id="party-date-dialog" class="party-date-dialog" aria-labelledby="party-dialog-title">
+    <div class="dialog-head">
+      <div class="party-dialog-title-wrap">
+        <span class="party-dialog-badge-icon" aria-hidden="true">📅</span>
+        <div>
+          <h2 id="party-dialog-title">پارٹی تاریخ فلٹر و پرنٹ</h2>
+          <span class="party-dialog-branch-sub">پارٹی: <strong id="party-dialog-branch-name"></strong></span>
+        </div>
+      </div>
+      <button id="close-party-date-dialog" type="button" aria-label="بند کریں">×</button>
+    </div>
+
+    <div class="party-dialog-content">
+      <div class="pfilter-mode-selector" role="tablist" aria-label="فلٹر کی قسم">
+        <button type="button" id="pfilter-tab-day" class="pfilter-mode-btn active" role="tab" aria-selected="true">مخصوص دن</button>
+        <button type="button" id="pfilter-tab-range" class="pfilter-mode-btn" role="tab" aria-selected="false">تاریخ کا دورانیہ</button>
+        <button type="button" id="pfilter-tab-all" class="pfilter-mode-btn" role="tab" aria-selected="false">تمام تاریخیں</button>
+      </div>
+
+      <!-- Single day panel -->
+      <div id="pfilter-sec-day" class="pfilter-section">
+        <label for="party-dialog-day">تاریخ منتخب کریں:</label>
+        <div class="pfilter-inline-date">
+          <input type="date" id="party-dialog-day" class="pfilter-input-date" aria-label="مخصوص دن">
+          <button type="button" id="party-dialog-day-today" class="btn-pfilter-quick">آج</button>
+        </div>
+      </div>
+
+      <!-- Range panel -->
+      <div id="pfilter-sec-range" class="pfilter-section" hidden>
+        <div class="pfilter-range-grid">
+          <div class="pfilter-field">
+            <label for="party-dialog-from">تاریخ سے:</label>
+            <input type="date" id="party-dialog-from" class="pfilter-input-date" aria-label="تاریخ سے">
+          </div>
+          <div class="pfilter-field">
+            <label for="party-dialog-to">تاریخ تک:</label>
+            <input type="date" id="party-dialog-to" class="pfilter-input-date" aria-label="تاریخ تک">
+          </div>
+        </div>
+        <div class="pfilter-quick-presets">
+          <span class="pfilter-presets-label">فوری انتخاب:</span>
+          <button type="button" id="pfilter-preset-7d" class="btn-preset-pill">آخری 7 دن</button>
+          <button type="button" id="pfilter-preset-month" class="btn-preset-pill">موجودہ مہینہ</button>
+          <button type="button" id="pfilter-preset-prev-month" class="btn-preset-pill">گزشتہ مہینہ</button>
+        </div>
+      </div>
+
+      <!-- All dates panel -->
+      <div id="pfilter-sec-all" class="pfilter-section" hidden>
+        <div class="pfilter-all-banner">
+          <p>اس پارٹی کی اب تک کی تمام درج شدہ تاریخوں کا حساب اور انٹریاں ظاہر ہوں گی۔</p>
+        </div>
+      </div>
+
+      <!-- Live matched results summary -->
+      <div class="pfilter-summary-card">
+        <div class="pfilter-summary-icon" aria-hidden="true">📊</div>
+        <div class="pfilter-summary-info">
+          <strong id="party-dialog-match-count">0 انٹریاں منتخب ہیں</strong>
+          <span id="party-dialog-match-amounts" class="pfilter-summary-sub">کل رقم: 0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="party-dialog-actions">
+      <div class="party-dialog-primary-actions">
+        <button type="button" id="party-dialog-print" class="btn-party-print">🖨 پرنٹ کریں</button>
+        <button type="button" id="party-dialog-pdf" class="btn-party-pdf">📄 PDF محفوظ کریں</button>
+      </div>
+      <div class="party-dialog-secondary-actions">
+        <button type="button" id="party-dialog-apply" class="btn-party-apply">✓ لاگو کریں</button>
+        <button type="button" id="party-dialog-reset" class="btn-party-reset">🔄 ری سیٹ</button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="export-dialog" aria-labelledby="export-title"><div class="dialog-head"><h2 id="export-title">Excel ایکسپورٹ</h2><button id="close-export" aria-label="بند کریں">×</button></div><p>نام، موبائیل نمبر، تاریخ، پارٹی اور رقم Excel میں محفوظ کریں۔</p><div class="export-actions"><button id="export-filtered" class="primary">فلٹر والی انٹریاں</button><button id="export-all">تمام انٹریاں</button></div></dialog>
 
   <dialog id="summary-dialog" aria-labelledby="summary-title">
-    <div class="dialog-head"><h2 id="summary-title">روزانہ خلاصہ</h2><button id="close-summary" aria-label="بند کریں">×</button></div>
+    <div class="dialog-head"><h2 id="summary-title">روزانہ و ماہانہ خلاصہ رپورٹ</h2><button id="close-summary" aria-label="بند کریں">×</button></div>
     <!-- FIX-12: Tabs control summary-tabpanel with proper role=tabpanel target -->
     <div class="summary-tabs" role="tablist" aria-label="خلاصہ کی قسم">
       <button id="summary-tab-date" type="button" role="tab" class="summary-tab active" aria-selected="true" aria-controls="summary-tabpanel">📅 تاریخ وار خلاصہ</button>
       <button id="summary-tab-party" type="button" role="tab" class="summary-tab" aria-selected="false" aria-controls="summary-tabpanel">🏢 پارٹی وار خلاصہ</button>
+      <button id="summary-tab-monthly" type="button" role="tab" class="summary-tab" aria-selected="false" aria-controls="summary-tabpanel">📈 ماہانہ اور کمیشن رپورٹ</button>
     </div>
-    <div class="summary-toolbar"><p id="summary-scope"></p><div class="summary-export-btns"><button id="summary-pdf" type="button" class="primary">📄 PDF محفوظ کریں</button><button id="summary-png" type="button">🖼 PNG محفوظ کریں</button></div></div>
+    <div class="summary-toolbar">
+      <div class="summary-scope-wrap">
+        <p id="summary-scope"></p>
+        <select id="summary-month-filter" class="summary-month-select" aria-label="مہینہ منتخب کریں">
+          <option value="">تمام مہینے</option>
+        </select>
+      </div>
+      <div class="summary-export-btns"><button id="summary-pdf" type="button" class="primary">📄 PDF محفوظ کریں</button><button id="summary-png" type="button">🖼 PNG محفوظ کریں</button></div>
+    </div>
     <p id="summary-status" role="status"></p>
     <div id="summary-tabpanel" class="summary-wrap" role="tabpanel" aria-labelledby="summary-tab-date">
       <table id="summary-table">
         <thead>
           <!-- FIX-13: Scope on summary headers -->
-          <tr><th id="summary-first-heading" scope="col">تاریخ</th><th scope="col">آرڈرز تعداد</th><th scope="col">بقایا</th><th scope="col">درہم</th><th id="summary-currency-heading" scope="col">روپیہ</th></tr>
+          <tr><th id="summary-first-heading" scope="col">تاریخ</th><th scope="col">آرڈرز تعداد</th><th scope="col">بقایا</th><th scope="col">کل درہم</th><th id="summary-fee-heading" scope="col" hidden>کمیشن فیس</th><th id="summary-net-aed-heading" scope="col" hidden>خالص درہم</th><th id="summary-currency-heading" scope="col">روپیہ</th></tr>
         </thead>
         <tbody id="summary-rows"></tbody>
-        <tfoot><tr><th scope="row">کل</th><td id="summary-count">0</td><td id="summary-balance">0</td><td id="summary-aed">0</td><td id="summary-pkr">0</td></tr></tfoot>
+        <tfoot><tr><th scope="row">کل</th><td id="summary-count">0</td><td id="summary-balance">0</td><td id="summary-aed">0</td><td id="summary-fee" hidden>0</td><td id="summary-net-aed" hidden>0</td><td id="summary-pkr">0</td></tr></tfoot>
       </table>
     </div>
     <p id="summary-hint">کسی تاریخ پر کلک کریں تو اسی دن کا رجسٹر کھل جائے گا۔</p>
@@ -976,11 +1131,22 @@
       <p id="external-backup-error" role="status" hidden></p>
     </section>
     <section class="external-backup-settings">
-      <h3>بیرونی فولڈر بیک اَپ</h3>
+      <h3>☁️ کلاؤڈ (Google Drive / OneDrive) و بیرونی فولڈر بیک اَپ</h3>
       <!-- FIX-10: Remove conflicting aria-hidden on live status message -->
       <p id="external-backup-status" class="sr-only" role="status"></p>
-      <div class="backup-actions-bar"><button id="external-backup-select" type="button">فولڈر منتخب کریں</button><button id="external-backup-retry" type="button" hidden>دوبارہ جوڑیں / بیک اَپ لیں</button><button id="external-backup-disable" type="button" hidden>بند کریں</button></div>
-      <p id="external-backup-help">منتخب USB یا synced فولڈر میں Hisaab-Backups کے اندر آخری 30 کاپیاں محفوظ ہوں گی۔ Cloud sync کی تصدیق اپنی sync app میں کریں۔</p>
+      <div id="cloud-detected-wrap" class="cloud-detected-wrap" hidden>
+        <span class="cloud-detected-label">فوری کلاؤڈ کنیکٹ (1-Click):</span>
+        <div id="cloud-detected-bar" class="cloud-detected-bar"></div>
+      </div>
+      <div class="backup-actions-bar">
+        <button id="external-backup-select" type="button">📁 فولڈر منتخب کریں</button>
+        <button id="external-backup-retry" type="button" hidden>🔄 ابھی سنک کریں</button>
+        <button id="external-backup-open-folder" type="button" hidden>📂 سنک فولڈر کھولیں</button>
+        <button id="external-backup-disable" type="button" hidden>بند کریں</button>
+        <button id="encrypted-backup-btn" type="button" title="پاس ورڈ سے محفوظ انکرپٹڈ بیک اَپ فائل ڈاؤن لوڈ کریں">🔒 پاس ورڈ والا بیک اَپ</button>
+      </div>
+      <p class="cloud-sync-schedule-note">⚡ خودکار شیڈول: ہر تبدیلی پر، ہر <strong>30 منٹ</strong> بعد، اور <strong>ایپ بند کرتے وقت (On Exit)</strong> خودکار بیک اَپ سنک ہوتا ہے۔</p>
+      <p id="external-backup-help">منتخب Google Drive، OneDrive یا USB فولڈر میں Hisaab-Backups کے اندر آخری 30 کاپیاں محفوظ ہوں گی۔</p>
     </section>
     <div id="backup-legacy-controls"></div>
     <p id="backup-status" class="backup-download-info" role="status"></p>
@@ -1081,14 +1247,14 @@
       <footer class="thermal-slip-footer">
         <div class="thermal-thanks">آپ کے کاروبار کا شکریہ!</div>
         <div class="thermal-note">کمپیوٹرائزڈ رسید — دستخط کی ضرورت نہیں</div>
-        <div class="thermal-tag">Powered by Hisaab POS v1.4.22</div>
+        <div class="thermal-tag">Powered by Hisaab POS v1.4.33</div>
       </footer>
     </article>
   </dialog>
 
   <dialog id="account-settings-dialog" class="auth-dialog no-print" dir="ltr">
     <div class="dialog-head">
-      <h2>👤 Account &amp; Password Settings <span class="dialog-version-pill">v1.4.22</span></h2>
+      <h2>👤 Account &amp; Password Settings <span class="dialog-version-pill">v1.4.33</span></h2>
       <button id="btn-close-account-settings" type="button" aria-label="Close">✕</button>
     </div>
     <form id="account-settings-form" class="auth-form" novalidate>
@@ -1165,7 +1331,7 @@
           <div class="text-center mb-6">
             <div class="auth-portal-badge">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span>First-Time Setup <span class="auth-version-pill">v1.4.22</span></span>
+              <span>First-Time Setup <span class="auth-version-pill">v1.4.33</span></span>
             </div>
             <h1 class="auth-display-title">
               Admin Setup
@@ -1254,7 +1420,7 @@
           <div class="text-center mb-6">
             <div class="auth-portal-badge">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span>Secure Portal <span class="auth-version-pill">v1.4.22</span></span>
+              <span>Secure Portal <span class="auth-version-pill">v1.4.33</span></span>
             </div>
             <h1 class="auth-display-title">
               Welcome Back
@@ -1425,17 +1591,18 @@
   <input id="file" type="file" accept="application/json,.json" hidden aria-label="بیک اَپ فائل منتخب کریں">
 
   <!-- FIX-3: Universal dialog backdrop-click fallback polyfill -->
-  <script src="dialog-fallback.js?v=1.4.22"></script>
-  <script src="excel-export.js?v=1.4.22"></script>
-  <script src="journal.js?v=1.4.22"></script>
-  <script src="khata.js?v=1.4.22"></script>
+  <script src="dialog-fallback.js?v=1.4.33"></script>
+  <script src="excel-export.js?v=1.4.33"></script>
+  <script src="journal.js?v=1.4.33"></script>
+  <script src="khata.js?v=1.4.33"></script>
   <!-- FIX-6 & FIX-27: html2canvas with SRI integrity verification and deferred non-blocking load -->
   <script src="assets/html2canvas.min.js?v=1.4.1" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" defer></script>
-  <script src="thermal-print.js?v=1.4.22"></script>
-  <script src="receipt-png.js?v=1.4.22"></script>
-  <script src="external-backup-ui.js?v=1.4.22"></script>
-  <script src="auth.js?v=1.4.22"></script>
-  <script src="app.js?v=1.4.22"></script>
-  <script src="ui.js?v=1.4.22"></script>
+  <script src="thermal-print.js?v=1.4.33"></script>
+  <script src="receipt-png.js?v=1.4.33"></script>
+  <script src="external-backup-ui.js?v=1.4.33"></script>
+  <script src="auth.js?v=1.4.33"></script>
+  <script src="urdu-amount.js?v=1.4.33"></script>
+  <script src="app.js?v=1.4.33"></script>
+  <script src="ui.js?v=1.4.33"></script>
 </body>
 </html>

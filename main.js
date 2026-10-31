@@ -5,7 +5,15 @@ const { randomUUID } = require('crypto');
 
 // P6: Only set App User Model ID on Windows platform
 if (process.platform === 'win32') {
-  app.setAppUserModelId('com.ishukhan.hisaab');
+  app.setAppUserModelId('com.ishtiaquddin.hisaab');
+  try {
+    const fsSync = require('fs');
+    const appData = app.getPath('appData');
+    const canonicalUserData = path.join(appData, 'حساب');
+    app.setPath('userData', canonicalUserData);
+  } catch (err) {
+    console.warn('Could not set canonical userData path:', err);
+  }
 }
 
 // Single instance lock enforcement
@@ -131,6 +139,33 @@ ipcMain.handle('external-backup-status', async (event) => {
 });
 
 // Trusted renderer frame only
+ipcMain.handle('external-backup-detect', async (event) => {
+  trustedFrame(event);
+  return getExternalBackup().detectCloudFolders();
+});
+
+// Trusted renderer frame only
+ipcMain.handle('external-backup-select-preset', async (event, presetId) => {
+  trustedFrame(event);
+  if (typeof presetId !== 'string' || !presetId) throw new Error('Invalid preset');
+  const detected = await getExternalBackup().detectCloudFolders();
+  const match = detected.find(d => d.id === presetId);
+  if (!match) throw new Error('Cloud folder not found');
+  return getExternalBackup().configure(match.path);
+});
+
+// Trusted renderer frame only
+ipcMain.handle('external-backup-open-folder', async (event) => {
+  trustedFrame(event);
+  const cfg = await getExternalBackup().status();
+  if (!cfg?.folder) return { status: 'disabled' };
+  const dir = path.join(cfg.folder, 'Hisaab-Backups');
+  await fs.mkdir(dir, { recursive: true }).catch(() => {});
+  await shell.openPath(dir);
+  return { status: 'ok' };
+});
+
+// Trusted renderer frame only
 ipcMain.handle('external-backup-select', async (event) => {
   trustedFrame(event);
   const result = await dialog.showOpenDialog(mainWindow, {
@@ -157,6 +192,28 @@ ipcMain.handle('external-backup-save', async (event, data) => {
     const config = await getExternalBackup().status();
     return { status: 'error', ...config, error: err.message };
   }
+});
+
+let quitSyncDone = false;
+app.on('before-quit', (event) => {
+  if (quitSyncDone || !gotTheLock) return;
+  quitSyncDone = true;
+  event.preventDefault();
+  (async () => {
+    try {
+      const cfg = await getExternalBackup().status();
+      if (cfg?.folder) {
+        const loaded = getDatabase().load();
+        if (loaded?.state) {
+          await Promise.race([
+            getExternalBackup().save(loaded.state),
+            new Promise(r => setTimeout(r, 3000))
+          ]);
+        }
+      }
+    } catch (_) {}
+    app.quit();
+  })();
 });
 
 app.on('will-quit', () => {

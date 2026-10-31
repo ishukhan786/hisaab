@@ -34,17 +34,57 @@
     more.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('.font-tools'))more.open=false;});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&more.open){more.open=false;more.querySelector('summary')?.focus();}});
   }
+  let supportsDisplayTransition;
+  function canTransitionDisplay() {
+    if (supportsDisplayTransition !== undefined) return supportsDisplayTransition;
+    if (!window.CSS?.supports?.('transition-behavior', 'allow-discrete') || !document.body) {
+      return false;
+    }
+    const probe = document.createElement('div');
+    probe.style.cssText = 'transition: display 1s allow-discrete !important; display: block;';
+    document.body.appendChild(probe);
+    getComputedStyle(probe).display;
+    probe.style.display = 'none';
+    supportsDisplayTransition = getComputedStyle(probe).display === 'block';
+    probe.remove();
+    return supportsDisplayTransition;
+  }
+  function supportsTopLayerExit() {
+    return window.CSS?.supports?.('overlay', 'auto') && canTransitionDisplay();
+  }
+  async function closeTopLayer(element) {
+    if (!element) return;
+    if (!supportsTopLayerExit()) {
+      element.setAttribute('data-closing', '');
+      const animations = typeof element.getAnimations === 'function' ? element.getAnimations({ subtree: true }) : [];
+      if (animations.length > 0) {
+        await Promise.race([
+          Promise.allSettled(animations.map(a => a.finished)),
+          new Promise(r => setTimeout(r, 2000)),
+        ]);
+      }
+      if (!element.hasAttribute('data-closing')) return;
+      element.removeAttribute('data-closing');
+    }
+    element.close();
+  }
   if(!('closedBy' in HTMLDialogElement.prototype)){
     document.querySelectorAll('dialog').forEach(d=>{
       d.addEventListener('click',e=>{
         if(e.target!==d)return;
         const rect=d.getBoundingClientRect();
         if(rect.top<=e.clientY&&e.clientY<=rect.top+rect.height&&rect.left<=e.clientX&&e.clientX<=rect.left+rect.width)return;
-        d.close();
+        closeTopLayer(d);
       });
     });
   }
-  document.querySelectorAll('.dialog-head button').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
+  document.querySelectorAll('dialog').forEach(d => {
+    d.addEventListener('cancel', e => {
+      e.preventDefault();
+      closeTopLayer(d);
+    });
+  });
+  document.querySelectorAll('.dialog-head button').forEach(button=>button.addEventListener('click',()=>closeTopLayer(button.closest('dialog'))));
 
   // ===================== Theme Management (Dark / Light Mode) =====================
   function updateThemeUI(theme) {
@@ -118,7 +158,8 @@
   const header=document.querySelector('.top-nav');
   const first=document.createElement('div');first.className='workspace-header';
   const tools=document.createElement('div');tools.className='workspace-tools';
-  first.append(document.querySelector('.brand-mini'),document.querySelector('.workspace-nav'),document.querySelector('#theme-toggle'),document.querySelector('#save-state'),document.querySelector('.more-menu'));
+  const cloudPill=document.querySelector('#cloud-sync-pill');
+  first.append(...[document.querySelector('.brand-mini'),document.querySelector('.workspace-nav'),document.querySelector('#theme-toggle'),cloudPill,document.querySelector('#save-state'),document.querySelector('.more-menu')].filter(Boolean));
   tools.append(document.querySelector('.top-nav-start'),document.querySelector('.top-nav-center'),document.querySelector('.top-nav-end'));
   header.append(first,tools);
   const output=document.createElement('details');output.className='output-menu';

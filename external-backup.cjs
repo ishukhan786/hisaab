@@ -1,7 +1,30 @@
 'use strict';
-const fs=require('node:fs/promises'),path=require('node:path'),{randomUUID}=require('node:crypto');
+const fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),{randomUUID}=require('node:crypto');
 class ExternalBackup{
  constructor(userData){this.settingsFile=path.join(userData,'external-backup.json');this.queue=Promise.resolve();}
+ async detectCloudFolders(){
+  const home=os.homedir();
+  const candidates=[
+   {id:'onedrive',label:'OneDrive',icon:'☁️',path:process.env.OneDrive||process.env.OneDriveConsumer||path.join(home,'OneDrive')},
+   {id:'gdrive-home',label:'Google Drive',icon:'☁️',path:path.join(home,'Google Drive')},
+   {id:'gdrive-mydrive',label:'Google Drive (My Drive)',icon:'☁️',path:path.join(home,'My Drive')},
+   {id:'gdrive-g',label:'Google Drive (G:)',icon:'☁️',path:'G:\\My Drive'},
+   {id:'dropbox',label:'Dropbox',icon:'📦',path:path.join(home,'Dropbox')},
+   {id:'documents',label:'Documents',icon:'📁',path:path.join(home,'Documents')}
+  ];
+  const seen=new Set(),found=[];
+  for(const c of candidates){
+   if(!c.path)continue;
+   const resolved=path.resolve(c.path);
+   const key=resolved.toLowerCase();
+   if(seen.has(key))continue;
+   try{
+    const st=await fs.stat(resolved);
+    if(st.isDirectory()){seen.add(key);found.push({id:c.id,label:c.label,icon:c.icon,path:resolved});}
+   }catch(_){}
+  }
+  return found;
+ }
  async status(){try{return JSON.parse(await fs.readFile(this.settingsFile,'utf8'));}catch(e){if(e.code==='ENOENT')return {folder:null,lastSuccess:null};throw e;}}
  async settings(value){
   await fs.mkdir(path.dirname(this.settingsFile),{recursive:true});

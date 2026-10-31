@@ -77,9 +77,18 @@
 
   let sessionUnlocked = false;
   let inactivityTimer = null;
+  let lastActivityResetAt = 0;
   const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+  const ACTIVITY_THROTTLE_MS = 4000;
 
-  function resetInactivity() {
+  function resetInactivity(e) {
+    if (e && sessionUnlocked) {
+      const now = Date.now();
+      if (now - lastActivityResetAt < ACTIVITY_THROTTLE_MS) return;
+      lastActivityResetAt = now;
+    } else {
+      lastActivityResetAt = Date.now();
+    }
     if (inactivityTimer) clearTimeout(inactivityTimer);
     if (sessionUnlocked) {
       inactivityTimer = setTimeout(() => {
@@ -115,8 +124,13 @@
   }
 
   function lockApp(reason = 'Enter your credentials to continue') {
+    const wasUnlocked = sessionUnlocked;
     sessionUnlocked = false;
     if (inactivityTimer) clearTimeout(inactivityTimer);
+
+    if (wasUnlocked && window.location.protocol.startsWith('http')) {
+      window.fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
+    }
 
     const overlay = $('auth-overlay');
     if (!overlay) return;
@@ -144,9 +158,16 @@
         if (errEl) errEl.textContent = '';
         const userInp = $('login-username');
         const passInp = $('login-password');
+        const remInp = $('remember-me');
+        let rememberUser = true;
+        try {
+          rememberUser = localStorage.getItem('hisaab-remember-user') !== '0';
+        } catch (_) {}
+        if (remInp) remInp.checked = rememberUser;
         if (passInp) passInp.value = '';
         if (userInp) {
-          if (!userInp.value && auth?.username) userInp.value = auth.username;
+          if (!rememberUser) userInp.value = '';
+          else if (!userInp.value && auth?.username) userInp.value = auth.username;
           else if (!userInp.value) userInp.value = 'admin';
           if (userInp.value) {
             passInp?.focus();
@@ -246,6 +267,13 @@
     const auth = getStoredAuth();
     const isWebMode = window.location.protocol.startsWith('http');
 
+    const rememberEl = $('remember-me');
+    if (rememberEl) {
+      try {
+        localStorage.setItem('hisaab-remember-user', rememberEl.checked ? '1' : '0');
+      } catch (_) {}
+    }
+
     if (isWebMode) {
       if (!username || !password) {
         if (errEl) errEl.textContent = 'Please enter both username and password.';
@@ -266,6 +294,10 @@
           if (errEl) errEl.textContent = response.status === 401 ? 'Invalid username or password.' : 'Login service unavailable.';
           shakeCard('auth-login-card');
           return { success: false, error: 'invalid_credentials' };
+        }
+        if (auth) {
+          auth.username = result.username || username;
+          saveStoredAuth(auth);
         }
         unlockApp();
         return { success: true };
@@ -476,9 +508,17 @@
       const newPin = ($('acc-new-pin')?.value || '').trim();
       const msgEl = $('acc-settings-msg');
 
-      if (window.location.protocol.startsWith('http') && newPass) {
-        if (newPass.length < 4) {
+      if (window.location.protocol.startsWith('http')) {
+        if (newPass && newPass.length < 4) {
           if (msgEl) { msgEl.className = 'pin-msg error'; msgEl.textContent = 'New password must be at least 4 characters.'; }
+          return;
+        }
+        if (newPin && !/^\d{4,8}$/.test(newPin)) {
+          if (msgEl) { msgEl.className = 'pin-msg error'; msgEl.textContent = 'New Recovery PIN must be 4 to 8 digits.'; }
+          return;
+        }
+        if (!newPass && !newUsername && !newPin) {
+          if (msgEl) { msgEl.className = 'pin-msg error'; msgEl.textContent = 'Please enter a new username, password, or Recovery PIN.'; }
           return;
         }
         try {
@@ -486,14 +526,34 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin',
-            body: JSON.stringify({ currentPassword: oldPass, newPassword: newPass })
+            body: JSON.stringify({ currentPassword: oldPass, newPassword: newPass, newUsername })
           });
           const result = await response.json().catch(() => ({}));
           if (!response.ok || result.status !== 'ok') {
-            if (msgEl) { msgEl.className = 'pin-msg error'; msgEl.textContent = result.message || 'Password could not be changed.'; }
+            if (msgEl) { msgEl.className = 'pin-msg error'; msgEl.textContent = result.message || 'Account settings could not be updated.'; }
             return;
           }
-          if (msgEl) { msgEl.className = 'pin-msg success'; msgEl.textContent = '✓ Password changed successfully!'; }
+          const auth = getStoredAuth();
+          if (auth) {
+            if (newUsername) auth.username = newUsername;
+            if (newPass) {
+              const newSalt = makeSalt();
+              auth.passwordHash = await hashPassword(newPass, newSalt);
+              auth.salt = newSalt;
+            }
+            if (newPin) {
+              const recSalt = makeSalt();
+              auth.recoveryPinHash = await hashPassword(newPin, recSalt);
+              auth.recoverySalt = recSalt;
+            }
+            auth.isDefault = false;
+            saveStoredAuth(auth);
+            if (window.HisaabState) {
+              window.HisaabState.auth = auth;
+              if (typeof window.HisaabSave === 'function') window.HisaabSave();
+            }
+          }
+          if (msgEl) { msgEl.className = 'pin-msg success'; msgEl.textContent = '✓ Account settings saved successfully!'; }
           setTimeout(() => $('account-settings-dialog')?.close(), 1500);
         } catch (_) {
           if (msgEl) { msgEl.className = 'pin-msg error'; msgEl.textContent = 'Server سے رابطہ نہیں ہو سکا۔'; }
@@ -565,6 +625,24 @@
 
     lockApp();
     document.body.classList.remove('auth-startup-pending');
+
+    if (window.location.protocol.startsWith('http')) {
+      window.fetch('/api/auth/status', { credentials: 'same-origin' })
+        .then(r => (r.ok ? r.json() : null))
+        .then(data => {
+          if (data?.isAuthenticated) {
+            if (data.username) {
+              const auth = getStoredAuth();
+              if (auth) {
+                auth.username = data.username;
+                saveStoredAuth(auth);
+              }
+            }
+            unlockApp();
+          }
+        })
+        .catch(() => {});
+    }
   }
 
   function setupGlassInteractivity() {

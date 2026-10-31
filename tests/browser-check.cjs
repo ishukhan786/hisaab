@@ -50,7 +50,7 @@ assert(await p.locator('#summary-dialog').evaluate(e=>e.open));
 assert.equal(await p.locator('#summary-rows tr').count(),1);
 assert.equal(await p.locator('#summary-balance').innerText(),'10');
 assert.equal(await p.locator('#summary-aed').innerText(),'125');
-assert.equal(await p.locator('#summary-pkr').innerText(),'1,000');
+assert.equal((await p.locator('#summary-pkr').innerText()).replace(/\s+/g,' '),'1,000 روپیہ');
 // Clicking summary row jumps to that day
 await p.locator('#summary-rows tr').first().click();
 assert.equal(await p.locator('#summary-dialog').evaluate(e=>e.open),false);

@@ -2,12 +2,20 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   isElectron: true,
-  externalBackup:{status:()=>ipcRenderer.invoke('external-backup-status'),select:()=>ipcRenderer.invoke('external-backup-select'),disable:()=>ipcRenderer.invoke('external-backup-disable'),save:data=>ipcRenderer.invoke('external-backup-save',data)},
+  externalBackup: {
+    status: () => ipcRenderer.invoke('external-backup-status'),
+    detect: () => ipcRenderer.invoke('external-backup-detect'),
+    selectPreset: (presetId) => ipcRenderer.invoke('external-backup-select-preset', presetId),
+    openFolder: () => ipcRenderer.invoke('external-backup-open-folder'),
+    select: () => ipcRenderer.invoke('external-backup-select'),
+    disable: () => ipcRenderer.invoke('external-backup-disable'),
+    save: data => ipcRenderer.invoke('external-backup-save', data)
+  },
   storage: {
     load: () => ipcRenderer.sendSync('database-load'),
-    initialize: (state, legacyRaw, revision) => ipcRenderer.sendSync('database-initialize',{state,legacyRaw,revision}),
-    save: (state, revision) => ipcRenderer.sendSync('database-save',{state,revision}),
-    restore: (state, revision, current) => ipcRenderer.sendSync('database-restore',{state,revision,current})
+    initialize: (state, legacyRaw, revision) => ipcRenderer.sendSync('database-initialize', { state, legacyRaw, revision }),
+    save: (state, revision) => ipcRenderer.sendSync('database-save', { state, revision }),
+    restore: (state, revision, current) => ipcRenderer.sendSync('database-restore', { state, revision, current })
   },
   saveReceiptPNG: (values, name) => ipcRenderer.invoke('save-receipt-png', values, name),
   copyReceiptPNG: (values) => ipcRenderer.invoke('copy-receipt-png', values),

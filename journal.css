@@ -1,4 +1,6 @@
-@font-face{font-family:'Bombay Black Unicode';src:local('Bombay Black Unicode'),local('Bombay Black'),url('assets/BombayBlackUnicode.ttf') format('truetype');font-weight:400 900;font-display:swap}
+@font-face{font-family:'Bombay Black Unicode';src:url('assets/BombayBlackUnicode.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Bombay Black Unicode';src:url('assets/BombayBlackUnicode.ttf') format('truetype');font-weight:700;font-display:swap}
+@font-face{font-family:'Bombay Black Unicode';src:url('assets/BombayBlackUnicode.ttf') format('truetype');font-weight:bold;font-display:swap}
 .workspace-nav{display:inline-flex;align-items:center;gap:6px;padding:0;background:transparent;border:0}
 .workspace-nav button{background:#f5f8f5;border:1px solid #d3dfd5;min-width:0;padding:5px 14px;height:36px}
 .workspace-nav button.active{background:#17634c;color:white;border-color:#17634c}
@@ -150,7 +152,8 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 
 /* Journal workspace hierarchy and readable cash closing cards. */
 @media screen {
-  .app-shell .journal-card {border-radius:16px;box-shadow:0 4px 24px rgba(18,63,46,0.08);border:1px solid #cce0d3}
+  .app-shell .journal-card {border-radius:16px;box-shadow:0 4px 24px rgba(18,63,46,0.08);border:1px solid #cce0d3;contain:layout style}
+  .app-shell .cash-summary {content-visibility:auto;contain-intrinsic-size:auto none auto 180px}
   .app-shell .journal-heading {padding:14px 24px;gap:12px;background:linear-gradient(180deg,#fbfdfc 0%,#f4f8f5 100%);border-bottom:1px solid #dce8e0}
   .app-shell .journal-heading h1 {font-family:'Bombay Black Unicode','Noto Nastaliq Urdu',serif;font-size:28px;font-weight:900;color:#134d38;line-height:1.9;letter-spacing:0.5px}
   .app-shell .journal-heading p {margin:2px 0 0;font-size:11.5px;color:#5a7667;line-height:2}

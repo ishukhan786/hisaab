@@ -71,13 +71,13 @@ const ALLOWED_ROOT_FILES = new Set([
   'journal.js',
   'khata.js',
   'theme-init.js',
-  'pin-init.js',
   'dialog-fallback.js',
   'excel-export.js',
   'receipt-png.js',
   'thermal-print.js',
   'external-backup-ui.js',
-  'auth.js'
+  'auth.js',
+  'urdu-amount.js'
 ]);
 
 function sendIndex(res) {
@@ -204,7 +204,7 @@ const authUserSchema = new mongoose.Schema({
 const HisaabAuthUser = mongoose.models.HisaabAuthUser || mongoose.model('HisaabAuthUser', authUserSchema);
 
 function hashPassword(password, salt) {
-  return crypto.pbkdf2Sync(String(password), String(salt), 120000, 32, 'sha256').toString('hex');
+  return crypto.pbkdf2Sync(String(password).trim(), String(salt), 120000, 32, 'sha256').toString('hex');
 }
 function signSession(user) {
   const payload = Buffer.from(JSON.stringify({ sub: String(user._id), username: user.username, exp: Date.now() + 8 * 60 * 60 * 1000 })).toString('base64url');
@@ -284,20 +284,35 @@ app.post('/api/auth/change-password', requireAuth, async (req, res) => {
       }
     } catch (_) { }
     const user = await ensureOwnerUser();
-    const currentPassword = String(req.body?.currentPassword || '');
-    const newPassword = String(req.body?.newPassword || '');
-    if (!user || newPassword.length < 4) return res.status(400).json({ status: 'error', message: 'New password must be at least 4 characters.' });
+    const currentPassword = String(req.body?.currentPassword || '').trim();
+    const newPassword = String(req.body?.newPassword || '').trim();
+    const newUsername = String(req.body?.newUsername || '').trim();
+    if (!user) return res.status(400).json({ status: 'error', message: 'User account not found.' });
+    if (newPassword && newPassword.length < 4) {
+      return res.status(400).json({ status: 'error', message: 'New password must be at least 4 characters.' });
+    }
+    if (!newPassword && !newUsername) {
+      return res.status(400).json({ status: 'error', message: 'No changes provided.' });
+    }
     const currentHash = hashPassword(currentPassword, user.passwordSalt);
-    if (currentHash !== user.passwordHash) return res.status(401).json({ status: 'error', message: 'Current password is incorrect.' });
-    const salt = crypto.randomBytes(16).toString('hex');
-    user.passwordSalt = salt;
-    user.passwordHash = hashPassword(newPassword, salt);
+    const validCurrent = currentHash.length === user.passwordHash.length &&
+      crypto.timingSafeEqual(Buffer.from(currentHash), Buffer.from(user.passwordHash));
+    if (!validCurrent) return res.status(401).json({ status: 'error', message: 'Current password is incorrect.' });
+    if (newUsername) {
+      user.username = newUsername;
+    }
+    if (newPassword) {
+      const salt = crypto.randomBytes(16).toString('hex');
+      user.passwordSalt = salt;
+      user.passwordHash = hashPassword(newPassword, salt);
+    }
     user.updatedAt = new Date();
     if (typeof user.save === 'function') {
       await user.save();
     }
-    res.json({ status: 'ok' });
-  } catch (error) { res.status(500).json({ status: 'error', message: 'Password could not be changed.' }); }
+    authCookie(res, signSession(user));
+    res.json({ status: 'ok', username: user.username });
+  } catch (error) { res.status(500).json({ status: 'error', message: 'Account settings could not be updated.' }); }
 });
 app.get('/api/auth/status', async (req, res) => {
   const session = readSession(req);

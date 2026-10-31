@@ -231,6 +231,12 @@ async function runSecurityTests() {
       assert.equal(res.body.includes('HisaabThermal'), true);
     });
 
+    await testAsync('GET /urdu-amount.js serves urdu amount engine in web app (status 200)', async () => {
+      const res = await fetchUrl('/urdu-amount.js');
+      assert.equal(res.status, 200);
+      assert.equal(res.body.includes('amountToUrduShort'), true);
+    });
+
     await testAsync('POST /api/backup validates input payload and rejects empty body with 400', async () => {
       const res = await new Promise((resolve, reject) => {
         const req = http.request({

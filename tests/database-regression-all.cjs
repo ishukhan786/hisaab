@@ -301,4 +301,56 @@ console.log('🧪 Starting 16-Scenario Regression Suite for HisaabDatabase');
   console.log('  ✓ 16. load() on empty DB → {state:null, revision:0}');
 }
 
-console.log('\n🎉 ALL 16 REGRESSION SCENARIOS VERIFIED SUCCESSFULLY!');
+// 17. Incremental khata_accounts and khata_entries SQLite table storage & round-trip
+{
+  const file = path.join(testDir, 'test-17.sqlite');
+  const db = new HisaabDatabase(file);
+  const state = makeBaseState();
+  state.khatas = [
+    {
+      id: 'kh-1',
+      code: '1',
+      name: 'حاجی اکبر',
+      mobile: '03001112233',
+      address: 'لاہور',
+      currency: 'pkr',
+      rows: [
+        { id: 'r1', date: '2026-09-10', detail: 'سابقہ بقایا', debit: '50,000', credit: '' },
+        { id: 'r2', date: '2026-10-05', detail: 'کیش وصولی', debit: '', credit: '15,000' }
+      ]
+    },
+    {
+      id: 'kh-2',
+      code: '2',
+      name: 'النور ٹریڈرز',
+      mobile: '0509988776',
+      address: 'دبئی',
+      currency: 'aed',
+      rows: [
+        { id: 'r1', date: '2026-10-12', detail: 'حوالہ', debit: '2,500', credit: '' }
+      ]
+    }
+  ];
+  const r1 = db.commit(state, 0, { initialize: true });
+  assert.equal(r1.revision, 1);
+
+  // Verify app_state.metadata does not bloat with full khatas array
+  const rawMeta = JSON.parse(db.db.prepare('SELECT metadata FROM app_state WHERE id=1').get().metadata);
+  assert.deepEqual(rawMeta.khatas, [], 'app_state.metadata stores compact [] marker while rows live in khata_accounts/khata_entries');
+  assert.equal(db.db.prepare('SELECT COUNT(*) AS c FROM khata_accounts').get().c, 2);
+  assert.equal(db.db.prepare('SELECT COUNT(*) AS c FROM khata_entries').get().c, 3);
+
+  const loaded = db.load();
+  assert.deepEqual(loaded.state, state);
+
+  // Incremental update: remove 1 entry and add 1 entry
+  state.khatas[0].rows.splice(1, 1);
+  state.khatas[1].rows.push({ id: 'r2', date: '2026-10-15', detail: 'وصولی', debit: '', credit: '1,000' });
+  const r2 = db.commit(state, 1);
+  assert.equal(r2.revision, 2);
+  assert.deepEqual(db.load().state, state);
+  db.close();
+  console.log('  ✓ 17. Incremental khata_accounts & khata_entries SQLite tables round-trip & diff update');
+}
+
+console.log('\n🎉 ALL 17 REGRESSION SCENARIOS VERIFIED SUCCESSFULLY!');

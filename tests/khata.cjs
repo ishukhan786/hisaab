@@ -205,8 +205,17 @@ assert.ok(khataJs.includes('btn-khata-dir-excel'), 'btn-khata-dir-excel event li
 assert.ok(khataCss.includes('.khata-dir-tabs-bar'), 'khata-dir-tabs-bar styling defined');
 assert.ok(khataCss.includes('.khata-dir-tab.is-receivable'), 'is-receivable tab styling defined');
 assert.ok(khataCss.includes('.khata-dir-tab.is-payable'), 'is-payable tab styling defined');
+assert.ok(khataCss.includes('.khata-dir-tab.is-overdue'), 'is-overdue tab styling defined');
+assert.ok(khataCss.includes('.khata-aging-badge'), 'khata-aging-badge styling defined');
 assert.ok(khataCss.includes('body.khata-view.khata-dir-printing'), 'khata-dir-printing print mode defined');
-console.log('  ✓ Receivables & Payables tabs, badges, directory print dossier, and Excel export verified');
+assert.ok(html.includes('id="tab-khata-overdue"'), 'tab-khata-overdue overdue receivables filter tab present');
+assert.ok(html.includes('id="badge-khata-overdue-count"'), 'badge-khata-overdue-count badge present');
+assert.ok(html.includes('id="summary-tab-monthly"'), 'summary-tab-monthly report tab present');
+assert.ok(html.includes('id="summary-month-filter"'), 'summary-month-filter selector present');
+assert.ok(html.includes('id="encrypted-backup-btn"'), 'encrypted-backup-btn present');
+assert.ok(khataJs.includes('computeDaysOld'), 'Receivables aging days computation present in khata.js');
+assert.ok(appJs.includes('encryptBackupPayload') && appJs.includes('decryptBackupPayload'), 'Web Crypto AES-GCM backup encryption/decryption present in app.js');
+console.log('  ✓ Receivables & Payables tabs, 30+ day overdue aging filter, monthly commission report, and encrypted backups verified');
 
 console.log('\n========================================');
 console.log('🎉 ALL KHATA VERIFICATION CHECKS PASSED!');

@@ -1,7 +1,7 @@
 {
   "name": "hisaabApp",
   "productName": "حساب",
-  "version": "1.4.22",
+  "version": "1.4.33",
   "description": "حساب — آف لائن روزانہ کھاتہ، اندراج رجسٹر اور پرنٹ سسٹم",
   "main": "main.js",
   "scripts": {
@@ -93,6 +93,7 @@
       "external-backup.cjs",
       "external-backup-ui.js",
       "auth.js",
+      "urdu-amount.js",
       "theme-init.js",
       "dialog-fallback.js"
     ]

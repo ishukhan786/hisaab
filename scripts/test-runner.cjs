@@ -14,7 +14,9 @@ const testSuites = [
   { name: 'Dark Mode / Night Theme', script: 'tests/theme-test.cjs' },
   { name: 'Print & PDF Light Theme Assurance', script: 'tests/print-theme.cjs' },
   { name: 'Khata & Customer Ledger Engine', script: 'tests/khata.cjs' },
-  { name: 'Thermal Slip Printer (80mm POS)', script: 'tests/thermal-slip.cjs' }
+  { name: 'Thermal Slip Printer (80mm POS)', script: 'tests/thermal-slip.cjs' },
+  { name: 'Register Audit & Rate Verification', script: 'tests/audit-verification.cjs' },
+  { name: 'Urdu Short Amount Calculation', script: 'tests/urdu-amount.test.cjs' }
 ];
 
 let failed = false;

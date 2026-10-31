@@ -1969,6 +1969,17 @@ html[data-theme="dark"] .khata-dir-table .khata-code-badge {
   color: #15803d;
 }
 
+.khata-dir-tab.is-overdue.active {
+  color: #9a3412;
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
+.khata-dir-tab.is-overdue .tab-badge {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
 .khata-dir-tab .tab-dot {
   width: 8px;
   height: 8px;
@@ -1978,6 +1989,55 @@ html[data-theme="dark"] .khata-dir-table .khata-code-badge {
 
 .tab-dot.dot-receivable { background: #ef4444; }
 .tab-dot.dot-payable { background: #10b981; }
+.tab-dot.dot-overdue { background: #f97316; }
+
+.khata-aging-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.khata-aging-badge.is-overdue-30 {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+}
+
+.khata-aging-badge.is-aging-15 {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+html[data-theme="dark"] .khata-dir-tab.is-overdue.active {
+  color: #fdba74 !important;
+  border-color: #9a3412 !important;
+  background: #2c1810 !important;
+}
+
+html[data-theme="dark"] .khata-dir-tab.is-overdue .tab-badge {
+  background: #431407 !important;
+  color: #fdba74 !important;
+}
+
+html[data-theme="dark"] .khata-aging-badge.is-overdue-30 {
+  background: #3b1219 !important;
+  color: #fda4af !important;
+  border-color: #881337 !important;
+}
+
+html[data-theme="dark"] .khata-aging-badge.is-aging-15 {
+  background: #33210b !important;
+  color: #fcd34d !important;
+  border-color: #78350f !important;
+}
 
 .khata-dir-filter-info {
   font-size: 12px;
@@ -3748,7 +3808,7 @@ html[data-theme="dark"] .khata-filter-badge {
     border-color: #d3e0d5 !important;
     border-bottom: 2px solid #c2d8c9 !important;
     border-inline-end: 1px solid #dce7df !important;
-    font-family: "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
+    font-family: "Bombay Black Unicode", "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
     font-weight: 700 !important;
     font-size: 13px !important;
     line-height: 2.2 !important;
@@ -4007,7 +4067,7 @@ html[data-theme="dark"] .khata-filter-badge {
     border-color: #264334 !important;
     border-bottom: 2px solid #2d5541 !important;
     border-inline-end: 1px solid #1e3529 !important;
-    font-family: "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
+    font-family: "Bombay Black Unicode", "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
     font-weight: 700 !important;
     font-size: 13px !important;
     line-height: 2.2 !important;
@@ -4309,6 +4369,16 @@ html[data-theme="dark"] .khata-filter-badge {
   /* Scrollbars (Dark Mode) */
   html[data-theme="dark"] body.app-shell :is(.table-wrap, .journal-table-wrap, .khata-table-wrap, .khata-dir-table-wrap, .summary-wrap) {
     scrollbar-color: #2a523e #122119 !important;
+  }
+
+  /* Andraj Register Table Header — Bombay Black Unicode in App UI (Light & Dark Mode) */
+  html body.app-shell #register-page .paper thead th,
+  html body.app-shell #register-page .paper thead th *,
+  html[data-theme="dark"] body.app-shell #register-page .paper thead th,
+  html[data-theme="dark"] body.app-shell #register-page .paper thead th * {
+    font-family: "Bombay Black Unicode", "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
   }
 }
 

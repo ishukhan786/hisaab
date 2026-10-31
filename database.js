@@ -15,7 +15,17 @@ class HisaabError extends Error {
 
 const MAX_BYTES = 15_000_000;
 const fields = ['sender','mobile','receiver','place','branch','balance','aed','pkr'];
-const validDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;
+const validDateCache = new Set();
+const validDate = value => {
+  if (typeof value !== 'string') return false;
+  if (validDateCache.has(value)) return true;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const t = Date.parse(value);
+  if (isNaN(t) || new Date(t).toISOString().slice(0, 10) !== value) return false;
+  if (validDateCache.size > 4096) validDateCache.clear();
+  validDateCache.add(value);
+  return true;
+};
 const text = (value, max) => typeof value === 'string' && value.length <= max;
 const validKhataAmount = value => {
   if (!text(value, 40)) return false;
@@ -46,6 +56,19 @@ function validateState(input) {
       if (!['pkr','afn'].includes(currency)) invalid('currency');
     }
   }
+  if (data.partyDateFilters != null) {
+    if (typeof data.partyDateFilters !== 'object' || Array.isArray(data.partyDateFilters)) invalid('partyDateFilters');
+    for (const [key, filter] of Object.entries(data.partyDateFilters)) {
+      if (!text(key, 350)) invalid('partyDateFilters key');
+      if (filter != null) {
+        if (typeof filter !== 'object' || Array.isArray(filter)) invalid('partyDateFilters item');
+        if (filter.mode != null && !['day', 'range', 'all'].includes(filter.mode)) invalid('partyDateFilters mode');
+        if (filter.date && !validDate(filter.date)) invalid('partyDateFilters date');
+        if (filter.from && !validDate(filter.from)) invalid('partyDateFilters from');
+        if (filter.to && !validDate(filter.to)) invalid('partyDateFilters to');
+      }
+    }
+  }
   const ids = new Set();
   const registerRow = (row, isTrash = false) => {
     if (!row || !text(row.id,99) || (!isTrash && ids.has(row.id)) || !validDate(row.entryDate)) invalid('entry');
@@ -62,8 +85,10 @@ function validateState(input) {
     /* FIX-7 & FIX-16: history field limits and total 50KB per-row serialized cap */
     if (row.history !== undefined) {
       if (!Array.isArray(row.history) || row.history.length > 30) invalid('history');
-      if (row.history.some(h => !h || !text(h.at,40) || !text(h.field,40) || !text(h.from,2000) || !text(h.to,2000))) invalid('history');
-      if (Buffer.byteLength(JSON.stringify(row.history)) > 50_000) invalid('history size');
+      if (row.history.length > 0) {
+        if (row.history.some(h => !h || !text(h.at,40) || !text(h.field,40) || !text(h.from,2000) || !text(h.to,2000))) invalid('history');
+        if (Buffer.byteLength(JSON.stringify(row.history)) > 50_000) invalid('history size');
+      }
     }
   };
   data.rows.forEach(r => registerRow(r, false));
@@ -139,36 +164,67 @@ class HisaabDatabase {
           CREATE TABLE journal_entries (id TEXT PRIMARY KEY, position INTEGER NOT NULL, entry_date TEXT NOT NULL, data TEXT NOT NULL CHECK(json_valid(data)));
           CREATE INDEX journal_date ON journal_entries(entry_date);
           CREATE TABLE trash_entries (id TEXT PRIMARY KEY, position INTEGER NOT NULL, data TEXT NOT NULL CHECK(json_valid(data)));
+          CREATE TABLE khata_accounts (id TEXT PRIMARY KEY, position INTEGER NOT NULL, code TEXT NOT NULL, data TEXT NOT NULL CHECK(json_valid(data)));
+          CREATE TABLE khata_entries (id TEXT PRIMARY KEY, khata_id TEXT NOT NULL, position INTEGER NOT NULL, entry_date TEXT NOT NULL, data TEXT NOT NULL CHECK(json_valid(data)));
+          CREATE INDEX khata_entries_account ON khata_entries(khata_id, position);
           CREATE TABLE migration_sources (id INTEGER PRIMARY KEY CHECK(id=1), imported_at TEXT NOT NULL, legacy_json TEXT, backup_path TEXT);
           PRAGMA user_version = 1;
         `);
       })();
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS khata_accounts (id TEXT PRIMARY KEY, position INTEGER NOT NULL, code TEXT NOT NULL, data TEXT NOT NULL CHECK(json_valid(data)));
+        CREATE TABLE IF NOT EXISTS khata_entries (id TEXT PRIMARY KEY, khata_id TEXT NOT NULL, position INTEGER NOT NULL, entry_date TEXT NOT NULL, data TEXT NOT NULL CHECK(json_valid(data)));
+        CREATE INDEX IF NOT EXISTS khata_entries_account ON khata_entries(khata_id, position);
+      `);
       if (this.db.pragma('foreign_key_check').length) throw new HisaabError('Database references are damaged', 'FOREIGN_KEY_VIOLATION');
       this.statements = {};
       this.caches = {};
       /* FIX-8: derive columns dynamically from table_info pragma to avoid schema drift */
-      for (const table of ['parties','register_entries','journal_entries','trash_entries']) {
+      for (const table of ['parties','register_entries','journal_entries','trash_entries','khata_accounts','khata_entries']) {
         const key = table === 'parties' ? 'name' : 'id';
         const columns = this.db.pragma(`table_info(${table})`).map(r => r.name);
         this.statements[table] = {
           put:this.db.prepare(`INSERT INTO ${table} (${columns.join(',')}) VALUES (${columns.map(c=>'@'+c).join(',')}) ON CONFLICT(${key}) DO UPDATE SET ${columns.filter(c=>c!==key).map(c=>c+'=excluded.'+c).join(',')}`),
           remove:this.db.prepare(`DELETE FROM ${table} WHERE ${key}=?`),
+          readData:columns.includes('data') ? this.db.prepare(`SELECT ${table === 'khata_entries' ? 'khata_id, data' : 'data'} FROM ${table} ORDER BY position`) : null,
           key
         };
         this.caches[table] = new Map(this.db.prepare(`SELECT * FROM ${table}`).all().map(r=>[r[key],JSON.stringify(r)]));
       }
+      this.headSelectStmt = this.db.prepare('SELECT * FROM app_state WHERE id=1');
+      this.headRevSelectStmt = this.db.prepare('SELECT revision,metadata FROM app_state WHERE id=1');
+      this.headUpdateStmt = this.db.prepare('UPDATE app_state SET metadata=?,revision=? WHERE id=1');
       this.load();
     } catch (error) { this.close(); throw error; }
   }
 
   load() {
-    const head = this.db.prepare('SELECT * FROM app_state WHERE id=1').get();
+    const head = this.headSelectStmt.get();
     /* FIX-11: machine-readable error codes */
     if (!head) throw new HisaabError('Missing database metadata', 'MISSING_METADATA');
     if (head.metadata === null) return {state:null,revision:head.revision};
     const metadata = JSON.parse(head.metadata);
-    const read = table => this.db.prepare(`SELECT data FROM ${table} ORDER BY position`).all().map(r=>JSON.parse(r.data));
-    return {state:validateState({...metadata,rows:read('register_entries'),trash:read('trash_entries'),journal:{...metadata.journal,rows:read('journal_entries')}}),revision:head.revision};
+    const read = table => this.statements[table].readData.all().map(r=>JSON.parse(r.data));
+    const stateObj = {...metadata,rows:read('register_entries'),trash:read('trash_entries'),journal:{...metadata.journal,rows:read('journal_entries')}};
+    if (metadata.khatas !== undefined) {
+      const accountRows = this.statements.khata_accounts.readData.all();
+      if (accountRows.length > 0) {
+        const entriesByKhata = new Map();
+        for (const r of this.statements.khata_entries.readData.all()) {
+          let list = entriesByKhata.get(r.khata_id);
+          if (!list) { list = []; entriesByKhata.set(r.khata_id, list); }
+          list.push(JSON.parse(r.data));
+        }
+        stateObj.khatas = accountRows.map(r => {
+          const acc = JSON.parse(r.data);
+          if (acc.rows !== undefined) acc.rows = entriesByKhata.get(acc.id) || [];
+          return acc;
+        });
+      } else {
+        stateObj.khatas = metadata.khatas;
+      }
+    }
+    return {state:validateState(stateObj),revision:head.revision};
   }
 
   /* FIX-4: crash-safe atomic backup write with robust fd closure */
@@ -208,20 +264,33 @@ class HisaabDatabase {
     if (legacyRaw !== null && (typeof legacyRaw !== 'string' || Buffer.byteLength(legacyRaw) > MAX_BYTES)) invalid('legacy source');
     /* FIX-6: validate current state only when restore=true and current is not null */
     const currentData = (restore && current !== null) ? validateState(current) : null;
+    const khataList = data.khatas || [];
+    const khataEntries = [];
+    let entryPos = 0;
+    for (const k of khataList) {
+      if (Array.isArray(k.rows)) {
+        for (const r of k.rows) {
+          khataEntries.push({id:`${k.id}:${r.id}`,khata_id:k.id,position:entryPos++,entry_date:r.date,data:JSON.stringify(r)});
+        }
+      }
+    }
     const tables = {
       parties:data.branches.map((name,position)=>({name,currency:data.partyCurrencies?.[name]==='afn'?'afn':'pkr',position})),
       register_entries:data.rows.map((row,position)=>({id:row.id,position,entry_date:row.entryDate,party:row.branch||null,data:JSON.stringify(row)})),
       journal_entries:data.journal.rows.map((row,position)=>({id:row.id,position,entry_date:row.date,data:JSON.stringify(row)})),
       /* FIX-3: composite key ${position}_${item.row.id} prevents PK collision on re-delete */
-      trash_entries:data.trash.map((item,position)=>({id:`${position}_${item.row.id}`,position,data:JSON.stringify(item)}))
+      trash_entries:data.trash.map((item,position)=>({id:`${position}_${item.row.id}`,position,data:JSON.stringify(item)})),
+      khata_accounts:khataList.map((k,position)=>({id:k.id,position,code:k.code.trim().toUpperCase(),data:JSON.stringify({...k,rows:k.rows!==undefined?[]:undefined})})),
+      khata_entries:khataEntries
     };
     /* FIX-13: delete empty partyCurrencies to eliminate cosmetic bloat in app_state.metadata */
-    const metaData = {...data,rows:undefined,trash:undefined,journal:{...data.journal,rows:undefined}};
+    const metaData = {...data,rows:undefined,trash:undefined,journal:{...data.journal,rows:undefined},khatas:data.khatas!==undefined?[]:undefined};
     if (metaData.partyCurrencies && Object.keys(metaData.partyCurrencies).length === 0) delete metaData.partyCurrencies;
+    if (metaData.partyDateFilters && Object.keys(metaData.partyDateFilters).length === 0) delete metaData.partyDateFilters;
     const metadata = JSON.stringify(metaData);
     const nextCaches = {};
     const result = this.db.transaction(()=>{
-      const head = this.db.prepare('SELECT revision,metadata FROM app_state WHERE id=1').get();
+      const head = this.headRevSelectStmt.get();
       /* FIX-11: machine-readable error codes */
       if (head.revision !== expectedRevision) throw new HisaabError('STALE_STATE: Reload before saving', 'STALE_STATE');
       if (head.revision >= Number.MAX_SAFE_INTEGER) throw new HisaabError('Revision overflow', 'REVISION_OVERFLOW');
@@ -243,7 +312,7 @@ class HisaabDatabase {
         for (const id of old.keys()) if(!next.has(id)) stmt.remove.run(id);
         nextCaches[table] = next;
       }
-      this.db.prepare('UPDATE app_state SET metadata=?,revision=? WHERE id=1').run(metadata,head.revision+1);
+      this.headUpdateStmt.run(metadata,head.revision+1);
       const backupPath = backupPaths[0] || null;
       if (initialize) this.db.prepare('INSERT INTO migration_sources VALUES(1,?,?,?)').run(new Date().toISOString(),legacyRaw,backupPath);
       return {revision:head.revision+1,backupPath,backupPaths};

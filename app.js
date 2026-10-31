@@ -19,19 +19,40 @@
   const cleanName = value => formatAllah(value).trim().replace(/\s+/g, ' ');
   const nameKey = value => cleanName(value).toLocaleLowerCase();
   const uid = () => crypto.randomUUID();
+  const nfIN = new Intl.NumberFormat('en-IN');
+  const validDateSet = new Set();
+  const intAmountCache = new Map();
   function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
-  function dateValid(s) { if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false; const d = new Date(`${s}T12:00:00Z`); return !isNaN(d) && d.toISOString().slice(0, 10) === s; }
+  function dateValid(s) {
+    if (typeof s !== 'string') return false;
+    if (validDateSet.has(s)) return true;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+    const d = new Date(`${s}T12:00:00Z`);
+    if (isNaN(d) || d.toISOString().slice(0, 10) !== s) return false;
+    if (validDateSet.size > 4096) validDateSet.clear();
+    validDateSet.add(s);
+    return true;
+  }
   function englishDigits(v) { return v.replace(/[۰-۹]/g, c => String(c.charCodeAt(0) - 1776)).replace(/[٠-٩]/g, c => String(c.charCodeAt(0) - 1632)).replace(/٫/g, '.').replace(/٬/g, ','); }
   function normalized(v) { return englishDigits(v).replace(/[,\s]/g, ''); }
-  function integerAmount(v) { const n = normalized(v); if (!n) return 0n; if (!/^-?\d{1,12}(\.0{1,2})?$/.test(n)) return null; return BigInt(n.split('.')[0]); }
+  function integerAmount(v) {
+    if (!v) return 0n;
+    const cached = intAmountCache.get(v);
+    if (cached !== undefined) return cached;
+    const n = normalized(v);
+    const res = !n ? 0n : /^-?\d{1,12}(\.0{1,2})?$/.test(n) ? BigInt(n.split('.')[0]) : null;
+    if (intAmountCache.size > 4096) intAmountCache.clear();
+    intAmountCache.set(v, res);
+    return res;
+  }
   function wholeText(v) { const n = integerAmount(v); return v.trim() && n !== null ? formatted(n) : v; }
-  function formatted(n) { return n.toLocaleString('en-IN'); }
+  function formatted(n) { return nfIN.format(n); }
   function blank(branch = '') { return { ...Object.fromEntries(rowFields.map(f => [f, ''])), id: uid(), entryDate: state.date || today(), branch }; }
   function fmtDate(iso) { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; }
   let journalController = null;
   let khataController = null;
   /* FIX-9: PIN hash and salt fields added to state; version stays 4 */
-  let state = { journal: { date: today(), rows: [] }, version: 4, title: 'Hisaab Register', date: today(), pageNumber: 1, startSerial: 1, partySerials: Object.create(null), fontSize: 13, branches: [], partyCurrencies: Object.create(null), rows: [], trash: [], lastBackupAt: null, lockedDates: [], pinCode: '', pinCodeHash: '', pinSalt: '', khatas: [] };
+  let state = { journal: { date: today(), rows: [] }, version: 4, title: 'Hisaab Register', date: today(), pageNumber: 1, startSerial: 1, partySerials: Object.create(null), partyDateFilters: Object.create(null), fontSize: 13, branches: [], partyCurrencies: Object.create(null), rows: [], trash: [], lastBackupAt: null, lockedDates: [], pinCode: '', pinCodeHash: '', pinSalt: '', khatas: [] };
   function activePageNumber() { return (Number(state.pageNumber) || 1) + (viewPage || 0); }
   const partyCurrency = name => name && Object.hasOwn(state.partyCurrencies || {}, name) && state.partyCurrencies[name] === 'afn' ? 'afn' : 'pkr';
   function currencyTotals(rows) { const sums = { pkr: 0n, afn: 0n }, invalid = new Set(); for (const r of rows) { const c = partyCurrency(r.branch), v = integerAmount(r.pkr); if (v === null) invalid.add(c); else sums[c] += v; } return { sums, invalid }; }
@@ -93,6 +114,19 @@
       if (Object.hasOwn(source.partySerials, '__unassigned') && Number.isInteger(source.partySerials.__unassigned) && source.partySerials.__unassigned > 0) partySerials.__unassigned = source.partySerials.__unassigned;
     }
     const partyCurrencies = Object.create(null); for (const name of registry) { const raw = source.partyCurrencies; if (raw && Object.hasOwn(raw, name)) { if (!['pkr', 'afn'].includes(raw[name])) throw Error('Invalid currency'); partyCurrencies[name] = raw[name]; } }
+    const partyDateFilters = Object.create(null);
+    if (source.partyDateFilters && typeof source.partyDateFilters === 'object' && !Array.isArray(source.partyDateFilters)) {
+      for (const [key, filter] of Object.entries(source.partyDateFilters)) {
+        if (typeof key === 'string' && filter && typeof filter === 'object' && !Array.isArray(filter)) {
+          const mode = ['day', 'range', 'all'].includes(filter.mode) ? filter.mode : 'day';
+          const date = typeof filter.date === 'string' && dateValid(filter.date) ? filter.date : '';
+          const from = typeof filter.from === 'string' && dateValid(filter.from) ? filter.from : '';
+          const to = typeof filter.to === 'string' && dateValid(filter.to) ? filter.to : '';
+          const allDates = Boolean(filter.allDates);
+          partyDateFilters[key] = { mode, date, from, to, allDates };
+        }
+      }
+    }
     /* FIX-30: prune and bound lockedDates to prevent memory growth */
     const lockedDates = Array.isArray(source.lockedDates) ? [...new Set(source.lockedDates.filter(d => typeof d === 'string' && dateValid(d)))].slice(-365) : [];
     let pinCode = typeof source.pinCode === 'string' && /^\d{4,8}$/.test(source.pinCode) ? source.pinCode : '';
@@ -100,7 +134,7 @@
     let pinSalt = typeof source.pinSalt === 'string' ? source.pinSalt : '';
     /* FIX-10: Web-mode fallback preserved for test assertions */
     if (isWebMode && !pinCode && !pinCodeHash) pinCode = '1234';
-    return { journal: window.HisaabJournal.normalize(source.journal, source.date || today()), version: 4, title: titleVal, date: source.date || today(), pageNumber: Number.isInteger(source.pageNumber) && source.pageNumber > 0 ? source.pageNumber : 1, startSerial, partySerials, fontSize: Number.isInteger(source.fontSize) ? Math.max(10, Math.min(22, source.fontSize)) : 13, branches: registry, partyCurrencies, rows, trash, lastBackupAt: typeof source.lastBackupAt === 'string' && Number.isFinite(Date.parse(source.lastBackupAt)) ? source.lastBackupAt : null, lockedDates, pinCode, pinCodeHash, pinSalt, khatas: window.HisaabKhata ? window.HisaabKhata.normalize(source.khatas || []) : (Array.isArray(source.khatas) ? source.khatas : []), auth: source.auth && typeof source.auth === 'object' ? source.auth : (window.HisaabAuth ? window.HisaabAuth.getAuth() : null) };
+    return { journal: window.HisaabJournal.normalize(source.journal, source.date || today()), version: 4, title: titleVal, date: source.date || today(), pageNumber: Number.isInteger(source.pageNumber) && source.pageNumber > 0 ? source.pageNumber : 1, startSerial, partySerials, fontSize: Number.isInteger(source.fontSize) ? Math.max(10, Math.min(22, source.fontSize)) : 13, branches: registry, partyCurrencies, partyDateFilters, rows, trash, lastBackupAt: typeof source.lastBackupAt === 'string' && Number.isFinite(Date.parse(source.lastBackupAt)) ? source.lastBackupAt : null, lockedDates, pinCode, pinCodeHash, pinSalt, khatas: window.HisaabKhata ? window.HisaabKhata.normalize(source.khatas || []) : (Array.isArray(source.khatas) ? source.khatas : []), auth: source.auth && typeof source.auth === 'object' ? source.auth : (window.HisaabAuth ? window.HisaabAuth.getAuth() : null) };
   }
   let cloudReady = !isWebMode;
   let mongoSaveTimer = null, pendingMongoSave = null;
@@ -258,6 +292,20 @@
   }
   retrySave.onclick = () => { if (storageReadFailed) location.reload(); else flushSave(); };
   window.addEventListener('beforeunload', event => { flushSave(); if (unsavedNative || unsavedDisk) { event.preventDefault(); event.returnValue = ''; } });
+  const rowSearchCache = new WeakMap();
+  function getRowSearchData(r) {
+    const sig = `${r.sender}\0${r.receiver}\0${r.mobile}\0${r.place}\0${r.branch}`;
+    let entry = rowSearchCache.get(r);
+    if (!entry || entry.sig !== sig) {
+      entry = {
+        sig,
+        text: formatAllah([r.sender, r.receiver, r.mobile, r.place, r.branch].join(' ')).toLocaleLowerCase(),
+        mobileDigits: (r.mobile || '').replace(/[\s()+-]/g, '')
+      };
+      rowSearchCache.set(r, entry);
+    }
+    return entry;
+  }
   const branchMatch = r => !selectedBranch || (selectedBranch === '__unassigned' ? !r.branch : r.branch === selectedBranch.slice(2));
   function rangeValid() { return !$('date-from').value || !$('date-to').value || $('date-from').value <= $('date-to').value; }
   const rangeActive = () => !!($('date-from').value || $('date-to').value);
@@ -269,12 +317,44 @@
   function queryMatch(r) {
     const query = formatAllah(englishDigits($('search').value)).trim().toLocaleLowerCase();
     if (!query) return true;
-    const text = formatAllah([r.sender, r.receiver, r.mobile, r.place, r.branch].join(' ')).toLocaleLowerCase();
+    const { text, mobileDigits } = getRowSearchData(r);
     const phoneQuery = query.replace(/[\s()+-]/g, '');
-    return text.includes(query) || (/^\d+$/.test(phoneQuery) && r.mobile.replace(/[\s()+-]/g, '').includes(phoneQuery));
+    return text.includes(query) || (/^\d+$/.test(phoneQuery) && mobileDigits.includes(phoneQuery));
   }
   function matches(r) { return populated(r) && branchMatch(r) && rangeValid() && dateMatch(r) && queryMatch(r); }
-  const selectedRows = () => state.rows.filter(matches);
+  const selectedRows = () => {
+    const from = $('date-from').value, to = $('date-to').value;
+    if (from && to && from > to) return [];
+    const rActive = !!(from || to);
+    const allDates = $('all-dates').checked;
+    const curDate = state.date;
+    const targetBranch = selectedBranch.startsWith('b:') ? selectedBranch.slice(2) : null;
+    const isUnassigned = selectedBranch === '__unassigned';
+    const rawSearch = $('search').value;
+    const query = rawSearch ? formatAllah(englishDigits(rawSearch)).trim().toLocaleLowerCase() : '';
+    const phoneQuery = query ? query.replace(/[\s()+-]/g, '') : '';
+    const isPhoneQuery = phoneQuery.length > 0 && /^\d+$/.test(phoneQuery);
+    const result = [];
+    for (let i = 0, len = state.rows.length; i < len; i++) {
+      const r = state.rows[i];
+      if (!populated(r)) continue;
+      if (selectedBranch) {
+        if (isUnassigned ? r.branch : r.branch !== targetBranch) continue;
+      }
+      if (rActive) {
+        const ed = r.entryDate;
+        if (!ed || (from && ed < from) || (to && ed > to)) continue;
+      } else if (!allDates && r.entryDate !== curDate) {
+        continue;
+      }
+      if (query) {
+        const { text, mobileDigits } = getRowSearchData(r);
+        if (!text.includes(query) && !(isPhoneQuery && mobileDigits.includes(phoneQuery))) continue;
+      }
+      result.push(r);
+    }
+    return result;
+  };
   function makeOption(value, label) { const option = document.createElement('option'); option.value = value; option.textContent = label; return option; }
   function branchOptions(select, value, filter = false) { select.replaceChildren(...(filter ? [makeOption('__unassigned', 'بغیر پارٹی')] : [makeOption('', 'بغیر پارٹی')]), ...state.branches.slice().sort((a, b) => a.localeCompare(b, 'ur')).map(n => makeOption(filter ? 'b:' + n : n, n))); if (!filter) select.append(makeOption('__new_party__', '＋ نئی پارٹی')); select.value = value; }
   function ensureActiveParty() {
@@ -292,13 +372,348 @@
     }
   }
 
+  function getCurrentFilterState() {
+    const isAll = Boolean($('all-dates')?.checked);
+    const fromVal = $('date-from')?.value || '';
+    const toVal = $('date-to')?.value || '';
+    const hasRange = Boolean(fromVal || toVal);
+    const dayVal = $('date')?.value || state.date || today();
+    let mode = 'day';
+    if (isAll) mode = 'all';
+    else if (hasRange) mode = 'range';
+    return { mode, date: dayVal, from: fromVal, to: toVal, allDates: isAll };
+  }
+
+  function saveCurrentPartyDateFilter(branchKey) {
+    if (!state.partyDateFilters) state.partyDateFilters = Object.create(null);
+    const key = branchKey !== undefined ? branchKey : selectedBranch;
+    state.partyDateFilters[key || ''] = getCurrentFilterState();
+    updatePartyDateFilterBtnUI();
+  }
+
+  function restorePartyDateFilter(branchKey) {
+    if (!state.partyDateFilters) state.partyDateFilters = Object.create(null);
+    const key = branchKey !== undefined ? branchKey : selectedBranch;
+    const filter = state.partyDateFilters[key || ''];
+    if (filter) {
+      if (filter.mode === 'all' || filter.allDates) {
+        if ($('all-dates')) $('all-dates').checked = true;
+        if ($('date-from')) $('date-from').value = '';
+        if ($('date-to')) $('date-to').value = '';
+        const d = filter.date && dateValid(filter.date) ? filter.date : (state.date || today());
+        if ($('date')) $('date').value = d;
+        state.date = d;
+      } else if (filter.mode === 'range' || (filter.from || filter.to)) {
+        if ($('all-dates')) $('all-dates').checked = false;
+        if ($('date-from')) $('date-from').value = filter.from || '';
+        if ($('date-to')) $('date-to').value = filter.to || '';
+        const d = filter.date && dateValid(filter.date) ? filter.date : (state.date || today());
+        if ($('date')) $('date').value = d;
+        state.date = d;
+        const drawer = $('range-drawer');
+        if (drawer) drawer.hidden = true;
+      } else {
+        if ($('all-dates')) $('all-dates').checked = false;
+        if ($('date-from')) $('date-from').value = '';
+        if ($('date-to')) $('date-to').value = '';
+        const d = filter.date && dateValid(filter.date) ? filter.date : today();
+        if ($('date')) $('date').value = d;
+        state.date = d;
+      }
+    } else {
+      if ($('all-dates')) $('all-dates').checked = false;
+      if ($('date-from')) $('date-from').value = '';
+      if ($('date-to')) $('date-to').value = '';
+      const d = state.date && dateValid(state.date) ? state.date : today();
+      if ($('date')) $('date').value = d;
+      state.date = d;
+    }
+    updatePartyDateFilterBtnUI();
+  }
+
+  function updatePartyDateFilterBtnUI() {
+    const btn = $('party-date-filter-btn');
+    if (!btn) return;
+    const isFiltered = Boolean($('all-dates')?.checked || $('date-from')?.value || $('date-to')?.value);
+    btn.classList.toggle('is-filtered', isFiltered);
+    if (isFiltered) {
+      const label = $('all-dates')?.checked ? 'تمام تاریخیں' : [$('date-from')?.value ? fmtDate($('date-from').value) : 'شروع', $('date-to')?.value ? fmtDate($('date-to').value) : 'آج'].join(' تا ');
+      btn.textContent = `📅 تاریخ فلٹر: ${label}`;
+      btn.title = `اس پارٹی کا تاریخ فلٹر فعال ہے (${label}) — تبدیل یا صاف کرنے کے لیے کلک کریں`;
+    } else {
+      btn.textContent = '📅 تاریخ فلٹر';
+      btn.title = 'اس پارٹی کا تاریخ فلٹر و پرنٹ';
+    }
+  }
+
+  let partyDialogMode = 'day';
+  function setPartyDialogMode(mode) {
+    partyDialogMode = mode === 'range' || mode === 'all' ? mode : 'day';
+    const tabs = [
+      ['day', $('pfilter-tab-day'), $('pfilter-sec-day')],
+      ['range', $('pfilter-tab-range'), $('pfilter-sec-range')],
+      ['all', $('pfilter-tab-all'), $('pfilter-sec-all')]
+    ];
+    for (const [m, tab, sec] of tabs) {
+      const active = m === partyDialogMode;
+      if (tab) {
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', String(active));
+      }
+      if (sec) sec.hidden = !active;
+    }
+    updatePartyDialogPreview();
+  }
+
+  function getPartyDialogMatchedRows() {
+    const dayVal = $('party-dialog-day')?.value || state.date || today();
+    const fromVal = $('party-dialog-from')?.value || '';
+    const toVal = $('party-dialog-to')?.value || '';
+    return state.rows.filter(r => {
+      if (!populated(r) || !branchMatch(r)) return false;
+      if (partyDialogMode === 'all') return true;
+      if (partyDialogMode === 'range') {
+        if (!fromVal && !toVal) return r.entryDate === dayVal;
+        if (!r.entryDate) return false;
+        return !((fromVal && r.entryDate < fromVal) || (toVal && r.entryDate > toVal));
+      }
+      return r.entryDate === dayVal;
+    });
+  }
+
+  function getPrintPeriodText(rows = selectedRows()) {
+    const dates = rows.map(r => r.entryDate || state.date).filter(Boolean).sort();
+    if (rangeActive()) {
+      const fromVal = $('date-from')?.value || '';
+      const toVal = $('date-to')?.value || '';
+      const startD = fromVal ? fmtDate(fromVal) : (dates[0] ? fmtDate(dates[0]) : 'شروع');
+      const endD = toVal ? fmtDate(toVal) : (dates.length ? fmtDate(dates[dates.length - 1]) : fmtDate(today()));
+      return startD === endD ? startD : `${startD} تا ${endD}`;
+    }
+    if ($('all-dates')?.checked) {
+      if (dates.length > 0) {
+        const startD = fmtDate(dates[0]);
+        const endD = fmtDate(dates[dates.length - 1]);
+        return startD === endD ? `تمام تاریخیں (${startD})` : `تمام تاریخیں (${startD} تا ${endD})`;
+      }
+      return 'تمام تاریخیں';
+    }
+    return '';
+  }
+
+  function updatePartyDialogPreview() {
+    const countEl = $('party-dialog-match-count');
+    const amountsEl = $('party-dialog-match-amounts');
+    if (!countEl || !amountsEl) return;
+    const matched = getPartyDialogMatchedRows();
+    const dates = matched.map(r => r.entryDate || state.date).filter(Boolean).sort();
+    const dayVal = $('party-dialog-day')?.value || state.date || today();
+    const fromVal = $('party-dialog-from')?.value || '';
+    const toVal = $('party-dialog-to')?.value || '';
+    let periodLabel = fmtDate(dayVal);
+    if (partyDialogMode === 'range') {
+      const startD = fromVal ? fmtDate(fromVal) : (dates[0] ? fmtDate(dates[0]) : 'شروع');
+      const endD = toVal ? fmtDate(toVal) : (dates.length ? fmtDate(dates[dates.length - 1]) : fmtDate(today()));
+      periodLabel = `${startD} تا ${endD}`;
+    } else if (partyDialogMode === 'all') {
+      periodLabel = dates.length
+        ? (dates[0] === dates[dates.length - 1]
+          ? `تمام تاریخیں (${fmtDate(dates[0])})`
+          : `تمام تاریخیں (${fmtDate(dates[0])} تا ${fmtDate(dates[dates.length - 1])})`)
+        : 'تمام تاریخیں';
+    }
+    countEl.textContent = `${matched.length} انٹریاں منتخب ہیں — دورانیہ: ${periodLabel}`;
+    let totAed = 0n, totBal = 0n;
+    for (const r of matched) {
+      const a = integerAmount(r.aed);
+      const b = integerAmount(r.balance);
+      if (a !== null) totAed += a;
+      if (b !== null) totBal += b;
+    }
+    amountsEl.textContent = matched.length
+      ? `درہم: ${formatted(totAed)} | بقایا: ${formatted(totBal)} | کل: ${currencyText(matched).replace(/\n/g, ' + ')}`
+      : 'کل رقم: 0';
+  }
+
+  function openPartyDateDialog() {
+    const dialog = $('party-date-dialog');
+    if (!dialog) return;
+    const partyLabel = selectedBranch.startsWith('b:')
+      ? selectedBranch.slice(2)
+      : selectedBranch === '__unassigned'
+        ? 'بغیر پارٹی'
+        : 'تمام پارٹیاں';
+    if ($('party-dialog-branch-name')) $('party-dialog-branch-name').textContent = partyLabel;
+    const cur = getCurrentFilterState();
+    if ($('party-dialog-day')) $('party-dialog-day').value = cur.date || state.date || today();
+    if ($('party-dialog-from')) $('party-dialog-from').value = cur.from || '';
+    if ($('party-dialog-to')) $('party-dialog-to').value = cur.to || '';
+    setPartyDialogMode(cur.mode);
+    if (!dialog.open) dialog.showModal();
+  }
+
+  function applyPartyDialogFilter() {
+    const dayVal = $('party-dialog-day')?.value || state.date || today();
+    const fromVal = $('party-dialog-from')?.value || '';
+    const toVal = $('party-dialog-to')?.value || '';
+    if (partyDialogMode === 'range' && fromVal && toVal && fromVal > toVal) {
+      alert('تاریخ سے، تاریخ تک سے آگے نہیں ہو سکتی۔');
+      return false;
+    }
+    if (partyDialogMode === 'all') {
+      if ($('all-dates')) $('all-dates').checked = true;
+      if ($('date-from')) $('date-from').value = '';
+      if ($('date-to')) $('date-to').value = '';
+      if ($('range-drawer')) $('range-drawer').hidden = true;
+      if ($('toggle-range')) $('toggle-range').classList.remove('active');
+    } else if (partyDialogMode === 'range' && (fromVal || toVal)) {
+      if ($('all-dates')) $('all-dates').checked = false;
+      if ($('date-from')) $('date-from').value = fromVal;
+      if ($('date-to')) $('date-to').value = toVal;
+      if ($('range-drawer')) $('range-drawer').hidden = true;
+      if ($('toggle-range')) $('toggle-range').classList.add('active');
+    } else {
+      if ($('all-dates')) $('all-dates').checked = false;
+      if ($('date-from')) $('date-from').value = '';
+      if ($('date-to')) $('date-to').value = '';
+      if ($('range-drawer')) $('range-drawer').hidden = true;
+      if ($('toggle-range')) $('toggle-range').classList.remove('active');
+      if (dateValid(dayVal)) {
+        state.date = dayVal;
+        if ($('date')) $('date').value = dayVal;
+        state.rows.forEach(row => {
+          if (!populated(row)) row.entryDate = state.date || today();
+        });
+      }
+    }
+    saveCurrentPartyDateFilter();
+    save();
+    applyFilter(true);
+    renderPartyTabs();
+    return true;
+  }
+
+  if ($('party-date-filter-btn')) $('party-date-filter-btn').onclick = openPartyDateDialog;
+  if ($('close-party-date-dialog')) $('close-party-date-dialog').onclick = () => $('party-date-dialog')?.close();
+  if ($('pfilter-tab-day')) $('pfilter-tab-day').onclick = () => setPartyDialogMode('day');
+  if ($('pfilter-tab-range')) $('pfilter-tab-range').onclick = () => setPartyDialogMode('range');
+  if ($('pfilter-tab-all')) $('pfilter-tab-all').onclick = () => setPartyDialogMode('all');
+  if ($('party-dialog-day')) $('party-dialog-day').addEventListener('input', updatePartyDialogPreview);
+  if ($('party-dialog-from')) $('party-dialog-from').addEventListener('input', updatePartyDialogPreview);
+  if ($('party-dialog-to')) $('party-dialog-to').addEventListener('input', updatePartyDialogPreview);
+  if ($('party-dialog-day-today')) {
+    $('party-dialog-day-today').onclick = () => {
+      if ($('party-dialog-day')) $('party-dialog-day').value = today();
+      updatePartyDialogPreview();
+    };
+  }
+  if ($('pfilter-preset-7d')) {
+    $('pfilter-preset-7d').onclick = () => {
+      const t = today();
+      if ($('party-dialog-from')) $('party-dialog-from').value = shiftDate(t, -6);
+      if ($('party-dialog-to')) $('party-dialog-to').value = t;
+      updatePartyDialogPreview();
+    };
+  }
+  if ($('pfilter-preset-month')) {
+    $('pfilter-preset-month').onclick = () => {
+      const t = today();
+      if ($('party-dialog-from')) $('party-dialog-from').value = t.slice(0, 8) + '01';
+      if ($('party-dialog-to')) $('party-dialog-to').value = t;
+      updatePartyDialogPreview();
+    };
+  }
+  if ($('pfilter-preset-prev-month')) {
+    $('pfilter-preset-prev-month').onclick = () => {
+      const [y, m] = today().split('-').map(Number);
+      const firstPrev = new Date(y, m - 2, 1);
+      const lastPrev = new Date(y, m - 1, 0);
+      const fmt = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if ($('party-dialog-from')) $('party-dialog-from').value = fmt(firstPrev);
+      if ($('party-dialog-to')) $('party-dialog-to').value = fmt(lastPrev);
+      updatePartyDialogPreview();
+    };
+  }
+  if ($('party-dialog-apply')) {
+    $('party-dialog-apply').onclick = () => {
+      if (applyPartyDialogFilter()) $('party-date-dialog')?.close();
+    };
+  }
+  if ($('party-dialog-reset')) {
+    $('party-dialog-reset').onclick = () => {
+      const t = today();
+      if ($('party-dialog-day')) $('party-dialog-day').value = t;
+      if ($('party-dialog-from')) $('party-dialog-from').value = '';
+      if ($('party-dialog-to')) $('party-dialog-to').value = '';
+      setPartyDialogMode('day');
+      if (applyPartyDialogFilter()) $('party-date-dialog')?.close();
+    };
+  }
+  if ($('party-dialog-print')) {
+    $('party-dialog-print').onclick = () => {
+      if (applyPartyDialogFilter()) {
+        $('party-date-dialog')?.close();
+        $('print')?.click();
+      }
+    };
+  }
+  if ($('party-dialog-pdf')) {
+    $('party-dialog-pdf').onclick = () => {
+      if (applyPartyDialogFilter()) {
+        $('party-date-dialog')?.close();
+        $('save-pdf')?.click();
+      }
+    };
+  }
+
+  function branchDateMatch(r, branchKey) {
+    if (branchKey === selectedBranch) return dateMatch(r);
+    const filter = state.partyDateFilters?.[branchKey || ''];
+    if (!filter || filter.mode === 'day') {
+      const d = filter?.date || state.date || today();
+      return r.entryDate === d;
+    }
+    if (filter.mode === 'all' || filter.allDates) return true;
+    if (filter.mode === 'range') {
+      const from = filter.from || '', to = filter.to || '';
+      if (!r.entryDate) return false;
+      return !(from && r.entryDate < from || to && r.entryDate > to);
+    }
+    return true;
+  }
+
   function partyDateCounts() {
     const byBranch = new Map();
     let allCount = 0, unassignedCount = 0;
-    if (rangeValid()) {
-      for (const r of state.rows) {
-        if (!populated(r) || !dateMatch(r)) continue;
-        allCount++;
+    const from = $('date-from').value, to = $('date-to').value;
+    const rActive = !!(from || to);
+    const allDates = $('all-dates').checked;
+    const curDate = state.date;
+    const filters = state.partyDateFilters;
+    for (let i = 0, len = state.rows.length; i < len; i++) {
+      const r = state.rows[i];
+      if (!populated(r)) continue;
+      const ed = r.entryDate;
+      const activeMatch = rActive ? (!!ed && !(from && ed < from || to && ed > to)) : (allDates || ed === curDate);
+      if (activeMatch) allCount++;
+      const bKey = r.branch ? 'b:' + r.branch : '__unassigned';
+      let bMatch = false;
+      if (bKey === selectedBranch) {
+        bMatch = activeMatch;
+      } else {
+        const filter = filters?.[bKey];
+        if (!filter || filter.mode === 'day') {
+          bMatch = ed === (filter?.date || curDate || today());
+        } else if (filter.mode === 'all' || filter.allDates) {
+          bMatch = true;
+        } else if (filter.mode === 'range') {
+          const fFrom = filter.from || '', fTo = filter.to || '';
+          bMatch = !!ed && !(fFrom && ed < fFrom || fTo && ed > fTo);
+        } else {
+          bMatch = true;
+        }
+      }
+      if (bMatch) {
         if (!r.branch) unassignedCount++;
         else byBranch.set(r.branch, (byBranch.get(r.branch) || 0) + 1);
       }
@@ -333,7 +748,11 @@
     }
   }
   function selectPartyTab(value) {
-    selectedBranch = value;
+    if (value !== selectedBranch) {
+      saveCurrentPartyDateFilter(selectedBranch);
+      selectedBranch = value;
+      restorePartyDateFilter(value);
+    }
     if ($('branch-filter')) $('branch-filter').value = value;
     applyFilter();
     const pages = Math.max(1, Math.ceil(selectedRows().length / pageSize));
@@ -359,6 +778,7 @@
       const badge = tab.querySelector('.tab-badge');
       if (badge) badge.textContent = i < sorted.length ? (byBranch.get(sorted[i]) || 0) : unassignedCount;
     });
+    updatePartyDateFilterBtnUI();
   }
   function updateBranches() { ensureActiveParty(); branchOptions($('branch-filter'), selectedBranch, true); state.rows.forEach(row => { const select = rowNodes.get(row.id)?.querySelector('[data-field="branch"]'); if (select) branchOptions(select, row.branch); }); renderPartyTabs(); }
   function draftRowsLast(rows) {
@@ -367,14 +787,25 @@
     return [...populatedRows, ...draftRows];
   }
   function ensureDraft() {
-    state.rows = draftRowsLast(state.rows);
-    for (const r of state.rows.filter(r => !populated(r))) {
-      const node = rowNodes.get(r.id);
-      if (node && node !== $('rows').lastElementChild && !node.contains(document.activeElement)) {
-        $('rows').append(node);
+    let needsReorder = false, seenDraft = false;
+    for (let i = 0, len = state.rows.length; i < len; i++) {
+      if (!populated(state.rows[i])) seenDraft = true;
+      else if (seenDraft) { needsReorder = true; break; }
+    }
+    if (needsReorder) state.rows = draftRowsLast(state.rows);
+    let hasMatchingDraft = false;
+    const rowsEl = $('rows');
+    for (let i = 0, len = state.rows.length; i < len; i++) {
+      const r = state.rows[i];
+      if (!populated(r)) {
+        if (branchMatch(r)) hasMatchingDraft = true;
+        const node = rowNodes.get(r.id);
+        if (node && node !== rowsEl.lastElementChild && !node.contains(document.activeElement)) {
+          rowsEl.append(node);
+        }
       }
     }
-    if (state.rows.some(r => branchMatch(r) && !populated(r))) return;
+    if (hasMatchingDraft) return;
     const activeTr = document.activeElement?.closest('#rows tr');
     if (activeTr) return;
     const row = blank(selectedBranch.startsWith('b:') ? selectedBranch.slice(2) : '');
@@ -383,11 +814,187 @@
     save();
   }
   function totals(rows = selectedRows()) {
-    let totalBalance = 0n, totalAed = 0n, invalidAny = false; const byType = new Map(); for (const field of moneyFields) { let total = 0n, invalid = false; for (const row of rows) { const value = integerAmount(row[field]); if (value === null) invalid = true; else { total += value; if (field === 'balance' && row.balanceType && row.balanceType.trim() && value > 0n) { const t = row.balanceType.trim(); byType.set(t, (byType.get(t) || 0n) + value); } } } if (field === 'balance') { totalBalance = total; if (invalid) invalidAny = true; } if (field === 'aed') { totalAed = total; if (invalid) invalidAny = true; } $('total-' + field).textContent = invalid ? 'رقم درست کریں' : formatted(total); } const balEl = $('total-balance'); if (balEl && !invalidAny) { const parts = []; for (const [name, sum] of byType) { parts.push(`${name}: ${formatted(sum)}`); } balEl.title = parts.length ? `کل بقایا: ${formatted(totalBalance)} (${parts.slice(0, 4).join(' | ')}${parts.length > 4 ? '...' : ''})` : `کل بقایا: ${formatted(totalBalance)}`; } const netEl = $('total-net-aed'); if (netEl) { const netAed = totalAed - totalBalance; netEl.textContent = invalidAny ? 'موجودہ درہم: رقم درست کریں' : `موجودہ درہم: ${formatted(netAed)}`; } const ordersEl = $('total-orders-count'); if (ordersEl) { ordersEl.textContent = `آرڈرز تعداد: ${rows.length}`; } $('total-pkr').textContent = currencyText(rows).split('\n').map(s => `(${s})`).join('\n'); $('count').textContent = `${rows.length} اندراجات`;
-    const fractional = rows.some(r => moneyFields.some(f => integerAmount(r[f]) === null));
-    $('filter-message').textContent = !rangeValid() ? 'تاریخ سے، تاریخ تک سے آگے نہیں ہو سکتی۔' : dayMode() ? `${fmtDate(state.date)} کی ${rows.length} انٹریاں۔ پرنٹ اور مجموعہ انہی کا ہے۔` : `${rows.length} انٹریاں منتخب ہیں۔ پرنٹ اور مجموعہ انہی کا ہے۔ نئی انٹری کے لیے روزانہ منظر کھولیں۔`;
+    let totalBalance = 0n, totalAed = 0n, totalPkr = 0n;
+    let invalidBal = false, invalidAed = false, invalidPkr = false;
+    const byType = new Map();
+    for (let i = 0, len = rows.length; i < len; i++) {
+      const row = rows[i];
+      const bVal = integerAmount(row.balance);
+      if (bVal === null) invalidBal = true;
+      else {
+        totalBalance += bVal;
+        if (row.balanceType && row.balanceType.trim() && bVal > 0n) {
+          const t = row.balanceType.trim();
+          byType.set(t, (byType.get(t) || 0n) + bVal);
+        }
+      }
+      const aVal = integerAmount(row.aed);
+      if (aVal === null) invalidAed = true;
+      else totalAed += aVal;
+      const pVal = integerAmount(row.pkr);
+      if (pVal === null) invalidPkr = true;
+      else totalPkr += pVal;
+    }
+    const invalidAny = invalidBal || invalidAed;
+    $('total-balance').textContent = invalidBal ? 'رقم درست کریں' : formatted(totalBalance);
+    $('total-aed').textContent = invalidAed ? 'رقم درست کریں' : formatted(totalAed);
+    const balEl = $('total-balance');
+    if (balEl && !invalidAny) {
+      const parts = [];
+      for (const [name, sum] of byType) parts.push(`${name}: ${formatted(sum)}`);
+      balEl.title = parts.length ? `کل بقایا: ${formatted(totalBalance)} (${parts.slice(0, 4).join(' | ')}${parts.length > 4 ? '...' : ''})` : `کل بقایا: ${formatted(totalBalance)}`;
+    }
+    const netEl = $('total-net-aed');
+    if (netEl) {
+      const netAed = totalAed - totalBalance;
+      netEl.textContent = invalidAny ? 'موجودہ درہم: رقم درست کریں' : `موجودہ درہم: ${formatted(netAed)}`;
+    }
+    const ordersEl = $('total-orders-count');
+    if (ordersEl) ordersEl.textContent = `آرڈرز تعداد: ${rows.length}`;
+    $('total-pkr').textContent = currencyText(rows).split('\n').map(s => `(${s})`).join('\n');
+    $('count').textContent = `${rows.length} اندراجات`;
+    ['total-balance', 'total-aed', 'total-pkr', 'total-orders-count', 'total-net-aed'].forEach(id => { const el = $(id); if (el) el.classList.add('total-bombay-black'); });
+    const fractional = invalidBal || invalidAed || invalidPkr;
+    const rValid = rangeValid();
+    $('filter-message').textContent = !rValid ? 'تاریخ سے، تاریخ تک سے آگے نہیں ہو سکتی۔' : dayMode() ? `${fmtDate(state.date)} کی ${rows.length} انٹریاں۔ پرنٹ اور مجموعہ انہی کا ہے۔` : `${rows.length} انٹریاں منتخب ہیں۔ پرنٹ اور مجموعہ انہی کا ہے۔ نئی انٹری کے لیے روزانہ منظر کھولیں۔`;
     if (fractional) $('filter-message').textContent += ' رقم میں صرف مکمل عدد لکھیں؛ پرانی اعشاری رقم کو خود نہیں بدلا گیا۔';
-    $('filter-message').classList.toggle('error', !rangeValid() || fractional);
+    $('filter-message').classList.toggle('error', !rValid || fractional);
+    updateAuditPanel(rows);
+  }
+
+  let auditPanelInitialized = false;
+  function updateAuditPanel(rows = selectedRows()) {
+    const rateInput = $('audit-rate-input');
+    const feeInput = $('audit-fee-input');
+    if (!rateInput || !feeInput) return;
+
+    if (!auditPanelInitialized) {
+      initAuditPanel();
+    }
+
+    let count = 0, totalAed = 0n, totalPkr = 0n, hasAfn = false, hasPkr = false;
+    const activeRows = [];
+    for (let i = 0, len = rows.length; i < len; i++) {
+      const r = rows[i];
+      if (!populated(r)) continue;
+      activeRows.push(r);
+      count++;
+      const a = integerAmount(r.aed);
+      if (a !== null) totalAed += a;
+      const p = integerAmount(r.pkr);
+      if (p !== null) totalPkr += p;
+      if (partyCurrency(r.branch) === 'afn') hasAfn = true;
+      else hasPkr = true;
+    }
+    const entriesCountEl = $('audit-entries-count');
+    if (entriesCountEl) entriesCountEl.textContent = count;
+
+    let feePerEntry = parseFloat(feeInput.value);
+    if (isNaN(feePerEntry) || feePerEntry < 0) feePerEntry = 10;
+
+    const totalFee = BigInt(Math.max(0, Math.round(count * feePerEntry)));
+    const totalFeeEl = $('audit-total-fee');
+    if (totalFeeEl) totalFeeEl.textContent = `${formatted(totalFee)} درہم`;
+
+    const totalAedEl = $('audit-total-aed');
+    if (totalAedEl) totalAedEl.textContent = formatted(totalAed);
+
+    const netAed = totalAed > totalFee ? totalAed - totalFee : 0n;
+    const netAedEl = $('audit-net-aed');
+    if (netAedEl) netAedEl.textContent = formatted(netAed);
+
+    const isMixedCurrency = hasAfn && hasPkr;
+    const isAfn = (selectedBranch.startsWith('b:') && partyCurrency(selectedBranch.slice(2)) === 'afn') || (hasAfn && !hasPkr);
+    const currLabel = isAfn ? 'افغانی' : 'روپیہ';
+
+    const actualPkrEl = $('audit-actual-pkr');
+    if (actualPkrEl) {
+      actualPkrEl.textContent = isMixedCurrency ? currencyText(activeRows).replace(/\n/g, ' + ') : `${formatted(totalPkr)} ${currLabel}`;
+    }
+
+    const rateVal = parseFloat(rateInput.value);
+    const banner = $('audit-result-banner');
+    const icon = $('audit-status-icon');
+    const text = $('audit-status-text');
+    const badge = $('audit-diff-badge');
+    const calcPkrEl = $('audit-calculated-pkr');
+
+    if (!banner || !icon || !text || !badge || !calcPkrEl) return;
+
+    if (isMixedCurrency) {
+      calcPkrEl.textContent = '—';
+      banner.className = 'audit-status-banner neutral';
+      icon.textContent = 'ℹ️';
+      text.textContent = 'روپیہ اور افغانی کی انٹریاں یکجا ہیں؛ درست ریٹ جانچ پڑتال کے لیے مخصوص پارٹی کا ٹیب منتخب کریں۔';
+      badge.hidden = true;
+      return;
+    }
+
+    if (isNaN(rateVal) || rateVal <= 0) {
+      calcPkrEl.textContent = '—';
+      banner.className = 'audit-status-banner neutral';
+      icon.textContent = 'ℹ️';
+      text.textContent = count ? 'جانچ پڑتال مکمل کرنے کے لیے اوپر ریٹ (Rate) درج کریں۔' : 'جانچ پڑتال کے لیے کوئی انٹری موجود نہیں ہے۔';
+      badge.hidden = true;
+      return;
+    }
+
+    const calculatedPkr = BigInt(Math.round(Number(netAed) * rateVal));
+    calcPkrEl.textContent = `${formatted(calculatedPkr)} ${currLabel}`;
+
+    const diff = totalPkr - calculatedPkr;
+    const absDiff = diff < 0n ? -diff : diff;
+
+    if (count === 0) {
+      banner.className = 'audit-status-banner neutral';
+      icon.textContent = 'ℹ️';
+      text.textContent = 'کوئی انٹری موجود نہیں ہے۔';
+      badge.hidden = true;
+    } else if (absDiff === 0n) {
+      banner.className = 'audit-status-banner success';
+      icon.textContent = '✅';
+      text.textContent = `ماشاءاللہ! تمام ${count} اندراجات کی جانچ پڑتال 100% درست اور برابر ہے۔`;
+      badge.hidden = false;
+      badge.className = 'diff-badge success';
+      badge.textContent = '✓ بالکل برابر (0 فرق)';
+    } else {
+      banner.className = 'audit-status-banner warning';
+      icon.textContent = '⚠️';
+      const dirText = diff > 0n ? 'رجسٹر میں حسابی رقم سے زیادہ ہے' : 'رجسٹر میں حسابی رقم سے کم ہے';
+      text.textContent = `توجہ: رجسٹر اور حسابی رقم میں ${formatted(absDiff)} ${currLabel} کا فرق ہے۔ (${dirText})`;
+      badge.hidden = false;
+      badge.className = 'diff-badge warning';
+      badge.textContent = `فرق: ${diff > 0n ? '+' : '-'}${formatted(absDiff)} ${currLabel}`;
+    }
+  }
+
+  function initAuditPanel() {
+    if (auditPanelInitialized) return;
+    const rateInput = $('audit-rate-input');
+    const feeInput = $('audit-fee-input');
+    if (!rateInput || !feeInput) return;
+    auditPanelInitialized = true;
+
+    try {
+      const savedRate = localStorage.getItem('hisaab-audit-rate');
+      if (savedRate && !isNaN(parseFloat(savedRate))) {
+        rateInput.value = savedRate;
+      }
+      const savedFee = localStorage.getItem('hisaab-audit-fee');
+      if (savedFee && !isNaN(parseFloat(savedFee))) {
+        feeInput.value = savedFee;
+      }
+    } catch (_) {}
+
+    rateInput.addEventListener('input', () => {
+      try { localStorage.setItem('hisaab-audit-rate', rateInput.value); } catch (_) {}
+      updateAuditPanel();
+    });
+
+    feeInput.addEventListener('input', () => {
+      try { localStorage.setItem('hisaab-audit-fee', feeInput.value); } catch (_) {}
+      updateAuditPanel();
+    });
   }
   function updateBalTypeSuggestions() { let dl = $('bal-type-suggestions'); if (!dl) { dl = document.createElement('datalist'); dl.id = 'bal-type-suggestions'; document.body.append(dl); } const set = new Set(['کھاتہ', 'عارضی قرضہ']); state.rows.forEach(r => { if (r.balanceType && r.balanceType.trim()) set.add(r.balanceType.trim()); }); dl.replaceChildren(...Array.from(set).map(val => { const opt = document.createElement('option'); opt.value = val; return opt; })); }
   function viewLabel() {
@@ -396,7 +1003,7 @@
   }
   const fieldUrduLabels = { orderType: 'آرڈر کی قسم', balanceType: 'بقایا کی نوعیت', sender: 'ارسال کنندہ', mobile: 'موبائیل نمبر', receiver: 'وصول کنندہ', place: 'مقام', branch: 'پارٹی', balance: 'بقایا', aed: 'درہم', pkr: 'روپیہ / افغانی' };
   const duplicateRecords = new WeakMap(), duplicateAccepted = new Map();
-  const duplicateSignature = r => JSON.stringify([r.entryDate, r.branch, r.sender, r.mobile, r.balance, r.aed, r.pkr]);
+  const duplicateSignature = r => `${r.entryDate}\x1f${r.branch}\x1f${r.sender}\x1f${r.mobile}\x1f${r.balance}\x1f${r.aed}\x1f${r.pkr}`;
   let duplicatePending = [];
   function reviewDuplicates(rows, lookup) {
     duplicatePending = rows.filter(r => lookup(r) && duplicateAccepted.get(r.id) !== JSON.stringify([duplicateSignature(r), duplicateSignature(lookup(r).row)]));
@@ -561,7 +1168,7 @@
       const match = matched && hasData ? findDuplicate(r) : null;
       const dup = match && duplicateAccepted.get(r.id) !== JSON.stringify([duplicateSignature(r), duplicateSignature(match.row)]) ? match : null;
       tr.classList.toggle('duplicate-row', !!dup);
-      const decoration = JSON.stringify([matched, val, dup?.index, r.history?.length || 0, r.entryDate, day]);
+      const decoration = `${matched}|${val}|${dup?.index ?? ''}|${r.history?.length || 0}|${r.entryDate}|${day}`;
       if (tr._decoration === decoration) return;
       tr._decoration = decoration;
       cell.replaceChildren();
@@ -607,7 +1214,7 @@
     const branch = selectedBranch === '' ? 'تمام پارٹیاں' : selectedBranch === '__unassigned' ? 'بغیر پارٹی' : selectedBranch.slice(2);
     $('branch-heading').textContent = (isParty ? '🏢 ' : '') + branch + ($('search').value.trim() ? ' | تلاش: ' + $('search').value.trim() : '');
     $('view-note').textContent = day ? '' : 'دکھایا جا رہا ہے: ' + viewLabel();
-    if ($('date-screen-badge')) $('date-screen-badge').textContent = fmtDate(state.date || today());
+    if ($('date-screen-badge')) $('date-screen-badge').textContent = day ? fmtDate(state.date || today()) : viewLabel();
     const hasRange = rangeActive();
     if ($('toggle-range')) $('toggle-range').classList.toggle('active', hasRange || !($('range-drawer')?.hidden ?? true));
     totals(filtered);
@@ -946,6 +1553,7 @@
       tr.append(td);
     });
     tr.addEventListener('focusout', () => setTimeout(() => { if (!tr.contains(document.activeElement)) applyFilter(true); }, 0));
+    const tdWords = document.createElement('td'); tdWords.className = 'col-words print-only'; tr.append(tdWords);
     const tdReceipt = document.createElement('td'); tdReceipt.className = 'col-receipt no-print'; tr.append(tdReceipt);
     const td = document.createElement('td'); td.className = 'no-print'; const del = document.createElement('button'); del.type = 'button'; del.className = 'delete'; del.textContent = '×'; del.title = 'حذف کریں — Undo سے واپس لائیں'; del.setAttribute('aria-label', 'انٹری حذف کریں');
     if (rLocked) del.disabled = true;
@@ -982,7 +1590,7 @@
     const currPage = activePageNumber();
     if ($('page-no-input')) $('page-no-input').value = currPage;
     if ($('page-no-val')) $('page-no-val').textContent = currPage;
-    applyFont(); updateBranches(); applyFilter(); updateUndo(); updateBackup(); journalController?.reset();
+    applyFont(); updateBranches(); applyFilter(); updateUndo(); updateBackup(); journalController?.reset(); initAuditPanel();
   }
   function focusRow(row) {
     const tr = rowNodes.get(row.id);
@@ -1348,8 +1956,8 @@
       if ($('page-no-val')) $('page-no-val').textContent = activePageNumber();
     });
   }
-  $('branch-filter').onchange = () => { selectedBranch = $('branch-filter').value; applyFilter(); updatePartyTabsActive(); };
-  $('all-dates').onchange = () => applyFilter();
+  $('branch-filter').onchange = () => { selectPartyTab($('branch-filter').value); };
+  $('all-dates').onchange = () => { saveCurrentPartyDateFilter(); save(); applyFilter(); };
 
   /* FIX-17: Debounced search filter handler */
   let searchDebounceTimer = null;
@@ -1357,10 +1965,10 @@
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => applyFilter(), 120);
   });
-  for (const id of ['date-from', 'date-to']) $(id).addEventListener('input', () => applyFilter());
+  for (const id of ['date-from', 'date-to']) $(id).addEventListener('input', () => { saveCurrentPartyDateFilter(); save(); applyFilter(); });
   if ($('toggle-range')) $('toggle-range').onclick = () => { const d = $('range-drawer'); if (!d) return; d.hidden = !d.hidden; $('toggle-range').classList.toggle('active', !d.hidden || rangeActive()); if (!d.hidden) $('date-from').focus(); };
-  if ($('clear-range-btn')) $('clear-range-btn').onclick = () => { for (const id of ['date-from', 'date-to']) $(id).value = ''; if ($('range-drawer')) $('range-drawer').hidden = true; if ($('toggle-range')) $('toggle-range').classList.remove('active'); applyFilter(); };
-  function resetFilters() { ensureActiveParty(); if ($('branch-filter')) $('branch-filter').value = selectedBranch; $('all-dates').checked = false; for (const id of ['search', 'date-from', 'date-to']) $(id).value = ''; if ($('range-drawer')) $('range-drawer').hidden = true; if ($('toggle-range')) $('toggle-range').classList.remove('active'); applyFilter(); renderPartyTabs(); }
+  if ($('clear-range-btn')) $('clear-range-btn').onclick = () => { for (const id of ['date-from', 'date-to']) $(id).value = ''; if ($('range-drawer')) $('range-drawer').hidden = true; if ($('toggle-range')) $('toggle-range').classList.remove('active'); saveCurrentPartyDateFilter(); save(); applyFilter(); };
+  function resetFilters() { ensureActiveParty(); if ($('branch-filter')) $('branch-filter').value = selectedBranch; $('all-dates').checked = false; for (const id of ['search', 'date-from', 'date-to']) $(id).value = ''; if ($('range-drawer')) $('range-drawer').hidden = true; if ($('toggle-range')) $('toggle-range').classList.remove('active'); saveCurrentPartyDateFilter(); save(); applyFilter(); renderPartyTabs(); }
   $('reset-filters').onclick = resetFilters;
   $('font-smaller').onclick = () => { state.fontSize = Math.max(10, state.fontSize - 1); applyFont(); save(); }; $('font-larger').onclick = () => { state.fontSize = Math.min(22, state.fontSize + 1); applyFont(); save(); };
   $('title').addEventListener('input', () => { state.title = $('title').value; if ($('title-print')) $('title-print').textContent = ($('title').value || 'اندراج رجسٹر'); save(); });
@@ -1381,6 +1989,7 @@
     state.rows.forEach(row => {
       if (!populated(row)) row.entryDate = state.date || today();
     });
+    saveCurrentPartyDateFilter();
     save();
     applyFilter(true);
     renderPartyTabs();
@@ -1406,26 +2015,109 @@
       setWorkingDate(today());
     };
   }
+  const URDU_MONTHS = ['جنوری', 'فروری', 'مارچ', 'اپریل', 'مئی', 'جون', 'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر'];
+  function fmtYearMonth(ym) {
+    if (!ym || !/^\d{4}-\d{2}$/.test(ym)) return ym || '';
+    const [y, m] = ym.split('-');
+    const idx = parseInt(m, 10) - 1;
+    const mName = URDU_MONTHS[idx] || m;
+    return `${mName} ${y}`;
+  }
+  function summaryCurrencyText(rows, fallbackCurr = 'pkr') {
+    const present = new Set(rows.map(r => partyCurrency(r.branch)));
+    const currencies = ['pkr', 'afn'].filter(c => present.has(c));
+    const { sums, invalid } = currencyTotals(rows);
+    const list = currencies.length ? currencies : [fallbackCurr === 'afn' ? 'afn' : 'pkr'];
+    return list.map(c => {
+      const unit = c === 'afn' ? 'افغانی' : 'روپیہ';
+      const val = invalid.has(c) ? 'رقم درست کریں' : formatted(sums[c]);
+      return `${val} ${unit}`;
+    }).join('\n');
+  }
+  function populateSummaryCurrencyCell(cell, rawText) {
+    const str = String(rawText || '0 روپیہ');
+    cell.dir = 'rtl';
+    cell.className = 'summary-curr-cell';
+    cell.dataset.rawLines = str;
+    cell.replaceChildren();
+    const lines = str.split('\n').map(s => s.trim()).filter(Boolean);
+    for (const line of (lines.length ? lines : ['0 روپیہ'])) {
+      const div = document.createElement('div');
+      div.className = 'summary-curr-line';
+      div.dir = 'rtl';
+      const m = line.match(/^(.+?)\s+(روپیہ|افغانی)$/);
+      if (m) {
+        const numSpan = document.createElement('span');
+        numSpan.className = 'summary-curr-num';
+        numSpan.dir = 'ltr';
+        numSpan.textContent = m[1];
+        const unitSpan = document.createElement('span');
+        unitSpan.className = 'summary-curr-unit';
+        unitSpan.dir = 'rtl';
+        unitSpan.textContent = m[2];
+        div.append(numSpan, ' ', unitSpan);
+      } else {
+        div.textContent = line;
+      }
+      cell.append(div);
+    }
+  }
   let summaryMode = 'date';
-  function renderSummary(mode = 'date') {
+  let summaryMonthFilter = '';
+  function renderSummary(mode = summaryMode) {
     summaryMode = mode;
     const isParty = mode === 'party';
-    if ($('summary-tab-date')) { $('summary-tab-date').classList.toggle('active', !isParty); $('summary-tab-date').setAttribute('aria-selected', String(!isParty)); }
+    const isMonthly = mode === 'monthly';
+    const isDate = !isParty && !isMonthly;
+    if ($('summary-tab-date')) { $('summary-tab-date').classList.toggle('active', isDate); $('summary-tab-date').setAttribute('aria-selected', String(isDate)); }
     if ($('summary-tab-party')) { $('summary-tab-party').classList.toggle('active', isParty); $('summary-tab-party').setAttribute('aria-selected', String(isParty)); }
-    if ($('summary-first-heading')) $('summary-first-heading').textContent = isParty ? 'پارٹی' : 'تاریخ';
-    if ($('summary-hint')) $('summary-hint').textContent = isParty ? 'کسی پارٹی پر کلک کریں تو اس پارٹی کا مکمل کھاتہ کھل جائے گا۔' : 'کسی تاریخ پر کلک کریں تو اسی دن کا رجسٹر کھل جائے گا۔';
-    const rows = state.rows.filter(populated);
+    if ($('summary-tab-monthly')) { $('summary-tab-monthly').classList.toggle('active', isMonthly); $('summary-tab-monthly').setAttribute('aria-selected', String(isMonthly)); }
+    if ($('summary-first-heading')) $('summary-first-heading').textContent = isParty ? 'پارٹی' : isMonthly ? 'مہینہ' : 'تاریخ';
+    if ($('summary-fee-heading')) $('summary-fee-heading').hidden = !isMonthly;
+    if ($('summary-net-aed-heading')) $('summary-net-aed-heading').hidden = !isMonthly;
+    if ($('summary-fee')) $('summary-fee').hidden = !isMonthly;
+    if ($('summary-net-aed')) $('summary-net-aed').hidden = !isMonthly;
+    if ($('summary-hint')) {
+      $('summary-hint').textContent = isParty
+        ? 'کسی پارٹی پر کلک کریں تو اس پارٹی کا مکمل کھاتہ کھل جائے گا۔'
+        : isMonthly
+          ? 'کسی مہینے پر کلک کریں تو اسی مہینے کا مکمل رجسٹر کھل جائے گا۔'
+          : 'کسی تاریخ پر کلک کریں تو اسی دن کا رجسٹر کھل جائے گا۔';
+    }
+    const allPopulated = state.rows.filter(populated);
+    const monthSelect = $('summary-month-filter');
+    if (monthSelect) {
+      const monthSet = new Set();
+      for (const r of allPopulated) {
+        const d = r.entryDate || state.date || today();
+        if (d && d.length >= 7) monthSet.add(d.slice(0, 7));
+      }
+      const sortedMonths = [...monthSet].sort((a, b) => b.localeCompare(a));
+      if (summaryMonthFilter && !monthSet.has(summaryMonthFilter)) summaryMonthFilter = '';
+      monthSelect.replaceChildren(
+        makeOption('', 'تمام مہینے'),
+        ...sortedMonths.map(ym => makeOption(ym, fmtYearMonth(ym)))
+      );
+      monthSelect.value = summaryMonthFilter;
+    }
+    const rows = summaryMonthFilter
+      ? allPopulated.filter(r => (r.entryDate || state.date || today()).slice(0, 7) === summaryMonthFilter)
+      : allPopulated;
     const tbody = $('summary-rows');
     tbody.replaceChildren();
     $('summary-currency-heading').textContent = rows.some(r => partyCurrency(r.branch) === 'afn') ? 'روپیہ / افغانی' : 'روپیہ';
-    let totCount = 0, totBal = 0n, totAed = 0n;
-    if (!isParty) {
+    let feePerEntry = parseFloat($('audit-fee-input')?.value);
+    if (isNaN(feePerEntry) || feePerEntry < 0) feePerEntry = 10;
+    let totCount = 0, totBal = 0n, totAed = 0n, totFee = 0n;
+    const colSpanCount = isMonthly ? 7 : 5;
+    if (isDate) {
       const groups = new Map();
       for (const r of rows) {
         const d = r.entryDate || state.date || today();
-        if (!groups.has(d)) groups.set(d, { count: 0, balance: 0n, aed: 0n, pkr: 0n });
+        if (!groups.has(d)) groups.set(d, { count: 0, balance: 0n, aed: 0n, pkr: 0n, rows: [] });
         const g = groups.get(d);
         g.count++;
+        g.rows.push(r);
         for (const f of moneyFields) {
           const v = integerAmount(r[f]);
           if (v !== null) g[f] += v;
@@ -1435,7 +2127,7 @@
       if (!dates.length) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 5; td.className = 'summary-empty-cell'; td.textContent = 'ابھی کوئی انٹری موجود نہیں ہے۔';
+        td.colSpan = colSpanCount; td.className = 'summary-empty-cell'; td.textContent = 'ابھی کوئی انٹری موجود نہیں ہے۔';
         tr.append(td); tbody.append(tr);
       }
       for (const d of dates) {
@@ -1455,22 +2147,22 @@
           applyFilter();
           $('summary-dialog').close();
         };
-        const tdDate = document.createElement('td'); tdDate.textContent = fmtDate(d);
-        const tdCount = document.createElement('td'); tdCount.textContent = g.count;
-        const tdBal = document.createElement('td'); tdBal.textContent = formatted(g.balance);
-        const tdAed = document.createElement('td'); tdAed.textContent = formatted(g.aed);
-        const tdPkr = document.createElement('td'); tdPkr.textContent = currencyText(rows.filter(r => (r.entryDate || state.date || today()) === d));
+        const tdDate = document.createElement('td'); tdDate.dir = 'ltr'; tdDate.textContent = fmtDate(d);
+        const tdCount = document.createElement('td'); tdCount.dir = 'ltr'; tdCount.textContent = g.count;
+        const tdBal = document.createElement('td'); tdBal.dir = 'ltr'; tdBal.textContent = formatted(g.balance);
+        const tdAed = document.createElement('td'); tdAed.dir = 'ltr'; tdAed.textContent = formatted(g.aed);
+        const tdPkr = document.createElement('td'); populateSummaryCurrencyCell(tdPkr, summaryCurrencyText(g.rows));
         tr.append(tdDate, tdCount, tdBal, tdAed, tdPkr);
         tbody.append(tr);
       }
       $('summary-scope').textContent = `کل ${dates.length} دن، ${totCount} آرڈرز تعداد۔`;
-    } else {
+    } else if (isParty) {
       const partyKeys = [...state.branches.slice().sort((a, b) => a.localeCompare(b, 'ur'))];
       if (rows.some(r => !r.branch)) partyKeys.push('');
       if (!partyKeys.length) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 5; td.className = 'summary-empty-cell'; td.textContent = 'ابھی کوئی پارٹی یا انٹری موجود نہیں ہے۔';
+        td.colSpan = colSpanCount; td.className = 'summary-empty-cell'; td.textContent = 'ابھی کوئی پارٹی یا انٹری موجود نہیں ہے۔';
         tr.append(td); tbody.append(tr);
       }
       for (const pName of partyKeys) {
@@ -1495,19 +2187,76 @@
           $('summary-dialog').close();
         };
         const tdParty = document.createElement('td'); tdParty.dir = 'rtl'; tdParty.className = 'summary-party-cell'; tdParty.textContent = label;
-        const tdCount = document.createElement('td'); tdCount.textContent = String(pRows.length);
-        const tdBal = document.createElement('td'); tdBal.textContent = formatted(bal);
-        const tdAed = document.createElement('td'); tdAed.textContent = formatted(aed);
-        const tdPkr = document.createElement('td'); tdPkr.textContent = pRows.length ? currencyText(pRows) : (partyCurrency(pName) === 'afn' ? '0 (AFN)' : '0');
+        const tdCount = document.createElement('td'); tdCount.dir = 'ltr'; tdCount.textContent = String(pRows.length);
+        const tdBal = document.createElement('td'); tdBal.dir = 'ltr'; tdBal.textContent = formatted(bal);
+        const tdAed = document.createElement('td'); tdAed.dir = 'ltr'; tdAed.textContent = formatted(aed);
+        const tdPkr = document.createElement('td');
+        populateSummaryCurrencyCell(tdPkr, summaryCurrencyText(pRows, partyCurrency(pName)));
         tr.append(tdParty, tdCount, tdBal, tdAed, tdPkr);
         tbody.append(tr);
       }
       $('summary-scope').textContent = `کل ${partyKeys.length} پارٹیاں، ${totCount} آرڈرز تعداد۔`;
+    } else {
+      const groups = new Map();
+      for (const r of rows) {
+        const d = r.entryDate || state.date || today();
+        const ym = d.slice(0, 7);
+        if (!groups.has(ym)) groups.set(ym, { count: 0, balance: 0n, aed: 0n, rows: [] });
+        const g = groups.get(ym);
+        g.count++;
+        g.rows.push(r);
+        const b = integerAmount(r.balance), a = integerAmount(r.aed);
+        if (b !== null) g.balance += b;
+        if (a !== null) g.aed += a;
+      }
+      const months = [...groups.keys()].sort((a, b) => b.localeCompare(a));
+      if (!months.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = colSpanCount; td.className = 'summary-empty-cell'; td.textContent = 'ابھی کوئی انٹری موجود نہیں ہے۔';
+        tr.append(td); tbody.append(tr);
+      }
+      for (const ym of months) {
+        const g = groups.get(ym);
+        const mFee = BigInt(Math.max(0, Math.round(g.count * feePerEntry)));
+        const netAed = g.aed - mFee;
+        totCount += g.count; totBal += g.balance; totAed += g.aed; totFee += mFee;
+        const tr = document.createElement('tr');
+        tr.title = `${fmtYearMonth(ym)} کی انٹریاں کھولیں`;
+        tr.onclick = () => {
+          const [y, m] = ym.split('-').map(Number);
+          const lastDay = new Date(y, m, 0).getDate();
+          const fromD = `${ym}-01`;
+          const toD = `${ym}-${String(lastDay).padStart(2, '0')}`;
+          $('all-dates').checked = false;
+          $('date-from').value = fromD;
+          $('date-to').value = toD;
+          if ($('range-drawer')) $('range-drawer').hidden = true;
+          if ($('toggle-range')) $('toggle-range').classList.add('active');
+          saveCurrentPartyDateFilter();
+          save();
+          applyFilter();
+          renderPartyTabs();
+          $('summary-dialog').close();
+        };
+        const tdMonth = document.createElement('td'); tdMonth.dir = 'rtl'; tdMonth.className = 'summary-party-cell'; tdMonth.textContent = fmtYearMonth(ym);
+        const tdCount = document.createElement('td'); tdCount.dir = 'ltr'; tdCount.textContent = String(g.count);
+        const tdBal = document.createElement('td'); tdBal.dir = 'ltr'; tdBal.textContent = formatted(g.balance);
+        const tdAed = document.createElement('td'); tdAed.dir = 'ltr'; tdAed.textContent = formatted(g.aed);
+        const tdFee = document.createElement('td'); tdFee.dir = 'ltr'; tdFee.textContent = formatted(mFee);
+        const tdNetAed = document.createElement('td'); tdNetAed.dir = 'ltr'; tdNetAed.textContent = formatted(netAed);
+        const tdPkr = document.createElement('td'); populateSummaryCurrencyCell(tdPkr, summaryCurrencyText(g.rows));
+        tr.append(tdMonth, tdCount, tdBal, tdAed, tdFee, tdNetAed, tdPkr);
+        tbody.append(tr);
+      }
+      $('summary-scope').textContent = `کل ${months.length} مہینے، ${totCount} آرڈرز — کل کمیشن: ${formatted(totFee)} درہم۔`;
     }
     $('summary-count').textContent = String(totCount);
     $('summary-balance').textContent = formatted(totBal);
     $('summary-aed').textContent = formatted(totAed);
-    $('summary-pkr').textContent = currencyText(rows);
+    if ($('summary-fee')) $('summary-fee').textContent = formatted(totFee);
+    if ($('summary-net-aed')) $('summary-net-aed').textContent = formatted(totAed - totFee);
+    if ($('summary-pkr')) populateSummaryCurrencyCell($('summary-pkr'), summaryCurrencyText(rows));
     if ($('summary-status')) $('summary-status').textContent = '';
   }
   function prepareSummaryOutput() {
@@ -1517,15 +2266,28 @@
     const head = document.createElement('header');
     head.className = 'summary-print-head';
     const titleEl = document.createElement('h3');
-    titleEl.textContent = (state.title || 'اندراج رجسٹر') + ' — ' + (summaryMode === 'party' ? 'پارٹی وار خلاصہ' : 'تاریخ وار خلاصہ');
-    const metaEl = document.createElement('span');
-    metaEl.className = 'summary-print-meta';
-    metaEl.textContent = ($('summary-scope')?.textContent || '') + '  |  تاریخ: ' + fmtDate(today());
-    head.append(titleEl, metaEl);
+    const modeTitle = summaryMode === 'party' ? 'پارٹی وار خلاصہ' : summaryMode === 'monthly' ? 'ماہانہ اور کمیشن رپورٹ' : 'تاریخ وار خلاصہ';
+    titleEl.textContent = (state.title || 'اندراج رجسٹر') + ' — ' + modeTitle;
+    const metaWrap = document.createElement('div');
+    metaWrap.className = 'summary-print-meta-wrap';
+    const scopeEl = document.createElement('span');
+    scopeEl.className = 'summary-print-meta';
+    scopeEl.textContent = $('summary-scope')?.textContent || '';
+    const dateEl = document.createElement('span');
+    dateEl.className = 'summary-print-date-pill';
+    dateEl.dir = 'ltr';
+    dateEl.textContent = fmtDate(today());
+    metaWrap.append(scopeEl, dateEl);
+    head.append(titleEl, metaWrap);
     const tbl = $('summary-table').cloneNode(true);
     tbl.removeAttribute('id');
     tbl.className = 'summary-print-table';
-    tbl.querySelectorAll('td').forEach(td => { if (td.textContent) td.textContent = td.textContent.replace(/^🏢\s*/, ''); });
+    tbl.querySelectorAll('[hidden]').forEach(el => el.remove());
+    tbl.querySelectorAll('td').forEach(td => {
+      if (!td.classList.contains('summary-curr-cell') && td.textContent) {
+        td.textContent = td.textContent.replace(/^🏢\s*/, '');
+      }
+    });
     sheet.append(head, tbl);
     $('receipt-print').replaceChildren(sheet);
     document.body.classList.add('summary-output');
@@ -1552,7 +2314,7 @@
       return;
     }
     document.body.inert = true;
-    const modeLabel = summaryMode === 'party' ? 'پارٹی_وار' : 'تاریخ_وار';
+    const modeLabel = summaryMode === 'party' ? 'پارٹی_وار' : summaryMode === 'monthly' ? 'ماہانہ_کمیشن' : 'تاریخ_وار';
     try {
       const result = await window.electronAPI.savePDF('خلاصہ_' + modeLabel + '_' + today() + '.pdf');
       if (result?.status === 'saved' && result.filePath) recordSavedPdf(result.filePath);
@@ -1566,17 +2328,26 @@
     }
   }
 
-  /* FIX-35: exportSummaryPNG with browser canvas max-height limit protection */
+  /* FIX-35: exportSummaryPNG with multi-line currency stacking & executive RTL/LTR typography */
   async function exportSummaryPNG() {
     if (document.body.inert) return;
     if ($('summary-status')) $('summary-status').textContent = 'تصویر تیار ہو رہی ہے…';
     await document.fonts.ready;
     try {
-      const headers = Array.from($('summary-table').querySelectorAll('thead th')).map(th => th.textContent.trim());
-      const bodyRows = Array.from($('summary-rows').querySelectorAll('tr')).map(tr => Array.from(tr.children).map(td => td.textContent.replace(/^🏢\s*/, '').trim()));
-      const footCells = Array.from($('summary-table').querySelectorAll('tfoot tr > *')).map(el => el.textContent.trim());
+      const extractCellText = el => {
+        if (el.dataset && el.dataset.rawLines) return el.dataset.rawLines.trim();
+        return el.textContent.replace(/^🏢\s*/, '').trim();
+      };
+      const headers = Array.from($('summary-table').querySelectorAll('thead th:not([hidden])')).map(th => th.textContent.trim());
+      const bodyRows = Array.from($('summary-rows').querySelectorAll('tr')).map(tr => Array.from(tr.children).filter(td => !td.hidden).map(extractCellText));
+      const footCells = Array.from($('summary-table').querySelectorAll('tfoot tr > *:not([hidden])')).map(extractCellText);
+      const hasMultiLine = bodyRows.some(r => r.some(c => c.includes('\n'))) || footCells.some(c => c.includes('\n'));
       const maxCanvasHeight = 16000;
-      const scale = 2, W = 960, pad = 34, headH = 70, thH = 48, rowH = 44, footH = 48;
+      const scale = 2;
+      const W = summaryMode === 'monthly' ? 1180 : 980;
+      const pad = 36, headH = 88, thH = 52;
+      const rowH = hasMultiLine ? 62 : 48;
+      const footH = hasMultiLine ? 64 : 52;
       const tableW = W - pad * 2;
       const estimatedH = pad + headH + thH + Math.max(1, bodyRows.length) * rowH + footH + pad;
       const totalH = Math.min(estimatedH, Math.floor(maxCanvasHeight / scale));
@@ -1586,22 +2357,61 @@
       ctx.scale(scale, scale);
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, W, totalH);
-      const reportTitle = (state.title || 'اندراج رجسٹر') + ' — ' + (summaryMode === 'party' ? 'پارٹی وار خلاصہ' : 'تاریخ وار خلاصہ');
-      const scopeText = ($('summary-scope')?.textContent || '') + '  •  تاریخ: ' + fmtDate(today());
+
+      const modeTitle = summaryMode === 'party' ? 'پارٹی وار خلاصہ' : summaryMode === 'monthly' ? 'ماہانہ اور کمیشن رپورٹ' : 'تاریخ وار خلاصہ';
+      const reportTitle = (state.title || 'اندراج رجسٹر') + ' — ' + modeTitle;
+      const scopeRaw = ($('summary-scope')?.textContent || '').replace(/۔$/, '');
+      const dateStr = fmtDate(today());
+
+      // Right side: Executive Urdu Title
+      ctx.save();
       ctx.direction = 'rtl';
-      ctx.fillStyle = '#144d39';
-      ctx.font = "700 21px 'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',Arial,sans-serif";
+      ctx.fillStyle = '#114b36';
+      ctx.font = "700 22px 'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',Arial,sans-serif";
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      ctx.fillText(reportTitle, W - pad, pad + 26);
-      ctx.fillStyle = '#4b6859';
-      ctx.font = "600 13px 'Noto Nastaliq Urdu',Arial,sans-serif";
-      ctx.textAlign = 'left';
-      ctx.fillText(scopeText, pad, pad + 28);
+      ctx.fillText(reportTitle, W - pad, pad + 28);
+      ctx.restore();
+
+      // Left side: Clean Date Badge + Scope Subtitle (no bidi punctuation collision)
+      ctx.save();
+      ctx.direction = 'ltr';
+      ctx.font = "700 13px 'Segoe UI',Calibri,Arial,sans-serif";
+      const dateText = dateStr;
+      const dateW = Math.ceil(ctx.measureText(dateText).width) + 24;
+      const pillH = 28, pillY = pad + 14;
+      ctx.fillStyle = '#eaf3ee';
+      ctx.strokeStyle = '#b7d4c3';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') ctx.roundRect(pad, pillY, dateW, pillH, 14);
+      else ctx.rect(pad, pillY, dateW, pillH);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#144d39';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(dateText, pad + dateW / 2, pillY + pillH / 2 + 1);
+      ctx.restore();
+
+      if (scopeRaw) {
+        ctx.save();
+        ctx.direction = 'rtl';
+        ctx.fillStyle = '#436454';
+        ctx.font = "600 13px 'Noto Nastaliq Urdu',Arial,sans-serif";
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(scopeRaw, pad + dateW + 14, pad + 28);
+        ctx.restore();
+      }
+
       ctx.strokeStyle = '#17634c';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(pad, pad + headH - 12); ctx.lineTo(W - pad, pad + headH - 12); ctx.stroke();
-      const colRatios = [0.24, 0.14, 0.20, 0.20, 0.22];
+      ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.moveTo(pad, pad + headH - 14); ctx.lineTo(W - pad, pad + headH - 14); ctx.stroke();
+
+      const colRatios = summaryMode === 'monthly'
+        ? [0.16, 0.10, 0.13, 0.14, 0.12, 0.15, 0.20]
+        : [0.22, 0.13, 0.19, 0.20, 0.26];
       const colBounds = [];
       let curRight = W - pad;
       for (const r of colRatios) {
@@ -1612,56 +2422,117 @@
       colBounds[colBounds.length - 1].left = pad;
       colBounds[colBounds.length - 1].width = colBounds[colBounds.length - 1].right - pad;
       colBounds[colBounds.length - 1].center = pad + colBounds[colBounds.length - 1].width / 2;
+
+      const drawSingleLine = (ln, b, centerY, isHeaderOrFoot, isUrduCol) => {
+        const currMatch = ln.match(/^(.+?)\s+(روپیہ|افغانی)$/);
+        if (currMatch) {
+          const numPart = currMatch[1];
+          const unitPart = currMatch[2];
+          const numFont = isHeaderOrFoot
+            ? "700 13.5px 'Segoe UI',Calibri,Arial,sans-serif"
+            : "700 13.5px 'Segoe UI',Calibri,Arial,sans-serif";
+          const unitFont = isHeaderOrFoot
+            ? "700 13px 'Noto Nastaliq Urdu',Arial,sans-serif"
+            : "700 12.5px 'Noto Nastaliq Urdu',Arial,sans-serif";
+          ctx.save();
+          ctx.textBaseline = 'middle';
+          ctx.textAlign = 'center';
+          ctx.font = numFont;
+          const numW = ctx.measureText(numPart).width;
+          ctx.font = unitFont;
+          const unitW = ctx.measureText(unitPart).width;
+          const gap = 7;
+          const totalW = unitW + gap + numW;
+          const leftEdge = b.center - totalW / 2;
+          ctx.direction = 'rtl';
+          ctx.font = unitFont;
+          ctx.fillText(unitPart, leftEdge + unitW / 2, centerY + 1);
+          ctx.direction = 'ltr';
+          ctx.font = numFont;
+          ctx.fillText(numPart, leftEdge + unitW + gap + numW / 2, centerY + 1);
+          ctx.restore();
+          return;
+        }
+        ctx.save();
+        ctx.direction = isUrduCol ? 'rtl' : 'ltr';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = isUrduCol
+          ? (isHeaderOrFoot ? "700 14.5px 'Noto Nastaliq Urdu',Arial,sans-serif" : "700 13.5px 'Noto Nastaliq Urdu',Arial,sans-serif")
+          : (isHeaderOrFoot ? "700 14.5px 'Segoe UI',Calibri,Arial,sans-serif" : "700 14px 'Segoe UI',Calibri,Arial,sans-serif");
+        ctx.fillText(ln, b.center, centerY + 1);
+        ctx.restore();
+      };
+
+      const drawCellLines = (rawVal, b, rowTop, cellH, isHeaderOrFoot, colIdx) => {
+        const lines = String(rawVal || '').split('\n').map(s => s.trim()).filter(Boolean);
+        if (!lines.length) return;
+        const isUrduCol = colIdx === 0 && (isHeaderOrFoot || summaryMode === 'party' || summaryMode === 'monthly');
+        if (lines.length === 1) {
+          drawSingleLine(lines[0], b, rowTop + cellH / 2, isHeaderOrFoot, isUrduCol);
+        } else {
+          const lineGap = 21;
+          const startY = rowTop + cellH / 2 - ((lines.length - 1) * lineGap) / 2;
+          lines.forEach((ln, idx) => {
+            drawSingleLine(ln, b, startY + idx * lineGap, isHeaderOrFoot, isUrduCol);
+          });
+        }
+      };
+
       let y = pad + headH;
-      ctx.fillStyle = '#eaf2ed';
+      ctx.fillStyle = '#e6f0ea';
       ctx.fillRect(pad, y, tableW, thH);
-      ctx.strokeStyle = '#99aa9a'; ctx.lineWidth = 1;
+      ctx.strokeStyle = '#99b0a1'; ctx.lineWidth = 1;
       for (let c = 0; c < colBounds.length; c++) {
         const b = colBounds[c];
         ctx.strokeRect(b.left, y, b.width, thH);
-        ctx.fillStyle = '#1c4334';
+        ctx.save();
+        ctx.direction = 'rtl';
+        ctx.fillStyle = '#12402f';
         ctx.font = "700 14px 'Noto Nastaliq Urdu',Arial,sans-serif";
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillText(headers[c] || '', b.center, y + thH / 2 + 2);
+        ctx.restore();
       }
       y += thH;
       for (let r = 0; r < bodyRows.length; r++) {
         if (y + rowH > totalH - footH - pad) break;
         const cells = bodyRows[r];
-        ctx.fillStyle = r % 2 === 1 ? '#f8fbf9' : '#ffffff';
+        ctx.fillStyle = r % 2 === 1 ? '#f7fbf8' : '#ffffff';
         ctx.fillRect(pad, y, tableW, rowH);
         if (cells.length === 1) {
           ctx.strokeStyle = '#c5d6cb';
           ctx.strokeRect(pad, y, tableW, rowH);
+          ctx.save();
+          ctx.direction = 'rtl';
           ctx.fillStyle = '#557062';
           ctx.font = "600 13px 'Noto Nastaliq Urdu',Arial,sans-serif";
           ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
           ctx.fillText(cells[0], W / 2, y + rowH / 2 + 2);
+          ctx.restore();
         } else {
           for (let c = 0; c < colBounds.length; c++) {
             const b = colBounds[c];
             ctx.strokeStyle = '#c5d6cb';
             ctx.strokeRect(b.left, y, b.width, rowH);
-            ctx.fillStyle = '#183329';
-            ctx.font = c === 0 && summaryMode === 'party' ? "700 13.5px 'Noto Nastaliq Urdu',Arial,sans-serif" : "700 14px Arial,'Noto Nastaliq Urdu',sans-serif";
-            ctx.textAlign = 'center';
-            ctx.fillText(cells[c] || '', b.center, y + rowH / 2 + 1);
+            ctx.fillStyle = '#163529';
+            drawCellLines(cells[c] || '', b, y, rowH, false, c);
           }
         }
         y += rowH;
       }
-      ctx.fillStyle = '#e2efe6';
+      ctx.fillStyle = '#dfeee5';
       ctx.fillRect(pad, y, tableW, footH);
       for (let c = 0; c < colBounds.length; c++) {
         const b = colBounds[c];
-        ctx.strokeStyle = '#99aa9a';
+        ctx.strokeStyle = '#8aa393';
         ctx.strokeRect(b.left, y, b.width, footH);
-        ctx.fillStyle = '#114935';
-        ctx.font = c === 0 ? "700 14.5px 'Noto Nastaliq Urdu',Arial,sans-serif" : "700 14.5px Arial,'Noto Nastaliq Urdu',sans-serif";
-        ctx.textAlign = 'center';
-        ctx.fillText(footCells[c] || '', b.center, y + footH / 2 + 1);
+        ctx.fillStyle = '#0e4531';
+        drawCellLines(footCells[c] || '', b, y, footH, true, c);
       }
-      const modeLabel = summaryMode === 'party' ? 'پارٹی_وار' : 'تاریخ_وار';
+      const modeLabel = summaryMode === 'party' ? 'پارٹی_وار' : summaryMode === 'monthly' ? 'ماہانہ_کمیشن' : 'تاریخ_وار';
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       if (!blob) throw Error('PNG failed');
       download(blob, 'خلاصہ_' + modeLabel + '_' + today() + '.png');
@@ -1677,6 +2548,13 @@
   }
   if ($('summary-tab-date')) $('summary-tab-date').onclick = () => renderSummary('date');
   if ($('summary-tab-party')) $('summary-tab-party').onclick = () => renderSummary('party');
+  if ($('summary-tab-monthly')) $('summary-tab-monthly').onclick = () => renderSummary('monthly');
+  if ($('summary-month-filter')) {
+    $('summary-month-filter').onchange = () => {
+      summaryMonthFilter = $('summary-month-filter').value || '';
+      renderSummary(summaryMode);
+    };
+  }
   if ($('summary-pdf')) $('summary-pdf').onclick = () => outputSummaryPDF();
   if ($('summary-png')) $('summary-png').onclick = () => exportSummaryPNG();
   $('summary-open').onclick = () => openSummary();
@@ -1722,6 +2600,9 @@
     if (state.partySerials && Object.hasOwn(state.partySerials, name)) {
       delete state.partySerials[name];
     }
+    if (state.partyDateFilters && Object.hasOwn(state.partyDateFilters, 'b:' + name)) {
+      delete state.partyDateFilters['b:' + name];
+    }
     if (selectedBranch === 'b:' + name) {
       selectedBranch = '';
       ensureActiveParty();
@@ -1742,7 +2623,7 @@
       const div = document.createElement('div'); div.className = 'party-item'; const input = document.createElement('input'); input.value = name; input.maxLength = 300; input.setAttribute('aria-label', 'پارٹی کا نام تبدیل کریں'); const count = document.createElement('small'); count.textContent = state.rows.filter(r => r.branch === name && populated(r)).length + ' اندراجات';
       const currSelect = document.createElement('select'); currSelect.className = 'party-currency-select'; currSelect.append(makeOption('pkr', 'روپیہ (PKR)'), makeOption('afn', 'افغانی (AFN)')); currSelect.value = partyCurrency(name);
       currSelect.onchange = () => { if ([...state.rows, ...state.trash.map(t => t.row)].some(r => r.branch === name && populated(r))) { currSelect.value = partyCurrency(name); $('branch-error').textContent = 'اس پارٹی کی انٹریاں موجود ہیں؛ نئی کرنسی کے لیے الگ پارٹی بنائیں۔'; return; } if (!state.partyCurrencies) state.partyCurrencies = {}; state.partyCurrencies[name] = currSelect.value; save(); updateBranches(); applyFilter(); $('branch-error').textContent = name + ' کی کرنسی اب ' + (currSelect.value === 'afn' ? 'افغانی' : 'روپیہ') + ' ہے۔'; };
-      const rename = document.createElement('button'); rename.textContent = 'نام محفوظ کریں'; rename.onclick = () => { const next = cleanName(input.value); if (!next) { $('branch-error').textContent = 'پارٹی کا نام لکھیں۔'; return; } if (state.branches.some(n => n !== name && nameKey(n) === nameKey(next))) { $('branch-error').textContent = 'یہ نام پہلے سے موجود ہے۔'; return; } state.branches[state.branches.indexOf(name)] = next; if (next !== name && state.partyCurrencies && Object.hasOwn(state.partyCurrencies, name)) { state.partyCurrencies[next] = state.partyCurrencies[name]; delete state.partyCurrencies[name]; } if (next !== name && state.partySerials && Object.hasOwn(state.partySerials, name)) { state.partySerials[next] = state.partySerials[name]; delete state.partySerials[name]; } for (const row of [...state.rows, ...state.trash.map(t => t.row)]) if (row.branch === name) row.branch = next; if (selectedBranch === 'b:' + name) selectedBranch = 'b:' + next; save(); updateBranches(); applyFilter(); renderBranchList(); $('branch-error').textContent = 'نام اور متعلقہ انٹریاں اپ ڈیٹ ہو گئیں۔'; };
+      const rename = document.createElement('button'); rename.textContent = 'نام محفوظ کریں'; rename.onclick = () => { const next = cleanName(input.value); if (!next) { $('branch-error').textContent = 'پارٹی کا نام لکھیں۔'; return; } if (state.branches.some(n => n !== name && nameKey(n) === nameKey(next))) { $('branch-error').textContent = 'یہ نام پہلے سے موجود ہے۔'; return; } state.branches[state.branches.indexOf(name)] = next; if (next !== name && state.partyCurrencies && Object.hasOwn(state.partyCurrencies, name)) { state.partyCurrencies[next] = state.partyCurrencies[name]; delete state.partyCurrencies[name]; } if (next !== name && state.partySerials && Object.hasOwn(state.partySerials, name)) { state.partySerials[next] = state.partySerials[name]; delete state.partySerials[name]; } if (next !== name && state.partyDateFilters && Object.hasOwn(state.partyDateFilters, 'b:' + name)) { state.partyDateFilters['b:' + next] = state.partyDateFilters['b:' + name]; delete state.partyDateFilters['b:' + name]; } for (const row of [...state.rows, ...state.trash.map(t => t.row)]) if (row.branch === name) row.branch = next; if (selectedBranch === 'b:' + name) selectedBranch = 'b:' + next; save(); updateBranches(); applyFilter(); renderBranchList(); $('branch-error').textContent = 'نام اور متعلقہ انٹریاں اپ ڈیٹ ہو گئیں۔'; };
       const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'delete-party-btn'; remove.textContent = '🗑 حذف کریں'; remove.title = `پارٹی "${name}" حذف کریں`; remove.onclick = () => deleteParty(name); div.append(input, currSelect, count, rename, remove); $('branch-list').append(div);
     }
   }
@@ -1953,8 +2834,21 @@
     if (document.body.classList.contains('receipt-output') || document.body.classList.contains('summary-output')) return;
     registerPrintActive = true;
     applyFilter(false, true);
+    const printRows = selectedRows();
     const datePrint = $('date-print-val');
-    if (datePrint) datePrint.textContent = fmtDate($('date').value || today());
+    if (datePrint) datePrint.textContent = fmtDate($('date').value || state.date || today());
+    const periodWrap = $('period-print-wrap');
+    const periodVal = $('period-print-val');
+    const periodText = getPrintPeriodText(printRows);
+    if (periodWrap && periodVal) {
+      if (periodText) {
+        periodVal.textContent = periodText;
+        periodWrap.hidden = false;
+      } else {
+        periodVal.textContent = '';
+        periodWrap.hidden = true;
+      }
+    }
     const titlePrint = $('title-print');
     if (titlePrint) titlePrint.textContent = ($('title').value || state.title || 'اندراج رجسٹر');
     const currPage = activePageNumber();
@@ -1962,8 +2856,21 @@
     const resetVal = Math.max(0, currPage - 1);
     document.documentElement.style.setProperty('--print-start-page', String(resetVal));
     document.querySelectorAll('.print-value').forEach(e => e.remove());
+    document.querySelectorAll('#rows .col-words').forEach(e => e.replaceChildren());
+    const thWords = document.querySelector('th.col-words');
+    if (thWords) thWords.textContent = 'لفظوں';
+    const tfootWords = document.querySelector('tfoot.register-totals .totals-row td.col-words');
+    if (tfootWords && !tfootWords.querySelector('.total-words-label')) {
+      const lbl = document.createElement('span');
+      lbl.className = 'total-words-label';
+      lbl.textContent = 'کل پاکستانی';
+      tfootWords.replaceChildren(lbl);
+    }
+    ['total-balance', 'total-aed', 'total-pkr', 'total-orders-count', 'total-net-aed'].forEach(id => {
+      const el = $(id);
+      if (el) el.classList.add('total-bombay-black');
+    });
     
-    const printRows = selectedRows();
     const maxPrintRows = 1500;
     const targetRows = printRows.length > maxPrintRows ? printRows.slice(0, maxPrintRows) : printRows;
 
@@ -1998,6 +2905,21 @@
         }
         input.after(span);
       });
+      const tdWords = tr.querySelector('.col-words');
+      if (tdWords) {
+        tdWords.replaceChildren();
+        const toUrdu = window.amountToUrduShort || (typeof amountToUrduShort !== 'undefined' ? amountToUrduShort : null);
+        const pkrInput = tr.querySelector('[data-field="pkr"]');
+        const pkrVal = pkrInput ? pkrInput.value.trim() : (row.pkr ? String(row.pkr).trim() : '');
+        const urduLabel = toUrdu && pkrVal !== '' ? toUrdu(pkrVal) : '';
+        if (urduLabel) {
+          const urduSpan = document.createElement('span');
+          urduSpan.className = 'print-words-text';
+          urduSpan.dir = 'rtl';
+          urduSpan.textContent = urduLabel;
+          tdWords.append(urduSpan);
+        }
+      }
     });
   }
   let printThemeRestore = null;
@@ -2052,13 +2974,14 @@
     if (khataController?.isActive()) { khataController.print(); return; }
     if (!canOutput(selectedRows())) return;
     await document.fonts.ready;
+    preparePrint();
     const restoreTheme = prepareForPrintTheme();
     if (!window.electronAPI?.previewPDF) {
       try { window.print(); } finally { restoreTheme(); }
       return;
     }
     document.body.inert = true;
-    try { preparePrint(); const result = await window.electronAPI.previewPDF(); if (result.status === 'error') alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔'); }
+    try { const result = await window.electronAPI.previewPDF(); if (result.status === 'error') alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔'); }
     catch { alert('پرنٹ پیش منظر نہیں کھل سکا۔ دوبارہ کوشش کریں۔'); }
     finally { restoreTheme(); registerPrintActive = false; document.documentElement.style.removeProperty('--print-start-page'); document.body.inert = false; applyFilter(); }
   };
@@ -2114,10 +3037,107 @@
     });
   }
   function download(blob, name) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+  function uint8ToBase64(bytes) {
+    let bin = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    return btoa(bin);
+  }
+  function base64ToUint8(b64) {
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  async function deriveAesKey(password, salt, iterations = 100000) {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+  async function encryptBackupPayload(payloadObj, password) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveAesKey(password, salt, 100000);
+    const plainBytes = new TextEncoder().encode(JSON.stringify(payloadObj));
+    const cipherBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plainBytes);
+    return {
+      hisaabEncryptedBackup: true,
+      version: 1,
+      alg: 'AES-256-GCM',
+      kdf: 'PBKDF2-SHA256',
+      iterations: 100000,
+      createdAt: new Date().toISOString(),
+      salt: uint8ToBase64(salt),
+      iv: uint8ToBase64(iv),
+      ciphertext: uint8ToBase64(new Uint8Array(cipherBuf))
+    };
+  }
+  async function decryptBackupPayload(envelope, password) {
+    if (!envelope || envelope.hisaabEncryptedBackup !== true) throw Error('Not encrypted');
+    const salt = base64ToUint8(envelope.salt);
+    const iv = base64ToUint8(envelope.iv);
+    const cipherBytes = base64ToUint8(envelope.ciphertext);
+    const iterations = Number(envelope.iterations) || 100000;
+    const key = await deriveAesKey(password, salt, iterations);
+    const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, cipherBytes);
+    return JSON.parse(new TextDecoder().decode(plainBuf));
+  }
+  window.HisaabCryptoBackup = { encrypt: encryptBackupPayload, decrypt: decryptBackupPayload };
   function backup() { const time = new Date().toISOString(); const snapshot = { ...state, rows: state.rows.filter(populated), lastBackupAt: time }; download(new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' }), `hisaab-backup-${today()}.json`); state.lastBackupAt = time; save(); updateBackup(); }
+  async function encryptedBackup() {
+    const pwd = typeof prompt === 'function' ? prompt('پاس ورڈ والا محفوظ بیک اَپ بنانے کے لیے پاس ورڈ درج کریں (کم از کم 4 حروف):') : '';
+    if (pwd === null) return;
+    if (!pwd || pwd.trim().length < 4) {
+      alert('براہ کرم کم از کم 4 حروف کا پاس ورڈ درج کریں۔');
+      return;
+    }
+    try {
+      const time = new Date().toISOString();
+      const snapshot = { ...state, rows: state.rows.filter(populated), lastBackupAt: time };
+      const encrypted = await encryptBackupPayload(snapshot, pwd);
+      download(new Blob([JSON.stringify(encrypted, null, 2)], { type: 'application/json' }), `hisaab-encrypted-backup-${today()}.json`);
+      state.lastBackupAt = time;
+      save();
+      updateBackup();
+      if ($('backup-status')) $('backup-status').textContent = '✓ پاس ورڈ سے محفوظ انکرپٹڈ بیک اَپ ڈاؤن لوڈ ہو گیا۔';
+    } catch {
+      alert('انکرپٹڈ بیک اَپ تیار نہیں ہو سکا۔ دوبارہ کوشش کریں۔');
+    }
+  }
   $('backup').onclick = backup; setInterval(updateBackup, 60000);
+  if ($('encrypted-backup-btn')) $('encrypted-backup-btn').onclick = encryptedBackup;
   $('restore').onclick = () => $('file').click();
-  $('file').onchange = async e => { const file = e.target.files[0]; if (!file) return; try { if (file.size > 15000000) throw Error('Large file'); await restoreBackupData(JSON.parse(await file.text())); } catch { alert('یہ درست حساب بیک اَپ نہیں ہے۔ موجودہ ڈیٹا تبدیل نہیں ہوا۔'); } finally { e.target.value = ''; } };
+  $('file').onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      if (file.size > 15000000) throw Error('Large file');
+      let parsed = JSON.parse(await file.text());
+      if (parsed && parsed.hisaabEncryptedBackup === true) {
+        const pwd = typeof prompt === 'function' ? prompt('🔒 یہ پاس ورڈ سے محفوظ بیک اَپ فائل ہے۔ کھولنے کے لیے پاس ورڈ درج کریں:') : '';
+        if (pwd === null) return;
+        try {
+          parsed = await decryptBackupPayload(parsed, pwd);
+        } catch {
+          alert('پاس ورڈ غلط ہے یا فائل خراب ہے۔ موجودہ ڈیٹا تبدیل نہیں ہوا۔');
+          return;
+        }
+      }
+      await restoreBackupData(parsed);
+    } catch {
+      alert('یہ درست حساب بیک اَپ نہیں ہے۔ موجودہ ڈیٹا تبدیل نہیں ہوا۔');
+    } finally {
+      e.target.value = '';
+    }
+  };
   $('export-open').onclick = () => { if (journalController?.isActive()) journalController.exportExcel(); else if (khataController?.isActive()) khataController.exportExcel(); else $('export-dialog').showModal(); }; $('close-export').onclick = () => $('export-dialog').close();
 
   /* FIX-34: exportExcel corrects currency labels for all-AFN case */
