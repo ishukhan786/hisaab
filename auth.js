@@ -375,6 +375,58 @@
   async function executeRecovery(username, pin, newPass, confirmPass) {
     const errEl = $('auth-recovery-error');
     const auth = getStoredAuth();
+    const isWebMode = window.location.protocol.startsWith('http');
+
+    if (newPass.length < 4) {
+      if (errEl) errEl.textContent = 'New password must be at least 4 characters.';
+      shakeCard('auth-recovery-card');
+      $('recovery-new-password')?.focus();
+      return { success: false, error: 'password_length' };
+    }
+
+    if (newPass !== confirmPass) {
+      if (errEl) errEl.textContent = 'New password and confirmation do not match.';
+      shakeCard('auth-recovery-card');
+      $('recovery-new-password-confirm')?.focus();
+      return { success: false, error: 'password_mismatch' };
+    }
+
+    if (isWebMode) {
+      if (!username || !pin) {
+        if (errEl) errEl.textContent = 'Please enter both username and Recovery PIN.';
+        shakeCard('auth-recovery-card');
+        return { success: false, error: 'empty_fields' };
+      }
+      try {
+        const response = await window.fetch('/api/auth/recover', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ username, pin, newPassword: newPass })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.status !== 'ok') {
+          if (errEl) errEl.textContent = result.message || 'Recovery failed. Please check your username and PIN.';
+          shakeCard('auth-recovery-card');
+          return { success: false, error: 'recovery_failed' };
+        }
+        if (auth) {
+          auth.username = result.username || username;
+          const newSalt = makeSalt();
+          auth.passwordHash = await hashPassword(newPass, newSalt);
+          auth.salt = newSalt;
+          auth.isDefault = false;
+          saveStoredAuth(auth);
+        }
+        unlockApp();
+        return { success: true };
+      } catch (_) {
+        if (errEl) errEl.textContent = 'Server سے رابطہ نہیں ہو سکا۔';
+        shakeCard('auth-recovery-card');
+        return { success: false, error: 'network' };
+      }
+    }
+
     if (!auth || !auth.passwordHash) {
       lockApp();
       return { success: false, error: 'no_auth' };
@@ -392,20 +444,6 @@
       shakeCard('auth-recovery-card');
       $('recovery-pin')?.focus();
       return { success: false, error: 'invalid_pin' };
-    }
-
-    if (newPass.length < 4) {
-      if (errEl) errEl.textContent = 'New password must be at least 4 characters.';
-      shakeCard('auth-recovery-card');
-      $('recovery-new-password')?.focus();
-      return { success: false, error: 'password_length' };
-    }
-
-    if (newPass !== confirmPass) {
-      if (errEl) errEl.textContent = 'New password and confirmation do not match.';
-      shakeCard('auth-recovery-card');
-      $('recovery-new-password-confirm')?.focus();
-      return { success: false, error: 'password_mismatch' };
     }
 
     const newSalt = makeSalt();
@@ -526,7 +564,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin',
-            body: JSON.stringify({ currentPassword: oldPass, newPassword: newPass, newUsername })
+            body: JSON.stringify({ currentPassword: oldPass, newPassword: newPass, newUsername, newPin })
           });
           const result = await response.json().catch(() => ({}));
           if (!response.ok || result.status !== 'ok') {

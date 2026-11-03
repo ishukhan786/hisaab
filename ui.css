@@ -7479,6 +7479,149 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
   }
 }
 
+/* ==========================================================================
+   MODERN FLOATING TOAST NOTIFICATIONS (Option 5)
+   Compliant with modern popover/toast design & allow-discrete transitions
+   ========================================================================== */
+@media screen {
+  .hisaab-toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 420px;
+    pointer-events: none;
+  }
+
+  .hisaab-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 16px;
+    border-radius: 14px;
+    font: 700 13px 'Noto Nastaliq Urdu', 'Segoe UI', Arial, sans-serif;
+    line-height: 1.8;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.08);
+    transition-property: opacity, transform;
+    transition-duration: 0.22s;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    transition-behavior: allow-discrete;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  @starting-style {
+    .hisaab-toast {
+      opacity: 0;
+      transform: translateY(14px) scale(0.95);
+    }
+  }
+
+  .hisaab-toast.is-hiding {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+
+  .hisaab-toast.toast-success {
+    background: rgba(240, 253, 244, 0.96);
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+  }
+
+  .hisaab-toast.toast-info {
+    background: rgba(240, 249, 255, 0.96);
+    border: 1px solid #7dd3fc;
+    color: #0369a1;
+  }
+
+  .hisaab-toast.toast-warning {
+    background: rgba(254, 252, 232, 0.96);
+    border: 1px solid #fde047;
+    color: #854d0e;
+  }
+
+  .hisaab-toast.toast-error {
+    background: rgba(254, 242, 242, 0.96);
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+  }
+
+  html[data-theme="dark"] .hisaab-toast.toast-success {
+    background: rgba(6, 44, 30, 0.94);
+    border-color: #10b981;
+    color: #a7f3d0;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65), 0 0 20px rgba(16, 185, 129, 0.15);
+  }
+
+  html[data-theme="dark"] .hisaab-toast.toast-info {
+    background: rgba(12, 38, 56, 0.94);
+    border-color: #0284c7;
+    color: #7dd3fc;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65);
+  }
+
+  html[data-theme="dark"] .hisaab-toast.toast-warning {
+    background: rgba(56, 40, 10, 0.94);
+    border-color: #d97706;
+    color: #fde68a;
+  }
+
+  html[data-theme="dark"] .hisaab-toast.toast-error {
+    background: rgba(56, 14, 14, 0.94);
+    border-color: #ef4444;
+    color: #fca5a5;
+  }
+
+  .toast-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .toast-text {
+    flex: 1;
+    word-break: break-word;
+  }
+
+  .toast-close {
+    border: 0;
+    background: transparent;
+    font-size: 18px;
+    line-height: 1;
+    color: inherit;
+    opacity: 0.6;
+    cursor: pointer;
+    padding: 0 4px;
+    transition: opacity 0.15s ease;
+  }
+
+  .toast-close:hover {
+    opacity: 1;
+  }
+
+  /* Tactile button feedback (Option 5 Micro-interactions) */
+  .btn-nav:active,
+  .btn-khata-action:active,
+  .btn-khata-new:active,
+  .btn-date-nav:active,
+  .btn-date-today:active,
+  .exec-action-btn:active {
+    transform: scale(0.96) !important;
+  }
+
+  #rows tr,
+  .khata-table tr,
+  .journal-table tr {
+    transition: background-color 0.12s ease;
+  }
+}
+
 
 
 

@@ -201,7 +201,7 @@
       if(e.target.value.trim()&&n!==null){e.target.value=format(n);data().cashCounts[data().date]=e.target.value;recalculate();}
       save(true);
     });
-    $('view-register').onclick=()=>{setPage(false);if(window.setWorkingDate)window.setWorkingDate(today());};$('view-journal').onclick=()=>setPage(true);
+    $('view-register').onclick=()=>{setPage(false);};$('view-journal').onclick=()=>setPage(true);
     $('journal-date').onchange=()=>{if(!validDate($('journal-date').value)){$('journal-date').value=data().date;return;}data().date=$('journal-date').value;refresh();save(true);};
     function shiftDate(days){
       const current=data().date,date=new Date(current+'T12:00:00Z');

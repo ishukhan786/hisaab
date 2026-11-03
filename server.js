@@ -21,6 +21,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 const AUTH_SECRET = process.env.HISAAB_AUTH_SECRET || 'change-this-hisaab-auth-secret';
 const OWNER_USERNAME = String(process.env.HISAAB_USERNAME || 'admin').trim();
 const OWNER_PASSWORD = String(process.env.HISAAB_PASSWORD || 'admin');
+const OWNER_RECOVERY_PIN = String(process.env.HISAAB_RECOVERY_PIN || '1234').trim();
 
 // Middleware
 app.use(cors());
@@ -199,6 +200,8 @@ const authUserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true, trim: true },
   passwordHash: { type: String, required: true },
   passwordSalt: { type: String, required: true },
+  recoveryPinHash: { type: String, default: '' },
+  recoverySalt: { type: String, default: '' },
   updatedAt: { type: Date, default: Date.now }
 }, { minimize: false });
 const HisaabAuthUser = mongoose.models.HisaabAuthUser || mongoose.model('HisaabAuthUser', authUserSchema);
@@ -229,17 +232,36 @@ let inMemoryOwner = null;
 async function ensureOwnerUser() {
   if (mongoose.connection.readyState === 1) {
     const existing = await HisaabAuthUser.findOne({ key: 'owner' });
-    if (existing) return existing;
+    if (existing) {
+      if (!existing.recoveryPinHash || !existing.recoverySalt) {
+        const recSalt = crypto.randomBytes(16).toString('hex');
+        existing.recoverySalt = recSalt;
+        existing.recoveryPinHash = hashPassword(OWNER_RECOVERY_PIN, recSalt);
+        await existing.save();
+      }
+      return existing;
+    }
     const salt = crypto.randomBytes(16).toString('hex');
-    return HisaabAuthUser.create({ key: 'owner', username: OWNER_USERNAME, passwordSalt: salt, passwordHash: hashPassword(OWNER_PASSWORD, salt) });
+    const recSalt = crypto.randomBytes(16).toString('hex');
+    return HisaabAuthUser.create({
+      key: 'owner',
+      username: OWNER_USERNAME,
+      passwordSalt: salt,
+      passwordHash: hashPassword(OWNER_PASSWORD, salt),
+      recoverySalt: recSalt,
+      recoveryPinHash: hashPassword(OWNER_RECOVERY_PIN, recSalt)
+    });
   }
   if (!inMemoryOwner) {
     const salt = crypto.randomBytes(16).toString('hex');
+    const recSalt = crypto.randomBytes(16).toString('hex');
     inMemoryOwner = {
       _id: 'in-memory-owner',
       username: OWNER_USERNAME,
       passwordSalt: salt,
-      passwordHash: hashPassword(OWNER_PASSWORD, salt)
+      passwordHash: hashPassword(OWNER_PASSWORD, salt),
+      recoverySalt: recSalt,
+      recoveryPinHash: hashPassword(OWNER_RECOVERY_PIN, recSalt)
     };
   }
   return inMemoryOwner;
@@ -287,11 +309,15 @@ app.post('/api/auth/change-password', requireAuth, async (req, res) => {
     const currentPassword = String(req.body?.currentPassword || '').trim();
     const newPassword = String(req.body?.newPassword || '').trim();
     const newUsername = String(req.body?.newUsername || '').trim();
+    const newPin = String(req.body?.newPin || '').trim();
     if (!user) return res.status(400).json({ status: 'error', message: 'User account not found.' });
     if (newPassword && newPassword.length < 4) {
       return res.status(400).json({ status: 'error', message: 'New password must be at least 4 characters.' });
     }
-    if (!newPassword && !newUsername) {
+    if (newPin && !/^\d{4,8}$/.test(newPin)) {
+      return res.status(400).json({ status: 'error', message: 'New Recovery PIN must be 4 to 8 digits.' });
+    }
+    if (!newPassword && !newUsername && !newPin) {
       return res.status(400).json({ status: 'error', message: 'No changes provided.' });
     }
     const currentHash = hashPassword(currentPassword, user.passwordSalt);
@@ -306,6 +332,11 @@ app.post('/api/auth/change-password', requireAuth, async (req, res) => {
       user.passwordSalt = salt;
       user.passwordHash = hashPassword(newPassword, salt);
     }
+    if (newPin) {
+      const recSalt = crypto.randomBytes(16).toString('hex');
+      user.recoverySalt = recSalt;
+      user.recoveryPinHash = hashPassword(newPin, recSalt);
+    }
     user.updatedAt = new Date();
     if (typeof user.save === 'function') {
       await user.save();
@@ -313,6 +344,47 @@ app.post('/api/auth/change-password', requireAuth, async (req, res) => {
     authCookie(res, signSession(user));
     res.json({ status: 'ok', username: user.username });
   } catch (error) { res.status(500).json({ status: 'error', message: 'Account settings could not be updated.' }); }
+});
+app.post('/api/auth/recover', async (req, res) => {
+  try {
+    try {
+      if (process.env.MONGODB_URI || MONGODB_URI) {
+        await connectDb();
+      }
+    } catch (_) { }
+    const user = await ensureOwnerUser();
+    const username = String(req.body?.username || '').trim();
+    const pin = String(req.body?.pin || '').trim();
+    const newPassword = String(req.body?.newPassword || '').trim();
+    if (!username || !pin || !newPassword) {
+      return res.status(400).json({ status: 'error', message: 'Please provide username, Recovery PIN, and new password.' });
+    }
+    if (newPassword.length < 4) {
+      return res.status(400).json({ status: 'error', message: 'New password must be at least 4 characters.' });
+    }
+    if (username.toLowerCase() !== user.username.toLowerCase()) {
+      return res.status(401).json({ status: 'error', message: 'Username does not match our records.' });
+    }
+    const recSalt = user.recoverySalt || user.passwordSalt;
+    const expectedPinHash = user.recoveryPinHash || hashPassword(OWNER_RECOVERY_PIN, recSalt);
+    const candidatePinHash = hashPassword(pin, recSalt);
+    const validPin = candidatePinHash.length === expectedPinHash.length &&
+      crypto.timingSafeEqual(Buffer.from(candidatePinHash), Buffer.from(expectedPinHash));
+    if (!validPin) {
+      return res.status(401).json({ status: 'error', message: 'Incorrect Recovery PIN.' });
+    }
+    const salt = crypto.randomBytes(16).toString('hex');
+    user.passwordSalt = salt;
+    user.passwordHash = hashPassword(newPassword, salt);
+    user.updatedAt = new Date();
+    if (typeof user.save === 'function') {
+      await user.save();
+    }
+    authCookie(res, signSession(user));
+    res.json({ status: 'ok', username: user.username });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Password recovery service unavailable.' });
+  }
 });
 app.get('/api/auth/status', async (req, res) => {
   const session = readSession(req);

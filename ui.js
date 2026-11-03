@@ -244,3 +244,75 @@
   const count=document.getElementById('count');const sync=()=>{hint.hidden=!/^0\s/.test(count.textContent);};
   new MutationObserver(sync).observe(count,{childList:true,characterData:true,subtree:true});sync();
 })();
+
+/* ==========================================================================
+   MODERN FLOATING TOAST NOTIFICATION SYSTEM (Option 5)
+   ========================================================================== */
+(() => {
+  const container = document.getElementById('hisaab-toast-container');
+  const icons = {
+    success: '✓',
+    info: 'ℹ️',
+    warning: '⚠️',
+    error: '✕'
+  };
+
+  function showToast(message, type = 'info', duration = 3200) {
+    if (!container || !message) return;
+    const toast = document.createElement('div');
+    toast.className = `hisaab-toast toast-${type}`;
+    toast.setAttribute('role', 'status');
+
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'toast-icon';
+    iconSpan.textContent = icons[type] || 'ℹ️';
+
+    const textDiv = document.createElement('div');
+    textDiv.className = 'toast-text';
+    textDiv.textContent = message;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'toast-close';
+    closeBtn.setAttribute('aria-label', 'بند کریں');
+    closeBtn.textContent = '×';
+
+    let timer = null;
+    const dismiss = () => {
+      if (timer) clearTimeout(timer);
+      toast.classList.add('is-hiding');
+      setTimeout(() => {
+        toast.remove();
+      }, 220);
+    };
+
+    closeBtn.onclick = dismiss;
+    toast.append(iconSpan, textDiv, closeBtn);
+    container.append(toast);
+
+    if (duration > 0) {
+      timer = setTimeout(dismiss, duration);
+    }
+    return dismiss;
+  }
+
+  window.showToast = showToast;
+
+  // Intercept save events for subtle non-intrusive notification
+  let lastSaveToast = 0;
+  document.addEventListener('hisaab:saved', () => {
+    const now = Date.now();
+    if (now - lastSaveToast > 15000) {
+      lastSaveToast = now;
+      showToast('ڈیٹا بیس میں محفوظ ہے ✓', 'success', 2200);
+    }
+  });
+
+  // Action toasts for exports
+  const exportBtn = document.getElementById('export-open');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      showToast('Excel ایکسپورٹ ڈائیلاگ کھل گیا', 'info', 2000);
+    });
+  }
+})();

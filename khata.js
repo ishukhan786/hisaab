@@ -493,7 +493,7 @@
 
         if (tr) {
           const els = tr._els;
-          tr.hidden = hasFilter ? !inFilter : false;
+          tr.hidden = (hasFilter && !isDraft) ? !inFilter : false;
           tr.classList.toggle('khata-draft', isDraft);
           const sCell = els ? els.sCell : tr.querySelector('.td-serial');
           if (sCell) sCell.textContent = isDraft ? '＋' : (inFilter ? formatCount(serial++) : '—');

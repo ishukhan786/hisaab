@@ -1229,7 +1229,7 @@
     updatePartyTabsActive();
   }
   function updateBackup() { const at = state.lastBackupAt; document.getElementById("backup-status").dataset.backupState = at && Date.now() - Date.parse(at) <= 7 * 86400000 ? "ready" : "pending"; const overdue = !at || Date.now() - Date.parse(at) > 7 * 86400000; $('backup-status').textContent = at ? `آخری دستی بیک اَپ ڈاؤن لوڈ: ${new Date(at).toLocaleString('en-GB')}${overdue ? ' — نیا بیک اَپ لے لیں۔' : ''}` : 'ابھی دستی بیک اَپ ڈاؤن لوڈ نہیں کیا گیا۔ چاہیں تو الگ کاپی ڈاؤن لوڈ کریں۔'; }
-  function updateUndo() { $('undo-bar').hidden = true; $('undo-message').textContent = `${state.trash.length} حذف شدہ انٹریاں واپس لائی جا سکتی ہیں۔ آخری حذف پہلے واپس ہوگا۔`; }
+  function updateUndo() { $('undo-bar').hidden = !state.trash.length; $('undo-message').textContent = `${state.trash.length} حذف شدہ انٹریاں واپس لائی جا سکتی ہیں۔ آخری حذف پہلے واپس ہوگا۔`; }
   const placeSuggestMenu = document.createElement('div');
   placeSuggestMenu.className = 'place-suggest-menu no-print';
   placeSuggestMenu.hidden = true;
@@ -1454,7 +1454,7 @@
         row[field] = input.value;
         if (isText) adjustHeight(input);
         if (!row.entryDate) row.entryDate = state.date || today();
-        if (selectedBranch.startsWith('b:') && !row.branch) row.branch = selectedBranch.slice(2);
+        if (field !== 'branch' && !wasPopulated && selectedBranch.startsWith('b:') && !row.branch) row.branch = selectedBranch.slice(2);
         if (moneyFields.includes(field)) input.setCustomValidity(integerAmount(input.value) === null ? 'صرف مکمل عدد لکھیں، اعشاری رقم نہیں' : '');
         if (!wasPopulated && matches(row)) viewPage = Math.floor(selectedRows().findIndex(r => r.id === row.id) / pageSize);
         if (updateBalTypeVis) updateBalTypeVis();
@@ -1478,23 +1478,45 @@
             e.preventDefault();
             const startIdx = fields.indexOf(field);
             if (startIdx >= 0) {
+              const wasPopulated = populated(row);
               tokens.forEach((tok, offset) => {
                 const targetIdx = startIdx + offset;
                 if (targetIdx < fields.length) {
                   const targetField = fields[targetIdx];
                   const targetInput = tr.querySelector('[data-field="' + targetField + '"]');
                   if (targetInput && !targetInput.disabled) {
+                    const prevVal = row[targetField] || '';
                     let cleanVal = tok.trim();
-                    if (['sender', 'receiver', 'place'].includes(targetField)) cleanVal = formatAllah(cleanVal);
-                    else if (targetField === 'mobile') cleanVal = englishDigits(cleanVal);
-                    else if (moneyFields.includes(targetField)) cleanVal = englishDigits(cleanVal).replace(/[^\d.-]/g, '');
+                    if (targetField === 'branch') {
+                      if (cleanVal !== '') {
+                        const matchedBranch = state.branches.find(b => nameKey(b) === nameKey(cleanVal));
+                        if (!matchedBranch) return;
+                        cleanVal = matchedBranch;
+                      }
+                    } else if (['sender', 'receiver', 'place'].includes(targetField)) {
+                      cleanVal = formatAllah(cleanVal);
+                    } else if (targetField === 'mobile') {
+                      cleanVal = englishDigits(cleanVal);
+                    } else if (moneyFields.includes(targetField)) {
+                      cleanVal = wholeText(englishDigits(cleanVal).replace(/[^\d.-]/g, ''));
+                    }
                     targetInput.value = cleanVal;
                     row[targetField] = cleanVal;
+                    if (prevVal !== cleanVal) recordHistory(row, targetField, prevVal, cleanVal);
+                    if (['sender', 'receiver', 'place'].includes(targetField)) adjustHeight(targetInput);
                   }
                 }
               });
               if (!row.entryDate) row.entryDate = state.date || today();
-              if (selectedBranch.startsWith('b:') && !row.branch) row.branch = selectedBranch.slice(2);
+              if (!wasPopulated && selectedBranch.startsWith('b:') && !row.branch) row.branch = selectedBranch.slice(2);
+              const balInput = tr.querySelector('[data-field="balance"]');
+              const balSelect = tr.querySelector('.bal-type-input');
+              if (balSelect && balInput) {
+                const hasVal = balInput.value.trim().length > 0 && integerAmount(balInput.value) !== 0n;
+                balSelect.style.display = hasVal ? 'inline-block' : 'none';
+                if (hasVal && !row.balanceType) { row.balanceType = 'jama'; balSelect.value = 'jama'; }
+                else if (!hasVal) { row.balanceType = ''; balSelect.value = ''; }
+              }
               applyFilter(true);
               save();
               return;
@@ -1677,7 +1699,8 @@
         loops++;
         diskWritePending = false;
         const clean = { ...state, rows: state.rows.filter(populated) };
-        const writable = await autoBackupHandle.createWritable({ keepExistingData: true });
+        const writable = await autoBackupHandle.createWritable({ keepExistingData: false });
+        if (typeof writable.truncate === 'function') await writable.truncate(0);
         await writable.write(JSON.stringify(clean, null, 2));
         await writable.close();
       } while (diskWritePending && loops < 3);
@@ -2310,7 +2333,7 @@
     prepareSummaryOutput();
     const restoreTheme = prepareForPrintTheme();
     if (!window.electronAPI?.savePDF) {
-      try { window.print(); } finally { restoreTheme(); clearSummaryOutput(); }
+      try { window.print(); } finally { restoreTheme(); clearReceiptOutput(); }
       return;
     }
     document.body.inert = true;
