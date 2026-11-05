@@ -222,15 +222,15 @@ app.on('will-quit', () => {
 
 let pdfBusy = false;
 let receiptPNGBusy = false;
-const receiptFields = ['title', 'serial', 'date', 'branch', 'sender', 'mobile', 'receiver', 'place', 'balance', 'aed', 'pkr', 'currency'];
+const receiptFields = ['title', 'serial', 'date', 'branch', 'sender', 'mobile', 'receiver', 'place', 'balance', 'aed', 'pkr', 'pkr-words', 'currency'];
 
 // P5: Robust off-screen receipt rendering without arbitrary setTimeout
 async function renderReceiptImage(values) {
   let renderer;
   try {
     renderer = new BrowserWindow({
-      width: 560,
-      height: 794,
+      width: 794,
+      height: 1123,
       useContentSize: true,
       show: false,
       webPreferences: {
@@ -242,18 +242,17 @@ async function renderReceiptImage(values) {
       }
     });
     // Windows clamps the initial window to the display; explicitly size the render surface.
-    renderer.setContentSize(560, 794);
+    renderer.setContentSize(794, 1123);
     renderer.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     await renderer.loadFile(path.join(__dirname, 'receipt-image.html'));
-    const data = Object.fromEntries(receiptFields.map(key => [key, values[key]]));
+    const data = Object.fromEntries(receiptFields.map(key => [key, values[key] || '']));
     const receiptSize = await renderer.webContents.executeJavaScript(`(async()=>{
       const values=${JSON.stringify(data)};
-      document.querySelectorAll('[data-receipt]').forEach(el=>{el.textContent=values[el.dataset.receipt];});
+      document.querySelectorAll('[data-receipt]').forEach(el=>{el.textContent=values[el.dataset.receipt]||'';});
       await document.fonts.ready;
       const sheet=document.getElementById('receipt-paper');
-      sheet.style.left='10mm';sheet.style.top='10mm';
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-      return {width:560,height:Math.max(794,Math.ceil(sheet.scrollHeight+76))};
+      return {width:794,height:Math.max(820,Math.ceil(sheet.scrollHeight+96))};
     })()`);
     renderer.setContentSize(receiptSize.width, receiptSize.height);
 

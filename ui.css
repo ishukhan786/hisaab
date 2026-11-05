@@ -3311,33 +3311,48 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   html[data-theme="dark"] .app-shell .receipt-sheet {
     color-scheme: light;
     background: #ffffff !important;
-    color: #213e35 !important;
-    --green: #17634c;
-    --ink: #213e35;
-    --muted: #607969;
+    color: #0f172a !important;
+    --green: #065f46;
+    --ink: #0f172a;
+    --muted: #475569;
   }
   html[data-theme="dark"] .app-shell .receipt-sheet :is(p, label, small) {
-    color: #405e50 !important;
+    color: #475569 !important;
   }
   html[data-theme="dark"] .app-shell .receipt-sheet .receipt-header h3,
   html[data-theme="dark"] .app-shell .receipt-sheet .receipt-badge,
-  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-amounts strong {
-    color: #17634c !important;
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-words-sub,
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-amount-box.receipt-amount-main strong {
+    color: #065f46 !important;
   }
-  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-party {
-    background: #f5f8f3 !important;
-    color: #213e35 !important;
-    border-color: #d5e1d6 !important;
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-meta-item {
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+  }
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-meta-item.receipt-meta-party {
+    background: #f0fdf4 !important;
+    border-color: #86efac !important;
   }
   html[data-theme="dark"] .app-shell .receipt-sheet .receipt-details dt {
-    color: #607969 !important;
+    color: #334155 !important;
+  }
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-details dd,
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-meta-item strong,
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-amount-box strong {
+    color: #0f172a !important;
   }
   html[data-theme="dark"] .app-shell .receipt-sheet .receipt-amounts {
-    background: #f1f6ee !important;
-    border-color: #a9bfae !important;
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
   }
-  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-amount-main {
-    background: #e1edde !important;
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-amount-box {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+  }
+  html[data-theme="dark"] .app-shell .receipt-sheet .receipt-amount-box.receipt-amount-main {
+    background: #ecfdf5 !important;
+    border-color: #059669 !important;
   }
 }
 
@@ -5074,25 +5089,28 @@ html[data-theme="dark"] .thermal-slip-sheet {
 }
 .thermal-row {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  font-size: 12.5px;
+  justify-content: flex-start;
+  align-items: baseline;
+  font-size: 13px;
   line-height: 2.15;
-  gap: 12px;
+  gap: 8px;
   padding: 1px 0;
+  direction: rtl;
+  text-align: right;
 }
 .thermal-lbl {
   color: #374151 !important;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 700;
   white-space: nowrap;
+  flex-shrink: 0;
   font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
 }
 .thermal-val {
   font-weight: 700;
   color: #111111 !important;
-  text-align: left;
-  direction: ltr;
+  text-align: right;
+  direction: rtl;
   overflow-wrap: anywhere;
 }
 .thermal-val:not(.font-mono) {
@@ -5105,52 +5123,99 @@ html[data-theme="dark"] .thermal-slip-sheet {
 .font-mono {
   font-family: 'Consolas', 'Courier New', Calibri, 'Segoe UI', monospace !important;
   direction: ltr;
-  text-align: left;
+  unicode-bidi: isolate;
+  text-align: right;
 }
 
 /* Amount Highlight Card */
 .thermal-slip-amount-card {
   background: #f4f8f5 !important;
   border: 1.5px solid #17634c;
-  border-radius: 8px;
-  padding: 14px 12px 13px;
-  margin: 8px 0;
+  border-radius: 10px;
+  padding: 0;
+  margin: 10px 0;
   text-align: center;
+  overflow: hidden;
+}
+.thermal-amount-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #e4f2eb !important;
+  border-bottom: 1px solid #b8d8c8;
+  direction: rtl;
 }
 .thermal-amount-label {
   font-size: 13px;
-  font-weight: 700;
-  color: #17634c !important;
-  margin-bottom: 8px;
+  font-weight: 800;
+  color: #0f4e39 !important;
+  margin: 0;
   font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
+}
+.thermal-curr {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #ffffff !important;
+  border: 1px solid #9ecfb3;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #14533c !important;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
+  line-height: 1.4;
 }
 .thermal-amount-big {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 6px;
-  margin: 6px 0 11px;
+  gap: 4px;
+  padding: 12px 12px 10px;
+  margin: 0;
 }
 .thermal-sum {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 900;
+  line-height: 1.2;
   color: #000000 !important;
   font-family: 'Consolas', 'Courier New', monospace !important;
   letter-spacing: 0.5px;
+  direction: ltr;
+  unicode-bidi: isolate;
 }
-.thermal-curr {
-  font-size: 13px;
+.thermal-amount-words {
+  font-size: 12.5px;
   font-weight: 700;
-  color: #222222 !important;
+  color: #1e4d3a !important;
   font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
+  direction: rtl;
+  line-height: 1.5;
 }
 .thermal-sub-amounts {
-  border-top: 1px dotted #a3c2b5;
-  padding-top: 9px;
-  margin-top: 6px;
+  border-top: 1px dashed #a3c2b5;
+  padding: 8px 12px;
+  margin: 0;
+  background: #ffffff !important;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 14px;
+}
+.thermal-sub-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  direction: rtl;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.thermal-sub-chip[hidden],
+.thermal-sub-amounts[hidden],
+.thermal-amount-words[hidden] {
+  display: none !important;
 }
 
 /* QR Code Section */
@@ -5267,16 +5332,16 @@ html[data-theme="dark"] .app-shell #receipt-thermal-btn {
   }
   #receipt-print .thermal-slip-meta,
   #receipt-print .thermal-slip-parties { gap: 7px !important; }
-  #receipt-print .thermal-row { line-height: 2.05 !important; gap: 10px !important; padding: 1px 0 !important; }
+  #receipt-print .thermal-row { justify-content: flex-start !important; align-items: baseline !important; line-height: 2.05 !important; gap: 8px !important; padding: 1px 0 !important; direction: rtl !important; text-align: right !important; }
   #receipt-print .thermal-slip-divider { margin: 11px 0 !important; }
-  #receipt-print .thermal-slip-amount-card { padding: 11px 10px 10px !important; margin: 7px 0 !important; }
-  #receipt-print .thermal-sub-amounts { gap: 6px !important; padding-top: 7px !important; }
+  #receipt-print .thermal-slip-amount-card { padding: 0 !important; margin: 7px 0 !important; background: #ffffff !important; border: 1.5px solid #000000 !important; border-radius: 6px !important; overflow: hidden !important; }
+  #receipt-print .thermal-amount-head { padding: 5px 9px !important; background: #f2f2f2 !important; border-bottom: 1px solid #000000 !important; }
+  #receipt-print .thermal-curr { background: #ffffff !important; border: 1px solid #000000 !important; color: #000000 !important; padding: 1px 7px !important; }
+  #receipt-print .thermal-amount-big { padding: 8px 8px 7px !important; gap: 2px !important; }
+  #receipt-print .thermal-amount-words { color: #000000 !important; font-size: 12px !important; font-weight: 700 !important; }
+  #receipt-print .thermal-sub-amounts { gap: 6px 12px !important; padding: 6px 9px !important; border-top: 1px dashed #000000 !important; background: #ffffff !important; }
   #receipt-print .thermal-slip-qr-box { padding: 8px 0 7px !important; }
   #receipt-print .thermal-qr-hint { margin-top: 8px !important; }
-  #receipt-print .thermal-slip-amount-card {
-    background: #ffffff !important;
-    border: 1.5px solid #000000 !important;
-  }
   #receipt-print .thermal-amount-label,
   #receipt-print .thermal-curr,
   #receipt-print .thermal-thanks,
@@ -7863,6 +7928,456 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
 
   html body.app-shell .hisaab-toast {
     font-size: 14.5px !important;
+  }
+
+  /* ==========================================================================
+     6. ENHANCED AUTO-BACKUP & CLOUD DATA PROTECTION DIALOG (#backup-dialog)
+     ========================================================================== */
+  html body.app-shell dialog#backup-dialog {
+    width: min(760px, 95vw) !important;
+    max-width: min(760px, 95vw) !important;
+    max-height: 88vh !important;
+    padding: 0 !important;
+    border-radius: 22px !important;
+    border: 1px solid #bcd8c8 !important;
+    background: #f8fbf9 !important;
+    box-shadow: 0 28px 80px rgba(15, 58, 41, 0.24), 0 8px 24px rgba(15, 58, 41, 0.08) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-hub-head {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 18px 24px 16px !important;
+    margin: 0 !important;
+    background: linear-gradient(135deg, #0f5138 0%, #146c4b 100%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+    color: #ffffff !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-hub-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  html body.app-shell #backup-dialog .backup-hub-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    font-size: 23px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  html body.app-shell #backup-dialog #backup-dialog-title {
+    margin: 0 !important;
+    font-size: 21px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    line-height: 1.4 !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-hub-subtitle {
+    margin: 3px 0 0 !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: rgba(236, 253, 245, 0.9) !important;
+    line-height: 1.5 !important;
+  }
+
+  html body.app-shell #backup-dialog #close-backups {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    border-radius: 11px !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.26) !important;
+    color: #ffffff !important;
+    font-size: 22px !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.16s ease !important;
+  }
+
+  html body.app-shell #backup-dialog #close-backups:hover {
+    background: #ef4444 !important;
+    border-color: #f87171 !important;
+    color: #ffffff !important;
+    transform: scale(1.06);
+  }
+
+  /* Live Status Banner Card */
+  html body.app-shell #backup-dialog .external-backup-banner {
+    margin: 18px 22px 14px !important;
+    padding: 14px 18px !important;
+    border-radius: 16px !important;
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%) !important;
+    border: 1.5px solid #86efac !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.08) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  html body.app-shell #backup-dialog .external-backup-banner.error {
+    background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%) !important;
+    border-color: #fda4af !important;
+  }
+
+  html body.app-shell #backup-dialog .external-backup-overview {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px 16px !important;
+    flex-wrap: wrap !important;
+  }
+
+  html body.app-shell #backup-dialog #external-backup-state {
+    font-size: 16.5px !important;
+    font-weight: 800 !important;
+    color: #065f46 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-last-time-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 4px 12px !important;
+    border-radius: 999px !important;
+    background: #ffffff !important;
+    border: 1px solid #a7f3d0 !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: #0f5132 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  html body.app-shell #backup-dialog .external-backup-location {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    padding-top: 8px !important;
+    border-top: 1px dashed rgba(16, 185, 129, 0.3) !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-loc-label {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #14532d !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-path-chip {
+    display: inline-block !important;
+    padding: 4px 12px !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    border: 1px solid #bbf7d0 !important;
+    font: 700 13.5px Consolas, 'Segoe UI', Arial, sans-serif !important;
+    color: #0f5132 !important;
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+  }
+
+  /* Cloud & External Folder Settings Section */
+  html body.app-shell #backup-dialog .external-backup-settings {
+    margin: 0 22px 14px !important;
+    padding: 18px 20px !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    border: 1px solid #d1e4d9 !important;
+    box-shadow: 0 4px 16px rgba(15, 58, 41, 0.05) !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-section-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    margin-bottom: 14px !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid #e6f0ea !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-section-head h3 {
+    margin: 0 !important;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    color: #0f4430 !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-retention-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 3px 12px !important;
+    border-radius: 999px !important;
+    background: #ecfdf5 !important;
+    border: 1px solid #a7f3d0 !important;
+    color: #047857 !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+  }
+
+  html body.app-shell #backup-dialog .cloud-detected-wrap {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    margin: 0 0 14px !important;
+    padding: 10px 14px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(90deg, #f0fdf4 0%, #f8fafc 100%) !important;
+    border: 1px solid #bbf7d0 !important;
+  }
+
+  html body.app-shell #backup-dialog .cloud-detected-label {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #065f46 !important;
+  }
+
+  /* Structured Action Buttons Grid */
+  html body.app-shell #backup-dialog .backup-actions-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+
+  html body.app-shell #backup-dialog .btn-backup-card {
+    min-height: 44px !important;
+    padding: 8px 14px !important;
+    border-radius: 12px !important;
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    transition: all 0.16s ease !important;
+  }
+
+  html body.app-shell #backup-dialog .btn-backup-card:hover:not(:disabled) {
+    transform: translateY(-1.5px) !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-info-banners {
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  html body.app-shell #backup-dialog .cloud-sync-schedule-note {
+    margin: 0 !important;
+    padding: 9px 14px !important;
+    border-radius: 10px !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    color: #1e3a8a !important;
+    font-size: 13.5px !important;
+    line-height: 1.65 !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-help-note {
+    margin: 0 !important;
+    padding: 8px 14px !important;
+    border-radius: 10px !important;
+    background: #f8faf9 !important;
+    border: 1px solid #e2ece6 !important;
+    color: #3f5e4d !important;
+    font-size: 13.5px !important;
+    line-height: 1.65 !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-help-note code {
+    font-family: Consolas, monospace;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: #e6f2ec;
+    color: #0d4b34;
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  html body.app-shell #backup-dialog .backup-download-info {
+    margin: 0 22px 12px !important;
+    padding: 9px 14px !important;
+    border-radius: 11px !important;
+    background: #fffbeb !important;
+    border: 1px solid #fde68a !important;
+    color: #92400e !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.6 !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-download-info[data-backup-state="ready"] {
+    background: #f0fdf4 !important;
+    border-color: #bbf7d0 !important;
+    color: #166534 !important;
+  }
+
+  /* Previous Auto-Backups Table Section */
+  html body.app-shell #backup-dialog .backup-history {
+    margin: 0 22px 20px !important;
+    padding: 16px 18px !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    border: 1px solid #d1e4d9 !important;
+    box-shadow: 0 4px 16px rgba(15, 58, 41, 0.05) !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-history > summary {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: #0f4430 !important;
+    padding: 2px 0 8px !important;
+    cursor: pointer !important;
+    user-select: none !important;
+  }
+
+  html body.app-shell #backup-dialog .backup-history .backup-actions-wrap {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    margin: 10px 0 12px !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid #e6f0ea !important;
+  }
+
+  html body.app-shell #backup-dialog #backup-list-table {
+    border: 1px solid #dbe8e0 !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+  }
+
+  html body.app-shell #backup-dialog #backup-list-table thead th {
+    background: #edf6f0 !important;
+    color: #134632 !important;
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    padding: 9px 12px !important;
+    border-bottom: 1.5px solid #c5ddd0 !important;
+  }
+
+  html body.app-shell #backup-dialog #backup-list-table tbody td {
+    padding: 9px 12px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    vertical-align: middle !important;
+  }
+
+  /* Dark Mode Support for Enhanced Backup Dialog */
+  html[data-theme="dark"] body.app-shell dialog#backup-dialog {
+    background: #0c1914 !important;
+    border-color: #214434 !important;
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.72), 0 0 28px rgba(16, 185, 129, 0.1) !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-hub-head {
+    background: linear-gradient(135deg, #092c1f 0%, #0f4531 100%) !important;
+    border-bottom-color: #1e4635 !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .external-backup-banner {
+    background: linear-gradient(135deg, #0f291e 0%, #0b2118 100%) !important;
+    border-color: #1f573f !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog #external-backup-state {
+    color: #6ee7b7 !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-last-time-pill,
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-path-chip {
+    background: #07150f !important;
+    border-color: #23533d !important;
+    color: #a7f3d0 !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-loc-label {
+    color: #a7f3d0 !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .external-backup-settings,
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-history {
+    background: #11231b !important;
+    border-color: #224434 !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-section-head,
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-history .backup-actions-wrap {
+    border-bottom-color: #1e3d2f !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-section-head h3,
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-history > summary {
+    color: #d1fae5 !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-retention-badge {
+    background: #092c1f !important;
+    border-color: #10b981 !important;
+    color: #6ee7b7 !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .cloud-detected-wrap {
+    background: #0b1f17 !important;
+    border-color: #1f513b !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .cloud-detected-label {
+    color: #6ee7b7 !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .cloud-sync-schedule-note {
+    background: rgba(30, 58, 138, 0.28) !important;
+    border-color: rgba(96, 165, 250, 0.35) !important;
+    color: #93c5fd !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-help-note {
+    background: #0c1a14 !important;
+    border-color: #1e3b2d !important;
+    color: #9cc5b0 !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-help-note code {
+    background: #143326 !important;
+    color: #6ee7b7 !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog .backup-download-info {
+    background: #281e0b !important;
+    border-color: #5c4516 !important;
+    color: #fcd34d !important;
+  }
+
+  html[data-theme="dark"] body.app-shell #backup-dialog #backup-list-table thead th {
+    background: #163024 !important;
+    color: #a7f3d0 !important;
+    border-bottom-color: #254d3a !important;
   }
 }
 

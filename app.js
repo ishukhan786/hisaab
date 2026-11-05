@@ -106,7 +106,7 @@
     const rows = source.rows.map(convert);
     if (source.version === 3) rows.reverse();
     if (source.trash !== undefined && (!Array.isArray(source.trash) || source.trash.length > 20)) throw Error('Invalid undo');
-    const trash = (source.trash || []).map(item => { if (!item || !Number.isInteger(item.index) || item.index < 0) throw Error('Invalid undo'); return { row: convert(item.row), index: item.index }; });
+    const trash = [];
     const startSerial = Number.isInteger(source.startSerial) && source.startSerial > 0 ? source.startSerial : 1;
     const partySerials = Object.create(null);
     if (source.partySerials && typeof source.partySerials === 'object') {
@@ -910,6 +910,10 @@
     const actualPkrEl = $('audit-actual-pkr');
     if (actualPkrEl) {
       actualPkrEl.textContent = isMixedCurrency ? currencyText(activeRows).replace(/\n/g, ' + ') : `${formatted(totalPkr)} ${currLabel}`;
+      const actualLbl = actualPkrEl.previousElementSibling;
+      if (actualLbl && actualLbl.classList.contains('metric-label')) {
+        actualLbl.textContent = isMixedCurrency ? 'رجسٹر کل رقم' : `رجسٹر کل ${currLabel}`;
+      }
     }
 
     const rateVal = parseFloat(rateInput.value);
@@ -918,6 +922,12 @@
     const text = $('audit-status-text');
     const badge = $('audit-diff-badge');
     const calcPkrEl = $('audit-calculated-pkr');
+    if (calcPkrEl) {
+      const calcLbl = calcPkrEl.previousElementSibling;
+      if (calcLbl && calcLbl.classList.contains('metric-label')) {
+        calcLbl.textContent = isMixedCurrency ? 'حسابی رقم' : `حسابی رقم (${currLabel})`;
+      }
+    }
 
     if (!banner || !icon || !text || !badge || !calcPkrEl) return;
 
@@ -1219,17 +1229,19 @@
     if ($('toggle-range')) $('toggle-range').classList.toggle('active', hasRange || !($('range-drawer')?.hidden ?? true));
     totals(filtered);
     const curr = activeCurrency();
-    const isAfn = curr === 'afn';
+    const isAfn = curr === 'afn' || (selectedBranch === '' && filtered.length > 0 && filtered.every(r => partyCurrency(r.branch) === 'afn'));
     const hasAnyAfn = filtered.some(r => partyCurrency(r.branch) === 'afn');
     const mixed = new Set(filtered.map(r => partyCurrency(r.branch))).size > 1;
     paper?.classList.toggle('mixed-currencies', mixed);
     const currLabel = isAfn ? 'افغانی' : (selectedBranch === '' && hasAnyAfn ? 'روپیہ / افغانی' : 'روپیہ');
     if ($('th-currency')) $('th-currency').textContent = currLabel;
     if ($('total-pkr')) $('total-pkr').title = isAfn ? 'کل افغانی' : 'کل روپیہ';
+    const totalWordsLbl = document.querySelector('tfoot.register-totals .totals-row td.col-words .total-words-label');
+    if (totalWordsLbl) totalWordsLbl.textContent = isAfn ? 'کل افغانی' : 'کل پاکستانی';
     updatePartyTabsActive();
   }
   function updateBackup() { const at = state.lastBackupAt; document.getElementById("backup-status").dataset.backupState = at && Date.now() - Date.parse(at) <= 7 * 86400000 ? "ready" : "pending"; const overdue = !at || Date.now() - Date.parse(at) > 7 * 86400000; $('backup-status').textContent = at ? `آخری دستی بیک اَپ ڈاؤن لوڈ: ${new Date(at).toLocaleString('en-GB')}${overdue ? ' — نیا بیک اَپ لے لیں۔' : ''}` : 'ابھی دستی بیک اَپ ڈاؤن لوڈ نہیں کیا گیا۔ چاہیں تو الگ کاپی ڈاؤن لوڈ کریں۔'; }
-  function updateUndo() { $('undo-bar').hidden = !state.trash.length; $('undo-message').textContent = `${state.trash.length} حذف شدہ انٹریاں واپس لائی جا سکتی ہیں۔ آخری حذف پہلے واپس ہوگا۔`; }
+  function updateUndo() { if ($('undo-bar')) $('undo-bar').hidden = true; }
   const placeSuggestMenu = document.createElement('div');
   placeSuggestMenu.className = 'place-suggest-menu no-print';
   placeSuggestMenu.hidden = true;
@@ -1577,7 +1589,7 @@
     tr.addEventListener('focusout', () => setTimeout(() => { if (!tr.contains(document.activeElement)) applyFilter(true); }, 0));
     const tdWords = document.createElement('td'); tdWords.className = 'col-words print-only'; tr.append(tdWords);
     const tdReceipt = document.createElement('td'); tdReceipt.className = 'col-receipt no-print'; tr.append(tdReceipt);
-    const td = document.createElement('td'); td.className = 'no-print'; const del = document.createElement('button'); del.type = 'button'; del.className = 'delete'; del.textContent = '×'; del.title = 'حذف کریں — Undo سے واپس لائیں'; del.setAttribute('aria-label', 'انٹری حذف کریں');
+    const td = document.createElement('td'); td.className = 'no-print'; const del = document.createElement('button'); del.type = 'button'; del.className = 'delete'; del.textContent = '×'; del.title = 'انٹری حذف کریں'; del.setAttribute('aria-label', 'انٹری حذف کریں');
     if (rLocked) del.disabled = true;
     del.onclick = e => {
       e.stopPropagation();
@@ -1586,8 +1598,6 @@
       if (index < 0) return;
       if (populated(row)) {
         if (typeof confirm === 'function' && !confirm('کیا آپ واقعی یہ انٹری حذف کرنا چاہتے ہیں؟')) return;
-        state.trash.push({ row: structuredClone(row), index });
-        state.trash = state.trash.slice(-20);
       }
       state.rows.splice(index, 1);
       render();
@@ -1644,7 +1654,7 @@
     applyFilter();
     focusRow(row);
   }
-  $('undo').onclick = () => { const item = state.trash.pop(); if (!item) return; if (item.row.branch && !state.branches.includes(item.row.branch)) state.branches.push(item.row.branch); state.rows.splice(Math.min(item.index, state.rows.length), 0, item.row); render(); save(); if (!rowNodes.has(item.row.id) || rowNodes.get(item.row.id).hidden) $('filter-message').textContent = 'انٹری واپس آ گئی ہے۔ اسے دیکھنے کے لیے فلٹر صاف کریں۔'; };
+  if ($('undo')) $('undo').onclick = () => {};
   const DISK_DB_NAME = 'hisaab-disk-db-v1', DISK_STORE = 'handles', DISK_KEY = 'primary';
   function openHandleDB() {
     return new Promise((resolve, reject) => {
@@ -2645,7 +2655,7 @@
     for (const name of state.branches) {
       const div = document.createElement('div'); div.className = 'party-item'; const input = document.createElement('input'); input.value = name; input.maxLength = 300; input.setAttribute('aria-label', 'پارٹی کا نام تبدیل کریں'); const count = document.createElement('small'); count.textContent = state.rows.filter(r => r.branch === name && populated(r)).length + ' اندراجات';
       const currSelect = document.createElement('select'); currSelect.className = 'party-currency-select'; currSelect.append(makeOption('pkr', 'روپیہ (PKR)'), makeOption('afn', 'افغانی (AFN)')); currSelect.value = partyCurrency(name);
-      currSelect.onchange = () => { if ([...state.rows, ...state.trash.map(t => t.row)].some(r => r.branch === name && populated(r))) { currSelect.value = partyCurrency(name); $('branch-error').textContent = 'اس پارٹی کی انٹریاں موجود ہیں؛ نئی کرنسی کے لیے الگ پارٹی بنائیں۔'; return; } if (!state.partyCurrencies) state.partyCurrencies = {}; state.partyCurrencies[name] = currSelect.value; save(); updateBranches(); applyFilter(); $('branch-error').textContent = name + ' کی کرنسی اب ' + (currSelect.value === 'afn' ? 'افغانی' : 'روپیہ') + ' ہے۔'; };
+      currSelect.onchange = () => { if (state.rows.some(r => r.branch === name && populated(r))) { currSelect.value = partyCurrency(name); $('branch-error').textContent = 'اس پارٹی کی انٹریاں موجود ہیں؛ نئی کرنسی کے لیے الگ پارٹی بنائیں۔'; return; } if (!state.partyCurrencies) state.partyCurrencies = {}; state.partyCurrencies[name] = currSelect.value; save(); updateBranches(); applyFilter(); $('branch-error').textContent = name + ' کی کرنسی اب ' + (currSelect.value === 'afn' ? 'افغانی' : 'روپیہ') + ' ہے۔'; };
       const rename = document.createElement('button'); rename.textContent = 'نام محفوظ کریں'; rename.onclick = () => { const next = cleanName(input.value); if (!next) { $('branch-error').textContent = 'پارٹی کا نام لکھیں۔'; return; } if (state.branches.some(n => n !== name && nameKey(n) === nameKey(next))) { $('branch-error').textContent = 'یہ نام پہلے سے موجود ہے۔'; return; } state.branches[state.branches.indexOf(name)] = next; if (next !== name && state.partyCurrencies && Object.hasOwn(state.partyCurrencies, name)) { state.partyCurrencies[next] = state.partyCurrencies[name]; delete state.partyCurrencies[name]; } if (next !== name && state.partySerials && Object.hasOwn(state.partySerials, name)) { state.partySerials[next] = state.partySerials[name]; delete state.partySerials[name]; } if (next !== name && state.partyDateFilters && Object.hasOwn(state.partyDateFilters, 'b:' + name)) { state.partyDateFilters['b:' + next] = state.partyDateFilters['b:' + name]; delete state.partyDateFilters['b:' + name]; } for (const row of [...state.rows, ...state.trash.map(t => t.row)]) if (row.branch === name) row.branch = next; if (selectedBranch === 'b:' + name) selectedBranch = 'b:' + next; save(); updateBranches(); applyFilter(); renderBranchList(); $('branch-error').textContent = 'نام اور متعلقہ انٹریاں اپ ڈیٹ ہو گئیں۔'; };
       const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'delete-party-btn'; remove.textContent = '🗑 حذف کریں'; remove.title = `پارٹی "${name}" حذف کریں`; remove.onclick = () => deleteParty(name); div.append(input, currSelect, count, rename, remove); $('branch-list').append(div);
     }
@@ -2668,9 +2678,14 @@
       if (!canOutput([row], false)) return;
       receiptSelection = { serial: String(serial), date: row.entryDate || state.date || today(), branch: row.branch || 'بغیر پارٹی' };
       const safeFmt = v => { const n = integerAmount(v); return n !== null ? formatted(n) : (v || '0'); };
+      const isAfn = partyCurrency(row.branch) === 'afn';
+      const formattedPkr = safeFmt(row.pkr);
+      const toUrdu = window.amountToUrduShort || (typeof amountToUrduShort !== 'undefined' ? amountToUrduShort : null);
+      const urduShort = toUrdu && formattedPkr && formattedPkr !== '0' && formattedPkr !== '—' ? toUrdu(formattedPkr) : '';
+      const unitWord = isAfn ? 'افغانی' : 'روپے';
       const values = {
         title: state.title || 'اندراج رجسٹر',
-        serial: String(serial),
+        serial: '#' + String(serial).padStart(4, '0'),
         date: fmtDate(receiptSelection.date),
         branch: receiptSelection.branch,
         sender: row.sender || '—',
@@ -2679,8 +2694,9 @@
         place: row.place || '—',
         balance: safeFmt(row.balance),
         aed: safeFmt(row.aed),
-        pkr: safeFmt(row.pkr),
-        currency: partyCurrency(row.branch) === 'afn' ? 'افغانی (AFN)' : 'روپیہ (PKR)'
+        pkr: formattedPkr,
+        'pkr-words': urduShort ? `(${urduShort} ${unitWord})` : '',
+        currency: isAfn ? 'افغانی (AFN)' : 'پاکستانی روپے (PKR)'
       };
       const paper = $('receipt-paper');
       if (paper) {
@@ -2882,12 +2898,17 @@
     document.querySelectorAll('#rows .col-words').forEach(e => e.replaceChildren());
     const thWords = document.querySelector('th.col-words');
     if (thWords) thWords.textContent = 'لفظوں';
+    const isPrintAfn = activeCurrency() === 'afn' || (selectedBranch === '' && printRows.length > 0 && printRows.every(r => partyCurrency(r.branch) === 'afn'));
+    const totalWordsText = isPrintAfn ? 'کل افغانی' : 'کل پاکستانی';
     const tfootWords = document.querySelector('tfoot.register-totals .totals-row td.col-words');
-    if (tfootWords && !tfootWords.querySelector('.total-words-label')) {
-      const lbl = document.createElement('span');
-      lbl.className = 'total-words-label';
-      lbl.textContent = 'کل پاکستانی';
-      tfootWords.replaceChildren(lbl);
+    if (tfootWords) {
+      let lbl = tfootWords.querySelector('.total-words-label');
+      if (!lbl) {
+        lbl = document.createElement('span');
+        lbl.className = 'total-words-label total-bombay-black';
+        tfootWords.replaceChildren(lbl);
+      }
+      lbl.textContent = totalWordsText;
     }
     ['total-balance', 'total-aed', 'total-pkr', 'total-orders-count', 'total-net-aed'].forEach(id => {
       const el = $(id);
@@ -3022,11 +3043,6 @@
         window.HisaabAuth.lock('App locked by user.');
         return;
       }
-    }
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !e.shiftKey && !journalController?.isActive() && !khataController?.isActive()) {
-      const active = document.activeElement;
-      const inInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
-      if (!inInput && state.trash.length) { e.preventDefault(); $('undo').click(); }
     }
     if (e.altKey && !e.ctrlKey && !e.metaKey && !journalController?.isActive() && !khataController?.isActive()) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {

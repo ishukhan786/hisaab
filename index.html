@@ -15,12 +15,12 @@
   <title>حساب — روزانہ کھاتہ و رجسٹر (Hisaab)</title>
   <!-- FIX-4: Anti-FOUC theme preload moved to external theme-init.js -->
   <!-- localStorage.getItem('hisaab-theme') verification guard preserved -->
-  <script src="theme-init.js?v=1.4.35"></script>
-  <link rel="stylesheet" href="style.css?v=1.4.35">
-  <link rel="stylesheet" href="ui.css?v=1.4.35">
-  <link rel="stylesheet" href="journal.css?v=1.4.35">
-  <link rel="stylesheet" href="khata.css?v=1.4.35">
-  <link rel="stylesheet" href="receipt-export.css?v=1.4.35">
+  <script src="theme-init.js?v=1.4.36"></script>
+  <link rel="stylesheet" href="style.css?v=1.4.36">
+  <link rel="stylesheet" href="ui.css?v=1.4.36">
+  <link rel="stylesheet" href="journal.css?v=1.4.36">
+  <link rel="stylesheet" href="khata.css?v=1.4.36">
+  <link rel="stylesheet" href="receipt-export.css?v=1.4.36">
 </head>
 <body class="app-shell auth-startup-pending">
   <header class="top-nav no-print">
@@ -30,7 +30,7 @@
         <div class="brand-titles">
           <!-- FIX-23: lang="en" on brand name -->
           <strong class="brand-title" lang="en">Hisaab</strong>
-          <span class="app-version-badge" title="سافٹ ویئر ورژن">v1.4.35</span>
+          <span class="app-version-badge" title="سافٹ ویئر ورژن">v1.4.36</span>
         </div>
       </div>
       <div class="top-date-wrap">
@@ -123,7 +123,6 @@
         </div>
       </details>
 
-      <button id="cloud-sync-pill" class="cloud-sync-pill no-print" type="button" data-backup-state="disabled" title="کلاؤڈ / Google Drive / OneDrive خودکار بیک اَپ سیٹنگز کھولیں">☁️ کلاؤڈ بیک اَپ</button>
       <span id="save-state" class="save-badge" role="status">محفوظ ہے</span>
     </div>
   </header>
@@ -144,7 +143,6 @@
   <main id="register-page" role="tabpanel" aria-labelledby="view-register">
     <!-- FIX-19: Accessible primary h1 for document outline -->
     <h1 class="sr-only">حساب — اندراج رجسٹر</h1>
-    <div class="undo-bar" id="undo-bar" hidden><span id="undo-message" role="status"></span><button id="undo">واپس لائیں (Undo)</button></div>
     <div class="party-tabs-bar no-print" id="party-tabs-bar" role="navigation" aria-label="پارٹی کھاتے">
       <div class="party-tabs-scroll" id="party-tabs" role="tablist"></div>
       <div class="party-tabs-actions">
@@ -270,7 +268,7 @@
       </section>
       <div class="paper-foot no-print"><span id="count">0 اندراجات</span><span lang="en">Hisaab · Daily Register</span></div>
     </section>
-    <footer class="help"><span>نئی انٹری اوپر والی "رپورٹ کی تاریخ" پر محفوظ ہوتی ہے • Enter / Tab سے اگلا خانہ • Shift+Tab سے پچھلا خانہ • Ctrl+D اوپر سے کاپی • Alt+1..9 پارٹی • Ctrl+P پرنٹ • Ctrl+Z واپس</span><span id="storage-help">ڈیٹا اسی براؤزر میں محفوظ ہوتا ہے؛ "مزید" میں خودکار بیک اَپ اور پن لاک (PIN) فعال کریں۔</span></footer>
+    <footer class="help"><span>نئی انٹری اوپر والی "رپورٹ کی تاریخ" پر محفوظ ہوتی ہے • Enter / Tab سے اگلا خانہ • Shift+Tab سے پچھلا خانہ • Ctrl+D اوپر سے کاپی • Alt+1..9 پارٹی • Ctrl+P پرنٹ</span><span id="storage-help">ڈیٹا اسی براؤزر میں محفوظ ہوتا ہے؛ "مزید" میں خودکار بیک اَپ اور پن لاک (PIN) فعال کریں۔</span></footer>
   </main>
 
   <!-- FIX-22: journal-page with hidden landmark and tabpanel role -->
@@ -1120,42 +1118,64 @@
     <p id="summary-hint">کسی تاریخ پر کلک کریں تو اسی دن کا رجسٹر کھل جائے گا۔</p>
   </dialog>
 
-  <dialog id="backup-dialog" aria-labelledby="backup-dialog-title">
-    <div class="dialog-head"><h2 id="backup-dialog-title">خودکار بیک اَپ</h2><button id="close-backups" aria-label="بند کریں">×</button></div>
+  <dialog id="backup-dialog" class="backup-hub-dialog" aria-labelledby="backup-dialog-title">
+    <div class="dialog-head backup-hub-head">
+      <div class="backup-hub-title-wrap">
+        <span class="backup-hub-icon" aria-hidden="true">🛡️</span>
+        <div>
+          <h2 id="backup-dialog-title">خودکار بیک اَپ و ڈیٹا حفاظت</h2>
+          <p class="backup-hub-subtitle">تبدیلی کے 2.5 سیکنڈ بعد خودکار بیک اَپ بنتا ہے اور آخری 30 کاپیاں محفوظ رہتی ہیں۔</p>
+        </div>
+      </div>
+      <button id="close-backups" aria-label="بند کریں">×</button>
+    </div>
     <p id="cloud-backup-status" role="status" hidden></p>
-    <p>تبدیلی کے تقریباً 2.5 سیکنڈ بعد خودکار بیک اَپ بنتا ہے۔ آخری 30 کاپیاں محفوظ رہتی ہیں، ضروری نہیں کہ یہ 30 دن کی ہوں۔ ری سٹور کرنے سے پہلے موجودہ ڈیٹا کا سیفٹی بیک اَپ بھی خود بن جاتا ہے۔</p>
 
     <section id="external-backup-banner" class="external-backup-banner no-print" aria-label="بیرونی بیک اَپ کی حالت">
-      <div class="external-backup-overview"><strong id="external-backup-state" role="status"></strong><span id="external-backup-last-success"></span></div>
-      <div class="external-backup-location"><span>بیک اَپ مقام:</span><bdi id="external-backup-location" dir="ltr"></bdi></div>
+      <div class="external-backup-overview">
+        <strong id="external-backup-state" role="status"></strong>
+        <span id="external-backup-last-success" class="backup-last-time-pill"></span>
+      </div>
+      <div class="external-backup-location">
+        <span class="backup-loc-label">📍 بیک اَپ مقام:</span>
+        <bdi id="external-backup-location" class="backup-path-chip" dir="ltr"></bdi>
+      </div>
       <p id="external-backup-error" role="status" hidden></p>
     </section>
+
     <section class="external-backup-settings">
-      <h3>☁️ کلاؤڈ (Google Drive / OneDrive) و بیرونی فولڈر بیک اَپ</h3>
+      <div class="backup-section-head">
+        <h3>☁️ کلاؤڈ (Google Drive / OneDrive) و بیرونی فولڈر سنک</h3>
+        <span class="backup-retention-badge">آخری 30 کاپیاں محفوظ</span>
+      </div>
       <!-- FIX-10: Remove conflicting aria-hidden on live status message -->
       <p id="external-backup-status" class="sr-only" role="status"></p>
       <div id="cloud-detected-wrap" class="cloud-detected-wrap" hidden>
-        <span class="cloud-detected-label">فوری کلاؤڈ کنیکٹ (1-Click):</span>
+        <span class="cloud-detected-label">⚡ فوری کلاؤڈ کنیکٹ (1-Click):</span>
         <div id="cloud-detected-bar" class="cloud-detected-bar"></div>
       </div>
-      <div class="backup-actions-bar">
-        <button id="external-backup-select" type="button">📁 فولڈر منتخب کریں</button>
-        <button id="external-backup-retry" type="button" hidden>🔄 ابھی سنک کریں</button>
-        <button id="external-backup-open-folder" type="button" hidden>📂 سنک فولڈر کھولیں</button>
-        <button id="external-backup-disable" type="button" hidden>بند کریں</button>
-        <button id="encrypted-backup-btn" type="button" title="پاس ورڈ سے محفوظ انکرپٹڈ بیک اَپ فائل ڈاؤن لوڈ کریں">🔒 پاس ورڈ والا بیک اَپ</button>
+      <div class="backup-actions-bar backup-actions-grid">
+        <button id="external-backup-select" type="button" class="btn-backup-card btn-backup-folder">📁 فولڈر منتخب کریں</button>
+        <button id="external-backup-retry" type="button" class="btn-backup-card btn-backup-sync" hidden>🔄 ابھی سنک کریں</button>
+        <button id="external-backup-open-folder" type="button" class="btn-backup-card btn-backup-open" hidden>📂 سنک فولڈر کھولیں</button>
+        <button id="encrypted-backup-btn" type="button" class="btn-backup-card btn-backup-encrypted" title="پاس ورڈ سے محفوظ انکرپٹڈ بیک اَپ فائل ڈاؤن لوڈ کریں">🔒 پاس ورڈ والا بیک اَپ</button>
+        <button id="external-backup-disable" type="button" class="btn-backup-card btn-backup-disable" hidden>✕ سنک بند کریں</button>
       </div>
-      <p class="cloud-sync-schedule-note">⚡ خودکار شیڈول: ہر تبدیلی پر، ہر <strong>30 منٹ</strong> بعد، اور <strong>ایپ بند کرتے وقت (On Exit)</strong> خودکار بیک اَپ سنک ہوتا ہے۔</p>
-      <p id="external-backup-help">منتخب Google Drive، OneDrive یا USB فولڈر میں Hisaab-Backups کے اندر آخری 30 کاپیاں محفوظ ہوں گی۔</p>
+      <div class="backup-info-banners">
+        <p class="cloud-sync-schedule-note">⚡ <strong>خودکار شیڈول:</strong> ہر تبدیلی پر، ہر <strong>30 منٹ</strong> بعد، اور <strong>ایپ بند کرتے وقت (On Exit)</strong> خودکار بیک اَپ سنک ہوتا ہے۔</p>
+        <p id="external-backup-help" class="backup-help-note">منتخب Google Drive، OneDrive یا USB فولڈر میں <code>Hisaab-Backups</code> کے اندر آخری 30 کاپیاں محفوظ ہوں گی۔ ری سٹور سے پہلے موجودہ ڈیٹا کا سیفٹی بیک اَپ بھی خود بن جاتا ہے۔</p>
+      </div>
     </section>
+
     <div id="backup-legacy-controls"></div>
     <p id="backup-status" class="backup-download-info" role="status"></p>
-    <details class="backup-history">
-      <summary>پچھلی محفوظ کاپیاں</summary>
+
+    <details class="backup-history" open>
+      <summary><span>🗂️ پچھلی محفوظ کاپیاں (Auto &amp; Safety Backups)</span></summary>
       <!-- FIX-5 & FIX-30: Class backup-actions-wrap replaces inline styles -->
       <div class="backup-actions-bar backup-actions-wrap">
-        <button id="open-backup-folder-btn" type="button" class="btn-sm">📁 بیک اَپ فولڈر کھولیں</button>
         <button id="create-backup-now-btn" type="button" class="btn-sm primary">⚡ فوری خودکار بیک اَپ لیں</button>
+        <button id="open-backup-folder-btn" type="button" class="btn-sm">📁 بیک اَپ فولڈر کھولیں</button>
       </div>
       <!-- FIX-5: table-scroll-48 class replaces inline max-height style -->
       <div class="summary-wrap table-scroll-48">
@@ -1199,12 +1219,30 @@
     </div>
     <div class="receipt-actions no-print"><button id="receipt-preview" type="button" class="primary">رسید پرنٹ کریں</button><button id="receipt-thermal-btn" type="button" class="primary" hidden>🧾 تھرمل سلپ پرنٹ</button><button id="receipt-save" type="button" hidden>PDF محفوظ کریں</button><button id="receipt-png" type="button" hidden>PNG محفوظ کریں</button><button id="receipt-copy" type="button" hidden>تصویر کاپی کریں</button><span id="receipt-status" role="status"></span></div>
     <article id="receipt-paper" class="receipt-sheet" dir="rtl">
-      <header class="receipt-header"><div><span class="receipt-kicker">حساب</span><h3 data-receipt="title"></h3></div><strong class="receipt-badge">انٹری رسید</strong></header>
-      <div class="receipt-meta"><div><span>نمبر شمار</span><strong data-receipt="serial" class="receipt-number"></strong></div><div><span>تاریخ</span><strong data-receipt="date" class="receipt-number"></strong></div></div>
-      <div class="receipt-party"><span>پارٹی</span><strong data-receipt="branch"></strong></div>
-      <dl class="receipt-details"><div><dt>ارسال کنندہ</dt><dd data-receipt="sender"></dd></div><div><dt>موبائیل نمبر</dt><dd data-receipt="mobile" class="receipt-number"></dd></div><div><dt>وصول کنندہ</dt><dd data-receipt="receiver"></dd></div><div><dt>مقام</dt><dd data-receipt="place"></dd></div></dl>
-      <div class="receipt-amounts"><div><span>بقایا</span><strong data-receipt="balance" class="receipt-number"></strong></div><div><span>درہم</span><strong data-receipt="aed" class="receipt-number"></strong></div><div class="receipt-amount-main"><span data-receipt="currency"></span><strong data-receipt="pkr" class="receipt-number"></strong></div></div>
-      <footer class="receipt-signatures"><span>تیار کنندہ</span><span>دستخط</span></footer>
+      <header class="receipt-header">
+        <div class="receipt-brand-block">
+          <span class="receipt-kicker">حساب · کمپیوٹرائزڈ واؤچر</span>
+          <h3 data-receipt="title"></h3>
+        </div>
+        <strong class="receipt-badge">انٹری رسید</strong>
+      </header>
+      <div class="receipt-meta-grid">
+        <div class="receipt-meta-item"><span>نمبر شمار</span><strong data-receipt="serial" class="receipt-number"></strong></div>
+        <div class="receipt-meta-item"><span>تاریخ</span><strong data-receipt="date" class="receipt-number"></strong></div>
+        <div class="receipt-meta-item receipt-meta-party"><span>پارٹی</span><strong data-receipt="branch"></strong></div>
+      </div>
+      <dl class="receipt-details">
+        <div><dt>ارسال کنندہ</dt><dd data-receipt="sender"></dd></div>
+        <div><dt>موبائیل نمبر</dt><dd data-receipt="mobile" class="receipt-number"></dd></div>
+        <div><dt>وصول کنندہ</dt><dd data-receipt="receiver"></dd></div>
+        <div><dt>مقام</dt><dd data-receipt="place"></dd></div>
+      </dl>
+      <div class="receipt-amounts">
+        <div class="receipt-amount-box"><span>بقایا</span><strong data-receipt="balance" class="receipt-number"></strong></div>
+        <div class="receipt-amount-box"><span>درہم (AED)</span><strong data-receipt="aed" class="receipt-number"></strong></div>
+        <div class="receipt-amount-box receipt-amount-main"><span data-receipt="currency"></span><strong data-receipt="pkr" class="receipt-number"></strong><small data-receipt="pkr-words" class="receipt-words-sub"></small></div>
+      </div>
+      <footer class="receipt-signatures"><span>تیار کنندہ</span><span>دستخط و مہر</span></footer>
     </article>
     <!-- 80mm POS Thermal Slip Sheet -->
     <article id="thermal-slip-paper" class="thermal-slip-sheet" dir="rtl" hidden>
@@ -1228,33 +1266,41 @@
       </div>
       <hr class="thermal-slip-divider">
       <div class="thermal-slip-amount-card">
-        <div class="thermal-amount-label">کل رقم کی ادائیگی</div>
-        <div class="thermal-amount-big">
-          <span data-thermal="pkr" class="thermal-sum"></span>
+        <div class="thermal-amount-head">
+          <span class="thermal-amount-label">کل قابلِ ادائیگی رقم</span>
           <small data-thermal="currency" class="thermal-curr"></small>
         </div>
-        <div class="thermal-sub-amounts">
-          <div class="thermal-row" data-thermal-wrap="aed"><span class="thermal-lbl">درہم (AED):</span><strong data-thermal="aed" class="thermal-val font-mono"></strong></div>
-          <div class="thermal-row" data-thermal-wrap="pkr"><span class="thermal-lbl">پاکستانی روپے (PKR):</span><strong data-thermal="pkr-sub" class="thermal-val font-mono"></strong></div>
+        <div class="thermal-amount-big">
+          <span data-thermal="pkr" class="thermal-sum"></span>
+          <span data-thermal="pkr-words" class="thermal-amount-words" hidden></span>
         </div>
-      </div>
-      <hr class="thermal-slip-divider">
-      <div class="thermal-slip-qr-box">
-        <div id="thermal-slip-qr" class="thermal-qr-container"></div>
-        <div class="thermal-qr-hint">اسکین کر کے رسید کی تصدیق کریں</div>
+        <div class="thermal-sub-amounts">
+          <div class="thermal-sub-chip" data-thermal-wrap="aed">
+            <span class="thermal-lbl">درہم (AED):</span>
+            <strong data-thermal="aed" class="thermal-val font-mono"></strong>
+          </div>
+          <div class="thermal-sub-chip" data-thermal-wrap="balance" hidden>
+            <span class="thermal-lbl">بقایا:</span>
+            <strong data-thermal="balance" class="thermal-val font-mono"></strong>
+          </div>
+          <div class="thermal-row" data-thermal-wrap="pkr" hidden>
+            <span class="thermal-lbl" data-thermal="pkr-sub-label">پاکستانی روپے (PKR):</span>
+            <strong data-thermal="pkr-sub" class="thermal-val font-mono"></strong>
+          </div>
+        </div>
       </div>
       <hr class="thermal-slip-divider">
       <footer class="thermal-slip-footer">
         <div class="thermal-thanks">آپ کے کاروبار کا شکریہ!</div>
         <div class="thermal-note">کمپیوٹرائزڈ رسید — دستخط کی ضرورت نہیں</div>
-        <div class="thermal-tag">Powered by Hisaab POS v1.4.35</div>
+        <div class="thermal-tag">Powered by Hisaab POS v1.4.36</div>
       </footer>
     </article>
   </dialog>
 
   <dialog id="account-settings-dialog" class="auth-dialog no-print" dir="ltr">
     <div class="dialog-head">
-      <h2>👤 Account &amp; Password Settings <span class="dialog-version-pill">v1.4.35</span></h2>
+      <h2>👤 Account &amp; Password Settings <span class="dialog-version-pill">v1.4.36</span></h2>
       <button id="btn-close-account-settings" type="button" aria-label="Close">✕</button>
     </div>
     <form id="account-settings-form" class="auth-form" novalidate>
@@ -1331,7 +1377,7 @@
           <div class="text-center mb-6">
             <div class="auth-portal-badge">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span>First-Time Setup <span class="auth-version-pill">v1.4.35</span></span>
+              <span>First-Time Setup <span class="auth-version-pill">v1.4.36</span></span>
             </div>
             <h1 class="auth-display-title">
               Admin Setup
@@ -1420,7 +1466,7 @@
           <div class="text-center mb-6">
             <div class="auth-portal-badge">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span>Secure Portal <span class="auth-version-pill">v1.4.35</span></span>
+              <span>Secure Portal <span class="auth-version-pill">v1.4.36</span></span>
             </div>
             <h1 class="auth-display-title">
               Welcome Back
@@ -1591,19 +1637,19 @@
   <input id="file" type="file" accept="application/json,.json" hidden aria-label="بیک اَپ فائل منتخب کریں">
 
   <!-- FIX-3: Universal dialog backdrop-click fallback polyfill -->
-  <script src="dialog-fallback.js?v=1.4.35"></script>
-  <script src="excel-export.js?v=1.4.35"></script>
-  <script src="journal.js?v=1.4.35"></script>
-  <script src="khata.js?v=1.4.35"></script>
+  <script src="dialog-fallback.js?v=1.4.36"></script>
+  <script src="excel-export.js?v=1.4.36"></script>
+  <script src="journal.js?v=1.4.36"></script>
+  <script src="khata.js?v=1.4.36"></script>
   <!-- FIX-6 & FIX-27: html2canvas with SRI integrity verification and deferred non-blocking load -->
   <script src="assets/html2canvas.min.js?v=1.4.1" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" defer></script>
-  <script src="thermal-print.js?v=1.4.35"></script>
-  <script src="receipt-png.js?v=1.4.35"></script>
-  <script src="external-backup-ui.js?v=1.4.35"></script>
-  <script src="auth.js?v=1.4.35"></script>
-  <script src="urdu-amount.js?v=1.4.35"></script>
-  <script src="app.js?v=1.4.35"></script>
-  <script src="ui.js?v=1.4.35"></script>
+  <script src="thermal-print.js?v=1.4.36"></script>
+  <script src="receipt-png.js?v=1.4.36"></script>
+  <script src="external-backup-ui.js?v=1.4.36"></script>
+  <script src="auth.js?v=1.4.36"></script>
+  <script src="urdu-amount.js?v=1.4.36"></script>
+  <script src="app.js?v=1.4.36"></script>
+  <script src="ui.js?v=1.4.36"></script>
 
   <!-- Modern Floating Toast Notification Container (WCAG compliant polite announcer) -->
   <div id="hisaab-toast-container" class="hisaab-toast-container no-print" aria-live="polite"></div>

@@ -378,6 +378,12 @@
           || 'ایڈمن';
 
         // Map values
+        const isAfn = String(values.currency || '').includes('AFN') || String(values.currency || '').includes('افغانی');
+        const toUrdu = window.amountToUrduShort || (typeof amountToUrduShort !== 'undefined' ? amountToUrduShort : null);
+        const rawPkr = values.pkr || '0';
+        const urduShort = toUrdu && rawPkr && rawPkr !== '0' && rawPkr !== '—' ? toUrdu(rawPkr) : '';
+        const unitWord = isAfn ? 'افغانی' : 'روپے';
+
         const thermalData = {
           serial: this.formatSerial(values.serial),
           date: values.date || values.entryDate || '',
@@ -387,10 +393,13 @@
           mobile: values.mobile || '—',
           receiver: values.receiver || '—',
           place: values.place || '—',
-          pkr: values.pkr || '0',
-          'pkr-sub': values.pkr || '0',
+          pkr: rawPkr,
+          'pkr-sub': rawPkr,
+          'pkr-sub-label': isAfn ? 'افغانی (AFN):' : 'پاکستانی روپے (PKR):',
+          'pkr-words': urduShort ? `(${urduShort} ${unitWord})` : '',
           currency: values.currency || 'روپیہ (PKR)',
-          aed: values.aed || '0'
+          aed: values.aed || '0',
+          balance: values.balance || '0'
         };
 
         for (const [key, val] of Object.entries(thermalData)) {
@@ -398,36 +407,30 @@
           if (el) el.textContent = val;
         }
 
+        const wordsEl = slip.querySelector('[data-thermal="pkr-words"]');
+        if (wordsEl) {
+          wordsEl.hidden = !urduShort;
+        }
+
         // Hide optional sub-amounts if they are '0' or '—'
         const aedWrap = slip.querySelector('[data-thermal-wrap="aed"]');
+        const isAedEmpty = !values.aed || values.aed === '0' || values.aed === '—';
         if (aedWrap) {
-          const isAedEmpty = !values.aed || values.aed === '0' || values.aed === '—';
           aedWrap.hidden = isAedEmpty;
+        }
+        const balWrap = slip.querySelector('[data-thermal-wrap="balance"]');
+        const isBalEmpty = !values.balance || values.balance === '0' || values.balance === '—';
+        if (balWrap) {
+          balWrap.hidden = isBalEmpty;
         }
         const pkrWrap = slip.querySelector('[data-thermal-wrap="pkr"]');
         if (pkrWrap) {
-          const isPkrEmpty = !values.pkr || values.pkr === '0';
-          pkrWrap.hidden = isPkrEmpty;
+          // Avoid repeating PKR/AFN in sub-amounts since it is already the main hero amount above
+          pkrWrap.hidden = true;
         }
-
-        // Generate Verification QR Code
-        const qrContainer = document.getElementById('thermal-slip-qr');
-        if (qrContainer) {
-          try {
-            // Keep the payload compact ASCII: it improves compatibility with
-            // low-cost thermal scanners while still carrying the receipt data.
-            // Keep the QR at the lowest practical density for thermal printers.
-            // Full receipt details remain printed beside it; the QR only needs
-            // to identify this receipt reliably when scanned.
-            const verificationText = `HISAAB|${thermalData.serial}`;
-
-            qrContainer.innerHTML = QRCode.toSVG(verificationText, {
-              margin: 4,
-              title: 'Hisaab Verified Receipt QR'
-            });
-          } catch (qrErr) {
-            console.warn('QR code generation notice:', qrErr);
-          }
+        const subBox = slip.querySelector('.thermal-sub-amounts');
+        if (subBox) {
+          subBox.hidden = isAedEmpty && isBalEmpty;
         }
       } catch (err) {
         console.warn('HisaabThermal.populateSlip notice:', err);

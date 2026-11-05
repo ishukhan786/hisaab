@@ -158,8 +158,7 @@
   const header=document.querySelector('.top-nav');
   const first=document.createElement('div');first.className='workspace-header';
   const tools=document.createElement('div');tools.className='workspace-tools';
-  const cloudPill=document.querySelector('#cloud-sync-pill');
-  first.append(...[document.querySelector('.brand-mini'),document.querySelector('.workspace-nav'),document.querySelector('#theme-toggle'),cloudPill,document.querySelector('#save-state'),document.querySelector('.more-menu')].filter(Boolean));
+  first.append(...[document.querySelector('.brand-mini'),document.querySelector('.workspace-nav'),document.querySelector('#theme-toggle'),document.querySelector('#save-state'),document.querySelector('.more-menu')].filter(Boolean));
   tools.append(document.querySelector('.top-nav-start'),document.querySelector('.top-nav-center'),document.querySelector('.top-nav-end'));
   header.append(first,tools);
   const output=document.createElement('details');output.className='output-menu';

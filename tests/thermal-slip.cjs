@@ -64,7 +64,7 @@ test('index.html includes receipt switcher tabs and 80mm thermal slip markup', (
   assert(html.includes('id="tab-receipt-thermal"'), 'Thermal tab button missing');
   assert(html.includes('id="receipt-thermal-btn"'), 'Dedicated thermal print button missing');
   assert(html.includes('id="thermal-slip-paper"'), 'Thermal slip article element missing');
-  assert(html.includes('id="thermal-slip-qr"'), 'QR container inside slip missing');
+  assert(!html.includes('id="thermal-slip-qr"'), 'QR/barcode container must be removed from thermal slip');
   assert(html.includes('data-thermal="serial"'), 'Serial data field missing');
   assert(html.includes('data-thermal="pkr"'), 'PKR amount data field missing');
   assert(html.includes('data-thermal="currency"'), 'Currency data field missing');

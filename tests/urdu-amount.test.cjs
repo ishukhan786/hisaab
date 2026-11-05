@@ -115,7 +115,8 @@ const appJs = fs.readFileSync(path.resolve('app.js'), 'utf8');
 assert.ok(appJs.includes('amountToUrduShort'), 'app.js references amountToUrduShort');
 assert.ok(appJs.includes('col-words'), 'app.js populates col-words cell');
 assert.ok(appJs.includes('print-words-text'), 'app.js creates print-words-text element');
-console.log('  ✓ app.js populates separate col-words column on left of Rupee with clean Urdu short amount labels.');
+assert.ok(appJs.includes("isPrintAfn ? 'کل افغانی' : 'کل پاکستانی'"), 'app.js dynamically sets کل افغانی or کل پاکستانی in totals-row words column');
+console.log('  ✓ app.js populates separate col-words column on left of Rupee with clean Urdu short amount labels and dynamic کل پاکستانی / کل افغانی total label.');
 
 // 10. Integration verification: style.css & ui.css
 const styleCss = fs.readFileSync(path.resolve('style.css'), 'utf8');

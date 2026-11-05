@@ -1,12 +1,30 @@
-/* Shared receipt typography and dimensions for PDF and PNG exports. */
-.receipt-sheet.receipt-export{box-sizing:border-box;font-size:12px;padding:8mm;box-shadow:none;width:128mm;max-width:none;line-height:2.45;background:#fff;color:#1d3328;border:1px solid #c8d9ce;border-radius:4mm}
-.receipt-export .receipt-header h3{font-size:20px}
-.receipt-export .receipt-badge{font-size:16px;padding:4px 14px}
-.receipt-export .receipt-details>div{grid-template-columns:100px minmax(0,1fr);gap:14px;padding:8px 0;break-inside:avoid;border-bottom:1px solid #e3ece6}
-.receipt-export .receipt-details dd{font-size:13px}
-.receipt-export .receipt-amounts{gap:6px;margin-top:10px}
-.receipt-export .receipt-amounts>div{border:1px solid #c8ded0;border-radius:3mm;padding:7px 5px;background:#f4faf6}
-.receipt-export .receipt-amounts strong{font-size:19px;color:#0b6245}
-.receipt-export .receipt-party strong{min-width:0;overflow-wrap:anywhere}
-.receipt-export-page{box-sizing:border-box;width:148mm;min-height:210mm;padding:10mm;background:#fff;color:#213e35;font-family:Calibri,'Segoe UI',Arial,sans-serif;direction:rtl}
-.receipt-export .receipt-amounts{display:flex}.receipt-export .receipt-amounts>div{flex:1}
+/* Shared A4 receipt typography and dimensions for PDF and PNG exports. */
+.receipt-sheet.receipt-export{box-sizing:border-box;font-size:15px;padding:12mm 14mm;box-shadow:none;width:100%;max-width:186mm;margin:0 auto;line-height:1.85;background:#fff;color:#0f172a;border:2px solid #065f46;border-radius:14px}
+.receipt-export .receipt-header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #065f46;padding-bottom:14px;margin-bottom:18px}
+.receipt-export .receipt-header h3{font-size:28px;font-weight:900;color:#064e3b;margin:0}
+.receipt-export .receipt-header p{font-size:15px;font-weight:700;color:#475569;margin:4px 0 0}
+.receipt-export .receipt-badge{font-size:20px;font-weight:900;padding:8px 22px;background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7;border-radius:10px}
+.receipt-export .receipt-meta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.receipt-export .receipt-meta-item{background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:4px}
+.receipt-export .receipt-meta-item.receipt-meta-party{background:#f0fdf4;border-color:#86efac}
+.receipt-export .receipt-meta-item span{font-size:13px;font-weight:700;color:#64748b}
+.receipt-export .receipt-meta-item strong{font-size:17px;font-weight:900;color:#0f172a;min-width:0;overflow-wrap:anywhere}
+.receipt-export .receipt-details{border:1.5px solid #cbd5e1;border-radius:12px;overflow:hidden;margin:0 0 20px}
+.receipt-export .receipt-details>div{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:16px;padding:12px 16px;break-inside:avoid;border-bottom:1px solid #e2e8f0}
+.receipt-export .receipt-details>div:nth-child(even){background:#f8fafc}
+.receipt-export .receipt-details>div:last-child{border-bottom:0}
+.receipt-export .receipt-details dt{font-size:15px;font-weight:800;color:#334155}
+.receipt-export .receipt-details dd{font-size:17px;font-weight:800;color:#0f172a;margin:0}
+.receipt-export .receipt-amounts{display:grid;grid-template-columns:1fr 1fr 1.35fr;gap:12px;margin:20px 0 24px;padding:14px;background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:12px}
+.receipt-export .receipt-amount-box{border:1.5px solid #cbd5e1;border-radius:10px;padding:12px 10px;background:#fff;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.receipt-export .receipt-amount-box span{font-size:14px;font-weight:800;color:#475569}
+.receipt-export .receipt-amount-box strong{font-size:22px;font-weight:900;color:#0f172a}
+.receipt-export .receipt-amount-box.receipt-amount-main{background:#ecfdf5;border:2px solid #059669}
+.receipt-export .receipt-amount-box.receipt-amount-main span{color:#065f46;font-size:15px}
+.receipt-export .receipt-amount-box.receipt-amount-main strong{font-size:26px;color:#047857}
+.receipt-export .receipt-words-sub{font-size:13px;font-weight:800;color:#065f46;margin-top:2px}
+.receipt-export .receipt-footer{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:34px;padding-top:12px}
+.receipt-export .receipt-footer div{border-top:1.5px dashed #64748b;padding-top:10px;text-align:center}
+.receipt-export .receipt-footer small{display:block;font-size:14px;font-weight:800;color:#475569}
+.receipt-export .receipt-footer strong{display:block;font-size:16px;font-weight:800;color:#0f172a;margin-top:4px}
+.receipt-export-page{box-sizing:border-box;width:210mm;min-height:148mm;padding:12mm;margin:0 auto;background:#fff;color:#0f172a;font-family:Calibri,'Segoe UI',Arial,sans-serif;direction:rtl}
