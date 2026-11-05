@@ -124,12 +124,12 @@ assert.ok(styleCss.includes('.col-words'), 'style.css contains .col-words styles
 assert.ok(styleCss.includes('3.3cm'), 'style.css sets rupee column width to 3.3cm');
 assert.ok(styleCss.includes('1.8cm'), 'style.css sets words column width to 1.8cm');
 assert.ok(styleCss.includes('"Bombay Black Unicode"'), 'style.css applies Bombay Black Unicode font to th.col-words');
-assert.ok(styleCss.includes('"Noto Nastaliq Urdu Print"'), 'style.css applies Noto Nastaliq Urdu Print font');
+assert.ok(styleCss.includes('Calibri'), 'style.css applies Calibri font');
 assert.ok(uiCss.includes('.print-words-text'), 'ui.css includes .print-words-text in dark mode print overrides');
 assert.ok(indexHtml.includes('کل پاکستانی'), 'index.html has کل پاکستانی in totals-row words column');
 assert.ok(styleCss.includes('.total-words-label'), 'style.css includes .total-words-label styling');
 assert.ok(uiCss.includes('.register-totals #total-balance') && uiCss.includes('"Bombay Black Unicode"'), 'ui.css applies Bombay Black Unicode to total-balance and total-aed');
-console.log('  ✓ style.css and ui.css provide complete print typography (Bombay Black Unicode header & totals text, Noto Nastaliq body and totals "کل پاکستانی"), layout (3.3cm Rupee, 1.8cm Words), and ink rules.');
+console.log('  ✓ style.css and ui.css provide complete print typography (Bombay Black Unicode header & totals text, Calibri body and totals "کل پاکستانی"), layout (3.3cm Rupee, 1.8cm Words), and ink rules.');
 
 // 11. Build & Server verification: package.json & server.js
 const pkg = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf8'));

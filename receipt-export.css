@@ -8,5 +8,5 @@
 .receipt-export .receipt-amounts>div{border:1px solid #c8ded0;border-radius:3mm;padding:7px 5px;background:#f4faf6}
 .receipt-export .receipt-amounts strong{font-size:19px;color:#0b6245}
 .receipt-export .receipt-party strong{min-width:0;overflow-wrap:anywhere}
-.receipt-export-page{box-sizing:border-box;width:148mm;min-height:210mm;padding:10mm;background:#fff;color:#213e35;font-family:'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif;direction:rtl}
+.receipt-export-page{box-sizing:border-box;width:148mm;min-height:210mm;padding:10mm;background:#fff;color:#213e35;font-family:Calibri,'Segoe UI',Arial,sans-serif;direction:rtl}
 .receipt-export .receipt-amounts{display:flex}.receipt-export .receipt-amounts>div{flex:1}

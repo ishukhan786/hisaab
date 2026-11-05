@@ -344,7 +344,7 @@ body.khata-view .top-nav-end {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  font-family: 'Bombay Black Unicode', 'Noto Nastaliq Urdu', serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   color: #123d2f;
   line-height: 1.8;
 }
@@ -1567,7 +1567,7 @@ body:not(.khata-view) dialog.khata-directory-modal {
   text-align: right;
   padding-inline-start: 16px;
   font-size: 14px;
-  font-family: 'Bombay Black Unicode', 'Noto Nastaliq Urdu', serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-weight: 700;
 }
 
@@ -1590,7 +1590,7 @@ body:not(.khata-view) dialog.khata-directory-modal {
 .khata-dir-table td:nth-child(3),
 .khata-customer-name,
 .khata-print-info-cell .info-val.info-name {
-  font-family: 'Bombay Black Unicode', 'Noto Nastaliq Urdu', serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
 }
 
 .khata-dir-table td:nth-child(5) {
@@ -1792,7 +1792,7 @@ html[data-theme="dark"] .khata-dir-table .khata-code-badge {
   margin: 0;
   font-size: 19px;
   font-weight: 800;
-  font-family: 'Bombay Black Unicode', 'Noto Nastaliq Urdu', serif !important;
+  font-family: 'Bombay Black Unicode', Calibri, 'Segoe UI', Arial, sans-serif !important;
   color: var(--khata-emerald-900, #064e3b);
   line-height: 1.55;
 }
@@ -2311,6 +2311,7 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     border: 1px solid #77887b !important;
     padding: 6px 8px !important;
     font-size: 9.5pt !important;
+    font-weight: 700 !important;
     color: #000000 !important;
   }
 
@@ -2477,7 +2478,7 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
   }
 
   .khata-print-main-title {
-    font-family: 'Bombay Black Unicode', 'Noto Nastaliq Urdu', serif !important;
+    font-family: 'Bombay Black Unicode', Calibri, 'Segoe UI', Arial, sans-serif !important;
     font-size: 17pt !important;
     font-weight: 700 !important;
     color: #0c2d20 !important;
@@ -2573,7 +2574,9 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
   }
 
   .khata-print-info-cell .info-val.info-name {
+    font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
     font-size: 11.5pt !important;
+    font-weight: 700 !important;
     color: #123d2f !important;
     line-height: 2.1 !important;
   }
@@ -2671,6 +2674,7 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     padding: 6px 6px !important;
     vertical-align: middle !important;
     font-size: 9.5pt !important;
+    font-weight: 700 !important;
   }
 
   .khata-table thead th {
@@ -2697,6 +2701,7 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
     text-align: center !important;
     font-family: var(--khata-font-num) !important;
     font-size: 9.5pt !important;
+    font-weight: 700 !important;
     color: #000000 !important;
     line-height: 1.3 !important;
   }
@@ -2710,6 +2715,7 @@ html[data-theme="dark"] .dir-tfoot-val.is-zero .dir-bal-tag {
   .khata-table td.td-detail .khata-print-val {
     text-align: right !important;
     font-family: inherit !important;
+    font-weight: 700 !important;
     white-space: pre-wrap !important;
     word-break: break-word !important;
     padding: 2px 6px !important;
@@ -3808,7 +3814,7 @@ html[data-theme="dark"] .khata-filter-badge {
     border-color: #d3e0d5 !important;
     border-bottom: 2px solid #c2d8c9 !important;
     border-inline-end: 1px solid #dce7df !important;
-    font-family: "Bombay Black Unicode", "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
+    font-family: "Bombay Black Unicode", Calibri, 'Segoe UI', Arial, sans-serif !important;
     font-weight: 700 !important;
     font-size: 13px !important;
     line-height: 2.2 !important;
@@ -4067,7 +4073,7 @@ html[data-theme="dark"] .khata-filter-badge {
     border-color: #264334 !important;
     border-bottom: 2px solid #2d5541 !important;
     border-inline-end: 1px solid #1e3529 !important;
-    font-family: "Bombay Black Unicode", "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
+    font-family: "Bombay Black Unicode", Calibri, 'Segoe UI', Arial, sans-serif !important;
     font-weight: 700 !important;
     font-size: 13px !important;
     line-height: 2.2 !important;
@@ -4376,7 +4382,7 @@ html[data-theme="dark"] .khata-filter-badge {
   html body.app-shell #register-page .paper thead th *,
   html[data-theme="dark"] body.app-shell #register-page .paper thead th,
   html[data-theme="dark"] body.app-shell #register-page .paper thead th * {
-    font-family: "Bombay Black Unicode", "Noto Nastaliq Urdu Print", "Noto Nastaliq Urdu", serif !important;
+    font-family: "Bombay Black Unicode", Calibri, 'Segoe UI', Arial, sans-serif !important;
     font-weight: 700 !important;
     font-size: 14px !important;
   }

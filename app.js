@@ -52,7 +52,7 @@
   let journalController = null;
   let khataController = null;
   /* FIX-9: PIN hash and salt fields added to state; version stays 4 */
-  let state = { journal: { date: today(), rows: [] }, version: 4, title: 'Hisaab Register', date: today(), pageNumber: 1, startSerial: 1, partySerials: Object.create(null), partyDateFilters: Object.create(null), fontSize: 13, branches: [], partyCurrencies: Object.create(null), rows: [], trash: [], lastBackupAt: null, lockedDates: [], pinCode: '', pinCodeHash: '', pinSalt: '', khatas: [] };
+  let state = { journal: { date: today(), rows: [] }, version: 4, title: 'Hisaab Register', date: today(), pageNumber: 1, startSerial: 1, partySerials: Object.create(null), partyDateFilters: Object.create(null), fontSize: 16, branches: [], partyCurrencies: Object.create(null), rows: [], trash: [], lastBackupAt: null, lockedDates: [], pinCode: '', pinCodeHash: '', pinSalt: '', khatas: [] };
   function activePageNumber() { return (Number(state.pageNumber) || 1) + (viewPage || 0); }
   const partyCurrency = name => name && Object.hasOwn(state.partyCurrencies || {}, name) && state.partyCurrencies[name] === 'afn' ? 'afn' : 'pkr';
   function currencyTotals(rows) { const sums = { pkr: 0n, afn: 0n }, invalid = new Set(); for (const r of rows) { const c = partyCurrency(r.branch), v = integerAmount(r.pkr); if (v === null) invalid.add(c); else sums[c] += v; } return { sums, invalid }; }
@@ -134,7 +134,7 @@
     let pinSalt = typeof source.pinSalt === 'string' ? source.pinSalt : '';
     /* FIX-10: Web-mode fallback preserved for test assertions */
     if (isWebMode && !pinCode && !pinCodeHash) pinCode = '1234';
-    return { journal: window.HisaabJournal.normalize(source.journal, source.date || today()), version: 4, title: titleVal, date: source.date || today(), pageNumber: Number.isInteger(source.pageNumber) && source.pageNumber > 0 ? source.pageNumber : 1, startSerial, partySerials, fontSize: Number.isInteger(source.fontSize) ? Math.max(10, Math.min(22, source.fontSize)) : 13, branches: registry, partyCurrencies, partyDateFilters, rows, trash, lastBackupAt: typeof source.lastBackupAt === 'string' && Number.isFinite(Date.parse(source.lastBackupAt)) ? source.lastBackupAt : null, lockedDates, pinCode, pinCodeHash, pinSalt, khatas: window.HisaabKhata ? window.HisaabKhata.normalize(source.khatas || []) : (Array.isArray(source.khatas) ? source.khatas : []), auth: source.auth && typeof source.auth === 'object' ? source.auth : (window.HisaabAuth ? window.HisaabAuth.getAuth() : null) };
+    return { journal: window.HisaabJournal.normalize(source.journal, source.date || today()), version: 4, title: titleVal, date: source.date || today(), pageNumber: Number.isInteger(source.pageNumber) && source.pageNumber > 0 ? source.pageNumber : 1, startSerial, partySerials, fontSize: Number.isInteger(source.fontSize) ? Math.max(15, Math.min(22, source.fontSize === 13 ? 16 : source.fontSize)) : 16, branches: registry, partyCurrencies, partyDateFilters, rows, trash, lastBackupAt: typeof source.lastBackupAt === 'string' && Number.isFinite(Date.parse(source.lastBackupAt)) ? source.lastBackupAt : null, lockedDates, pinCode, pinCodeHash, pinSalt, khatas: window.HisaabKhata ? window.HisaabKhata.normalize(source.khatas || []) : (Array.isArray(source.khatas) ? source.khatas : []), auth: source.auth && typeof source.auth === 'object' ? source.auth : (window.HisaabAuth ? window.HisaabAuth.getAuth() : null) };
   }
   let cloudReady = !isWebMode;
   let mongoSaveTimer = null, pendingMongoSave = null;
@@ -2390,7 +2390,7 @@
       ctx.save();
       ctx.direction = 'rtl';
       ctx.fillStyle = '#114b36';
-      ctx.font = "700 22px 'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',Arial,sans-serif";
+      ctx.font = "700 22px Calibri,'Segoe UI',Arial,sans-serif";
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
       ctx.fillText(reportTitle, W - pad, pad + 28);
@@ -2421,7 +2421,7 @@
         ctx.save();
         ctx.direction = 'rtl';
         ctx.fillStyle = '#436454';
-        ctx.font = "600 13px 'Noto Nastaliq Urdu',Arial,sans-serif";
+        ctx.font = "600 13px Calibri,'Segoe UI',Arial,sans-serif";
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.fillText(scopeRaw, pad + dateW + 14, pad + 28);
@@ -2455,8 +2455,8 @@
             ? "700 13.5px 'Segoe UI',Calibri,Arial,sans-serif"
             : "700 13.5px 'Segoe UI',Calibri,Arial,sans-serif";
           const unitFont = isHeaderOrFoot
-            ? "700 13px 'Noto Nastaliq Urdu',Arial,sans-serif"
-            : "700 12.5px 'Noto Nastaliq Urdu',Arial,sans-serif";
+            ? "700 13px Calibri,'Segoe UI',Arial,sans-serif"
+            : "700 12.5px Calibri,'Segoe UI',Arial,sans-serif";
           ctx.save();
           ctx.textBaseline = 'middle';
           ctx.textAlign = 'center';
@@ -2481,7 +2481,7 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = isUrduCol
-          ? (isHeaderOrFoot ? "700 14.5px 'Noto Nastaliq Urdu',Arial,sans-serif" : "700 13.5px 'Noto Nastaliq Urdu',Arial,sans-serif")
+          ? (isHeaderOrFoot ? "700 14.5px Calibri,'Segoe UI',Arial,sans-serif" : "700 13.5px Calibri,'Segoe UI',Arial,sans-serif")
           : (isHeaderOrFoot ? "700 14.5px 'Segoe UI',Calibri,Arial,sans-serif" : "700 14px 'Segoe UI',Calibri,Arial,sans-serif");
         ctx.fillText(ln, b.center, centerY + 1);
         ctx.restore();
@@ -2512,7 +2512,7 @@
         ctx.save();
         ctx.direction = 'rtl';
         ctx.fillStyle = '#12402f';
-        ctx.font = "700 14px 'Noto Nastaliq Urdu',Arial,sans-serif";
+        ctx.font = "700 14px Calibri,'Segoe UI',Arial,sans-serif";
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(headers[c] || '', b.center, y + thH / 2 + 2);
@@ -2530,7 +2530,7 @@
           ctx.save();
           ctx.direction = 'rtl';
           ctx.fillStyle = '#557062';
-          ctx.font = "600 13px 'Noto Nastaliq Urdu',Arial,sans-serif";
+          ctx.font = "600 13px Calibri,'Segoe UI',Arial,sans-serif";
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(cells[0], W / 2, y + rowH / 2 + 2);
