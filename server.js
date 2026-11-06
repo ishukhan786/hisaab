@@ -18,13 +18,27 @@ const crypto = require('node:crypto');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
-const AUTH_SECRET = process.env.HISAAB_AUTH_SECRET || 'change-this-hisaab-auth-secret';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL);
+const ENV_AUTH_SECRET = String(process.env.HISAAB_AUTH_SECRET || '').trim();
+const INSECURE_AUTH_SECRETS = new Set(['', 'change-this-hisaab-auth-secret', 'change-this-to-a-long-random-secret']);
+// Fail fast: a shared/placeholder session secret would let anyone forge login cookies.
+if (IS_PRODUCTION && (INSECURE_AUTH_SECRETS.has(ENV_AUTH_SECRET) || ENV_AUTH_SECRET.length < 16)) {
+  console.error('FATAL: Set HISAAB_AUTH_SECRET to a strong random value (at least 16 characters) before running in production.');
+  process.exit(1);
+}
+const AUTH_SECRET = ENV_AUTH_SECRET || 'change-this-hisaab-auth-secret';
 const OWNER_USERNAME = String(process.env.HISAAB_USERNAME || 'admin').trim();
 const OWNER_PASSWORD = String(process.env.HISAAB_PASSWORD || 'admin');
 const OWNER_RECOVERY_PIN = String(process.env.HISAAB_RECOVERY_PIN || '1234').trim();
+if (IS_PRODUCTION && OWNER_PASSWORD === 'admin') {
+  console.warn('WARNING: HISAAB_PASSWORD is still the default "admin" in production. Change it immediately.');
+}
 
 // Middleware
-app.use(cors());
+// CORS: same-origin requests are always fine. In production, only origins listed in
+// HISAAB_ALLOWED_ORIGINS may call the API cross-origin (localhost stays open for dev/testing).
+const ALLOWED_ORIGINS = String(process.env.HISAAB_ALLOWED_ORIGINS || '').split(',').map(v => v.trim()).filter(Boolean);
+app.use(cors(IS_PRODUCTION ? { origin: (origin, callback) => callback(null, !origin || ALLOWED_ORIGINS.includes(origin)) } : {}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 

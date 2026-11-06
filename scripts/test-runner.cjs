@@ -9,6 +9,7 @@ console.log('==================================================\n');
 const testSuites = [
   { name: 'External Backup Engine', script: 'tests/external-backup.cjs' },
   { name: 'Security, Asset Shield & OCC', script: 'tests/security-suite.cjs' },
+  { name: 'Server Security Hardening', script: 'tests/server-hardening.cjs' },
   { name: 'Web Unified API & Open Access', script: 'tests/web-unified-api.cjs' },
   { name: 'Authentication & Access Security', script: 'tests/web-pin-flow.cjs' },
   { name: 'Dark Mode / Night Theme', script: 'tests/theme-test.cjs' },

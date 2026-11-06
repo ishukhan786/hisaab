@@ -4,6 +4,17 @@
   const isWebMode = !nativeStorage && window.location.protocol.startsWith('http');
   const KEY = 'hisaab-register-v1';
   const $ = id => document.getElementById(id);
+  /* Global safety net: surface unexpected runtime errors instead of failing silently. */
+  let lastGlobalErrorToast = 0;
+  function reportGlobalError(kind, detail) {
+    try { console.error(`[Hisaab] ${kind}:`, detail); } catch (_) {}
+    const now = Date.now();
+    if (now - lastGlobalErrorToast < 8000 || typeof window.showToast !== 'function') return;
+    lastGlobalErrorToast = now;
+    window.showToast('غیر متوقع مسئلہ پیش آیا۔ صفحہ دوبارہ کھولنے پر محفوظ ڈیٹا بحال رہے گا۔', 'error', 6000);
+  }
+  window.addEventListener('error', event => { if (event && event.message) reportGlobalError('uncaught', event.message); });
+  window.addEventListener('unhandledrejection', event => { const reason = event && event.reason; reportGlobalError('promise', reason && reason.message ? reason.message : String(reason || '')); });
   let storageRevision = 0, nativeNeedsInit = false, legacySource = null, storageReadFailed = false, unsavedNative = false;
   let autoBackupTimer = null, autoBackupHandle = null, diskWriteBusy = false, diskWritePending = false, diskSyncTimer = null, pendingDiskHandle = null, unsavedDisk = false;
   const retrySave = document.createElement('button'); retrySave.type = 'button'; retrySave.id = 'retry-save'; retrySave.textContent = 'دوبارہ محفوظ کریں'; retrySave.hidden = true;
@@ -52,7 +63,7 @@
   let journalController = null;
   let khataController = null;
   /* FIX-9: PIN hash and salt fields added to state; version stays 4 */
-  let state = { journal: { date: today(), rows: [] }, version: 4, title: 'Hisaab Register', date: today(), pageNumber: 1, startSerial: 1, partySerials: Object.create(null), partyDateFilters: Object.create(null), fontSize: 16, branches: [], partyCurrencies: Object.create(null), rows: [], trash: [], lastBackupAt: null, lockedDates: [], pinCode: '', pinCodeHash: '', pinSalt: '', khatas: [] };
+  let state = { journal: { date: today(), rows: [] }, version: 4, title: 'Hisaab Register', date: today(), pageNumber: 1, startSerial: 1, partySerials: Object.create(null), partyDateFilters: Object.create(null), fontSize: 16, branches: [], partyCurrencies: Object.create(null), rows: [], lastBackupAt: null, lockedDates: [], pinCode: '', pinCodeHash: '', pinSalt: '', khatas: [] };
   function activePageNumber() { return (Number(state.pageNumber) || 1) + (viewPage || 0); }
   const partyCurrency = name => name && Object.hasOwn(state.partyCurrencies || {}, name) && state.partyCurrencies[name] === 'afn' ? 'afn' : 'pkr';
   function currencyTotals(rows) { const sums = { pkr: 0n, afn: 0n }, invalid = new Set(); for (const r of rows) { const c = partyCurrency(r.branch), v = integerAmount(r.pkr); if (v === null) invalid.add(c); else sums[c] += v; } return { sums, invalid }; }
@@ -105,8 +116,6 @@
     }
     const rows = source.rows.map(convert);
     if (source.version === 3) rows.reverse();
-    if (source.trash !== undefined && (!Array.isArray(source.trash) || source.trash.length > 20)) throw Error('Invalid undo');
-    const trash = [];
     const startSerial = Number.isInteger(source.startSerial) && source.startSerial > 0 ? source.startSerial : 1;
     const partySerials = Object.create(null);
     if (source.partySerials && typeof source.partySerials === 'object') {
@@ -134,7 +143,7 @@
     let pinSalt = typeof source.pinSalt === 'string' ? source.pinSalt : '';
     /* FIX-10: Web-mode fallback preserved for test assertions */
     if (isWebMode && !pinCode && !pinCodeHash) pinCode = '1234';
-    return { journal: window.HisaabJournal.normalize(source.journal, source.date || today()), version: 4, title: titleVal, date: source.date || today(), pageNumber: Number.isInteger(source.pageNumber) && source.pageNumber > 0 ? source.pageNumber : 1, startSerial, partySerials, fontSize: Number.isInteger(source.fontSize) ? Math.max(15, Math.min(22, source.fontSize === 13 ? 16 : source.fontSize)) : 16, branches: registry, partyCurrencies, partyDateFilters, rows, trash, lastBackupAt: typeof source.lastBackupAt === 'string' && Number.isFinite(Date.parse(source.lastBackupAt)) ? source.lastBackupAt : null, lockedDates, pinCode, pinCodeHash, pinSalt, khatas: window.HisaabKhata ? window.HisaabKhata.normalize(source.khatas || []) : (Array.isArray(source.khatas) ? source.khatas : []), auth: source.auth && typeof source.auth === 'object' ? source.auth : (window.HisaabAuth ? window.HisaabAuth.getAuth() : null) };
+    return { journal: window.HisaabJournal.normalize(source.journal, source.date || today()), version: 4, title: titleVal, date: source.date || today(), pageNumber: Number.isInteger(source.pageNumber) && source.pageNumber > 0 ? source.pageNumber : 1, startSerial, partySerials, fontSize: Number.isInteger(source.fontSize) ? Math.max(15, Math.min(22, source.fontSize === 13 ? 16 : source.fontSize)) : 16, branches: registry, partyCurrencies, partyDateFilters, rows, lastBackupAt: typeof source.lastBackupAt === 'string' && Number.isFinite(Date.parse(source.lastBackupAt)) ? source.lastBackupAt : null, lockedDates, pinCode, pinCodeHash, pinSalt, khatas: window.HisaabKhata ? window.HisaabKhata.normalize(source.khatas || []) : (Array.isArray(source.khatas) ? source.khatas : []), auth: source.auth && typeof source.auth === 'object' ? source.auth : (window.HisaabAuth ? window.HisaabAuth.getAuth() : null) };
   }
   let cloudReady = !isWebMode;
   let mongoSaveTimer = null, pendingMongoSave = null;
@@ -1241,7 +1250,6 @@
     updatePartyTabsActive();
   }
   function updateBackup() { const at = state.lastBackupAt; document.getElementById("backup-status").dataset.backupState = at && Date.now() - Date.parse(at) <= 7 * 86400000 ? "ready" : "pending"; const overdue = !at || Date.now() - Date.parse(at) > 7 * 86400000; $('backup-status').textContent = at ? `آخری دستی بیک اَپ ڈاؤن لوڈ: ${new Date(at).toLocaleString('en-GB')}${overdue ? ' — نیا بیک اَپ لے لیں۔' : ''}` : 'ابھی دستی بیک اَپ ڈاؤن لوڈ نہیں کیا گیا۔ چاہیں تو الگ کاپی ڈاؤن لوڈ کریں۔'; }
-  function updateUndo() { if ($('undo-bar')) $('undo-bar').hidden = true; }
   const placeSuggestMenu = document.createElement('div');
   placeSuggestMenu.className = 'place-suggest-menu no-print';
   placeSuggestMenu.hidden = true;
@@ -1622,7 +1630,7 @@
     const currPage = activePageNumber();
     if ($('page-no-input')) $('page-no-input').value = currPage;
     if ($('page-no-val')) $('page-no-val').textContent = currPage;
-    applyFont(); updateBranches(); applyFilter(); updateUndo(); updateBackup(); journalController?.reset(); initAuditPanel();
+    applyFont(); updateBranches(); applyFilter(); updateBackup(); journalController?.reset(); initAuditPanel();
   }
   function focusRow(row) {
     const tr = rowNodes.get(row.id);
@@ -1654,7 +1662,6 @@
     applyFilter();
     focusRow(row);
   }
-  if ($('undo')) $('undo').onclick = () => {};
   const DISK_DB_NAME = 'hisaab-disk-db-v1', DISK_STORE = 'handles', DISK_KEY = 'primary';
   function openHandleDB() {
     return new Promise((resolve, reject) => {
@@ -2621,11 +2628,6 @@
     state.rows.forEach(r => {
       if (r.branch === name) r.branch = '';
     });
-    if (state.trash && state.trash.length) {
-      state.trash.forEach(t => {
-        if (t.row && t.row.branch === name) t.row.branch = '';
-      });
-    }
     state.branches = state.branches.filter(n => n !== name);
     if (state.partyCurrencies && Object.hasOwn(state.partyCurrencies, name)) {
       delete state.partyCurrencies[name];
@@ -2656,7 +2658,7 @@
       const div = document.createElement('div'); div.className = 'party-item'; const input = document.createElement('input'); input.value = name; input.maxLength = 300; input.setAttribute('aria-label', 'پارٹی کا نام تبدیل کریں'); const count = document.createElement('small'); count.textContent = state.rows.filter(r => r.branch === name && populated(r)).length + ' اندراجات';
       const currSelect = document.createElement('select'); currSelect.className = 'party-currency-select'; currSelect.append(makeOption('pkr', 'روپیہ (PKR)'), makeOption('afn', 'افغانی (AFN)')); currSelect.value = partyCurrency(name);
       currSelect.onchange = () => { if (state.rows.some(r => r.branch === name && populated(r))) { currSelect.value = partyCurrency(name); $('branch-error').textContent = 'اس پارٹی کی انٹریاں موجود ہیں؛ نئی کرنسی کے لیے الگ پارٹی بنائیں۔'; return; } if (!state.partyCurrencies) state.partyCurrencies = {}; state.partyCurrencies[name] = currSelect.value; save(); updateBranches(); applyFilter(); $('branch-error').textContent = name + ' کی کرنسی اب ' + (currSelect.value === 'afn' ? 'افغانی' : 'روپیہ') + ' ہے۔'; };
-      const rename = document.createElement('button'); rename.textContent = 'نام محفوظ کریں'; rename.onclick = () => { const next = cleanName(input.value); if (!next) { $('branch-error').textContent = 'پارٹی کا نام لکھیں۔'; return; } if (state.branches.some(n => n !== name && nameKey(n) === nameKey(next))) { $('branch-error').textContent = 'یہ نام پہلے سے موجود ہے۔'; return; } state.branches[state.branches.indexOf(name)] = next; if (next !== name && state.partyCurrencies && Object.hasOwn(state.partyCurrencies, name)) { state.partyCurrencies[next] = state.partyCurrencies[name]; delete state.partyCurrencies[name]; } if (next !== name && state.partySerials && Object.hasOwn(state.partySerials, name)) { state.partySerials[next] = state.partySerials[name]; delete state.partySerials[name]; } if (next !== name && state.partyDateFilters && Object.hasOwn(state.partyDateFilters, 'b:' + name)) { state.partyDateFilters['b:' + next] = state.partyDateFilters['b:' + name]; delete state.partyDateFilters['b:' + name]; } for (const row of [...state.rows, ...state.trash.map(t => t.row)]) if (row.branch === name) row.branch = next; if (selectedBranch === 'b:' + name) selectedBranch = 'b:' + next; save(); updateBranches(); applyFilter(); renderBranchList(); $('branch-error').textContent = 'نام اور متعلقہ انٹریاں اپ ڈیٹ ہو گئیں۔'; };
+      const rename = document.createElement('button'); rename.textContent = 'نام محفوظ کریں'; rename.onclick = () => { const next = cleanName(input.value); if (!next) { $('branch-error').textContent = 'پارٹی کا نام لکھیں۔'; return; } if (state.branches.some(n => n !== name && nameKey(n) === nameKey(next))) { $('branch-error').textContent = 'یہ نام پہلے سے موجود ہے۔'; return; } state.branches[state.branches.indexOf(name)] = next; if (next !== name && state.partyCurrencies && Object.hasOwn(state.partyCurrencies, name)) { state.partyCurrencies[next] = state.partyCurrencies[name]; delete state.partyCurrencies[name]; } if (next !== name && state.partySerials && Object.hasOwn(state.partySerials, name)) { state.partySerials[next] = state.partySerials[name]; delete state.partySerials[name]; } if (next !== name && state.partyDateFilters && Object.hasOwn(state.partyDateFilters, 'b:' + name)) { state.partyDateFilters['b:' + next] = state.partyDateFilters['b:' + name]; delete state.partyDateFilters['b:' + name]; } for (const row of state.rows) if (row.branch === name) row.branch = next; if (selectedBranch === 'b:' + name) selectedBranch = 'b:' + next; save(); updateBranches(); applyFilter(); renderBranchList(); $('branch-error').textContent = 'نام اور متعلقہ انٹریاں اپ ڈیٹ ہو گئیں۔'; };
       const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'delete-party-btn'; remove.textContent = '🗑 حذف کریں'; remove.title = `پارٹی "${name}" حذف کریں`; remove.onclick = () => deleteParty(name); div.append(input, currSelect, count, rename, remove); $('branch-list').append(div);
     }
   }
