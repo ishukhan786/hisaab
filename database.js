@@ -92,6 +92,7 @@ function validateState(input) {
     }
   };
   data.rows.forEach(r => registerRow(r, false));
+  if (data.trash === undefined) data.trash = [];
   if (!Array.isArray(data.trash) || data.trash.length > 20) invalid('trash');
   for (const item of data.trash) {
     if (!item || !Number.isInteger(item.index) || item.index < 0) invalid('trash index');

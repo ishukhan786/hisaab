@@ -63,7 +63,7 @@
   let journalController = null;
   let khataController = null;
   /* FIX-9: PIN hash and salt fields added to state; version stays 4 */
-  let state = { journal: { date: today(), rows: [] }, version: 4, title: 'Hisaab Register', date: today(), pageNumber: 1, startSerial: 1, partySerials: Object.create(null), partyDateFilters: Object.create(null), fontSize: 16, branches: [], partyCurrencies: Object.create(null), rows: [], lastBackupAt: null, lockedDates: [], pinCode: '', pinCodeHash: '', pinSalt: '', khatas: [] };
+  let state = { journal: { date: today(), rows: [] }, version: 4, title: 'Hisaab Register', date: today(), pageNumber: 1, startSerial: 1, partySerials: Object.create(null), partyDateFilters: Object.create(null), fontSize: 16, branches: [], partyCurrencies: Object.create(null), rows: [], trash: [], lastBackupAt: null, lockedDates: [], pinCode: '', pinCodeHash: '', pinSalt: '', khatas: [] };
   function activePageNumber() { return (Number(state.pageNumber) || 1) + (viewPage || 0); }
   const partyCurrency = name => name && Object.hasOwn(state.partyCurrencies || {}, name) && state.partyCurrencies[name] === 'afn' ? 'afn' : 'pkr';
   function currencyTotals(rows) { const sums = { pkr: 0n, afn: 0n }, invalid = new Set(); for (const r of rows) { const c = partyCurrency(r.branch), v = integerAmount(r.pkr); if (v === null) invalid.add(c); else sums[c] += v; } return { sums, invalid }; }
@@ -143,7 +143,7 @@
     let pinSalt = typeof source.pinSalt === 'string' ? source.pinSalt : '';
     /* FIX-10: Web-mode fallback preserved for test assertions */
     if (isWebMode && !pinCode && !pinCodeHash) pinCode = '1234';
-    return { journal: window.HisaabJournal.normalize(source.journal, source.date || today()), version: 4, title: titleVal, date: source.date || today(), pageNumber: Number.isInteger(source.pageNumber) && source.pageNumber > 0 ? source.pageNumber : 1, startSerial, partySerials, fontSize: Number.isInteger(source.fontSize) ? Math.max(15, Math.min(22, source.fontSize === 13 ? 16 : source.fontSize)) : 16, branches: registry, partyCurrencies, partyDateFilters, rows, lastBackupAt: typeof source.lastBackupAt === 'string' && Number.isFinite(Date.parse(source.lastBackupAt)) ? source.lastBackupAt : null, lockedDates, pinCode, pinCodeHash, pinSalt, khatas: window.HisaabKhata ? window.HisaabKhata.normalize(source.khatas || []) : (Array.isArray(source.khatas) ? source.khatas : []), auth: source.auth && typeof source.auth === 'object' ? source.auth : (window.HisaabAuth ? window.HisaabAuth.getAuth() : null) };
+    return { journal: window.HisaabJournal.normalize(source.journal, source.date || today()), version: 4, title: titleVal, date: source.date || today(), pageNumber: Number.isInteger(source.pageNumber) && source.pageNumber > 0 ? source.pageNumber : 1, startSerial, partySerials, fontSize: Number.isInteger(source.fontSize) ? Math.max(15, Math.min(22, source.fontSize === 13 ? 16 : source.fontSize)) : 16, branches: registry, partyCurrencies, partyDateFilters, rows, trash: [], lastBackupAt: typeof source.lastBackupAt === 'string' && Number.isFinite(Date.parse(source.lastBackupAt)) ? source.lastBackupAt : null, lockedDates, pinCode, pinCodeHash, pinSalt, khatas: window.HisaabKhata ? window.HisaabKhata.normalize(source.khatas || []) : (Array.isArray(source.khatas) ? source.khatas : []), auth: source.auth && typeof source.auth === 'object' ? source.auth : (window.HisaabAuth ? window.HisaabAuth.getAuth() : null) };
   }
   let cloudReady = !isWebMode;
   let mongoSaveTimer = null, pendingMongoSave = null;
@@ -3036,6 +3036,8 @@
     const syncTopNavH = () => document.documentElement.style.setProperty('--top-nav-h', topNavEl.offsetHeight + 'px');
     syncTopNavH();
     new ResizeObserver(syncTopNavH).observe(topNavEl);
+    // The app shell is hidden until login, so re-measure once it becomes visible.
+    window.addEventListener('hisaab:unlocked', syncTopNavH);
   }
   window.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); $('print').click(); }

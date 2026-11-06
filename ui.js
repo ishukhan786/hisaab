@@ -90,20 +90,13 @@
   function updateThemeUI(theme) {
     const isDark = theme === 'dark';
     const toggleBtn = document.getElementById('theme-toggle');
-    const menuBtn = document.getElementById('menu-theme-toggle');
     if (toggleBtn) {
       const content = document.createElement('span');
       content.className = 'button-content';
-      content.append(icon(isDark ? 'sun' : 'moon'), document.createTextNode(isDark ? 'ڈے موڈ' : 'نائٹ موڈ'));
+      content.append(icon(isDark ? 'sun' : 'moon'));
       toggleBtn.replaceChildren(content);
       toggleBtn.title = isDark ? 'ڈے موڈ تبدیل کریں (Alt+T)' : 'نائٹ موڈ تبدیل کریں (Alt+T)';
       toggleBtn.setAttribute('aria-label', toggleBtn.title);
-    }
-    if (menuBtn) {
-      const content = document.createElement('span');
-      content.className = 'button-content';
-      content.append(icon(isDark ? 'sun' : 'moon'), document.createTextNode(isDark ? '☀️ ڈے موڈ (لائٹ تھیم)' : '🌙 نائٹ موڈ (ڈارک تھیم)'));
-      menuBtn.replaceChildren(content);
     }
   }
 
@@ -135,9 +128,6 @@
 
   const toggleBtn = document.getElementById('theme-toggle');
   if (toggleBtn) toggleBtn.addEventListener('click', toggleTheme);
-
-  const menuThemeBtn = document.getElementById('menu-theme-toggle');
-  if (menuThemeBtn) menuThemeBtn.addEventListener('click', toggleTheme);
 
   window.addEventListener('storage', e => {
     if (e.key === 'hisaab-theme' && (e.newValue === 'dark' || e.newValue === 'light')) {

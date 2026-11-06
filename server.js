@@ -13,6 +13,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('node:path');
+const fs = require('node:fs');
+const zlib = require('node:zlib');
 const crypto = require('node:crypto');
 
 const app = express();
@@ -95,22 +97,52 @@ const ALLOWED_ROOT_FILES = new Set([
   'urdu-amount.js'
 ]);
 
-function sendIndex(res) {
-  return res.sendFile(path.join(__dirname, 'index.html'));
+// Zero-dependency gzip for the text frontend (CSS/JS/HTML). The gzipped buffer is cached
+// in memory and invalidated by mtime, so edits during development are still served fresh.
+const COMPRESSIBLE_EXT = new Set(['.css', '.js', '.html', '.json', '.svg']);
+const gzipCache = new Map();
+function gzippedFile(absPath) {
+  const stat = fs.statSync(absPath);
+  const cached = gzipCache.get(absPath);
+  if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) return cached.buf;
+  const buf = zlib.gzipSync(fs.readFileSync(absPath), { level: 6 });
+  gzipCache.set(absPath, { mtimeMs: stat.mtimeMs, size: stat.size, buf });
+  return buf;
+}
+function sendStaticFile(req, res, absPath, cacheControl) {
+  res.set('Cache-Control', cacheControl);
+  const ext = path.extname(absPath).toLowerCase();
+  if (COMPRESSIBLE_EXT.has(ext) && /\bgzip\b/i.test(String(req.headers['accept-encoding'] || ''))) {
+    try {
+      res.set('Content-Encoding', 'gzip');
+      res.set('Vary', 'Accept-Encoding');
+      res.type(ext);
+      return res.send(gzippedFile(absPath));
+    } catch (_) { /* fall back to an uncompressed send */ }
+  }
+  return res.sendFile(absPath);
+}
+
+function sendIndex(req, res) {
+  return sendStaticFile(req, res, path.join(__dirname, 'index.html'), 'no-cache');
 }
 
 app.get('/:filename', (req, res, next) => {
   const filename = req.params.filename;
-  if (filename === 'index.html') return sendIndex(res);
+  if (filename === 'index.html') return sendIndex(req, res);
   if (ALLOWED_ROOT_FILES.has(filename)) {
-    return res.sendFile(path.join(__dirname, filename));
+    // Versioned assets (?v=<release>) are safe to cache forever; HTML must revalidate.
+    const cacheControl = filename.endsWith('.html') ? 'no-cache'
+      : req.query.v ? 'public, max-age=31536000, immutable'
+      : 'public, max-age=3600';
+    return sendStaticFile(req, res, path.join(__dirname, filename), cacheControl);
   }
   next();
 });
 
 // Serve index.html on root
 app.get('/', (req, res) => {
-  sendIndex(res);
+  sendIndex(req, res);
 });
 
 // MongoDB connection caching for Serverless (Vercel) & local dev

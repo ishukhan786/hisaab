@@ -189,6 +189,9 @@
       el.inert = false;
     });
 
+    // Let the app shell re-measure layout-dependent values now that it is visible.
+    window.dispatchEvent(new Event('hisaab:unlocked'));
+
     resetInactivity();
   }
 
@@ -489,6 +492,7 @@
     });
 
     $('btn-goto-recovery')?.addEventListener('click', () => {
+      document.body.classList.remove('auth-startup-pending');
       hideAllCards();
       const recCard = $('auth-recovery-card');
       if (recCard) {
@@ -662,7 +666,8 @@
     }
 
     lockApp();
-    document.body.classList.remove('auth-startup-pending');
+    // Keep body.auth-startup-pending until unlock so the heavy app shell stays out of
+    // layout while the login card is shown; unlockApp() removes the class.
 
     if (window.location.protocol.startsWith('http')) {
       window.fetch('/api/auth/status', { credentials: 'same-origin' })

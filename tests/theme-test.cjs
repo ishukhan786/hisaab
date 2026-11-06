@@ -13,7 +13,7 @@ const uiCss = fs.readFileSync(path.resolve('ui.css'), 'utf8');
 assert.ok(html.includes('<meta name="color-scheme" content="light dark">'), 'Meta color-scheme present');
 assert.ok(html.includes('id="meta-theme-color"'), 'Meta theme-color present');
 assert.ok(html.includes('id="theme-toggle"'), 'Theme toggle button present in top navigation');
-assert.ok(html.includes('id="menu-theme-toggle"'), 'Theme toggle option present in More menu');
+assert.ok(!html.includes('id="menu-theme-toggle"'), 'Theme toggle option removed from More menu');
 assert.ok(html.includes('localStorage.getItem(\'hisaab-theme\')'), 'Anti-FOUC script present in head');
 console.log('  ✓ index.html has complete meta, anti-FOUC script, and theme toggle buttons');
 
