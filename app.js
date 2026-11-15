@@ -2678,7 +2678,7 @@
   function openReceipt(row, serial) {
     try {
       if (!canOutput([row], false)) return;
-      receiptSelection = { serial: String(serial), date: row.entryDate || state.date || today(), branch: row.branch || 'بغیر پارٹی' };
+      receiptSelection = { serial: String(serial), date: row.entryDate || state.date || today(), branch: row.branch || 'بغیر پارٹی', mobile: row.mobile || '' };
       const safeFmt = v => { const n = integerAmount(v); return n !== null ? formatted(n) : (v || '0'); };
       const isAfn = partyCurrency(row.branch) === 'afn';
       const formattedPkr = safeFmt(row.pkr);
@@ -2725,6 +2725,7 @@
         $('receipt-copy').disabled = !window.electronAPI?.copyReceiptPNG && !(window.ClipboardItem && navigator.clipboard?.write);
         $('receipt-copy').title = $('receipt-copy').disabled ? 'اس براؤزر میں تصویر کاپی دستیاب نہیں؛ PNG ڈاؤن لوڈ کریں' : 'تصویر کاپی کریں';
       }
+      if ($('receipt-whatsapp')) $('receipt-whatsapp').hidden = false;
       const d = $('receipt-dialog');
       if (d) {
         try { if (d.open) d.close(); } catch (_) {}
@@ -2803,6 +2804,61 @@
       $('receipt-status').textContent = result.status === 'copied' ? '✓ رسید کی تصویر کاپی ہو گئی (WhatsApp میں Ctrl+V کریں)' : result.status === 'busy' ? 'پہلی تصویر مکمل ہونے دیں۔' : 'تصویر کاپی نہیں ہو سکی؛ دوبارہ کوشش کریں۔';
     } catch { $('receipt-status').textContent = 'تصویر کاپی نہیں ہو سکی؛ دوبارہ کوشش کریں۔'; }
     finally { document.body.inert = false; }
+  };
+
+  if ($('receipt-whatsapp')) $('receipt-whatsapp').onclick = async () => {
+    if (!receiptSelection || document.body.inert) return;
+    const values = {};
+    $('receipt-paper').querySelectorAll('[data-receipt]').forEach(el => { values[el.dataset.receipt] = el.textContent; });
+    const isThermal = $('tab-receipt-thermal')?.classList.contains('active');
+    const normalizeWaPhone = raw => {
+      let d = englishDigits(String(raw || '')).replace(/\D/g, '');
+      if (!d) return '';
+      if (d.startsWith('00')) d = d.slice(2);
+      else if (d.startsWith('03') && d.length === 11) d = '92' + d.slice(1);
+      else if (d.startsWith('05') && d.length === 10) d = '971' + d.slice(1);
+      return d;
+    };
+    const phone = normalizeWaPhone(receiptSelection.mobile || values.mobile);
+    const lines = [
+      `*${values.title || 'حساب رسید'}*`,
+      `رسید نمبر: ${values.serial || ''}`,
+      `تاریخ: ${values.date || ''}`,
+      `پارٹی: ${values.branch || ''}`,
+      values.sender && values.sender !== '—' ? `ارسال کنندہ: ${values.sender}` : '',
+      values.receiver && values.receiver !== '—' ? `وصول کنندہ: ${values.receiver}` : '',
+      values.place && values.place !== '—' ? `مقام: ${values.place}` : '',
+      `درہم (AED): ${values.aed || '0'}`,
+      `${values.currency || 'روپیہ'}: ${values.pkr || '0'} ${values['pkr-words'] || ''}`.trim()
+    ].filter(Boolean).join('\n');
+    document.body.inert = true;
+    $('receipt-status').textContent = 'WhatsApp کے لیے رسید تیار ہو رہی ہے…';
+    let copied = false;
+    try {
+      if (!isThermal && window.electronAPI?.copyReceiptPNG) {
+        const res = await window.electronAPI.copyReceiptPNG(values);
+        copied = res?.status === 'copied';
+      } else if (window.ClipboardItem && navigator.clipboard?.write && window.createReceiptPNG) {
+        const image = await window.createReceiptPNG(values, { isThermal });
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': image })]);
+        copied = true;
+      }
+    } catch (_) {}
+    try {
+      if (window.electronAPI?.openWhatsApp) {
+        await window.electronAPI.openWhatsApp(phone, lines);
+      } else {
+        const url = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(lines)}` : `https://wa.me/?text=${encodeURIComponent(lines)}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+      $('receipt-status').textContent = copied
+        ? '✓ رسید کاپی ہو گئی — WhatsApp چیٹ میں Ctrl+V کر کے تصویر بھیجیں'
+        : '✓ WhatsApp چیٹ کھل گئی ہے';
+    } catch (_) {
+      $('receipt-status').textContent = 'WhatsApp نہیں کھل سکا؛ تصویر کاپی کر کے دستی طور پر بھیجیں۔';
+    } finally {
+      document.body.inert = false;
+    }
   };
 
   function prepareReceiptOutput() {

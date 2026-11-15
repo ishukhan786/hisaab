@@ -328,7 +328,7 @@ html body.app-shell .output-panel { position: fixed !important; z-index: 2000 !i
  .paper thead th.col-words,.paper tbody td.col-words,.paper tfoot td.col-words,.col-words{display:table-cell!important;width:1.8cm!important;max-width:1.8cm!important;min-width:1.8cm!important;text-align:center!important;vertical-align:middle!important}
  .paper tbody td.col-words,.print-words-text{font-family:Calibri,'Segoe UI',Arial,sans-serif!important;font-weight:700!important;font-synthesis:none!important;-webkit-text-stroke:0!important;text-shadow:none!important;color:#000000!important}
  .paper tbody td,.paper #rows td,.paper #rows .print-value,.order-print-section td,.order-print-section .print-value{font-weight:700!important;color:#000000!important}
- .paper #rows>tr>td,.paper #rows td,.order-print-section tbody td{height:1cm!important;min-height:1cm!important}
+ .paper #rows>tr>td,.paper #rows td,.order-print-section tbody td{height:1.05cm!important;min-height:1.05cm!important}
  .paper tfoot.register-totals .totals-row > td.col-words, .total-words-label{font-family:'Bombay Black Unicode',Calibri,'Segoe UI',Arial,sans-serif!important;font-size:11.5px!important;font-weight:700!important;text-align:center!important;vertical-align:middle!important;line-height:2.2!important;white-space:nowrap!important;color:#000000!important}
  .order-print-section td.col-mobile,.order-print-section .col-mobile .print-value{white-space:nowrap!important;text-align:center;direction:ltr}
  .order-print-section .print-value{display:block!important;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;padding:2px 4px}
@@ -2052,7 +2052,7 @@ html[data-theme="dark"] .app-shell #summary-open:hover {
   color: #ffffff !important;
 }
 
-html[data-theme="dark"] .app-shell :is(#theme-toggle, #menu-theme-toggle) {
+html[data-theme="dark"] .app-shell #theme-toggle {
   color: #fde047 !important;
   border-color: #4b6653 !important;
 }
@@ -2980,13 +2980,7 @@ html[data-theme="dark"] .range-drawer input {
   color: #e5efe8 !important;
 }
 
-/* Undo & Warning Banners */
-html[data-theme="dark"] .undo-bar {
-  background: #172d22 !important;
-  border-color: #274d3a !important;
-  color: #6ee7b7 !important;
-}
-
+/* Warning Banners */
 html[data-theme="dark"] .duplicate-warning {
   background: #2a2211 !important;
   border-color: #52401c !important;
@@ -3947,7 +3941,6 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
 
   /* 22. MORE MENU ITEM COLORS: MATCHED TO NIGHT MODE TRIGGER BUTTON (MIDNIGHT OBSIDIAN & GOLD) */
   html body.app-shell .more-menu .menu button,
-  html body.app-shell .more-menu .menu button#menu-theme-toggle,
   html body.app-shell .more-menu .menu button#manage-branches,
   html body.app-shell .more-menu .menu button#reset-filters,
   html body.app-shell .more-menu .menu button:is(#account-settings-btn, #pin-settings-btn),
@@ -3963,12 +3956,8 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
     box-shadow: 0 3px 10px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
     transition: all .18s cubic-bezier(.22, 1, .36, 1) !important;
   }
-  html body.app-shell .more-menu .menu button#menu-theme-toggle {
-    color: #facc15 !important;
-  }
 
   html body.app-shell .more-menu .menu button:hover:not(:disabled),
-  html body.app-shell .more-menu .menu button#menu-theme-toggle:hover:not(:disabled),
   html body.app-shell .more-menu .menu button#manage-branches:hover:not(:disabled),
   html body.app-shell .more-menu .menu button#reset-filters:hover:not(:disabled),
   html body.app-shell .more-menu .menu button:is(#account-settings-btn, #pin-settings-btn):hover:not(:disabled),
@@ -5463,7 +5452,6 @@ html[data-theme="dark"] body.app-shell .more-menu .menu button:hover:not(:disabl
 
 /* Unified More menu buttons in Dark Mode: Matched to Night Mode Trigger Button (Midnight Obsidian & Gold) */
 html[data-theme="dark"] body.app-shell .more-menu .menu button,
-html[data-theme="dark"] body.app-shell .more-menu .menu button#menu-theme-toggle,
 html[data-theme="dark"] body.app-shell .more-menu .menu button#manage-branches,
 html[data-theme="dark"] body.app-shell .more-menu .menu button#reset-filters,
 html[data-theme="dark"] body.app-shell .more-menu .menu button:is(#account-settings-btn, #pin-settings-btn),
@@ -5479,11 +5467,7 @@ html[data-theme="dark"] body.app-shell .more-menu .menu button#restore {
   box-shadow: 0 3px 10px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
   transition: all .18s cubic-bezier(.22, 1, .36, 1) !important;
 }
-html[data-theme="dark"] body.app-shell .more-menu .menu button#menu-theme-toggle {
-  color: #facc15 !important;
-}
 html[data-theme="dark"] body.app-shell .more-menu .menu button:hover:not(:disabled),
-html[data-theme="dark"] body.app-shell .more-menu .menu button#menu-theme-toggle:hover:not(:disabled),
 html[data-theme="dark"] body.app-shell .more-menu .menu button#manage-branches:hover:not(:disabled),
 html[data-theme="dark"] body.app-shell .more-menu .menu button#reset-filters:hover:not(:disabled),
 html[data-theme="dark"] body.app-shell .more-menu .menu button:is(#account-settings-btn, #pin-settings-btn):hover:not(:disabled),
@@ -7408,61 +7392,35 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
     }
   }
 
-  /* 7. Cloud / Google Drive / OneDrive Auto-Sync Pill & Quick-Connect Bar */
-  html body.app-shell #cloud-sync-pill:not(#toggle-pwd-btn) {
+  /* 7. Backup Error Warning Pill (shown only on failure) & WhatsApp Share Button */
+  html body.app-shell #backup-error-pill.backup-warn-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     min-height: 36px;
-    padding: 4px 13px;
+    padding: 4px 12px;
     border-radius: 999px !important;
-    font-size: 11.5px;
-    font-weight: 700;
-    line-height: 1.8;
-    background: linear-gradient(135deg var(--in-oklch), #f0f9ff 0%, #e0f2fe 100%) !important;
-    color: #0369a1 !important;
-    border: 1px solid #7dd3fc !important;
-    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.12), inset 0 1px 0 #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%) !important;
+    color: #be123c !important;
+    border: 1px solid #fda4af !important;
     cursor: pointer;
   }
-
-  html body.app-shell #cloud-sync-pill[data-backup-state="ready"]:not(#toggle-pwd-btn) {
-    background: linear-gradient(135deg var(--in-oklch), #ecfdf5 0%, #d1fae5 100%) !important;
-    color: #047857 !important;
-    border-color: #6ee7b7 !important;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.18), inset 0 1px 0 #ffffff !important;
-  }
-
-  html body.app-shell #cloud-sync-pill[data-backup-state="working"]:not(#toggle-pwd-btn) {
-    background: linear-gradient(135deg var(--in-oklch), #fffbeb 0%, #fef3c7 100%) !important;
-    color: #b45309 !important;
-    border-color: #fcd34d !important;
-  }
-
-  html body.app-shell #cloud-sync-pill[data-backup-state="error"]:not(#toggle-pwd-btn) {
-    background: linear-gradient(135deg var(--in-oklch), #fff1f2 0%, #ffe4e6 100%) !important;
-    color: #be123c !important;
-    border-color: #fda4af !important;
-  }
-
-  html[data-theme="dark"] body.app-shell #cloud-sync-pill:not(#toggle-pwd-btn) {
-    background: linear-gradient(135deg var(--in-oklch), #0c2d48 0%, #082032 100%) !important;
-    color: #7dd3fc !important;
-    border: 1px solid #0284c7 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-  }
-
-  html[data-theme="dark"] body.app-shell #cloud-sync-pill[data-backup-state="ready"]:not(#toggle-pwd-btn) {
-    background: linear-gradient(135deg var(--in-oklch), #064e3b 0%, #022c22 100%) !important;
-    color: #6ee7b7 !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 14px rgba(16, 185, 129, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-  }
-
-  html[data-theme="dark"] body.app-shell #cloud-sync-pill[data-backup-state="error"]:not(#toggle-pwd-btn) {
-    background: linear-gradient(135deg var(--in-oklch), #4c0519 0%, #310410 100%) !important;
+  html[data-theme="dark"] body.app-shell #backup-error-pill.backup-warn-pill {
+    background: linear-gradient(135deg, #4c0519 0%, #310410 100%) !important;
     color: #fda4af !important;
     border-color: #f43f5e !important;
+  }
+  html body.app-shell .receipt-actions .btn-whatsapp {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #166534 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 3px 10px rgba(22, 163, 74, 0.25) !important;
+  }
+  html body.app-shell .receipt-actions .btn-whatsapp:hover:not(:disabled) {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
   }
 
   .cloud-detected-wrap {
@@ -7735,7 +7693,7 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
   }
 
   html body.app-shell #save-state,
-  html body.app-shell #cloud-sync-pill {
+  html body.app-shell #backup-error-pill {
     font-size: 13px !important;
     font-weight: 700 !important;
   }
@@ -8379,6 +8337,244 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
     background: #163024 !important;
     color: #a7f3d0 !important;
     border-bottom-color: #254d3a !important;
+  }
+}
+
+/* ==========================================================================
+   10/10 UI/UX POLISH: RESPONSIVE, TOUCH TARGETS, & VIEWPORT REFINEMENTS
+   ========================================================================== */
+@media screen {
+  .app-shell .table-wrap,
+  .app-shell .journal-table-wrap,
+  .app-shell .khata-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scroll-behavior: smooth;
+  }
+
+  .app-shell :is(body.journal-view, body.khata-view) .workspace-tools {
+    justify-content: flex-end;
+  }
+
+  .app-shell .receipt-actions .btn-whatsapp {
+    transition: transform .16s ease, box-shadow .16s ease !important;
+  }
+
+  .app-shell .receipt-actions .btn-whatsapp:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(22, 163, 74, 0.34) !important;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html body.app-shell #backup-error-pill.backup-warn-pill:not([hidden]) {
+      animation: backupWarnPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes backupWarnPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.32); }
+      50% { box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
+    }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .app-shell .workspace-header {
+    gap: 8px;
+  }
+  .app-shell .workspace-tools {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .app-shell .workspace-tools .top-nav-center {
+    min-width: 0;
+    width: 100%;
+  }
+  .app-shell .workspace-tools .top-nav-end {
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .app-shell .workspace-header .workspace-nav {
+    order: 3;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .app-shell .workspace-header .workspace-nav button {
+    min-height: 44px;
+    padding: 4px 6px !important;
+    font-size: 12px !important;
+    white-space: nowrap;
+  }
+  .app-shell .btn-date-nav,
+  .app-shell .btn-date-today,
+  .app-shell .output-menu > summary,
+  .app-shell .more-menu > summary {
+    min-height: 44px;
+  }
+  .app-shell .receipt-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .app-shell .receipt-actions .btn-whatsapp,
+  .app-shell .receipt-actions #receipt-status {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   UNIQUE JEWEL-TONE GRADIENTS FOR EVERY BUTTON (LIGHT & DARK MODES)
+   ========================================================================== */
+@media screen {
+  /* Output Dropdown Trigger (پرنٹ / ایکسپورٹ ▾): Cerulean Ocean Blue */
+  html body.app-shell .output-menu > summary.btn-nav {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 55%, #075985 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #075985 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+  html body.app-shell .output-menu > summary.btn-nav:hover {
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 55%, #0369a1 100%) !important;
+    box-shadow: 0 7px 20px rgba(2, 132, 199, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+  }
+
+  /* More Menu Trigger (مزید ▾): Royal Indigo */
+  html body.app-shell .more-menu > summary.btn-nav {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 55%, #3730a3 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #312e81 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+  html body.app-shell .more-menu > summary.btn-nav:hover {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 55%, #4338ca 100%) !important;
+    border-color: #818cf8 !important;
+    box-shadow: 0 7px 20px rgba(79, 70, 229, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+  }
+
+  /* Party Date Filter & Manage Parties Gear */
+  html body.app-shell #party-date-filter-btn {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 55%, #0e7490 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #0e7490 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(8, 145, 178, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+  html body.app-shell #party-date-filter-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 55%, #0891b2 100%) !important;
+  }
+  html body.app-shell #manage-parties-tab {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #b45309 !important;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  }
+  html body.app-shell #manage-parties-tab:hover:not(:disabled) {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  }
+
+  /* Unique Jewel Gradients for Every Button in More Menu (Light & Dark Modes) */
+  html body.app-shell .more-menu .menu button#manage-branches {
+    background: linear-gradient(135deg, #10b981 0%, #059669 55%, #047857 100%) !important;
+    border-color: #047857 !important;
+    color: #ffffff !important;
+  }
+  html body.app-shell .more-menu .menu button#manage-branches:hover:not(:disabled) {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 55%, #059669 100%) !important;
+  }
+
+  html body.app-shell .more-menu .menu button#reset-filters {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 55%, #0369a1 100%) !important;
+    border-color: #0369a1 !important;
+    color: #ffffff !important;
+  }
+  html body.app-shell .more-menu .menu button#reset-filters:hover:not(:disabled) {
+    background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 55%, #0284c7 100%) !important;
+  }
+
+  html body.app-shell .more-menu .menu button:is(#account-settings-btn, #pin-settings-btn) {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 55%, #6d28d9 100%) !important;
+    border-color: #5b21b6 !important;
+    color: #ffffff !important;
+  }
+  html body.app-shell .more-menu .menu button:is(#account-settings-btn, #pin-settings-btn):hover:not(:disabled) {
+    background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 55%, #7c3aed 100%) !important;
+  }
+
+  html body.app-shell .more-menu .menu button#lock-app-now-btn {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 55%, #be123c 100%) !important;
+    border-color: #9f1239 !important;
+    color: #ffffff !important;
+  }
+  html body.app-shell .more-menu .menu button#lock-app-now-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #fb7185 0%, #f43f5e 55%, #e11d48 100%) !important;
+  }
+
+  html body.app-shell .more-menu .menu button#manage-backups {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 55%, #0f766e 100%) !important;
+    border-color: #115e59 !important;
+    color: #ffffff !important;
+  }
+  html body.app-shell .more-menu .menu button#manage-backups:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 55%, #0d9488 100%) !important;
+  }
+
+  html body.app-shell .more-menu .menu button#backup {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 55%, #b45309 100%) !important;
+    border-color: #92400e !important;
+    color: #ffffff !important;
+  }
+  html body.app-shell .more-menu .menu button#backup:hover:not(:disabled) {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 55%, #d97706 100%) !important;
+  }
+
+  html body.app-shell .more-menu .menu button#restore {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 55%, #c2410c 100%) !important;
+    border-color: #9a3412 !important;
+    color: #ffffff !important;
+  }
+  html body.app-shell .more-menu .menu button#restore:hover:not(:disabled) {
+    background: linear-gradient(135deg, #fb923c 0%, #f97316 55%, #ea580c 100%) !important;
+  }
+
+  html body.app-shell .more-menu .font-tools button#font-smaller {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+    border-color: #334155 !important;
+    color: #ffffff !important;
+  }
+  html body.app-shell .more-menu .font-tools button#font-larger {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border-color: #047857 !important;
+    color: #ffffff !important;
+  }
+
+  /* Distinct Receipt Action Gradients */
+  html body.app-shell .receipt-actions #receipt-save {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%) !important;
+    border-color: #991b1b !important;
+    color: #ffffff !important;
+  }
+  html body.app-shell .receipt-actions #receipt-png {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 55%, #0e7490 100%) !important;
+    border-color: #155e75 !important;
+    color: #ffffff !important;
+  }
+  html body.app-shell .receipt-actions #receipt-copy {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 55%, #6d28d9 100%) !important;
+    border-color: #5b21b6 !important;
+    color: #ffffff !important;
+  }
+  html body.app-shell .receipt-actions #receipt-thermal-btn {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    border-color: #334155 !important;
+    color: #facc15 !important;
   }
 }
 

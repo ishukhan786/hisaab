@@ -152,7 +152,7 @@
 /* Keep Nastaliq place names clear of both borders; increase entry rows by 2%. */
 @media screen{#rows>tr>td{height:58.14px;min-height:58.14px}#rows td.col-place{vertical-align:middle}#rows td.col-place textarea{line-height:1.8;padding-block:8px;transform:translateY(.12em)}}
 /* Entry row styling in print and screen */
-@media print{#rows>tr>td{height:1cm;min-height:0;vertical-align:middle}#rows td.col-place .print-value{line-height:1.45;padding:2px 4px;transform:translateY(.12em);text-align:center}}
+@media print{#rows>tr>td{height:1.05cm;min-height:0;vertical-align:middle}#rows td.col-place .print-value{line-height:1.45;padding:2px 4px;transform:translateY(.12em);text-align:center}}
 /* Nastaliq requires generous leading: center the complete line box, not a shifted glyph. */
 @media screen{
   #rows>tr>td{height:64px;min-height:64px;vertical-align:middle}
@@ -160,7 +160,7 @@
 }
 @media print{
   .head-party,.date-print-line{line-height:1.8}
-  #rows>tr>td{height:1cm;min-height:0;padding:0;vertical-align:middle}
+  #rows>tr>td{height:1.05cm;min-height:0;padding:0;vertical-align:middle}
   #rows .print-value,#rows td.col-place .print-value{line-height:1.45;padding:2px 4px;transform:none;white-space:pre-wrap;overflow:visible;text-align:center}
   .paper-foot{padding:1px 0 0;line-height:1.1}
 }
@@ -285,7 +285,7 @@ tfoot.register-totals .totals-row>th{font-size:calc(var(--entry-font) + 2px);fon
   .page-no-label{display:inline!important;font-family:inherit!important;font-weight:700!important;font-size:15px!important;color:#000!important;line-height:1.8!important}
   .page-no-val{display:inline!important;font-family:Arial,Calibri,sans-serif!important;font-weight:700!important;font-size:15px!important;color:#000!important;line-height:1.8!important}
   td.number{font-family:Arial,sans-serif;font-size:var(--entry-font);font-weight:700;color:#1e3c32}
-  #rows>tr>td,.paper #rows>tr>td,.paper #rows td{height:1cm!important;min-height:1cm!important;padding:0;vertical-align:middle;text-align:center}
+  #rows>tr>td,.paper #rows>tr>td,.paper #rows td{height:1.05cm!important;min-height:1.05cm!important;padding:0;vertical-align:middle;text-align:center}
   #rows .print-value{display:inline-block;vertical-align:middle;text-align:center;font-size:var(--entry-font);line-height:1.45;transform:none}
   #rows td.col-place .print-value{transform:none}
   #rows td.number,#rows input.amount+.print-value,#rows input.phone+.print-value,#total-balance,#total-aed,#total-pkr{transform:translateY(0);text-align:center}

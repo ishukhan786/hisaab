@@ -1,5 +1,6 @@
 # Scratch & temporary files
 scratch/
+Microsoft/
 *.log
 
 # Operating System files

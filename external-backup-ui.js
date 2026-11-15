@@ -144,22 +144,11 @@
     }
     if ($('external-backup-state')) $('external-backup-state').dataset.backupState = badgeState;
 
-    const pill = $('cloud-sync-pill');
-    if (pill) {
-      pill.dataset.backupState = badgeState;
-      if (working) {
-        pill.textContent = '☁️ سنک جاری…';
-      } else if (err) {
-        pill.textContent = '☁️ بیک اَپ منقطع ⚠️';
-      } else if (config.folder) {
-        const tag = provider || 'کلاؤڈ';
-        pill.textContent = shortTime ? `☁️ ${tag}: ${shortTime} ✓` : `☁️ ${tag} فعال ✓`;
-      } else {
-        pill.textContent = '☁️ کلاؤڈ بیک اَپ';
-      }
-      pill.title = config.folder
-        ? `${state} | مقام: ${folder}${last ? ' | آخری سنک: ' + last : ''}`
-        : 'کلاؤڈ (Google Drive / OneDrive) یا USB خودکار بیک اَپ سیٹ کرنے کے لیے کلک کریں';
+    const warnPill = $('backup-error-pill');
+    if (warnPill) {
+      const showError = Boolean(config.folder && err);
+      warnPill.hidden = !showError;
+      warnPill.title = showError ? `خودکار بیک اَپ منقطع: ${err} — حل کرنے کے لیے کلک کریں` : '';
     }
 
     const supported = !!native || !!window.showDirectoryPicker;
@@ -329,8 +318,8 @@
         };
       }
 
-      if ($('cloud-sync-pill')) {
-        $('cloud-sync-pill').onclick = () => {
+      if ($('backup-error-pill')) {
+        $('backup-error-pill').onclick = () => {
           if ($('manage-backups')) $('manage-backups').click();
           else $('backup-dialog')?.showModal();
         };

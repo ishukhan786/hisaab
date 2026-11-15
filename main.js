@@ -330,6 +330,18 @@ ipcMain.handle('copy-receipt-png', async (event, values) => {
   }
 });
 
+// Trusted renderer frame only: open https://wa.me/ links in external browser/WhatsApp app
+ipcMain.handle('open-whatsapp', async (event, phone = '', text = '') => {
+  trustedFrame(event);
+  const digits = String(phone || '').replace(/\D/g, '').slice(0, 20);
+  const body = String(text || '').slice(0, 1500);
+  const url = digits
+    ? `https://wa.me/${digits}?text=${encodeURIComponent(body)}`
+    : `https://wa.me/?text=${encodeURIComponent(body)}`;
+  await shell.openExternal(url);
+  return { status: 'opened' };
+});
+
 // Trusted renderer frame only
 ipcMain.handle('preview-pdf', async (event, options = {}) => {
   trustedFrame(event);

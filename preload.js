@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   saveReceiptPNG: (values, name) => ipcRenderer.invoke('save-receipt-png', values, name),
   copyReceiptPNG: (values) => ipcRenderer.invoke('copy-receipt-png', values),
+  openWhatsApp: (phone, text) => ipcRenderer.invoke('open-whatsapp', phone, text),
   previewPDF: (options) => ipcRenderer.invoke('preview-pdf', options),
   savePDF: (suggestedName, options) => ipcRenderer.invoke('save-pdf', suggestedName, options),
   openFile: (filePath) => ipcRenderer.invoke('open-file', filePath),
