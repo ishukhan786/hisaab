@@ -451,13 +451,18 @@ tfoot.register-totals .totals-row > th,
 #total-balance, .paper #total-balance,
 #total-aed, .paper #total-aed,
 #total-pkr, .paper #total-pkr,
-tfoot.register-totals .totals-row > td,
-.paper tfoot.register-totals .totals-row > td,
-.total-words-label {
+tfoot.register-totals .totals-row > td:not(.col-words),
+.paper tfoot.register-totals .totals-row > td:not(.col-words) {
   font-family: "Bombay Black Unicode", Calibri, 'Segoe UI', Arial, sans-serif !important;
   font-weight: 700 !important;
   font-variant-numeric: normal !important;
   font-synthesis: weight style !important;
+}
+.paper tfoot.register-totals .totals-row > td.col-words,
+.total-words-label {
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
+  font-weight: 700 !important;
+  font-variant-numeric: normal !important;
 }
 @media print {
   .paper thead th {
@@ -476,8 +481,7 @@ tfoot.register-totals .totals-row > td,
   .paper #total-pkr,
   .paper #total-net-aed,
   .paper #total-orders-count,
-  .paper tfoot.register-totals .totals-row > td,
-  .total-words-label {
+  .paper tfoot.register-totals .totals-row > td:not(.col-words) {
     font-family: "Bombay Black Unicode", Calibri, 'Segoe UI', Arial, sans-serif !important;
     line-height: 1.8 !important;
     padding-block: 4px;
@@ -485,6 +489,15 @@ tfoot.register-totals .totals-row > td,
     font-weight: 700 !important;
     font-variant-numeric: normal !important;
     font-synthesis: weight style !important;
+  }
+  .paper tfoot.register-totals .totals-row > td.col-words,
+  .total-words-label {
+    font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
+    line-height: 1.8 !important;
+    padding-block: 4px;
+    vertical-align: middle !important;
+    font-weight: 700 !important;
+    font-variant-numeric: normal !important;
   }
   .total-bombay-black,
   #total-balance,
@@ -651,7 +664,7 @@ tfoot.register-totals .totals-row > td,
     border-bottom: 1px solid #000 !important;
     text-align: center !important;
     vertical-align: middle !important;
-    font-family: "Bombay Black Unicode", Calibri, 'Segoe UI', Arial, sans-serif !important;
+    font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
     font-size: 11.5px !important;
     font-weight: 700 !important;
     line-height: 2.2 !important;
@@ -659,7 +672,7 @@ tfoot.register-totals .totals-row > td,
   }
   .total-words-label {
     display: inline-block !important;
-    font-family: "Bombay Black Unicode", Calibri, 'Segoe UI', Arial, sans-serif !important;
+    font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
     font-size: 11.5px !important;
     font-weight: 700 !important;
     direction: rtl !important;

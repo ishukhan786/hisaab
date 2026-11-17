@@ -3019,7 +3019,7 @@
       let lbl = tfootWords.querySelector('.total-words-label');
       if (!lbl) {
         lbl = document.createElement('span');
-        lbl.className = 'total-words-label total-bombay-black';
+        lbl.className = 'total-words-label';
         tfootWords.replaceChildren(lbl);
       }
       lbl.textContent = totalWordsText;

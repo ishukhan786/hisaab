@@ -125,8 +125,8 @@ html[data-theme="dark"] .app-shell .tab-date-filter-btn.is-filtered{background:l
 .app-shell .register-totals #total-balance,
 .app-shell .register-totals #total-aed,
 .app-shell .register-totals #total-pkr,
-.app-shell .register-totals .totals-row>td,
-.app-shell .total-words-label{font-family:'Bombay Black Unicode',Calibri,'Segoe UI',Arial,sans-serif!important;font-size:15px;color:#0c4330;font-weight:700;vertical-align:middle;padding:4px 12px;line-height:1.8!important;font-variant-numeric:normal!important;font-synthesis:weight style!important}
+.app-shell .register-totals .totals-row>td:not(.col-words){font-family:'Bombay Black Unicode',Calibri,'Segoe UI',Arial,sans-serif!important;font-size:15px;color:#0c4330;font-weight:700;vertical-align:middle;padding:4px 12px;line-height:1.8!important;font-variant-numeric:normal!important;font-synthesis:weight style!important}
+.app-shell .total-words-label{font-family:Calibri,'Segoe UI',Arial,sans-serif!important;font-size:15px;color:#0c4330;font-weight:700;vertical-align:middle;padding:4px 12px;line-height:1.8!important;font-variant-numeric:normal!important}
 .app-shell .register-totals .totals-row>td{font-variant-numeric:normal!important;font-synthesis:weight style!important;font-size:14px;font-weight:700;color:#0a3e2c;vertical-align:middle;padding:4px 8px;line-height:1.8!important}
 .app-shell .paper-foot{padding:12px 24px;border-top:1px solid #dce8e0;font-size:11px;color:#4f6d5c;font-weight:600}
 .app-shell .help{padding:14px 6px;gap:16px;color:#617b6b;line-height:2.4}
@@ -310,7 +310,7 @@ html body.app-shell .output-panel { position: fixed !important; z-index: 2000 !i
  .paper thead th.col-balance,.order-print-section thead th.col-balance{width:2.5cm}
  .paper thead th.col-aed,.order-print-section thead th.col-aed{width:2.5cm}
  .paper thead th.col-pkr,.order-print-section thead th.col-pkr{width:3.3cm !important}
- .paper thead th, .paper tfoot.register-totals .totals-row>th, .paper .totals-title-wrap, .paper .totals-title-wrap>span, .paper .totals-title-wrap span, .paper #total-balance, .paper #total-aed, .paper #total-pkr, .paper #total-net-aed, .paper #total-orders-count, .paper tfoot.register-totals .totals-row>td, .total-words-label{font-family:'Bombay Black Unicode',Calibri,'Segoe UI',Arial,sans-serif!important;font-weight:700!important;font-variant-numeric:normal!important;font-synthesis:weight style!important}
+ .paper thead th, .paper tfoot.register-totals .totals-row>th, .paper .totals-title-wrap, .paper .totals-title-wrap>span, .paper .totals-title-wrap span, .paper #total-balance, .paper #total-aed, .paper #total-pkr, .paper #total-net-aed, .paper #total-orders-count, .paper tfoot.register-totals .totals-row>td:not(.col-words){font-family:'Bombay Black Unicode',Calibri,'Segoe UI',Arial,sans-serif!important;font-weight:700!important;font-variant-numeric:normal!important;font-synthesis:weight style!important}
  .total-bombay-black,
  .paper #total-balance,
  .paper #total-aed,
@@ -329,7 +329,7 @@ html body.app-shell .output-panel { position: fixed !important; z-index: 2000 !i
  .paper tbody td.col-words,.print-words-text{font-family:Calibri,'Segoe UI',Arial,sans-serif!important;font-weight:700!important;font-synthesis:none!important;-webkit-text-stroke:0!important;text-shadow:none!important;color:#000000!important}
  .paper tbody td,.paper #rows td,.paper #rows .print-value,.order-print-section td,.order-print-section .print-value{font-weight:700!important;color:#000000!important}
  .paper #rows>tr>td,.paper #rows td,.order-print-section tbody td{height:1.05cm!important;min-height:1.05cm!important}
- .paper tfoot.register-totals .totals-row > td.col-words, .total-words-label{font-family:'Bombay Black Unicode',Calibri,'Segoe UI',Arial,sans-serif!important;font-size:11.5px!important;font-weight:700!important;text-align:center!important;vertical-align:middle!important;line-height:2.2!important;white-space:nowrap!important;color:#000000!important}
+ .paper tfoot.register-totals .totals-row > td.col-words, .total-words-label{font-family:Calibri,'Segoe UI',Arial,sans-serif!important;font-size:12px!important;font-weight:700!important;text-align:center!important;vertical-align:middle!important;line-height:2.2!important;white-space:nowrap!important;color:#000000!important}
  .order-print-section td.col-mobile,.order-print-section .col-mobile .print-value{white-space:nowrap!important;text-align:center;direction:ltr}
  .order-print-section .print-value{display:block!important;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;padding:2px 4px}
  .print-bal-tag{display:block;font-family:Calibri,'Segoe UI',Arial,sans-serif;font-size:7.5pt;font-weight:700;line-height:1.1;color:#000;margin-bottom:1px}
