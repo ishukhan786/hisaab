@@ -1037,8 +1037,16 @@
     const filteredRows = precomputedFiltered || selectedRows();
     const startVal = precomputedStart !== undefined ? precomputedStart : activeStartSerial();
     const groups = new Map(), keys = new Map(), serials = new Map(filteredRows.map((r, i) => [r.id, startVal + i]));
-    for (const row of state.rows) {
+    const isDay = dayMode() && !rangeActive();
+    const curDate = state.date;
+    const targetBranch = selectedBranch.startsWith('b:') ? selectedBranch.slice(2) : null;
+    const isUnassigned = selectedBranch === '__unassigned';
+    for (let i = 0, len = state.rows.length; i < len; i++) {
+      const row = state.rows[i];
       if (!populated(row)) continue;
+      if (isDay && row.entryDate && row.entryDate !== curDate) continue;
+      if (targetBranch && row.branch && row.branch !== targetBranch) continue;
+      if (isUnassigned && row.branch) continue;
       let record = duplicateRecords.get(row);
       const signature = duplicateSignature(row);
       if (!record || record.signature !== signature) {
@@ -1136,14 +1144,33 @@
     if (!d.open) d.showModal();
   }
 
+  let filterDebounceTimer = null;
+  function debouncedApplyFilter(keepFocus = true) {
+    clearTimeout(filterDebounceTimer);
+    filterDebounceTimer = setTimeout(() => {
+      filterDebounceTimer = null;
+      applyFilter(keepFocus);
+    }, 120);
+  }
+  function flushFilterDebounce() {
+    if (filterDebounceTimer) {
+      clearTimeout(filterDebounceTimer);
+      filterDebounceTimer = null;
+      applyFilter(true);
+    }
+  }
+
   /* FIX-16, FIX-17, FIX-18: decomposed applyFilter with DocumentFragment and debounced search */
   function applyFilter(keepFocus = false, forPrint = false) {
+    if (filterDebounceTimer && !keepFocus) {
+      clearTimeout(filterDebounceTimer);
+      filterDebounceTimer = null;
+    }
     ensureDraft();
     const start = activeStartSerial();
     if ($('start-serial') && document.activeElement !== $('start-serial')) $('start-serial').value = start;
-    let offset = 0;
     const active = keepFocus ? document.activeElement?.closest('#rows tr') : null;
-    let draftShown = false;
+    const activeId = active?.dataset?.id;
     const day = dayMode();
     forPrint = forPrint || registerPrintActive;
     updateLockBtn();
@@ -1151,7 +1178,8 @@
     if (nextKey !== viewKey) { viewPage = 0; viewKey = nextKey; }
     const filtered = selectedRows(), matchedIds = new Set(filtered.map(r => r.id)), pages = Math.max(1, Math.ceil(filtered.length / pageSize));
     viewPage = Math.min(viewPage, pages - 1);
-    const pageIds = new Set((forPrint ? filtered : filtered.slice(viewPage * pageSize, (viewPage + 1) * pageSize)).map(r => r.id));
+    const pageSlice = forPrint ? filtered : filtered.slice(viewPage * pageSize, (viewPage + 1) * pageSize);
+    const pageIds = new Set(pageSlice.map(r => r.id));
     pageNav.hidden = forPrint || pages === 1; pagePrev.disabled = viewPage === 0; pageNext.disabled = viewPage === pages - 1;
     pageLabel.textContent = `صفحہ ${viewPage + 1} / ${pages} · ${filtered.length} اندراجات · مجموعہ اور پرنٹ تمام منتخب اندراجات کا ہے`;
     const currPage = activePageNumber();
@@ -1159,17 +1187,37 @@
     if ($('page-no-val')) $('page-no-val').textContent = currPage;
     const findDuplicate = duplicateLookup(filtered, start), visibleNodes = [];
     reviewDuplicates(filtered, findDuplicate);
-    state.rows.forEach(r => {
-      let tr = rowNodes.get(r.id);
-      const hasData = populated(r);
-      let draft = day && branchMatch(r) && !hasData && !draftShown;
-      if (draft) draftShown = true;
-      const matched = matchedIds.has(r.id);
-      const serial = matched ? start + offset++ : null;
-      if (!(pageIds.has(r.id) || draft || (tr && tr === active))) {
-        if (tr) { tr.remove(); rowNodes.delete(r.id); }
-        return;
+
+    const draftRow = day ? state.rows.find(r => branchMatch(r) && !populated(r)) : null;
+
+    // Prune stale off-page DOM nodes in O(current_nodes), avoiding O(all_rows) iterations
+    for (const [id, tr] of rowNodes) {
+      if (!pageIds.has(id) && id !== draftRow?.id && id !== activeId) {
+        tr.remove();
+        rowNodes.delete(id);
       }
+    }
+
+    // Assemble render list: current page rows, plus bottom draft row, plus active row if kept
+    const renderItems = [];
+    const pageStartIndex = forPrint ? 0 : viewPage * pageSize;
+    for (let i = 0; i < pageSlice.length; i++) {
+      renderItems.push({ r: pageSlice[i], matched: true, serial: start + pageStartIndex + i, hasData: true, draft: false });
+    }
+    if (draftRow && !pageIds.has(draftRow.id)) {
+      renderItems.push({ r: draftRow, matched: false, serial: null, hasData: false, draft: true });
+    }
+    if (active && activeId && !pageIds.has(activeId) && activeId !== draftRow?.id) {
+      const activeRow = state.rows.find(r => r.id === activeId);
+      if (activeRow) {
+        const isMatched = matchedIds.has(activeId);
+        const idx = isMatched ? filtered.indexOf(activeRow) : -1;
+        renderItems.push({ r: activeRow, matched: isMatched, serial: idx >= 0 ? start + idx : null, hasData: populated(activeRow), draft: false });
+      }
+    }
+
+    renderItems.forEach(({ r, matched, serial, hasData, draft }) => {
+      let tr = rowNodes.get(r.id);
       if (!tr) tr = createRowElement(r);
       visibleNodes.push(tr); tr.hidden = false; tr.classList.toggle('draft-row', !hasData);
       const balInput = tr.querySelector('.bal-type-input');
@@ -1460,6 +1508,7 @@
       if (rLocked) input.disabled = true;
       input.addEventListener('focus', () => { input._prevVal = input.value; });
       input.addEventListener('blur', () => {
+        flushFilterDebounce();
         if (field === 'place') hidePlaceSuggestions();
         if (input._prevVal !== undefined && input._prevVal !== input.value) { recordHistory(row, field, input._prevVal, input.value); input._prevVal = input.value; }
         if (field === 'sender') autoFillFromSender(row, tr);
@@ -1478,7 +1527,14 @@
         if (moneyFields.includes(field)) input.setCustomValidity(integerAmount(input.value) === null ? 'صرف مکمل عدد لکھیں، اعشاری رقم نہیں' : '');
         if (!wasPopulated && matches(row)) viewPage = Math.floor(selectedRows().findIndex(r => r.id === row.id) / pageSize);
         if (updateBalTypeVis) updateBalTypeVis();
-        applyFilter(true); save();
+        if (wasPopulated && field !== 'branch') {
+          if (moneyFields.includes(field)) totals();
+          debouncedApplyFilter(true);
+        } else {
+          flushFilterDebounce();
+          applyFilter(true);
+        }
+        save();
         if (field === 'place') {
           if (input._dismissedFor !== input.value) { input._dismissedFor = null; showFieldSuggestions(field, input, row, accept); }
         }

@@ -8349,7 +8349,13 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
   .app-shell .khata-table-wrap {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    scroll-behavior: smooth;
+  }
+
+  /* GPU layer optimization: isolate row layout to prevent whole-table reflow */
+  .app-shell #rows > tr,
+  .app-shell #journal-rows > tr,
+  .app-shell #khata-rows > tr {
+    contain: layout style;
   }
 
   .app-shell :is(body.journal-view, body.khata-view) .workspace-tools {
