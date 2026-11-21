@@ -382,7 +382,8 @@
         const toUrdu = window.amountToUrduShort || (typeof amountToUrduShort !== 'undefined' ? amountToUrduShort : null);
         const rawPkr = values.pkr || '0';
         const urduShort = toUrdu && rawPkr && rawPkr !== '0' && rawPkr !== '—' ? toUrdu(rawPkr) : '';
-        const unitWord = isAfn ? 'افغانی' : 'روپے';
+        const isNoCurrency = Boolean(values.noCurrency);
+        const unitWord = isNoCurrency ? '' : (isAfn ? 'افغانی' : 'روپے');
 
         const thermalData = {
           serial: this.formatSerial(values.serial),
@@ -395,9 +396,9 @@
           place: values.place || '—',
           pkr: rawPkr,
           'pkr-sub': rawPkr,
-          'pkr-sub-label': isAfn ? 'افغانی (AFN):' : 'پاکستانی روپے (PKR):',
-          'pkr-words': urduShort ? `(${urduShort} ${unitWord})` : '',
-          currency: values.currency || 'روپیہ (PKR)',
+          'pkr-sub-label': isNoCurrency ? 'رقم:' : (isAfn ? 'افغانی (AFN):' : 'پاکستانی روپے (PKR):'),
+          'pkr-words': urduShort ? (unitWord ? `(${urduShort} ${unitWord})` : `(${urduShort})`) : '',
+          currency: isNoCurrency ? '' : (values.currency || 'روپیہ (PKR)'),
           aed: values.aed || '0',
           balance: values.balance || '0'
         };

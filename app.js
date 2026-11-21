@@ -2760,6 +2760,7 @@
       };
       const paper = $('receipt-paper');
       if (paper) {
+        paper.classList.remove('is-khata-receipt');
         for (const [field, value] of Object.entries(values)) {
           const el = paper.querySelector('[data-receipt="' + field + '"]');
           if (el) el.textContent = value;
@@ -2799,7 +2800,7 @@
     }
   }
 
-  /* Single Entry Cash Receipt Voucher for Customer Khata */
+  /* Single Entry Cash Receipt Voucher for Customer Khata (Currency-Free: Pure Amount Numbers) */
   function openKhataReceipt(row, khata, serial, baqayaDisplay) {
     try {
       if (!row || !khata) return;
@@ -2808,10 +2809,8 @@
       const numAmt = integerAmount(rawAmt);
       const safeAmt = numAmt !== null ? formatted(numAmt) : (rawAmt || '0');
 
-      const isAed = khata.currency === 'aed';
       const toUrdu = window.amountToUrduShort || (typeof amountToUrduShort !== 'undefined' ? amountToUrduShort : null);
       const urduShort = toUrdu && safeAmt && safeAmt !== '0' && safeAmt !== '—' ? toUrdu(safeAmt) : '';
-      const unitWord = isAed ? 'درہم' : 'روپے';
 
       const serialStr = typeof serial === 'number' || typeof serial === 'string'
         ? String(serial).padStart(3, '0')
@@ -2843,12 +2842,14 @@
         balance: baqayaDisplay || '—',
         aed: '—',
         pkr: safeAmt,
-        'pkr-words': urduShort ? `(${urduShort} ${unitWord})` : '',
-        currency: isAed ? 'درہم (AED)' : 'پاکستانی روپے (PKR)'
+        'pkr-words': urduShort ? `(${urduShort})` : '',
+        currency: 'رقم',
+        noCurrency: true
       };
 
       const paper = $('receipt-paper');
       if (paper) {
+        paper.classList.add('is-khata-receipt');
         for (const [field, value] of Object.entries(values)) {
           const el = paper.querySelector('[data-receipt="' + field + '"]');
           if (el) el.textContent = value;
@@ -2970,7 +2971,7 @@
           `تاریخ: ${values.date || ''}`,
           `گاہک: ${receiptSelection.khataName || ''} (${receiptSelection.khataCode || ''})`,
           values.place && values.place !== '—' ? `تفصیل: ${values.place}` : '',
-          `رقم: ${values.pkr || '0'} ${values.currency || ''} ${values['pkr-words'] || ''}`.trim(),
+          `رقم: ${values.pkr || '0'} ${values['pkr-words'] || ''}`.trim(),
           values.balance && values.balance !== '—' ? `کھاتے کا بقایا: ${values.balance}` : '',
           'آپ کے تعاون کا شکریہ!'
         ].filter(Boolean).join('\n')

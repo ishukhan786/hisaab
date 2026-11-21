@@ -684,4 +684,9 @@ tfoot.register-totals .totals-row > td:not(.col-words),
   }
 }
 
+/* Customer Khata single-entry receipt: currency-free (pure amount numbers only) */
+.receipt-sheet.is-khata-receipt .receipt-amount-aed {
+  display: none !important;
+}
+
 
