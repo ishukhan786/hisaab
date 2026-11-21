@@ -2800,7 +2800,7 @@
   }
 
   /* Single Entry Cash Receipt Voucher for Customer Khata */
-  function openKhataReceipt(row, khata, serial) {
+  function openKhataReceipt(row, khata, serial, baqayaDisplay) {
     try {
       if (!row || !khata) return;
       const isCredit = Boolean(row.credit && row.credit.trim());
@@ -2808,10 +2808,10 @@
       const numAmt = integerAmount(rawAmt);
       const safeAmt = numAmt !== null ? formatted(numAmt) : (rawAmt || '0');
 
-      const isAfn = khata.currency === 'aed';
+      const isAed = khata.currency === 'aed';
       const toUrdu = window.amountToUrduShort || (typeof amountToUrduShort !== 'undefined' ? amountToUrduShort : null);
       const urduShort = toUrdu && safeAmt && safeAmt !== '0' && safeAmt !== '—' ? toUrdu(safeAmt) : '';
-      const unitWord = isAfn ? 'درہم' : 'روپے';
+      const unitWord = isAed ? 'درہم' : 'روپے';
 
       const serialStr = typeof serial === 'number' || typeof serial === 'string'
         ? String(serial).padStart(3, '0')
@@ -2840,11 +2840,11 @@
         mobile: khata.mobile || '—',
         receiver: isCredit ? (state.title || 'ادارہ / کیشیئر') : (khata.name || 'گاہک'),
         place: row.detail || (isCredit ? 'نقد وصولی' : 'ادائیگی / مال ادھار'),
-        balance: row._baqayaDisplay || '—',
-        aed: isAfn ? safeAmt : '—',
+        balance: baqayaDisplay || '—',
+        aed: '—',
         pkr: safeAmt,
         'pkr-words': urduShort ? `(${urduShort} ${unitWord})` : '',
-        currency: isAfn ? 'درہم (AED)' : 'پاکستانی روپے (PKR)'
+        currency: isAed ? 'درہم (AED)' : 'پاکستانی روپے (PKR)'
       };
 
       const paper = $('receipt-paper');

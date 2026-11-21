@@ -596,7 +596,7 @@
               if (tag.textContent !== tagText) tag.textContent = tagText;
               if (amtSpan.textContent !== formattedAbs) amtSpan.textContent = formattedAbs;
               if (sideSpan.textContent !== sideText) sideSpan.textContent = sideText;
-              r._baqayaDisplay = formattedAbs + ' ' + tagText;
+              tr._baqayaDisplay = formattedAbs + ' ' + tagText;
             }
 
             if (tr) {
@@ -989,7 +989,7 @@
         e.stopPropagation();
         if (typeof window.openKhataReceipt === 'function') {
           const rowIdx = khata.rows.indexOf(r);
-          window.openKhataReceipt(r, khata, rowIdx >= 0 ? rowIdx + 1 : 1);
+          window.openKhataReceipt(r, khata, rowIdx >= 0 ? rowIdx + 1 : 1, tr._baqayaDisplay || '—');
         }
       };
 
