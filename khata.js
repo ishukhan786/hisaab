@@ -351,26 +351,6 @@
       try { return localStorage.getItem('hisaab-khata-sort') || 'default'; } catch (_) { return 'default'; }
     })();
 
-    function getCustomerInitials(name) {
-      const clean = String(name || '').trim().replace(/\s+/g, ' ');
-      if (!clean) return '؟';
-      const words = clean.split(' ').filter(Boolean);
-      if (words.length >= 2) {
-        return (words[0][0] + ' ' + words[1][0]).toUpperCase();
-      }
-      return clean.slice(0, 2).toUpperCase();
-    }
-
-    function getAvatarToneIndex(str) {
-      const s = String(str || '');
-      let hash = 0;
-      for (let i = 0; i < s.length; i++) {
-        hash = ((hash << 5) - hash) + s.charCodeAt(i);
-        hash |= 0;
-      }
-      return Math.abs(hash) % 6;
-    }
-
     function computeDaysOld(lastDateStr, todayStr) {
       if (!lastDateStr || !todayStr || !validDate(lastDateStr) || !validDate(todayStr)) return 0;
       const diffMs = Date.parse(todayStr + 'T00:00:00Z') - Date.parse(lastDateStr + 'T00:00:00Z');
@@ -1052,11 +1032,6 @@
       $('khata-view-name').textContent = khata.name;
       $('khata-view-mobile').textContent = khata.mobile || '—';
       $('khata-view-address').textContent = khata.address || '—';
-      const avatarEl = $('khata-view-avatar');
-      if (avatarEl) {
-        avatarEl.textContent = getCustomerInitials(khata.name);
-        avatarEl.className = `khata-profile-avatar avatar-tone-${getAvatarToneIndex(khata.code || khata.name)} no-print`;
-      }
 
       const currBadge = $('khata-view-currency');
       if (currBadge) currBadge.remove();
@@ -1414,16 +1389,11 @@
           const nameWrap = document.createElement('div');
           nameWrap.className = 'khata-dir-name-wrap';
 
-          const avatarSpan = document.createElement('span');
-          avatarSpan.className = `khata-avatar avatar-tone-${getAvatarToneIndex(k.code || k.name)} no-print`;
-          avatarSpan.setAttribute('aria-hidden', 'true');
-          avatarSpan.textContent = getCustomerInitials(k.name);
-
           const nameSpan = document.createElement('span');
           nameSpan.className = 'khata-dir-name-text';
           nameSpan.textContent = k.name;
 
-          nameWrap.append(avatarSpan, nameSpan);
+          nameWrap.append(nameSpan);
           if (running > 0n && item.daysOld >= 15) {
             const ageBadge = document.createElement('span');
             const ageCls = item.daysOld >= 90
