@@ -280,11 +280,15 @@
 
     closeBtn.onclick = dismiss;
     toast.append(iconSpan, textDiv, closeBtn);
-    container.append(toast);
 
     if (duration > 0) {
+      const progressBar = document.createElement('div');
+      progressBar.className = 'toast-progress-bar';
+      progressBar.style.animationDuration = `${duration}ms`;
+      toast.appendChild(progressBar);
       timer = setTimeout(dismiss, duration);
     }
+    container.append(toast);
     return dismiss;
   }
 

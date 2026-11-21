@@ -8996,6 +8996,520 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
     background: #16291f !important;
     border-color: rgba(52, 211, 153, 0.2) !important;
   }
+
+  /* ==========================================================================
+     PHASE 2: ALL COMPREHENSIVE UI/UX IMPROVEMENTS
+     Page Transitions, Summary Dialog, Toast Countdown, Empty States, Tactile Responses
+     ========================================================================== */
+
+  /* 1. Fluid Workspace Page Transitions */
+  #register-page:not([hidden]),
+  #journal-page:not([hidden]),
+  #khata-page:not([hidden]) {
+    animation: workspaceFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  }
+  @keyframes workspaceFadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(8px) scale(0.995);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* 2. Luxury Redesign for Summary Dialog (#summary-dialog) */
+  html body.app-shell dialog#summary-dialog {
+    width: min(880px, 96vw) !important;
+    max-width: min(880px, 96vw) !important;
+    max-height: 90vh !important;
+    padding: 0 !important;
+    border-radius: 24px !important;
+    border: 1px solid #bcd8c8 !important;
+    background: #f8fbf9 !important;
+    box-shadow: 0 28px 80px rgba(15, 58, 41, 0.28), 0 8px 24px rgba(15, 58, 41, 0.08) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  html body.app-shell #summary-dialog .dialog-head {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 18px 24px 16px !important;
+    margin: 0 !important;
+    background: linear-gradient(135deg, #0f5138 0%, #15734f 100%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+  }
+
+  html body.app-shell #summary-dialog #summary-title {
+    margin: 0 !important;
+    font-size: 21px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    line-height: 1.4 !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  html body.app-shell #summary-dialog #summary-title::before {
+    content: "📊";
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 19px;
+  }
+
+  html body.app-shell #summary-dialog #close-summary {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    border-radius: 11px !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.26) !important;
+    color: #ffffff !important;
+    font-size: 22px !important;
+    line-height: 1 !important;
+    display: grid !important;
+    place-items: center !important;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  html body.app-shell #summary-dialog #close-summary:hover {
+    background: rgba(239, 68, 68, 0.3) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    color: #ffffff !important;
+    transform: rotate(90deg);
+  }
+
+  html body.app-shell #summary-dialog > :not(.dialog-head) {
+    margin-inline: 20px;
+  }
+  html body.app-shell #summary-dialog .summary-tabs {
+    margin-top: 18px !important;
+    margin-bottom: 14px !important;
+    padding: 6px !important;
+    background: #e7f2ec !important;
+    border: 1px solid #cadcd0 !important;
+    border-radius: 16px !important;
+  }
+  html body.app-shell #summary-dialog .summary-tab {
+    min-height: 42px !important;
+    border-radius: 11px !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: #245842 !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  html body.app-shell #summary-dialog .summary-tab:hover {
+    background: rgba(255, 255, 255, 0.75) !important;
+    color: #0f4a34 !important;
+    transform: translateY(-1px);
+  }
+  html body.app-shell #summary-dialog .summary-tab.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border-color: #047857 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    transform: scale(1.015);
+  }
+
+  html body.app-shell #summary-dialog .summary-toolbar {
+    margin-bottom: 14px !important;
+    padding: 10px 14px !important;
+    background: #edf6f1 !important;
+    border: 1px solid #d4e5db !important;
+    border-radius: 14px !important;
+  }
+  html body.app-shell #summary-dialog #summary-scope {
+    background: #ffffff !important;
+    border: 1px solid #c8ded1 !important;
+    color: #0d5c3f !important;
+    font-weight: 800 !important;
+    padding: 6px 16px !important;
+    box-shadow: 0 2px 6px rgba(13, 92, 63, 0.06) !important;
+  }
+  html body.app-shell #summary-dialog .summary-month-select {
+    padding: 6px 14px !important;
+    border-radius: 10px !important;
+    border: 1px solid #cadfd2 !important;
+    background: #ffffff !important;
+    color: #124b35 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    outline: none !important;
+  }
+  html body.app-shell #summary-dialog .summary-month-select:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22) !important;
+  }
+
+  html body.app-shell #summary-dialog .summary-wrap {
+    border: 1px solid #cadfd2 !important;
+    border-radius: 16px !important;
+    max-height: 52vh !important;
+    overflow: auto !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 16px rgba(15, 58, 41, 0.05), inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  }
+
+  html body.app-shell #summary-dialog #summary-table th {
+    background: linear-gradient(180deg, #f0f7f3 0%, #e7f2eb 100%) !important;
+    color: #0d5238 !important;
+    border-bottom: 2px solid #b7d6c3 !important;
+    padding: 12px 14px !important;
+    font-weight: 800 !important;
+  }
+  html body.app-shell #summary-dialog #summary-table td {
+    padding: 11px 14px !important;
+    font-size: 13.5px !important;
+    border-bottom: 1px solid #e5eee8 !important;
+  }
+  html body.app-shell #summary-dialog #summary-table tbody tr:hover {
+    background: #e6f6ed !important;
+  }
+  html body.app-shell #summary-dialog #summary-table tfoot th,
+  html body.app-shell #summary-dialog #summary-table tfoot td {
+    background: linear-gradient(180deg, #e4f2ea 0%, #d8ebd0 100%) !important;
+    color: #0b4b32 !important;
+    border-top: 2.5px solid #1f8a61 !important;
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    padding: 12px 14px !important;
+  }
+
+  html body.app-shell #summary-dialog #summary-hint {
+    margin: 14px 20px 20px !important;
+    padding: 11px 18px !important;
+    background: #eef7f2 !important;
+    border: 1px solid #cbe0d3 !important;
+    border-radius: 14px !important;
+    font-size: 13px !important;
+    color: #17573d !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 6px rgba(15, 58, 41, 0.04) !important;
+  }
+
+  /* Dark mode for Summary Dialog */
+  html[data-theme="dark"] body.app-shell dialog#summary-dialog {
+    background: #111e17 !important;
+    border-color: rgba(52, 211, 153, 0.3) !important;
+    box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.75), 0 0 30px rgba(16, 185, 129, 0.12) !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog .dialog-head {
+    background: linear-gradient(135deg, #0b2016 0%, #112d20 100%) !important;
+    border-bottom-color: rgba(52, 211, 153, 0.25) !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog .summary-tabs {
+    background: rgba(18, 36, 27, 0.8) !important;
+    border-color: rgba(52, 211, 153, 0.2) !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog .summary-tab {
+    color: #a7f3d0 !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog .summary-tab:hover {
+    background: rgba(30, 58, 45, 0.9) !important;
+    color: #ffffff !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog .summary-tab.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.45) !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog .summary-toolbar {
+    background: #14281f !important;
+    border-color: rgba(52, 211, 153, 0.2) !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog #summary-scope {
+    background: #162f23 !important;
+    border-color: rgba(52, 211, 153, 0.28) !important;
+    color: #a7f3d0 !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog .summary-month-select {
+    background: #162f23 !important;
+    border-color: rgba(52, 211, 153, 0.25) !important;
+    color: #e2f2ea !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog .summary-wrap {
+    background: #13241b !important;
+    border-color: rgba(52, 211, 153, 0.22) !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog #summary-table th {
+    background: linear-gradient(180deg, #183326 0%, #13271d 100%) !important;
+    color: #a7f3d0 !important;
+    border-bottom: 2px solid rgba(52, 211, 153, 0.35) !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog #summary-table td {
+    border-bottom-color: rgba(52, 211, 153, 0.15) !important;
+    color: #e2f2ea !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog #summary-table tbody tr:hover {
+    background: #1b3829 !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog #summary-table tfoot th,
+  html[data-theme="dark"] body.app-shell #summary-dialog #summary-table tfoot td {
+    background: linear-gradient(180deg, #183326 0%, #102319 100%) !important;
+    color: #6ee7b7 !important;
+    border-top: 2.5px solid rgba(52, 211, 153, 0.45) !important;
+  }
+  html[data-theme="dark"] body.app-shell #summary-dialog #summary-hint {
+    background: #15271e !important;
+    border-color: rgba(52, 211, 153, 0.22) !important;
+    color: #c9e8d8 !important;
+  }
+
+  /* 3. Enhanced Toast Notifications with Progress Countdown */
+  .hisaab-toast {
+    position: relative !important;
+    overflow: hidden !important;
+    animation: toastSpringIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  }
+  @keyframes toastSpringIn {
+    0% {
+      opacity: 0;
+      transform: translateY(18px) scale(0.92);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  .hisaab-toast .toast-icon {
+    font-size: 18px !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+  }
+  .toast-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3.5px;
+    background: currentColor;
+    opacity: 0.38;
+    transform-origin: right;
+    animation-name: toastProgressCountdown;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+  @keyframes toastProgressCountdown {
+    0% { transform: scaleX(1); }
+    100% { transform: scaleX(0); }
+  }
+
+  /* 4. Refined Empty States */
+  .summary-empty-cell,
+  .history-empty-cell {
+    padding: 38px 20px !important;
+    text-align: center !important;
+    color: #557967 !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    line-height: 2 !important;
+  }
+  .summary-empty-cell::before,
+  .history-empty-cell::before {
+    content: "📭";
+    display: block;
+    font-size: 32px;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
+    animation: emptyFloat 3s ease-in-out infinite;
+  }
+  @keyframes emptyFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  html[data-theme="dark"] :is(.summary-empty-cell, .history-empty-cell) {
+    color: #93bfa7 !important;
+  }
+
+  /* 5. Skeleton Loading & Shimmer Utility */
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    background: #e6ede8 !important;
+    border-radius: 8px;
+  }
+  .skeleton-shimmer::after {
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    animation: hisaabShimmer 1.6s infinite;
+    content: "";
+  }
+  @keyframes hisaabShimmer {
+    100% { transform: translateX(100%); }
+  }
+  html[data-theme="dark"] .skeleton-shimmer {
+    background: #172b20 !important;
+  }
+  html[data-theme="dark"] .skeleton-shimmer::after {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  }
+
+  /* 6. Tactile Button Micro-Interactions */
+  button:not(.toast-close):not(#close-summary):not(#close-backups):not(#close-receipt),
+  .btn-nav,
+  .btn-journal-action,
+  .btn-lock,
+  .summary-tab,
+  .party-tab {
+    transition: transform 0.14s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.18s ease, filter 0.18s ease, background 0.18s ease !important;
+  }
+  button:not(.toast-close):not(#close-summary):not(#close-backups):not(#close-receipt):active,
+  .btn-nav:active,
+  .btn-journal-action:active,
+  .btn-lock:active,
+  .summary-tab:active,
+  .party-tab:active {
+    transform: scale(0.965) translateY(1px) !important;
+  }
+
+  /* 7. Luxury Redesign for Receipt Dialog (#receipt-dialog) */
+  html body.app-shell dialog#receipt-dialog {
+    width: min(800px, 96vw) !important;
+    max-width: min(800px, 96vw) !important;
+    max-height: 92vh !important;
+    padding: 0 !important;
+    border-radius: 24px !important;
+    border: 1px solid #bcd8c8 !important;
+    background: #f8fbf9 !important;
+    box-shadow: 0 28px 80px rgba(15, 58, 41, 0.28), 0 8px 24px rgba(15, 58, 41, 0.08) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+  html body.app-shell #receipt-dialog .dialog-head {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px 14px !important;
+    margin: 0 !important;
+    background: linear-gradient(135deg, #0f5138 0%, #15734f 100%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+  }
+  html body.app-shell #receipt-dialog #receipt-heading {
+    margin: 0 !important;
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  html body.app-shell #receipt-dialog #receipt-heading::before {
+    content: "🧾";
+    font-size: 20px;
+  }
+  html body.app-shell #receipt-dialog #close-receipt {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    border-radius: 11px !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.26) !important;
+    color: #ffffff !important;
+    font-size: 22px !important;
+    line-height: 1 !important;
+    display: grid !important;
+    place-items: center !important;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  html body.app-shell #receipt-dialog #close-receipt:hover {
+    background: rgba(239, 68, 68, 0.3) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    transform: rotate(90deg);
+  }
+  html body.app-shell #receipt-dialog .receipt-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 16px 20px 12px !important;
+    padding: 5px !important;
+    background: #e7f2ec !important;
+    border: 1px solid #cadcd0 !important;
+    border-radius: 14px !important;
+  }
+  html body.app-shell #receipt-dialog .receipt-tab-btn {
+    flex: 1;
+    min-height: 40px;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    font-size: 13.5px !important;
+    color: #245842 !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+  }
+  html body.app-shell #receipt-dialog .receipt-tab-btn.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
+  }
+  html body.app-shell #receipt-dialog .receipt-actions {
+    position: sticky;
+    top: 68px;
+    z-index: 8;
+    background: #f8fbf9 !important;
+    padding: 10px 20px !important;
+    margin: 0 0 14px !important;
+    border-bottom: 1px solid #dbe8e0 !important;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  html body.app-shell #receipt-dialog #receipt-paper {
+    margin: 0 20px 24px !important;
+    border-radius: 18px !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid #d5e4db !important;
+  }
+  html[data-theme="dark"] body.app-shell dialog#receipt-dialog {
+    background: #111e17 !important;
+    border-color: rgba(52, 211, 153, 0.3) !important;
+    box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.75) !important;
+  }
+  html[data-theme="dark"] body.app-shell #receipt-dialog .dialog-head {
+    background: linear-gradient(135deg, #0b2016 0%, #112d20 100%) !important;
+    border-bottom-color: rgba(52, 211, 153, 0.25) !important;
+  }
+  html[data-theme="dark"] body.app-shell #receipt-dialog .receipt-tabs {
+    background: rgba(18, 36, 27, 0.8) !important;
+    border-color: rgba(52, 211, 153, 0.2) !important;
+  }
+  html[data-theme="dark"] body.app-shell #receipt-dialog .receipt-tab-btn {
+    color: #a7f3d0 !important;
+  }
+  html[data-theme="dark"] body.app-shell #receipt-dialog .receipt-tab-btn.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+  }
+  html[data-theme="dark"] body.app-shell #receipt-dialog .receipt-actions {
+    background: #111e17 !important;
+    border-bottom-color: rgba(52, 211, 153, 0.2) !important;
+  }
+  html[data-theme="dark"] body.app-shell #receipt-dialog #receipt-paper {
+    background: #162a20 !important;
+    border-color: rgba(52, 211, 153, 0.25) !important;
+  }
 }
 
 
