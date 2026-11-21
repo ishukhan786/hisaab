@@ -9510,6 +9510,452 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
     background: #162a20 !important;
     border-color: rgba(52, 211, 153, 0.25) !important;
   }
+
+  /* ==========================================================================
+     EXECUTIVE LOGIN PAGE REDESIGN — OBSIDIAN EMERALD & CHAMPAGNE GOLD EDITION
+     Split-Screen FinTech Showcase, High-Contrast User-Friendly Form, 3D Logo Crest
+     ========================================================================== */
+
+  .auth-overlay {
+    background-color: #03120c !important;
+    padding: 24px !important;
+  }
+
+  .auth-space-base {
+    background: radial-gradient(circle at 20% 20%, #0a2e20 0%, #04160f 55%, #020c08 100%) !important;
+  }
+
+  /* Replace violet/pink/cyan orbs with cohesive Obsidian Emerald & Champagne Gold atmosphere */
+  .orb-item.orb-violet {
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.34) 0%, rgba(5, 150, 105, 0.22) 48%, transparent 72%) !important;
+  }
+  .orb-item.orb-cyan {
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.14) 48%, transparent 72%) !important;
+  }
+  .orb-item.orb-pink {
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.26) 0%, rgba(15, 118, 110, 0.16) 48%, transparent 72%) !important;
+  }
+  .auth-bg-vignette {
+    background: radial-gradient(circle at center, transparent 10%, #020c08 100%) !important;
+  }
+
+  /* Split-Screen Executive Container */
+  .auth-split-shell {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 940px;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    border-radius: 30px;
+    overflow: hidden;
+    background: rgba(7, 27, 19, 0.82);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(167, 243, 208, 0.18);
+    box-shadow:
+      0 36px 90px -16px rgba(0, 0, 0, 0.78),
+      0 0 0 1px rgba(251, 191, 36, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    animation: authShellEntrance 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes authShellEntrance {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Left Brand Showcase Panel */
+  .auth-brand-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 40px 38px 32px;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(16, 185, 129, 0.22) 0%, transparent 55%),
+      radial-gradient(circle at 88% 92%, rgba(245, 158, 11, 0.16) 0%, transparent 55%),
+      linear-gradient(160deg, #0b2d20 0%, #061c14 58%, #04130d 100%);
+    border-right: 1px solid rgba(167, 243, 208, 0.12);
+    color: #ecfdf5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+  }
+
+  .auth-brand-logo-frame {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 96px;
+    height: 96px;
+    border-radius: 26px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(251, 191, 36, 0.28);
+    box-shadow:
+      0 18px 38px rgba(0, 0, 0, 0.48),
+      0 0 30px rgba(245, 158, 11, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    margin-bottom: 20px;
+  }
+
+  .auth-brand-logo-img {
+    width: 82px;
+    height: 82px;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
+  }
+
+  .auth-brand-kicker {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #fcd34d;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .auth-brand-heading {
+    margin: 0 0 10px;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: #ffffff;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    line-height: 1.2;
+  }
+
+  .auth-brand-urdu {
+    font-family: "Bombay Black Unicode", Calibri, "Segoe UI", sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fef08a 0%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .auth-brand-tagline {
+    margin: 0 0 6px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(209, 250, 229, 0.86);
+    font-weight: 500;
+  }
+
+  .auth-brand-tagline-urdu {
+    margin: 0;
+    font-family: Calibri, "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    color: rgba(167, 243, 208, 0.72);
+    text-align: left;
+  }
+
+  .auth-brand-features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .auth-brand-features li {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(167, 243, 208, 0.1);
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .auth-brand-features li:hover {
+    background: rgba(16, 185, 129, 0.09);
+    border-color: rgba(52, 211, 153, 0.24);
+  }
+
+  .auth-feat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 11px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    color: #6ee7b7;
+  }
+
+  .auth-brand-features li strong {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 2px;
+  }
+
+  .auth-brand-features li span {
+    display: block;
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgba(209, 250, 229, 0.7);
+  }
+
+  .auth-brand-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(167, 243, 208, 0.12);
+    font-size: 12px;
+    color: rgba(167, 243, 208, 0.72);
+    font-weight: 600;
+  }
+
+  .auth-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+    flex-shrink: 0;
+  }
+
+  .auth-brand-ver {
+    margin-left: auto;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    color: #fde68a;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* Right Form Panel inside Split Shell */
+  .auth-split-shell .auth-card-container {
+    max-width: none !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: rgba(4, 18, 13, 0.45);
+  }
+
+  /* Hide corner floating badge on desktop split view (shown on mobile when left panel hides) */
+  .auth-split-shell .auth-floating-badge {
+    display: none !important;
+  }
+
+  .auth-badge-logo-img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    display: block;
+  }
+
+  html body.app-shell .auth-split-shell .auth-card {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    max-width: 410px !important;
+    padding: 32px 28px 28px !important;
+  }
+
+  .auth-split-shell .auth-shimmer-line {
+    display: none !important;
+  }
+
+  /* Emerald & Gold Portal Badge */
+  .auth-portal-badge {
+    background: rgba(16, 185, 129, 0.14) !important;
+    border: 1px solid rgba(52, 211, 153, 0.32) !important;
+    color: #a7f3d0 !important;
+    padding: 5px 14px !important;
+  }
+
+  .auth-version-pill {
+    background: rgba(245, 158, 11, 0.2) !important;
+    color: #fde68a !important;
+    border: 1px solid rgba(251, 191, 36, 0.35) !important;
+  }
+
+  .auth-title-gradient {
+    background: linear-gradient(135deg, #6ee7b7 0%, #34d399 45%, #fcd34d 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+  }
+
+  .auth-subtitle {
+    color: rgba(209, 250, 229, 0.78) !important;
+    font-size: 13.5px !important;
+  }
+
+  /* High-Contrast User-Friendly Input Fields */
+  .auth-card .glass-input-group {
+    background: rgba(11, 34, 25, 0.9) !important;
+    border: 1.5px solid rgba(167, 243, 208, 0.2) !important;
+    border-radius: 14px !important;
+    min-height: 54px !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
+  }
+
+  .auth-card .glass-input-group:hover {
+    border-color: rgba(52, 211, 153, 0.42) !important;
+    background: rgba(13, 40, 29, 0.96) !important;
+  }
+
+  .auth-card .glass-input-group:focus-within {
+    border-color: #10b981 !important;
+    background: rgba(14, 46, 33, 1) !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.22), 0 8px 22px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  .auth-card .floating-input {
+    color: #ffffff !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+  }
+
+  .auth-card .floating-label {
+    color: rgba(167, 243, 208, 0.72) !important;
+    font-weight: 600 !important;
+  }
+
+  .auth-card .floating-input:focus ~ .floating-label,
+  .auth-card .floating-input:not(:placeholder-shown) ~ .floating-label {
+    color: #6ee7b7 !important;
+  }
+
+  .auth-card .glass-input-icon svg {
+    stroke: #6ee7b7 !important;
+    opacity: 0.85;
+  }
+
+  html body.app-shell .auth-card .glass-eye-btn,
+  html body.app-shell #toggle-login-pwd-btn,
+  html body.app-shell #toggle-setup-pwd-btn,
+  html body.app-shell #toggle-setup-confirm-btn,
+  html body.app-shell #toggle-rec-pwd-btn {
+    background: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    color: rgba(167, 243, 208, 0.85) !important;
+    min-width: 36px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    margin-right: 6px !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  html body.app-shell .auth-card .glass-eye-btn:hover,
+  html body.app-shell #toggle-login-pwd-btn:hover {
+    color: #ffffff !important;
+    background: rgba(16, 185, 129, 0.2) !important;
+  }
+
+  /* Remember Me Checkbox */
+  .auth-card .glass-checkbox-text {
+    color: rgba(209, 250, 229, 0.88) !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+  }
+
+  .auth-card .glass-checkbox-label input:checked + .glass-checkbox-box {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.45) !important;
+  }
+
+  /* Signature Executive Emerald-Gold Submit Button */
+  html body.app-shell .auth-card .btn-primary-glow.auth-submit-btn {
+    min-height: 52px !important;
+    border-radius: 14px !important;
+    background: linear-gradient(135deg, #10b981 0%, #059669 58%, #047857 100%) !important;
+    border: 1px solid rgba(110, 231, 183, 0.45) !important;
+    color: #ffffff !important;
+    font-size: 15.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.01em !important;
+    box-shadow:
+      0 12px 28px -6px rgba(16, 185, 129, 0.5),
+      0 0 0 1px rgba(251, 191, 36, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.34) !important;
+    transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease !important;
+  }
+
+  html body.app-shell .auth-card .btn-primary-glow.auth-submit-btn:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1.5px);
+    box-shadow:
+      0 16px 34px -6px rgba(16, 185, 129, 0.65),
+      0 0 22px rgba(245, 158, 11, 0.26),
+      inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+  }
+
+  /* Forgot Password Link */
+  html body.app-shell .auth-card .auth-link-btn {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    color: #a7f3d0 !important;
+    font-weight: 600 !important;
+  }
+  html body.app-shell .auth-card .auth-link-btn:hover {
+    background: rgba(16, 185, 129, 0.12) !important;
+    color: #fde68a !important;
+  }
+  .auth-card .auth-footer-urdu {
+    color: rgba(253, 230, 138, 0.85) !important;
+  }
+
+  /* Responsive Tablet / Mobile Collapse */
+  @media (max-width: 860px) {
+    .auth-split-shell {
+      grid-template-columns: 1fr;
+      max-width: 450px;
+      border-radius: 26px;
+    }
+    .auth-brand-panel {
+      display: none !important;
+    }
+    .auth-split-shell .auth-card-container {
+      padding: 6px;
+      background: transparent;
+    }
+    .auth-split-shell .auth-floating-badge {
+      display: flex !important;
+      top: 14px !important;
+      right: 14px !important;
+      width: 52px !important;
+      height: 52px !important;
+      border-radius: 15px !important;
+      background: rgba(11, 38, 27, 0.85) !important;
+      border-color: rgba(251, 191, 36, 0.35) !important;
+    }
+  }
 }
 
 
