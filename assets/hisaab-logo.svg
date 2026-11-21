@@ -1,9 +1,106 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="title desc">
   <title id="title">Hisaab</title>
-  <desc id="desc">An H monogram with a check mark, representing clear and balanced accounts.</desc>
-  <defs><linearGradient id="emerald" x1="30" y1="18" x2="226" y2="244" gradientUnits="userSpaceOnUse"><stop stop-color="#20856A"/><stop offset="1" stop-color="#0B4034"/></linearGradient></defs>
-  <rect x="8" y="8" width="240" height="240" rx="58" fill="url(#emerald)"/>
-  <rect x="9" y="9" width="238" height="238" rx="57" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="2"/>
-  <path d="M76 70V186M180 70V186" stroke="#FFFFFF" stroke-width="25" stroke-linecap="round"/>
-  <path d="M77 130L116 157L179 98" stroke="#96E7C4" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <desc id="desc">Premium luxury emerald and champagne gold H monogram with an ascending verified ledger check mark for Hisaab accounting software.</desc>
+  <defs>
+    <!-- Deep Luxury Obsidian Emerald Base -->
+    <linearGradient id="bg-emerald" x1="24" y1="16" x2="232" y2="244" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#147a57"/>
+      <stop offset="48%" stop-color="#0a4a35"/>
+      <stop offset="100%" stop-color="#042419"/>
+    </linearGradient>
+
+    <!-- Ambient Top-Left Emerald Specular Glow -->
+    <radialGradient id="ambient-glow" cx="72" cy="48" r="168" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34d399" stop-opacity="0.38"/>
+      <stop offset="55%" stop-color="#10b981" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#042419" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Subtle Bottom-Right Gold Ambient Bounce -->
+    <radialGradient id="gold-bounce" cx="204" cy="216" r="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#042419" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Metallic Border Sheen -->
+    <linearGradient id="rim-sheen" x1="16" y1="12" x2="240" y2="244" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#a7f3d0" stop-opacity="0.65"/>
+      <stop offset="38%" stop-color="#34d399" stop-opacity="0.22"/>
+      <stop offset="72%" stop-color="#fde68a" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.55"/>
+    </linearGradient>
+
+    <!-- Satin White Architectural Pillars -->
+    <linearGradient id="pillar-white" x1="68" y1="56" x2="188" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="65%" stop-color="#ecfdf5"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+
+    <!-- Sovereign Champagne Gold Ribbon -->
+    <linearGradient id="champagne-gold" x1="64" y1="140" x2="196" y2="86" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="45%" stop-color="#fcd34d"/>
+      <stop offset="82%" stop-color="#fef08a"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+
+    <!-- Glass Top Highlight -->
+    <linearGradient id="glass-sheen" x1="128" y1="12" x2="128" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Subtle Elevation Shadow for Emblem -->
+    <filter id="emblem-shadow" x="-16%" y="-16%" width="132%" height="136%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#02150e" flood-opacity="0.52"/>
+    </filter>
+
+    <filter id="gold-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#02150e" flood-opacity="0.45"/>
+    </filter>
+
+    <clipPath id="squircle-clip">
+      <rect x="8" y="8" width="240" height="240" rx="58"/>
+    </clipPath>
+  </defs>
+
+  <!-- Base Luxury Squircle -->
+  <g clip-path="url(#squircle-clip)">
+    <rect x="8" y="8" width="240" height="240" rx="58" fill="url(#bg-emerald)"/>
+    <rect x="8" y="8" width="240" height="240" rx="58" fill="url(#ambient-glow)"/>
+    <rect x="8" y="8" width="240" height="240" rx="58" fill="url(#gold-bounce)"/>
+
+    <!-- Subtle Architectural Ledger Grid Accent -->
+    <g stroke="#a7f3d0" stroke-opacity="0.07" stroke-width="1.5">
+      <line x1="8" y1="88" x2="248" y2="88"/>
+      <line x1="8" y1="168" x2="248" y2="168"/>
+      <line x1="128" y1="8" x2="128" y2="248"/>
+    </g>
+
+    <!-- Soft Glass Specular Arc -->
+    <path d="M8 66C8 34 34 8 66 8H190C222 8 248 34 248 66V82C196 108 60 108 8 82V66Z" fill="url(#glass-sheen)"/>
+  </g>
+
+  <!-- Crisp Metallic Double Border -->
+  <rect x="9.5" y="9.5" width="237" height="237" rx="56.5" stroke="url(#rim-sheen)" stroke-width="3"/>
+  <rect x="16" y="16" width="224" height="224" rx="50" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1.25"/>
+
+  <!-- Architectural H Pillars (Ledger Columns) -->
+  <g filter="url(#emblem-shadow)">
+    <!-- Left Pillar -->
+    <rect x="64" y="60" width="28" height="136" rx="14" fill="url(#pillar-white)"/>
+    <!-- Right Pillar -->
+    <rect x="164" y="60" width="28" height="136" rx="14" fill="url(#pillar-white)"/>
+  </g>
+
+  <!-- Champagne Gold Ascending Check / Ledger Balance Ribbon -->
+  <g filter="url(#gold-glow)">
+    <path d="M72 132L115 162L186 92" stroke="url(#champagne-gold)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Inner Specular Gold Highlight -->
+    <path d="M74 130L115 159L184 91" stroke="#fffbeb" stroke-opacity="0.55" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Sovereign Gold Diamond Accent (Crown Precision Mark) -->
+  <path d="M128 46L135 53L128 60L121 53Z" fill="url(#champagne-gold)"/>
 </svg>
