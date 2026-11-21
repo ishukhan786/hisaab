@@ -8584,6 +8584,421 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
   }
 }
 
+/* ==========================================================================
+   MUKAMMAL LUXURY REDESIGN & POLISHED DESIGN SYSTEM
+   Modern Glassmorphic Shell, Diffused Elevation, Satin Ledgers & Micro-Interactions
+   ========================================================================== */
+@media screen {
+  /* 1. Global Shell & Ambient Atmosphere */
+  body.app-shell {
+    background-color: #f3f7f5;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.07) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(5, 150, 105, 0.05) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(20, 184, 166, 0.04) 0px, transparent 50%);
+    background-attachment: fixed;
+    color: #13392a;
+    letter-spacing: -0.01em;
+  }
+
+  /* 2. Glassmorphic Top Navigation */
+  .app-shell .top-nav {
+    background: rgba(255, 255, 255, 0.86) !important;
+    backdrop-filter: blur(24px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+    border-bottom: 1px solid rgba(195, 222, 208, 0.8) !important;
+    box-shadow: 0 8px 32px -6px rgba(12, 50, 36, 0.06), 0 1px 2px rgba(12, 50, 36, 0.02) !important;
+    transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  /* Brand Logo & Title with Luxury Shine */
+  .app-shell .logo-mini {
+    box-shadow: 0 6px 18px rgba(5, 150, 105, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  }
+  .app-shell .brand-mini h1,
+  .app-shell .brand-mini .brand-title {
+    font-weight: 900 !important;
+    letter-spacing: 0.02em !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  /* 3. Segmented Workspace Switcher Pill */
+  .app-shell .workspace-nav {
+    background: rgba(224, 238, 231, 0.88) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(185, 216, 199, 0.9) !important;
+    border-radius: 9999px !important;
+    padding: 4px !important;
+    box-shadow: inset 0 2px 5px rgba(14, 52, 38, 0.08), 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  }
+  .app-shell .workspace-nav button {
+    border-radius: 9999px !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    padding: 5px 20px !important;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  .app-shell .workspace-nav button:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.85) !important;
+    color: #0d4632 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3px 8px rgba(16, 56, 41, 0.08) !important;
+  }
+  .app-shell .workspace-nav button.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%) !important;
+    color: #ffffff !important;
+    border-color: #047857 !important;
+    box-shadow: 0 4px 16px rgba(5, 150, 105, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+    transform: scale(1.02) !important;
+  }
+
+  /* 4. Controls, Date, Search & Serial Fields */
+  .app-shell :is(.top-date-field, .top-search-wrap, .top-serial-field) {
+    background: #ffffff !important;
+    border: 1px solid #bfdbcb !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 6px rgba(15, 50, 36, 0.04), inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  .app-shell :is(.top-date-field, .top-search-wrap, .top-serial-field):focus-within {
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22), 0 4px 12px rgba(16, 185, 129, 0.1) !important;
+    background: #ffffff !important;
+    transform: translateY(-1px);
+  }
+  .app-shell :is(.top-date-field, .top-search-wrap, .top-serial-field) input {
+    border-radius: 10px !important;
+  }
+
+  /* 5. Floating Glass Party Tabs Dock */
+  .app-shell .party-tabs-bar {
+    background: rgba(238, 247, 242, 0.88) !important;
+    backdrop-filter: blur(18px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+    border: 1px solid rgba(190, 220, 204, 0.85) !important;
+    border-radius: 20px !important;
+    padding: 10px 16px !important;
+    margin: 0 0 20px !important;
+    box-shadow: 0 8px 26px -6px rgba(16, 52, 38, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+  }
+  .app-shell .party-tab {
+    border-radius: 13px !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+    border: 1px solid rgba(190, 218, 203, 0.85) !important;
+    font-weight: 700 !important;
+    padding: 6px 18px !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 2px 5px rgba(16, 52, 38, 0.04) !important;
+  }
+  .app-shell .party-tab:hover {
+    background: #ffffff !important;
+    border-color: #34d399 !important;
+    color: #064e3b !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(16, 75, 52, 0.12) !important;
+  }
+  .app-shell .party-tab.active {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    color: #ffffff !important;
+    border-color: #047857 !important;
+    box-shadow: 0 6px 18px rgba(5, 150, 105, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    transform: scale(1.02) !important;
+  }
+  .app-shell .tab-add-btn,
+  .app-shell .tab-manage-btn {
+    border-radius: 13px !important;
+    font-weight: 700 !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  .app-shell .tab-add-btn:hover,
+  .app-shell .tab-manage-btn:hover {
+    transform: translateY(-1.5px) !important;
+  }
+
+  /* 6. Physical Luxury Register Paper Ledger */
+  .app-shell .paper {
+    border-radius: 24px !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(198, 222, 209, 0.85) !important;
+    box-shadow: 
+      0 20px 50px -12px rgba(15, 48, 35, 0.09),
+      0 4px 14px -2px rgba(15, 48, 35, 0.03),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+    overflow: hidden !important;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .app-shell .paper:hover {
+    box-shadow: 
+      0 26px 60px -14px rgba(15, 48, 35, 0.12),
+      0 6px 18px -2px rgba(15, 48, 35, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  }
+  .app-shell .paper-head {
+    background: linear-gradient(180deg, #fcfdfd 0%, #f0f7f3 100%) !important;
+    border-bottom: 1.5px solid #d4e4db !important;
+    padding: 18px 26px !important;
+  }
+  .app-shell .paper-head #title {
+    font-weight: 900 !important;
+    border-radius: 12px !important;
+    padding: 4px 12px !important;
+    transition: all 0.2s ease !important;
+  }
+  .app-shell .paper-head #title:hover {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-color: #a7cfb9 !important;
+  }
+  .app-shell .paper-head #title:focus {
+    background: #ffffff !important;
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+  }
+
+  /* Table Header Satin Finish */
+  .app-shell .paper thead th {
+    background: linear-gradient(180deg, #f8fbf9 0%, #eaf4ed 100%) !important;
+    color: #0c4330 !important;
+    font-weight: 800 !important;
+    border-bottom: 2.5px solid #b2d7bf !important;
+    letter-spacing: 0.01em;
+  }
+
+  /* Table Data Rows: Soft alternating & High-visibility focus */
+  .app-shell #rows > tr:nth-child(even) {
+    background: #f9fcf9 !important;
+  }
+  .app-shell #rows > tr:hover {
+    background: #eef8f2 !important;
+  }
+  .app-shell #rows td :is(input, textarea):focus {
+    box-shadow: inset 0 0 0 2px #059669, 0 0 0 3px rgba(16, 185, 129, 0.18) !important;
+    background: #ffffff !important;
+    border-radius: 6px !important;
+  }
+  .app-shell #rows tr.draft-row > td {
+    background: rgba(246, 252, 248, 0.7) !important;
+    border-bottom: 1.5px dashed #b7d6c2 !important;
+  }
+  .app-shell #rows td.number {
+    font-weight: 700 !important;
+    color: #245e46 !important;
+    background: #f3f8f5 !important;
+  }
+
+  /* 7. Totals Row Card Strip */
+  .app-shell tfoot.register-totals {
+    background: linear-gradient(180deg, #f2f8f4 0%, #e1eee6 100%) !important;
+    box-shadow: inset 0 2px 6px rgba(12, 54, 38, 0.07) !important;
+    border-top: 2.5px solid #99c6ab !important;
+  }
+  .app-shell .totals-title-wrap {
+    gap: 10px !important;
+  }
+  .app-shell :is(.orders-count-badge, .net-aed-badge) {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(160, 204, 180, 0.8) !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 2px 5px rgba(12, 54, 38, 0.05) !important;
+    padding: 3px 12px !important;
+  }
+
+  /* 8. Modern Janch Partal (Audit Card) */
+  .register-audit-card {
+    background: linear-gradient(135deg, rgba(246, 252, 248, 0.95) 0%, rgba(234, 247, 239, 0.92) 100%) !important;
+    border: 1px solid #b7dcce !important;
+    border-radius: 20px !important;
+    box-shadow: 0 12px 36px -8px rgba(16, 56, 40, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  }
+  .register-audit-card input {
+    background: #ffffff !important;
+    border: 1px solid #a8d5be !important;
+    border-radius: 10px !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  }
+  .register-audit-card input:focus {
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+  }
+
+  /* 9. Roznamcha (Journal) Card & Cash Summaries */
+  .journal-card {
+    border-radius: 24px !important;
+    border: 1px solid rgba(198, 222, 209, 0.85) !important;
+    box-shadow: 0 20px 50px -12px rgba(15, 48, 35, 0.09) !important;
+    overflow: hidden !important;
+  }
+  .journal-opening-line {
+    background: linear-gradient(135deg, #f5fbf7 0%, #eaf5ed 100%) !important;
+    padding: 14px 26px !important;
+    border-bottom: 1.5px solid #d3e5db !important;
+  }
+  .cash-summary {
+    background: linear-gradient(135deg, #f3f8f5 0%, #e8f3ec 100%) !important;
+    border: 1px solid #c2dbcd !important;
+    border-radius: 18px !important;
+    box-shadow: 0 8px 24px -6px rgba(15, 50, 36, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    padding: 14px !important;
+  }
+  .cash-item {
+    border-radius: 12px !important;
+    border: 1px solid #cce0d4 !important;
+    background: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(16, 56, 40, 0.04) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  .cash-item:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(16, 56, 40, 0.1) !important;
+  }
+  .bal-tag {
+    border-radius: 9999px !important;
+    padding: 3px 10px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  /* 10. Khata (Customer Ledger) Directory & Statements */
+  .khata-card,
+  .khata-profile-card {
+    border-radius: 20px !important;
+    box-shadow: 0 12px 34px -8px rgba(16, 56, 40, 0.08) !important;
+    border: 1px solid rgba(198, 222, 209, 0.85) !important;
+  }
+  .khata-dir-card {
+    border-radius: 16px !important;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 3px 10px rgba(18, 63, 46, 0.05) !important;
+  }
+  .khata-dir-card:hover {
+    transform: translateY(-2.5px) !important;
+    box-shadow: 0 10px 28px -4px rgba(18, 63, 46, 0.14) !important;
+    border-color: #34d399 !important;
+  }
+
+  /* 11. Luxury Dialogs & Overlays */
+  dialog {
+    border-radius: 24px !important;
+    box-shadow: 0 28px 70px -15px rgba(10, 40, 28, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid #bfded0 !important;
+    overflow: hidden !important;
+  }
+  dialog::backdrop {
+    background: rgba(10, 28, 20, 0.58) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+  }
+  .dialog-head {
+    border-bottom: 1px solid #d4e4db !important;
+    padding: 16px 22px !important;
+  }
+}
+
+/* ==========================================================================
+   NIGHT THEME (DARK MODE) OBSIDIAN LUXURY ENHANCEMENTS
+   ========================================================================== */
+@media screen {
+  html[data-theme="dark"] body.app-shell {
+    background-color: #0b1611 !important;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(5, 150, 105, 0.08) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(20, 184, 166, 0.06) 0px, transparent 50%) !important;
+    color: #e3f2ea !important;
+  }
+
+  html[data-theme="dark"] .app-shell .top-nav {
+    background: rgba(15, 28, 22, 0.88) !important;
+    backdrop-filter: blur(24px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+    border-bottom: 1px solid rgba(42, 75, 60, 0.8) !important;
+    box-shadow: 0 8px 32px -6px rgba(0, 0, 0, 0.35) !important;
+  }
+
+  html[data-theme="dark"] .app-shell .workspace-nav {
+    background: rgba(22, 42, 33, 0.9) !important;
+    border-color: rgba(52, 211, 153, 0.25) !important;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  }
+
+  html[data-theme="dark"] .app-shell .party-tabs-bar {
+    background: rgba(18, 35, 27, 0.92) !important;
+    border: 1px solid rgba(52, 211, 153, 0.22) !important;
+    box-shadow: 0 8px 28px -6px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  html[data-theme="dark"] .app-shell .party-tab {
+    background: rgba(26, 48, 38, 0.85) !important;
+    border-color: rgba(52, 211, 153, 0.22) !important;
+    color: #c9e8d8 !important;
+  }
+  html[data-theme="dark"] .app-shell .party-tab:hover {
+    background: #234234 !important;
+    border-color: #34d399 !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3) !important;
+  }
+  html[data-theme="dark"] .app-shell .party-tab.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45) !important;
+  }
+
+  html[data-theme="dark"] .app-shell .paper {
+    background: #122119 !important;
+    border-color: rgba(52, 211, 153, 0.25) !important;
+    box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.5) !important;
+  }
+  html[data-theme="dark"] .app-shell .paper-head {
+    background: linear-gradient(180deg, #162a20 0%, #122119 100%) !important;
+    border-bottom-color: rgba(52, 211, 153, 0.25) !important;
+  }
+  html[data-theme="dark"] .app-shell .paper thead th {
+    background: linear-gradient(180deg, #193125 0%, #14271d 100%) !important;
+    color: #a7f3d0 !important;
+    border-bottom: 2.5px solid rgba(52, 211, 153, 0.45) !important;
+  }
+  html[data-theme="dark"] .app-shell #rows > tr:nth-child(even) {
+    background: #14251c !important;
+  }
+  html[data-theme="dark"] .app-shell #rows > tr:hover {
+    background: #1b3528 !important;
+  }
+  html[data-theme="dark"] .app-shell #rows td :is(input, textarea):focus {
+    box-shadow: inset 0 0 0 2px #34d399, 0 0 0 3px rgba(52, 211, 153, 0.3) !important;
+    background: #193125 !important;
+    color: #ffffff !important;
+  }
+  html[data-theme="dark"] .app-shell tfoot.register-totals {
+    background: linear-gradient(180deg, #16291f 0%, #101e17 100%) !important;
+    border-top: 2.5px solid rgba(52, 211, 153, 0.4) !important;
+  }
+
+  html[data-theme="dark"] dialog {
+    background: #122119 !important;
+    border-color: rgba(52, 211, 153, 0.3) !important;
+    box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.7) !important;
+    color: #e3f2ea !important;
+  }
+  html[data-theme="dark"] dialog::backdrop {
+    background: rgba(3, 10, 7, 0.75) !important;
+  }
+  html[data-theme="dark"] .register-audit-card {
+    background: linear-gradient(135deg, rgba(20, 38, 29, 0.95) 0%, rgba(16, 30, 23, 0.92) 100%) !important;
+    border-color: rgba(52, 211, 153, 0.28) !important;
+    box-shadow: 0 14px 40px -8px rgba(0, 0, 0, 0.45) !important;
+  }
+  html[data-theme="dark"] .cash-summary {
+    background: linear-gradient(135deg, #15271e 0%, #101e17 100%) !important;
+    border-color: rgba(52, 211, 153, 0.25) !important;
+  }
+  html[data-theme="dark"] .cash-item {
+    background: #16291f !important;
+    border-color: rgba(52, 211, 153, 0.2) !important;
+  }
+}
+
+
 
 
 
