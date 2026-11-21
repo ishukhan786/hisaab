@@ -347,6 +347,29 @@
     }
 
     let directoryFilter = 'all'; // 'all' | 'receivables' | 'payables' | 'overdue'
+    let directorySort = (() => {
+      try { return localStorage.getItem('hisaab-khata-sort') || 'default'; } catch (_) { return 'default'; }
+    })();
+
+    function getCustomerInitials(name) {
+      const clean = String(name || '').trim().replace(/\s+/g, ' ');
+      if (!clean) return '؟';
+      const words = clean.split(' ').filter(Boolean);
+      if (words.length >= 2) {
+        return (words[0][0] + ' ' + words[1][0]).toUpperCase();
+      }
+      return clean.slice(0, 2).toUpperCase();
+    }
+
+    function getAvatarToneIndex(str) {
+      const s = String(str || '');
+      let hash = 0;
+      for (let i = 0; i < s.length; i++) {
+        hash = ((hash << 5) - hash) + s.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash) % 6;
+    }
 
     function computeDaysOld(lastDateStr, todayStr) {
       if (!lastDateStr || !todayStr || !validDate(lastDateStr) || !validDate(todayStr)) return 0;
@@ -573,6 +596,12 @@
               if (tag.textContent !== tagText) tag.textContent = tagText;
               if (amtSpan.textContent !== formattedAbs) amtSpan.textContent = formattedAbs;
               if (sideSpan.textContent !== sideText) sideSpan.textContent = sideText;
+              r._baqayaDisplay = formattedAbs + ' ' + tagText;
+            }
+
+            if (tr) {
+              const rBtn = tr._els ? tr._els.receiptBtn : tr.querySelector('.btn-khata-row-receipt');
+              if (rBtn) rBtn.hidden = !hasData(r);
             }
 
             // Sync static print text for other cells
@@ -586,6 +615,8 @@
             if (pvJama) pvJama.textContent = r.credit || '';
           }
         } else if (tr) {
+          const rBtn = tr._els ? tr._els.receiptBtn : tr.querySelector('.btn-khata-row-receipt');
+          if (rBtn) rBtn.hidden = true;
           const bCell = tr._els ? tr._els.bCell : tr.querySelector('.td-baqaya');
           if (bCell) {
             bCell.classList.remove('is-jama', 'is-banam');
@@ -771,6 +802,7 @@
         if (wasDraft !== nowDraft || /سابقہ|opening/i.test(r.detail)) {
           recalculate(khata);
           if (wasDraft && !nowDraft) {
+            btnReceipt.hidden = false;
             ensureDraft(khata, { appendNode: true });
           }
         }
@@ -821,6 +853,7 @@
         }
         recalculate(khata);
         if (wasDraft && hasData(r)) {
+          btnReceipt.hidden = false;
           ensureDraft(khata, { appendNode: true });
         }
         save();
@@ -883,6 +916,7 @@
         }
         recalculate(khata);
         if (wasDraft && hasData(r)) {
+          btnReceipt.hidden = false;
           ensureDraft(khata, { appendNode: true });
         }
         save();
@@ -940,20 +974,25 @@
       tdBaqaya.className = 'td-baqaya';
       tr.append(tdBaqaya);
 
-      tr._els = {
-        sCell: tdSerial,
-        banamInput: inBanam,
-        jamaInput: inJama,
-        bCell: tdBaqaya,
-        pvDate: printDate,
-        pvDetail: printDetail,
-        pvBanam: printBanam,
-        pvJama: printJama
-      };
-
-      // 7. Delete Row
+      // 7. Actions (Receipt Voucher & Delete)
       const tdDelete = document.createElement('td');
       tdDelete.className = 'td-delete no-print';
+
+      const btnReceipt = document.createElement('button');
+      btnReceipt.type = 'button';
+      btnReceipt.className = 'btn-khata-row-receipt no-print';
+      btnReceipt.innerHTML = '<span aria-hidden="true">🧾</span> رسید';
+      btnReceipt.title = 'اس انٹری کی کیش رسید / واؤچر پرنٹ و WhatsApp پر بھیجیں';
+      btnReceipt.setAttribute('aria-label', 'اس انٹری کی رسید');
+      btnReceipt.hidden = !hasData(r);
+      btnReceipt.onclick = e => {
+        e.stopPropagation();
+        if (typeof window.openKhataReceipt === 'function') {
+          const rowIdx = khata.rows.indexOf(r);
+          window.openKhataReceipt(r, khata, rowIdx >= 0 ? rowIdx + 1 : 1);
+        }
+      };
+
       const btnDel = document.createElement('button');
       btnDel.type = 'button';
       btnDel.className = 'btn-delete-row no-print';
@@ -970,8 +1009,20 @@
         recalculate(khata);
         save(true);
       };
-      tdDelete.append(btnDel);
+      tdDelete.append(btnReceipt, btnDel);
       tr.append(tdDelete);
+
+      tr._els = {
+        sCell: tdSerial,
+        banamInput: inBanam,
+        jamaInput: inJama,
+        bCell: tdBaqaya,
+        receiptBtn: btnReceipt,
+        pvDate: printDate,
+        pvDetail: printDetail,
+        pvBanam: printBanam,
+        pvJama: printJama
+      };
 
       (container || $('khata-rows')).append(tr);
     }
@@ -1001,6 +1052,11 @@
       $('khata-view-name').textContent = khata.name;
       $('khata-view-mobile').textContent = khata.mobile || '—';
       $('khata-view-address').textContent = khata.address || '—';
+      const avatarEl = $('khata-view-avatar');
+      if (avatarEl) {
+        avatarEl.textContent = getCustomerInitials(khata.name);
+        avatarEl.className = `khata-profile-avatar avatar-tone-${getAvatarToneIndex(khata.code || khata.name)} no-print`;
+      }
 
       const currBadge = $('khata-view-currency');
       if (currBadge) currBadge.remove();
@@ -1185,6 +1241,27 @@
         });
       }
 
+      // Smart Sorting (Highest Debt, Highest Payable, Recently Active, Alphabetical)
+      const sortEl = $('khata-dir-sort');
+      if (sortEl && sortEl.value !== directorySort) sortEl.value = directorySort;
+      if (directorySort !== 'default' && filtered.length > 1) {
+        filtered = [...filtered].sort((a, b) => {
+          if (directorySort === 'highest-debt') {
+            return b.running > a.running ? 1 : b.running < a.running ? -1 : 0;
+          }
+          if (directorySort === 'highest-payable') {
+            return a.running > b.running ? 1 : a.running < b.running ? -1 : 0;
+          }
+          if (directorySort === 'recent') {
+            return (b.lastDate || '').localeCompare(a.lastDate || '');
+          }
+          if (directorySort === 'name') {
+            return (a.khata.name || '').localeCompare(b.khata.name || '', 'ur');
+          }
+          return 0;
+        });
+      }
+
       // Update count indicator
       const countEl = $('khata-dir-count');
       if (countEl) {
@@ -1332,19 +1409,42 @@
           tdCode.append(strong);
 
           const tdName = document.createElement('td');
+          tdName.className = 'dir-td-name';
           tdName.style.fontWeight = '700';
+          const nameWrap = document.createElement('div');
+          nameWrap.className = 'khata-dir-name-wrap';
+
+          const avatarSpan = document.createElement('span');
+          avatarSpan.className = `khata-avatar avatar-tone-${getAvatarToneIndex(k.code || k.name)} no-print`;
+          avatarSpan.setAttribute('aria-hidden', 'true');
+          avatarSpan.textContent = getCustomerInitials(k.name);
+
           const nameSpan = document.createElement('span');
+          nameSpan.className = 'khata-dir-name-text';
           nameSpan.textContent = k.name;
-          tdName.append(nameSpan);
+
+          nameWrap.append(avatarSpan, nameSpan);
           if (running > 0n && item.daysOld >= 15) {
             const ageBadge = document.createElement('span');
-            ageBadge.className = 'khata-aging-badge ' + (item.daysOld >= 30 ? 'is-overdue-30' : 'is-aging-15');
+            const ageCls = item.daysOld >= 90
+              ? 'is-overdue-90'
+              : item.daysOld >= 60
+                ? 'is-overdue-60'
+                : item.daysOld >= 30
+                  ? 'is-overdue-30'
+                  : 'is-aging-15';
+            ageBadge.className = 'khata-aging-badge ' + ageCls;
             ageBadge.title = `آخری اندراج: ${formatDisplayDate(item.lastDate)} (${item.daysOld} دن پہلے)`;
-            ageBadge.textContent = item.daysOld >= 30
-              ? `⏰ ${formatCount(item.daysOld)} دن پرانا`
-              : `⏳ ${formatCount(item.daysOld)} دن`;
-            tdName.append(ageBadge);
+            ageBadge.textContent = item.daysOld >= 90
+              ? `🔥 ${formatCount(item.daysOld)} دن پرانا`
+              : item.daysOld >= 60
+                ? `⚠️ ${formatCount(item.daysOld)} دن پرانا`
+                : item.daysOld >= 30
+                  ? `⏰ ${formatCount(item.daysOld)} دن پرانا`
+                  : `⏳ ${formatCount(item.daysOld)} دن`;
+            nameWrap.append(ageBadge);
           }
+          tdName.append(nameWrap);
 
           const tdMobile = document.createElement('td');
           tdMobile.className = 'eng-num';
@@ -2093,6 +2193,11 @@
     $('tab-khata-receivables')?.addEventListener('click', () => setDirectoryFilter('receivables'));
     $('tab-khata-payables')?.addEventListener('click', () => setDirectoryFilter('payables'));
     $('tab-khata-overdue')?.addEventListener('click', () => setDirectoryFilter('overdue'));
+    $('khata-dir-sort')?.addEventListener('change', e => {
+      directorySort = e.target.value || 'default';
+      try { localStorage.setItem('hisaab-khata-sort', directorySort); } catch (_) {}
+      renderDirectory();
+    });
 
     // Directory Overview Stat Card Clickable Filters
     ['stat-card-khata-all', 'stat-card-khata-receivables', 'stat-card-khata-payables'].forEach(id => {

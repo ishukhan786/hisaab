@@ -2743,6 +2743,8 @@
       const unitWord = isAfn ? 'افغانی' : 'روپے';
       const values = {
         title: state.title || 'اندراج رجسٹر',
+        kicker: 'حساب · کمپیوٹرائزڈ واؤچر',
+        badge: 'انٹری رسید',
         serial: '#' + String(serial).padStart(4, '0'),
         date: fmtDate(receiptSelection.date),
         branch: receiptSelection.branch,
@@ -2796,6 +2798,91 @@
       }
     }
   }
+
+  /* Single Entry Cash Receipt Voucher for Customer Khata */
+  function openKhataReceipt(row, khata, serial) {
+    try {
+      if (!row || !khata) return;
+      const isCredit = Boolean(row.credit && row.credit.trim());
+      const rawAmt = isCredit ? row.credit : (row.debit || '');
+      const numAmt = integerAmount(rawAmt);
+      const safeAmt = numAmt !== null ? formatted(numAmt) : (rawAmt || '0');
+
+      const isAfn = khata.currency === 'aed';
+      const toUrdu = window.amountToUrduShort || (typeof amountToUrduShort !== 'undefined' ? amountToUrduShort : null);
+      const urduShort = toUrdu && safeAmt && safeAmt !== '0' && safeAmt !== '—' ? toUrdu(safeAmt) : '';
+      const unitWord = isAfn ? 'درہم' : 'روپے';
+
+      const serialStr = typeof serial === 'number' || typeof serial === 'string'
+        ? String(serial).padStart(3, '0')
+        : '001';
+
+      receiptSelection = {
+        serial: `${khata.code}-${serialStr}`,
+        date: row.date || state.date || today(),
+        branch: `${khata.name} (${khata.code})`,
+        mobile: khata.mobile || '',
+        isKhata: true,
+        khataName: khata.name,
+        khataCode: khata.code,
+        isCredit
+      };
+
+      const voucherBadge = isCredit ? 'رقم وصولی رسید' : 'ادائیگی واؤچر';
+      const values = {
+        title: (state.title || 'حساب') + (isCredit ? ' — رقم وصولی رسید' : ' — ادائیگی واؤچر'),
+        kicker: 'کسٹمر کھاتہ · باضابطہ کمپیوٹرائزڈ واؤچر',
+        badge: voucherBadge,
+        serial: '#' + receiptSelection.serial,
+        date: fmtDate(receiptSelection.date),
+        branch: `${khata.name} (${khata.code})`,
+        sender: isCredit ? (khata.name || 'گاہک') : (state.title || 'ادارہ / کیشیئر'),
+        mobile: khata.mobile || '—',
+        receiver: isCredit ? (state.title || 'ادارہ / کیشیئر') : (khata.name || 'گاہک'),
+        place: row.detail || (isCredit ? 'نقد وصولی' : 'ادائیگی / مال ادھار'),
+        balance: row._baqayaDisplay || '—',
+        aed: isAfn ? safeAmt : '—',
+        pkr: safeAmt,
+        'pkr-words': urduShort ? `(${urduShort} ${unitWord})` : '',
+        currency: isAfn ? 'درہم (AED)' : 'پاکستانی روپے (PKR)'
+      };
+
+      const paper = $('receipt-paper');
+      if (paper) {
+        for (const [field, value] of Object.entries(values)) {
+          const el = paper.querySelector('[data-receipt="' + field + '"]');
+          if (el) el.textContent = value;
+        }
+      }
+      try {
+        if (window.HisaabThermal?.populateSlip) {
+          window.HisaabThermal.populateSlip(values);
+        }
+      } catch (thmErr) {
+        console.warn('Thermal slip notice:', thmErr);
+      }
+      try {
+        switchReceiptTab('standard');
+      } catch (_) {}
+      if ($('receipt-status')) $('receipt-status').textContent = '';
+      if ($('receipt-save')) $('receipt-save').hidden = false;
+      if ($('receipt-png')) $('receipt-png').hidden = false;
+      if ($('receipt-copy')) {
+        $('receipt-copy').hidden = false;
+        $('receipt-copy').disabled = !window.electronAPI?.copyReceiptPNG && !(window.ClipboardItem && navigator.clipboard?.write);
+        $('receipt-copy').title = $('receipt-copy').disabled ? 'اس براؤزر میں تصویر کاپی دستیاب نہیں؛ PNG ڈاؤن لوڈ کریں' : 'تصویر کاپی کریں';
+      }
+      if ($('receipt-whatsapp')) $('receipt-whatsapp').hidden = false;
+      const d = $('receipt-dialog');
+      if (d) {
+        try { if (d.open) d.close(); } catch (_) {}
+        d.showModal();
+      }
+    } catch (err) {
+      console.error('Failed to open khata receipt dialog:', err);
+    }
+  }
+  window.openKhataReceipt = openKhataReceipt;
 
   function switchReceiptTab(tab) {
     const isThermal = tab === 'thermal';
@@ -2876,17 +2963,28 @@
       return d;
     };
     const phone = normalizeWaPhone(receiptSelection.mobile || values.mobile);
-    const lines = [
-      `*${values.title || 'حساب رسید'}*`,
-      `رسید نمبر: ${values.serial || ''}`,
-      `تاریخ: ${values.date || ''}`,
-      `پارٹی: ${values.branch || ''}`,
-      values.sender && values.sender !== '—' ? `ارسال کنندہ: ${values.sender}` : '',
-      values.receiver && values.receiver !== '—' ? `وصول کنندہ: ${values.receiver}` : '',
-      values.place && values.place !== '—' ? `مقام: ${values.place}` : '',
-      `درہم (AED): ${values.aed || '0'}`,
-      `${values.currency || 'روپیہ'}: ${values.pkr || '0'} ${values['pkr-words'] || ''}`.trim()
-    ].filter(Boolean).join('\n');
+    const lines = receiptSelection.isKhata
+      ? [
+          `*${values.title || 'کسٹمر کھاتہ رسید'}*`,
+          `رسید نمبر: ${values.serial || ''}`,
+          `تاریخ: ${values.date || ''}`,
+          `گاہک: ${receiptSelection.khataName || ''} (${receiptSelection.khataCode || ''})`,
+          values.place && values.place !== '—' ? `تفصیل: ${values.place}` : '',
+          `رقم: ${values.pkr || '0'} ${values.currency || ''} ${values['pkr-words'] || ''}`.trim(),
+          values.balance && values.balance !== '—' ? `کھاتے کا بقایا: ${values.balance}` : '',
+          'آپ کے تعاون کا شکریہ!'
+        ].filter(Boolean).join('\n')
+      : [
+          `*${values.title || 'حساب رسید'}*`,
+          `رسید نمبر: ${values.serial || ''}`,
+          `تاریخ: ${values.date || ''}`,
+          `پارٹی: ${values.branch || ''}`,
+          values.sender && values.sender !== '—' ? `ارسال کنندہ: ${values.sender}` : '',
+          values.receiver && values.receiver !== '—' ? `وصول کنندہ: ${values.receiver}` : '',
+          values.place && values.place !== '—' ? `مقام: ${values.place}` : '',
+          `درہم (AED): ${values.aed || '0'}`,
+          `${values.currency || 'روپیہ'}: ${values.pkr || '0'} ${values['pkr-words'] || ''}`.trim()
+        ].filter(Boolean).join('\n');
     document.body.inert = true;
     $('receipt-status').textContent = 'WhatsApp کے لیے رسید تیار ہو رہی ہے…';
     let copied = false;
