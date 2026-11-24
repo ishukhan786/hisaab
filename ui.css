@@ -10378,6 +10378,102 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
       grid-template-columns: 1fr;
     }
   }
+
+  /* ==========================================================================
+     WORKSPACE NAV SEGMENTED TABS — DISTINCT ACTIVE TAB IDENTITY (LIGHT & DARK)
+     ========================================================================== */
+  html body.app-shell .workspace-nav {
+    background: #dcebe2 !important;
+    border: 1px solid #b5d3c1 !important;
+    padding: 4px !important;
+    gap: 5px !important;
+    border-radius: 9999px !important;
+    box-shadow: inset 0 2px 5px rgba(12, 48, 34, 0.1), 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+  }
+
+  html body.app-shell .workspace-nav button:not(.active) {
+    background: transparent !important;
+    background-image: none !important;
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+    color: #365e4c !important;
+    font-weight: 600 !important;
+    opacity: 0.82;
+  }
+
+  html body.app-shell .workspace-nav button:not(.active):hover {
+    background: rgba(255, 255, 255, 0.72) !important;
+    border-color: rgba(16, 185, 129, 0.25) !important;
+    color: #0d4632 !important;
+    opacity: 1;
+    translate: 0 -1px !important;
+  }
+
+  html body.app-shell .workspace-nav button.active {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    opacity: 1 !important;
+    transform: scale(1.03) !important;
+  }
+
+  html body.app-shell .workspace-nav #view-register.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 58%, #047857 100%) !important;
+    border: 1px solid #047857 !important;
+    box-shadow: 0 5px 16px rgba(5, 150, 105, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+
+  html body.app-shell .workspace-nav #view-journal.active {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 58%, #3730a3 100%) !important;
+    border: 1px solid #3730a3 !important;
+    box-shadow: 0 5px 16px rgba(79, 70, 229, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+
+  html body.app-shell .workspace-nav #view-khata.active {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 58%, #0369a1 100%) !important;
+    border: 1px solid #0369a1 !important;
+    box-shadow: 0 5px 16px rgba(2, 132, 199, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  }
+
+  /* Dark Mode Workspace Nav Parity */
+  html[data-theme="dark"] body.app-shell .workspace-nav {
+    background: #0d1d15 !important;
+    border-color: rgba(52, 211, 153, 0.25) !important;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  }
+
+  html[data-theme="dark"] body.app-shell .workspace-nav button:not(.active) {
+    background: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    color: #8bbda3 !important;
+    opacity: 0.78;
+  }
+
+  html[data-theme="dark"] body.app-shell .workspace-nav button:not(.active):hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(52, 211, 153, 0.25) !important;
+    color: #ecfdf5 !important;
+    opacity: 1;
+  }
+
+  html[data-theme="dark"] body.app-shell .workspace-nav #view-register.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%) !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 5px 18px rgba(16, 185, 129, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+
+  html[data-theme="dark"] body.app-shell .workspace-nav #view-journal.active {
+    background: linear-gradient(135deg, #818cf8 0%, #4f46e5 60%, #3730a3 100%) !important;
+    border-color: #a5b4fc !important;
+    box-shadow: 0 5px 18px rgba(99, 102, 241, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+
+  html[data-theme="dark"] body.app-shell .workspace-nav #view-khata.active {
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 60%, #0369a1 100%) !important;
+    border-color: #7dd3fc !important;
+    box-shadow: 0 5px 18px rgba(14, 165, 233, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
 }
 
 
