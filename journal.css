@@ -52,6 +52,10 @@ body.journal-view .top-nav-end{grid-column:2;grid-row:1;border:0;padding:0;justi
 .is-banam .bal-tag{background:#fee2e2;color:#991b1b!important;border:1px solid #fca5a5}
 .journal-table tfoot th{height:52px;line-height:2.2}
 @media screen {
+  .journal-table-wrap{max-height:68vh;overflow:auto}
+  .journal-table thead th{position:sticky;top:0;z-index:3;box-shadow:0 2px 6px rgba(15,58,41,.08)}
+  .journal-table tbody tr:focus-within td.journal-serial{background:#d7efe2!important;color:#0f5138!important;box-shadow:inset -4px 0 0 #10b981!important}
+  html[data-theme="dark"] .journal-table tbody tr:focus-within td.journal-serial{background:#183a2b!important;color:#6ee7b7!important;box-shadow:inset -4px 0 0 #34d399!important}
   .journal-description{position:relative!important;display:flex!important;align-items:center!important;gap:8px;padding:6px 8px!important;vertical-align:middle!important;direction:ltr}
   .journal-description textarea{order:2;flex:1 1 auto;width:auto!important;min-width:0}
   .journal-delete{order:1;position:static!important;z-index:5;transform:none!important;flex:0 0 26px;font:18px Arial,sans-serif!important;width:26px!important;min-width:26px!important;height:26px!important;min-height:26px!important;padding:0!important;background:rgba(248,252,249,.92)!important;border:1px solid #b7d4c1!important;border-radius:7px!important;color:#b94a52!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;cursor:pointer;opacity:0.9;visibility:visible;transition:all .16s ease!important;box-shadow:0 2px 5px rgba(16,56,41,.16)!important}

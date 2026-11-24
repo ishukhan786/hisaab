@@ -9956,6 +9956,428 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
       border-color: rgba(251, 191, 36, 0.35) !important;
     }
   }
+
+  /* ==========================================================================
+     SENIOR UI/UX SYSTEM: UNIFIED DIALOGS, REGISTER GUTTER, SHORTCUTS & CTRL+K
+     ========================================================================== */
+
+  /* 1. Unified Luxury Dialog Design System (#branch-dialog, #export-dialog, #history-dialog, #party-date-dialog, #account-settings-dialog, #shortcuts-dialog) */
+  html body.app-shell :is(#branch-dialog, #export-dialog, #history-dialog, #party-date-dialog, #account-settings-dialog, #shortcuts-dialog) {
+    padding: 0 !important;
+    border-radius: 24px !important;
+    border: 1px solid #bcd8c8 !important;
+    background: #f8fbf9 !important;
+    box-shadow: 0 28px 80px rgba(15, 58, 41, 0.26), 0 8px 24px rgba(15, 58, 41, 0.08) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  html body.app-shell :is(#branch-dialog, #export-dialog, #history-dialog, #party-date-dialog, #account-settings-dialog, #shortcuts-dialog) .dialog-head {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 22px 14px !important;
+    margin: 0 !important;
+    background: linear-gradient(135deg, #0f5138 0%, #15734f 100%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+  }
+
+  html body.app-shell :is(#branch-dialog, #export-dialog, #history-dialog, #party-date-dialog, #account-settings-dialog, #shortcuts-dialog) .dialog-head :is(h2, .party-dialog-branch-sub) {
+    color: #ffffff !important;
+    margin: 0 !important;
+  }
+
+  html body.app-shell :is(#branch-dialog, #export-dialog, #history-dialog, #party-date-dialog, #account-settings-dialog, #shortcuts-dialog) .dialog-head > button:last-child {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    border-radius: 11px !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.26) !important;
+    color: #ffffff !important;
+    font-size: 20px !important;
+    line-height: 1 !important;
+    display: grid !important;
+    place-items: center !important;
+    transition: all 0.18s ease !important;
+  }
+
+  html body.app-shell :is(#branch-dialog, #export-dialog, #history-dialog, #party-date-dialog, #account-settings-dialog, #shortcuts-dialog) .dialog-head > button:last-child:hover {
+    background: rgba(239, 68, 68, 0.3) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    transform: rotate(90deg) !important;
+  }
+
+  html body.app-shell :is(#branch-dialog, #export-dialog, #history-dialog) > :not(.dialog-head) {
+    margin-inline: 22px;
+  }
+  html body.app-shell :is(#branch-dialog, #export-dialog, #history-dialog) > :nth-child(2) {
+    margin-top: 16px;
+  }
+  html body.app-shell :is(#branch-dialog, #export-dialog, #history-dialog) > :last-child {
+    margin-bottom: 22px;
+  }
+
+  html body.app-shell #account-settings-dialog .auth-form {
+    padding: 20px 24px 24px !important;
+  }
+
+  html[data-theme="dark"] body.app-shell :is(#branch-dialog, #export-dialog, #history-dialog, #party-date-dialog, #account-settings-dialog, #shortcuts-dialog) {
+    background: #111e17 !important;
+    border-color: rgba(52, 211, 153, 0.3) !important;
+    box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.78), 0 0 30px rgba(16, 185, 129, 0.12) !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(#branch-dialog, #export-dialog, #history-dialog, #party-date-dialog, #account-settings-dialog, #shortcuts-dialog) .dialog-head {
+    background: linear-gradient(135deg, #0b2016 0%, #112d20 100%) !important;
+    border-bottom-color: rgba(52, 211, 153, 0.25) !important;
+  }
+
+  /* 2. Active Row Gutter Indicator in Register (#rows) */
+  html body.app-shell #rows > tr:focus-within > td.serial {
+    background: #d7efe2 !important;
+    color: #0f5138 !important;
+    box-shadow: inset -4px 0 0 #10b981 !important;
+  }
+  html[data-theme="dark"] body.app-shell #rows > tr:focus-within > td.serial {
+    background: #183a2b !important;
+    color: #6ee7b7 !important;
+    box-shadow: inset -4px 0 0 #34d399 !important;
+  }
+
+  /* 3. Top Nav Search Ctrl+K Hint & Laptop Density Polish */
+  .top-search-wrap {
+    position: relative;
+  }
+  .top-kbd-hint {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 2px 7px !important;
+    min-height: 22px !important;
+    height: 22px !important;
+    border-radius: 6px !important;
+    border: 1px solid #c5ddd0 !important;
+    background: #f0f7f3 !important;
+    color: #165e43 !important;
+    font: 700 10.5px ui-monospace, SFMono-Regular, Consolas, monospace !important;
+    cursor: pointer !important;
+    line-height: 1 !important;
+  }
+  .top-kbd-hint:hover {
+    background: #10b981 !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+  }
+  html[data-theme="dark"] .top-kbd-hint {
+    background: #162f23 !important;
+    border-color: rgba(52, 211, 153, 0.3) !important;
+    color: #a7f3d0 !important;
+  }
+  html body.app-shell #search {
+    padding-inline-end: 64px !important;
+  }
+
+  @media screen and (max-width: 1380px) {
+    .app-shell .top-nav {
+      padding: 8px 14px !important;
+      gap: 8px !important;
+    }
+    .app-shell .top-nav-end {
+      gap: 6px !important;
+    }
+  }
+
+  @media screen and (max-width: 960px) {
+    .app-shell .audit-metrics-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+  }
+  @media screen and (max-width: 560px) {
+    .app-shell .audit-metrics-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+
+  /* 4. Compact Help Chips Footer & Empty Hint Reset Button */
+  .app-shell .help.help-compact {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    padding: 10px 14px !important;
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    border: 1px solid #d4e4da !important;
+  }
+  .help-chips {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .help-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #295240;
+  }
+  .help-chip kbd,
+  .quick-jump-foot kbd,
+  .shortcut-item kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: #edf5ef;
+    border: 1px solid #c3dacb;
+    color: #104b35;
+    font: 700 11px ui-monospace, SFMono-Regular, Consolas, monospace;
+    direction: ltr;
+  }
+  .help-shortcuts-btn {
+    padding: 4px 10px !important;
+    min-height: 28px !important;
+    height: 28px !important;
+    border-radius: 8px !important;
+    background: rgba(16, 185, 129, 0.12) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+    color: #0b5a3d !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+  }
+  .help-shortcuts-btn:hover {
+    background: #10b981 !important;
+    color: #ffffff !important;
+  }
+  html[data-theme="dark"] .app-shell .help.help-compact {
+    background: rgba(18, 33, 25, 0.8) !important;
+    border-color: rgba(52, 211, 153, 0.2) !important;
+  }
+  html[data-theme="dark"] .help-chip {
+    color: #a7d7be;
+  }
+  html[data-theme="dark"] :is(.help-chip kbd, .quick-jump-foot kbd, .shortcut-item kbd) {
+    background: #163023;
+    border-color: rgba(52, 211, 153, 0.32);
+    color: #6ee7b7;
+  }
+  html[data-theme="dark"] .help-shortcuts-btn {
+    background: rgba(16, 185, 129, 0.18) !important;
+    border-color: rgba(52, 211, 153, 0.32) !important;
+    color: #a7f3d0 !important;
+  }
+
+  .empty-hint-reset-btn {
+    margin-inline-start: auto;
+    padding: 5px 12px !important;
+    min-height: 32px !important;
+    border-radius: 9px !important;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border: 1px solid #047857 !important;
+    color: #ffffff !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+  }
+
+  /* 5. Quick Jump Command Palette (Ctrl+K) & Shortcuts Reference Dialog */
+  dialog.quick-jump-dialog {
+    width: min(600px, 95vw) !important;
+    max-width: min(600px, 95vw) !important;
+    padding: 0 !important;
+    border-radius: 22px !important;
+    border: 1px solid #bcd8c8 !important;
+    background: #f8fbf9 !important;
+    box-shadow: 0 32px 90px rgba(12, 50, 36, 0.32) !important;
+    overflow: hidden !important;
+  }
+  .quick-jump-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #0f5138 0%, #15734f 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  }
+  .quick-jump-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  #quick-jump-input {
+    flex: 1;
+    min-width: 0;
+    border: 0 !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    color: #ffffff !important;
+    padding: 10px 14px !important;
+    border-radius: 12px !important;
+    font-size: 14.5px !important;
+    font-weight: 600 !important;
+    outline: none !important;
+  }
+  #quick-jump-input::placeholder {
+    color: rgba(236, 253, 245, 0.72) !important;
+  }
+  #close-quick-jump {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff !important;
+    font-size: 20px !important;
+  }
+  .quick-jump-results {
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .quick-jump-item {
+    width: 100%;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 14px !important;
+    border-radius: 12px !important;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    text-align: right !important;
+    cursor: pointer !important;
+  }
+  .quick-jump-item:hover,
+  .quick-jump-item.is-active {
+    background: #e6f6ed !important;
+    border-color: #a7dfc0 !important;
+  }
+  .qj-icon {
+    font-size: 18px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #edf6f1;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .qj-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .qj-text strong {
+    display: block;
+    font-size: 13.5px;
+    color: #114732;
+  }
+  .qj-text small {
+    display: block;
+    font-size: 11.5px;
+    color: #547967;
+  }
+  .qj-badge {
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: #e1f2e8;
+    color: #0e583c;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .quick-jump-empty {
+    padding: 30px 16px;
+    text-align: center;
+    color: #5a7a69;
+    font-weight: 700;
+  }
+  .quick-jump-foot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 9px 16px;
+    background: #edf6f1;
+    border-top: 1px solid #d4e4da;
+    font-size: 11.5px;
+    color: #2c5b46;
+  }
+  html[data-theme="dark"] dialog.quick-jump-dialog {
+    background: #111e17 !important;
+    border-color: rgba(52, 211, 153, 0.3) !important;
+  }
+  html[data-theme="dark"] .quick-jump-item:hover,
+  html[data-theme="dark"] .quick-jump-item.is-active {
+    background: #193628 !important;
+    border-color: rgba(52, 211, 153, 0.35) !important;
+  }
+  html[data-theme="dark"] .qj-icon {
+    background: #162e22;
+  }
+  html[data-theme="dark"] .qj-text strong {
+    color: #e2f2ea;
+  }
+  html[data-theme="dark"] .qj-text small {
+    color: #93bfa7;
+  }
+  html[data-theme="dark"] .qj-badge {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+  }
+  html[data-theme="dark"] .quick-jump-foot {
+    background: #14261d;
+    border-top-color: rgba(52, 211, 153, 0.2);
+    color: #a7f3d0;
+  }
+
+  /* Shortcuts Dialog Grid */
+  dialog.shortcuts-dialog {
+    width: min(560px, 95vw) !important;
+    max-width: min(560px, 95vw) !important;
+  }
+  .shortcuts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 20px 22px 24px;
+  }
+  .shortcut-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #eef7f2;
+    border: 1px solid #d0e4d7;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #164f39;
+  }
+  html[data-theme="dark"] .shortcut-item {
+    background: #15291f;
+    border-color: rgba(52, 211, 153, 0.22);
+    color: #d1fae5;
+  }
+  @media (max-width: 540px) {
+    .shortcuts-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 }
 
 

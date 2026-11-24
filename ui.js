@@ -232,9 +232,221 @@
   const hint=document.createElement('div');hint.className='entry-empty-hint no-print';
   const symbol=document.createElement('span');symbol.className='entry-empty-icon';symbol.textContent='✎';symbol.setAttribute('aria-hidden','true');
   const message=document.createElement('p');message.textContent='اس منظر میں کوئی اندراج نہیں۔ نیچے خالی قطار سے شروع کریں، یا تاریخ اور تلاش کا فلٹر چیک کریں۔';
-  hint.append(symbol,message);document.querySelector('#register-page .table-wrap').before(hint);
+  const resetHintBtn=document.createElement('button');resetHintBtn.type='button';resetHintBtn.className='empty-hint-reset-btn';resetHintBtn.textContent='🔄 فلٹر صاف کریں';
+  resetHintBtn.onclick=()=>{document.getElementById('reset-filters')?.click();};
+  hint.append(symbol,message,resetHintBtn);document.querySelector('#register-page .table-wrap').before(hint);
   const count=document.getElementById('count');const sync=()=>{hint.hidden=!/^0\s/.test(count.textContent);};
   new MutationObserver(sync).observe(count,{childList:true,characterData:true,subtree:true});sync();
+})();
+
+/* ==========================================================================
+   QUICK JUMP COMMAND PALETTE (Ctrl+K) & KEYBOARD SHORTCUTS GUIDE (?)
+   ========================================================================== */
+(() => {
+  const qDialog = document.getElementById('quick-jump-dialog');
+  const qInput = document.getElementById('quick-jump-input');
+  const qResults = document.getElementById('quick-jump-results');
+  const qClose = document.getElementById('close-quick-jump');
+  const qTrigger = document.getElementById('open-quick-jump');
+
+  const sDialog = document.getElementById('shortcuts-dialog');
+  const sClose = document.getElementById('close-shortcuts');
+  const sBtnFooter = document.getElementById('btn-show-shortcuts');
+  const sBtnMenu = document.getElementById('open-shortcuts-menu');
+
+  let activeIdx = 0;
+  let currentItems = [];
+
+  function collectItems(query) {
+    const q = String(query || '').trim().toLowerCase();
+    const items = [];
+
+    const workspaces = [
+      { id: 'view-register', title: 'اندراج رجسٹر (Daily Register)', badge: 'صفحہ', icon: '📒' },
+      { id: 'view-journal', title: 'روزنامچہ (Cashbook)', badge: 'صفحہ', icon: '📖' },
+      { id: 'view-khata', title: 'کسٹمرز کھاتے (Customer Ledger)', badge: 'صفحہ', icon: '👥' }
+    ];
+    for (const w of workspaces) {
+      items.push({
+        icon: w.icon,
+        title: w.title,
+        sub: 'ورک اسپیس تبدیل کریں',
+        badge: w.badge,
+        run: () => document.getElementById(w.id)?.click()
+      });
+    }
+
+    const partyTabs = Array.from(document.querySelectorAll('#party-tabs button'));
+    for (const btn of partyTabs) {
+      const name = btn.textContent.trim();
+      if (!name) continue;
+      items.push({
+        icon: '🏢',
+        title: name,
+        sub: 'اندراج رجسٹر پارٹی ٹیب',
+        badge: 'پارٹی',
+        run: () => {
+          document.getElementById('view-register')?.click();
+          btn.click();
+        }
+      });
+    }
+
+    const khatas = Array.isArray(window.HisaabState?.khatas) ? window.HisaabState.khatas : [];
+    for (const k of khatas) {
+      items.push({
+        icon: '👤',
+        title: `${k.name} (${k.code})`,
+        sub: [k.mobile, k.address].filter(Boolean).join(' • ') || 'کسٹمر کھاتہ کھولیں',
+        badge: 'کھاتہ',
+        run: () => {
+          document.getElementById('view-khata')?.click();
+          const searchEl = document.getElementById('khata-dir-search');
+          if (searchEl) {
+            searchEl.value = k.code || k.name;
+            searchEl.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          const rows = Array.from(document.querySelectorAll('#khata-dir-rows tr'));
+          const match = rows.find(tr => tr.textContent.includes(k.code));
+          if (match) match.click();
+        }
+      });
+    }
+
+    const actions = [
+      { icon: '📋', title: 'روزانہ و ماہانہ خلاصہ رپورٹ', sub: 'Summary Report', badge: 'ایکشن', run: () => document.getElementById('summary-open')?.click() },
+      { icon: '🛡️', title: 'خودکار بیک اَپ و ڈیٹا حفاظت', sub: 'Auto-Backup & USB/Cloud', badge: 'ایکشن', run: () => document.getElementById('manage-backups')?.click() },
+      { icon: '🖨️', title: 'پرنٹ / PDF محفوظ کریں', sub: 'Ctrl+P', badge: 'ایکشن', run: () => document.getElementById('print')?.click() },
+      { icon: '🌙', title: 'نائٹ / ڈے موڈ تبدیل کریں', sub: 'Alt+T', badge: 'ایکشن', run: () => document.getElementById('theme-toggle')?.click() },
+      { icon: '🔑', title: 'لاگ ان اکاؤنٹ و پاس ورڈ سیٹنگز', sub: 'Account Settings', badge: 'ایکشن', run: () => document.getElementById('account-settings-btn')?.click() },
+      { icon: '🔒', title: 'ابھی ایپ لاک کریں', sub: 'Ctrl+L', badge: 'ایکشن', run: () => document.getElementById('lock-app-now-btn')?.click() }
+    ];
+    items.push(...actions);
+
+    if (!q) return items.slice(0, 14);
+    return items.filter(it =>
+      it.title.toLowerCase().includes(q) ||
+      it.sub.toLowerCase().includes(q) ||
+      it.badge.toLowerCase().includes(q)
+    ).slice(0, 16);
+  }
+
+  function renderQuickJump() {
+    if (!qResults) return;
+    currentItems = collectItems(qInput?.value);
+    activeIdx = 0;
+    qResults.replaceChildren();
+    if (!currentItems.length) {
+      const empty = document.createElement('div');
+      empty.className = 'quick-jump-empty';
+      empty.textContent = 'کوئی مماثل کھاتہ، پارٹی یا ایکشن نہیں ملا۔';
+      qResults.append(empty);
+      return;
+    }
+    currentItems.forEach((item, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'quick-jump-item' + (idx === 0 ? ' is-active' : '');
+      btn.setAttribute('role', 'option');
+      btn.setAttribute('aria-selected', String(idx === 0));
+
+      const icon = document.createElement('span');
+      icon.className = 'qj-icon';
+      icon.textContent = item.icon;
+
+      const textWrap = document.createElement('div');
+      textWrap.className = 'qj-text';
+      const title = document.createElement('strong');
+      title.textContent = item.title;
+      const sub = document.createElement('small');
+      sub.textContent = item.sub;
+      textWrap.append(title, sub);
+
+      const badge = document.createElement('span');
+      badge.className = 'qj-badge';
+      badge.textContent = item.badge;
+
+      btn.append(icon, textWrap, badge);
+      btn.onclick = () => {
+        qDialog?.close();
+        item.run();
+      };
+      qResults.append(btn);
+    });
+  }
+
+  function highlightActive() {
+    if (!qResults) return;
+    const nodes = Array.from(qResults.querySelectorAll('.quick-jump-item'));
+    nodes.forEach((n, i) => {
+      const sel = i === activeIdx;
+      n.classList.toggle('is-active', sel);
+      n.setAttribute('aria-selected', String(sel));
+      if (sel) n.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  function openQuickJump() {
+    if (!qDialog || document.body.inert) return;
+    if (qInput) qInput.value = '';
+    renderQuickJump();
+    try { if (qDialog.open) qDialog.close(); } catch (_) {}
+    qDialog.showModal();
+    qInput?.focus();
+  }
+
+  function openShortcuts() {
+    if (!sDialog || document.body.inert) return;
+    const more = document.querySelector('.more-menu');
+    if (more) more.open = false;
+    try { if (sDialog.open) sDialog.close(); } catch (_) {}
+    sDialog.showModal();
+  }
+
+  if (qTrigger) qTrigger.onclick = openQuickJump;
+  if (qClose) qClose.onclick = () => qDialog?.close();
+  if (qInput) {
+    qInput.addEventListener('input', renderQuickJump);
+    qInput.addEventListener('keydown', e => {
+      if (!currentItems.length) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIdx = (activeIdx + 1) % currentItems.length;
+        highlightActive();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIdx = (activeIdx - 1 + currentItems.length) % currentItems.length;
+        highlightActive();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const chosen = currentItems[activeIdx];
+        if (chosen) {
+          qDialog?.close();
+          chosen.run();
+        }
+      }
+    });
+  }
+
+  if (sBtnFooter) sBtnFooter.onclick = openShortcuts;
+  if (sBtnMenu) sBtnMenu.onclick = openShortcuts;
+  if (sClose) sClose.onclick = () => sDialog?.close();
+
+  window.addEventListener('keydown', e => {
+    if (document.body.inert) return;
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      openQuickJump();
+      return;
+    }
+    if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const tag = document.activeElement?.tagName;
+      if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+        e.preventDefault();
+        openShortcuts();
+      }
+    }
+  });
 })();
 
 /* ==========================================================================

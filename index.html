@@ -6,33 +6,33 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <link rel="icon" type="image/svg+xml" href="assets/hisaab-logo.svg?v=1.4.45">
-  <link rel="alternate icon" href="assets/icon.ico?v=1.4.45">
-  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=1.4.45">
+  <link rel="icon" type="image/svg+xml" href="assets/hisaab-logo.svg?v=1.4.46">
+  <link rel="alternate icon" href="assets/icon.ico?v=1.4.46">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=1.4.46">
   <!-- FIX-28: Meta theme-color dynamically synchronizes with theme changes -->
   <meta id="meta-theme-color" name="theme-color" content="#105442">
   <!-- FIX-23: Dual-language title for screen-reader pronunciation -->
   <title>حساب — روزانہ کھاتہ و رجسٹر (Hisaab)</title>
   <!-- FIX-4: Anti-FOUC theme preload moved to external theme-init.js -->
   <!-- localStorage.getItem('hisaab-theme') verification guard preserved -->
-  <script src="theme-init.js?v=1.4.45"></script>
+  <script src="theme-init.js?v=1.4.46"></script>
   <!-- Start the Urdu display font early so the login/login text does not wait on it -->
   <link rel="preload" href="assets/BombayBlackUnicode.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="stylesheet" href="style.css?v=1.4.45">
-  <link rel="stylesheet" href="ui.css?v=1.4.45">
-  <link rel="stylesheet" href="journal.css?v=1.4.45">
-  <link rel="stylesheet" href="khata.css?v=1.4.45">
-  <link rel="stylesheet" href="receipt-export.css?v=1.4.45">
+  <link rel="stylesheet" href="style.css?v=1.4.46">
+  <link rel="stylesheet" href="ui.css?v=1.4.46">
+  <link rel="stylesheet" href="journal.css?v=1.4.46">
+  <link rel="stylesheet" href="khata.css?v=1.4.46">
+  <link rel="stylesheet" href="receipt-export.css?v=1.4.46">
 </head>
 <body class="app-shell auth-startup-pending">
   <header class="top-nav no-print">
     <div class="top-nav-start">
       <div class="brand-mini">
-        <img class="hisaab-logo" src="assets/hisaab-logo.svg?v=1.4.45" width="44" height="44" alt="">
+        <img class="hisaab-logo" src="assets/hisaab-logo.svg?v=1.4.46" width="44" height="44" alt="">
         <div class="brand-titles">
           <!-- FIX-23: lang="en" on brand name -->
           <strong class="brand-title" lang="en">Hisaab</strong>
-          <span class="app-version-badge" title="سافٹ ویئر ورژن">v1.4.45</span>
+          <span class="app-version-badge" title="سافٹ ویئر ورژن">v1.4.46</span>
         </div>
       </div>
       <div class="top-date-wrap">
@@ -57,6 +57,7 @@
       <div class="top-search-wrap">
         <span class="search-icon" aria-hidden="true">🔍</span>
         <input id="search" type="search" placeholder="تلاش کریں (نام، موبائل، مقام)..." autocomplete="off" aria-label="تلاش کریں">
+        <button id="open-quick-jump" type="button" class="top-kbd-hint no-print" title="فوری تلاش و جمپ (Ctrl+K)" aria-label="فوری تلاش (Ctrl+K)">Ctrl+K</button>
       </div>
     </div>
 
@@ -111,6 +112,7 @@
           </div>
           <button id="manage-branches" type="button">🏢 پارٹیاں سنبھالیں</button>
           <button id="reset-filters" type="button">🔄 فلٹر صاف کریں</button>
+          <button id="open-shortcuts-menu" type="button">⌨️ کی بورڈ شارٹ کٹس (?)</button>
           <button id="account-settings-btn" type="button">👤 لاگ ان اکاؤنٹ و پاس ورڈ</button>
           <button id="lock-app-now-btn" type="button">🔒 ابھی ایپ لاک کریں (Ctrl+L)</button>
           <hr class="menu-divider">
@@ -270,7 +272,16 @@
       </section>
       <div class="paper-foot no-print"><span id="count">0 اندراجات</span><span lang="en">Hisaab · Daily Register</span></div>
     </section>
-    <footer class="help"><span>نئی انٹری اوپر والی "رپورٹ کی تاریخ" پر محفوظ ہوتی ہے • Enter / Tab سے اگلا خانہ • Shift+Tab سے پچھلا خانہ • Ctrl+D اوپر سے کاپی • Alt+1..9 پارٹی • Ctrl+P پرنٹ</span><span id="storage-help">ڈیٹا اسی براؤزر میں محفوظ ہوتا ہے؛ "مزید" میں خودکار بیک اَپ اور پن لاک (PIN) فعال کریں۔</span></footer>
+    <footer class="help help-compact no-print">
+      <div class="help-chips">
+        <span class="help-chip"><kbd>Enter</kbd> / <kbd>Tab</kbd> اگلا خانہ</span>
+        <span class="help-chip"><kbd>Ctrl+D</kbd> اوپر سے کاپی</span>
+        <span class="help-chip"><kbd>Ctrl+K</kbd> فوری جمپ</span>
+        <span class="help-chip"><kbd>Ctrl+P</kbd> پرنٹ</span>
+        <button id="btn-show-shortcuts" type="button" class="help-shortcuts-btn" title="تمام کی بورڈ شارٹ کٹس دیکھیں (?)">⌨️ تمام شارٹ کٹس</button>
+      </div>
+      <span id="storage-help">ڈیٹا خودکار طور پر محفوظ ہوتا ہے؛ "مزید" میں خودکار بیک اَپ فعال رکھیں۔</span>
+    </footer>
   </main>
 
   <!-- FIX-22: journal-page with hidden landmark and tabpanel role -->
@@ -1305,14 +1316,14 @@
       <footer class="thermal-slip-footer">
         <div class="thermal-thanks">آپ کے کاروبار کا شکریہ!</div>
         <div class="thermal-note">کمپیوٹرائزڈ رسید — دستخط کی ضرورت نہیں</div>
-        <div class="thermal-tag">Powered by Hisaab POS v1.4.45</div>
+        <div class="thermal-tag">Powered by Hisaab POS v1.4.46</div>
       </footer>
     </article>
   </dialog>
 
   <dialog id="account-settings-dialog" class="auth-dialog no-print" dir="ltr">
     <div class="dialog-head">
-      <h2>👤 Account &amp; Password Settings <span class="dialog-version-pill">v1.4.45</span></h2>
+      <h2>👤 Account &amp; Password Settings <span class="dialog-version-pill">v1.4.46</span></h2>
       <button id="btn-close-account-settings" type="button" aria-label="Close">✕</button>
     </div>
     <form id="account-settings-form" class="auth-form" novalidate>
@@ -1348,6 +1359,41 @@
     </form>
   </dialog>
 
+  <!-- Quick Jump Command Palette (Ctrl+K) -->
+  <dialog id="quick-jump-dialog" class="quick-jump-dialog no-print" aria-labelledby="quick-jump-title">
+    <div class="quick-jump-header">
+      <span class="quick-jump-icon" aria-hidden="true">⚡</span>
+      <input id="quick-jump-input" type="search" autocomplete="off" placeholder="فوری تلاش: کسٹمر کھاتہ، پارٹی، صفحہ یا ایکشن لکھیں..." aria-label="فوری تلاش و جمپ">
+      <h2 id="quick-jump-title" class="sr-only">فوری تلاش و جمپ</h2>
+      <button id="close-quick-jump" type="button" aria-label="بند کریں">×</button>
+    </div>
+    <div id="quick-jump-results" class="quick-jump-results" role="listbox" aria-label="نتائج"></div>
+    <div class="quick-jump-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd> منتخب کریں</span>
+      <span><kbd>Enter</kbd> کھولیں</span>
+      <span><kbd>Esc</kbd> بند کریں</span>
+    </div>
+  </dialog>
+
+  <!-- Keyboard Shortcuts Reference Dialog (?) -->
+  <dialog id="shortcuts-dialog" class="shortcuts-dialog no-print" aria-labelledby="shortcuts-title">
+    <div class="dialog-head">
+      <h2 id="shortcuts-title">⌨️ کی بورڈ شارٹ کٹس گائیڈ</h2>
+      <button id="close-shortcuts" type="button" aria-label="بند کریں">×</button>
+    </div>
+    <div class="shortcuts-grid">
+      <div class="shortcut-item"><kbd>Ctrl + K</kbd><span>فوری تلاش و کھاتہ جمپ</span></div>
+      <div class="shortcut-item"><kbd>Ctrl + P</kbd><span>موجودہ صفحہ پرنٹ / PDF</span></div>
+      <div class="shortcut-item"><kbd>Ctrl + D</kbd><span>اوپر والی سطر کاپی کریں</span></div>
+      <div class="shortcut-item"><kbd>Alt + T</kbd><span>نائٹ / ڈے موڈ تبدیل کریں</span></div>
+      <div class="shortcut-item"><kbd>Ctrl + L</kbd><span>ایپ فوری لاک کریں</span></div>
+      <div class="shortcut-item"><kbd>Alt + 1..9</kbd><span>پارٹی ٹیب پر جائیں</span></div>
+      <div class="shortcut-item"><kbd>Enter / Tab</kbd><span>اگلے خانے میں جائیں</span></div>
+      <div class="shortcut-item"><kbd>Shift + Tab</kbd><span>پچھلے خانے میں جائیں</span></div>
+      <div class="shortcut-item"><kbd>?</kbd><span>شارٹ کٹس گائیڈ کھولیں</span></div>
+    </div>
+  </dialog>
+
   <!-- ========================================================
        Desktop Authentication Overlay — Glassmorphic Edition
        ======================================================== -->
@@ -1376,7 +1422,7 @@
       <aside class="auth-brand-panel" aria-label="Hisaab Brand Overview">
         <div class="auth-brand-top">
           <div class="auth-brand-logo-frame">
-            <img src="assets/hisaab-logo.svg?v=1.4.45" alt="Hisaab Logo" class="auth-brand-logo-img" width="84" height="84">
+            <img src="assets/hisaab-logo.svg?v=1.4.46" alt="Hisaab Logo" class="auth-brand-logo-img" width="84" height="84">
           </div>
           <div class="auth-brand-kicker">EXECUTIVE ACCOUNTING SUITE</div>
           <h2 class="auth-brand-heading">
@@ -1423,7 +1469,7 @@
         <div class="auth-brand-footer">
           <span class="auth-status-dot" aria-hidden="true"></span>
           <span>Offline-First Secure Desktop &amp; Web Engine</span>
-          <span class="auth-brand-ver">v1.4.45</span>
+          <span class="auth-brand-ver">v1.4.46</span>
         </div>
       </aside>
 
@@ -1431,7 +1477,7 @@
       <div class="auth-card-container">
         <!-- Mobile / Compact Brand Crest Badge -->
         <div class="auth-floating-badge" aria-hidden="true">
-          <img src="assets/hisaab-logo.svg?v=1.4.45" alt="" width="44" height="44" class="auth-badge-logo-img">
+          <img src="assets/hisaab-logo.svg?v=1.4.46" alt="" width="44" height="44" class="auth-badge-logo-img">
         </div>
 
       <!-- 1. Setup Card (First-time user) -->
@@ -1443,7 +1489,7 @@
           <div class="text-center mb-6">
             <div class="auth-portal-badge">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span>First-Time Setup <span class="auth-version-pill">v1.4.45</span></span>
+              <span>First-Time Setup <span class="auth-version-pill">v1.4.46</span></span>
             </div>
             <h1 class="auth-display-title">
               Admin Setup
@@ -1532,7 +1578,7 @@
           <div class="text-center mb-6">
             <div class="auth-portal-badge">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span>Secure Portal <span class="auth-version-pill">v1.4.45</span></span>
+              <span>Secure Portal <span class="auth-version-pill">v1.4.46</span></span>
             </div>
             <h1 class="auth-display-title">
               Welcome Back
@@ -1704,19 +1750,19 @@
   <input id="file" type="file" accept="application/json,.json" hidden aria-label="بیک اَپ فائل منتخب کریں">
 
   <!-- FIX-3: Universal dialog backdrop-click fallback polyfill -->
-  <script src="dialog-fallback.js?v=1.4.45"></script>
-  <script src="excel-export.js?v=1.4.45"></script>
-  <script src="journal.js?v=1.4.45"></script>
-  <script src="khata.js?v=1.4.45"></script>
+  <script src="dialog-fallback.js?v=1.4.46"></script>
+  <script src="excel-export.js?v=1.4.46"></script>
+  <script src="journal.js?v=1.4.46"></script>
+  <script src="khata.js?v=1.4.46"></script>
   <!-- FIX-6 & FIX-27: html2canvas with SRI integrity verification and deferred non-blocking load -->
   <script src="assets/html2canvas.min.js?v=1.4.1" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" defer></script>
-  <script src="thermal-print.js?v=1.4.45"></script>
-  <script src="receipt-png.js?v=1.4.45"></script>
-  <script src="external-backup-ui.js?v=1.4.45"></script>
-  <script src="auth.js?v=1.4.45"></script>
-  <script src="urdu-amount.js?v=1.4.45"></script>
-  <script src="app.js?v=1.4.45"></script>
-  <script src="ui.js?v=1.4.45"></script>
+  <script src="thermal-print.js?v=1.4.46"></script>
+  <script src="receipt-png.js?v=1.4.46"></script>
+  <script src="external-backup-ui.js?v=1.4.46"></script>
+  <script src="auth.js?v=1.4.46"></script>
+  <script src="urdu-amount.js?v=1.4.46"></script>
+  <script src="app.js?v=1.4.46"></script>
+  <script src="ui.js?v=1.4.46"></script>
 
   <!-- Modern Floating Toast Notification Container (WCAG compliant polite announcer) -->
   <div id="hisaab-toast-container" class="hisaab-toast-container no-print" aria-live="polite"></div>
