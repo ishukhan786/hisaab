@@ -1024,17 +1024,17 @@
   }
   const fieldUrduLabels = { orderType: 'آرڈر کی قسم', balanceType: 'بقایا کی نوعیت', sender: 'ارسال کنندہ', mobile: 'موبائیل نمبر', receiver: 'وصول کنندہ', place: 'مقام', branch: 'پارٹی', balance: 'بقایا', aed: 'درہم', pkr: 'روپیہ / افغانی' };
   const duplicateRecords = new WeakMap(), duplicateAccepted = new Map();
-  const duplicateSignature = r => `${r.entryDate}\x1f${r.branch}\x1f${r.sender}\x1f${r.mobile}\x1f${r.balance}\x1f${r.aed}\x1f${r.pkr}`;
+  const duplicateSignature = r => `${r.entryDate || ''}\x1f${r.branch || ''}\x1f${r.orderType || ''}\x1f${r.balanceType || ''}\x1f${r.sender || ''}\x1f${r.mobile || ''}\x1f${r.receiver || ''}\x1f${r.place || ''}\x1f${r.balance || ''}\x1f${r.aed || ''}\x1f${r.pkr || ''}`;
   let duplicatePending = [];
   function reviewDuplicates(rows, lookup) {
     duplicatePending = rows.filter(r => lookup(r) && duplicateAccepted.get(r.id) !== JSON.stringify([duplicateSignature(r), duplicateSignature(lookup(r).row)]));
     const banner = $('duplicate-warning'); banner.hidden = !duplicatePending.length;
-    $('duplicate-warning-text').textContent = duplicatePending.length + ' ممکنہ دہرے اندراجات: اسی تاریخ اور پارٹی میں یکساں موبائل اور رقوم موجود ہیں (موبائل نہ ہو تو نام اور رقوم)۔ انٹریاں محفوظ ہیں؛ جائزہ لے کر درست کریں یا برقرار رکھیں۔';
+    $('duplicate-warning-text').textContent = duplicatePending.length + ' ممکنہ دہرے اندراجات: اسی تاریخ اور پارٹی میں تمام کالمز کا ڈیٹا بالکل ایک جیسا ہے۔ انٹریاں محفوظ ہیں؛ جائزہ لے کر درست کریں یا برقرار رکھیں۔';
   }
   $('duplicate-keep').onclick = () => { const lookup = duplicateLookup(); for (const r of duplicatePending) { const match = lookup(r); if (match) duplicateAccepted.set(r.id, JSON.stringify([duplicateSignature(r), duplicateSignature(match.row)])); } applyFilter(); };
   $('duplicate-review').onclick = () => { const r = duplicatePending[0]; if (!r) return; const rows = selectedRows(); viewPage = Math.floor(rows.findIndex(x => x.id === r.id) / pageSize); applyFilter(); focusRow(r); };
   
-  /* FIX-22: memoized duplicate lookup computation */
+  /* FIX-22: memoized duplicate lookup computation — triggers only when ALL columns match */
   function duplicateLookup(precomputedFiltered, precomputedStart) {
     const filteredRows = precomputedFiltered || selectedRows();
     const startVal = precomputedStart !== undefined ? precomputedStart : activeStartSerial();
@@ -1052,11 +1052,27 @@
       let record = duplicateRecords.get(row);
       const signature = duplicateSignature(row);
       if (!record || record.signature !== signature) {
-        const phone = englishDigits(row.mobile).replace(/\D/g, ''), sender = cleanName(row.sender).toLowerCase();
+        const sender = cleanName(row.sender || '').toLowerCase();
+        const mobile = englishDigits(row.mobile || '').trim().replace(/[\s\-()]+/g, '');
+        const receiver = cleanName(row.receiver || '').toLowerCase();
+        const place = cleanName(row.place || '').toLowerCase();
+        const orderType = cleanName(row.orderType || '').toLowerCase();
+        const balanceType = cleanName(row.balanceType || '').toLowerCase();
         const values = moneyFields.map(f => integerAmount(row[f]));
-        const hasMoney = values.every(v => v !== null) && values.some(v => v !== 0n);
-        const identity = phone.length >= 7 ? ['phone', phone] : !phone && sender ? ['name', sender] : null;
-        const key = identity && hasMoney ? JSON.stringify([row.entryDate || state.date, row.branch, partyCurrency(row.branch), ...identity, ...values.map(String)]) : null;
+        const validMoney = values.every(v => v !== null);
+        const hasMoney = validMoney && values.some(v => v !== 0n);
+        const key = hasMoney ? JSON.stringify([
+          row.entryDate || state.date,
+          row.branch || '',
+          partyCurrency(row.branch),
+          orderType,
+          balanceType,
+          sender,
+          mobile,
+          receiver,
+          place,
+          ...values.map(String)
+        ]) : null;
         record = { signature, key }; duplicateRecords.set(row, record);
       }
       if (!record.key) continue;
@@ -1245,7 +1261,7 @@
       if (matched && populated(r)) {
         if (dup) {
           const badge = document.createElement('span'); badge.className = 'dup-badge no-print'; badge.textContent = '⚠️';
-          badge.title = 'ممکنہ دہرا آرڈر: ' + (dup.index === undefined ? 'اسی تاریخ اور پارٹی میں دوسرا آرڈر' : 'نمبر شمار #' + dup.index);
+          badge.title = 'ممکنہ دہرا اندراج (تمام کالمز یکساں): ' + (dup.index === undefined ? 'اسی تاریخ اور پارٹی میں دوسرا آرڈر' : 'نمبر شمار #' + dup.index);
           wrap.append(badge);
         }
       }

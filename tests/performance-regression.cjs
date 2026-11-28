@@ -24,7 +24,14 @@ const {pathToFileURL}=require('node:url');
     assert.equal(await page.locator('#rows .serial-num').first().innerText(),'401');
     assert.equal(await page.locator('#rows tr:not(.draft-row)').count(),50);
     await page.locator('[data-id="r449"] [data-field="sender"]').fill('Changed');
+    assert.equal(await page.locator('[data-id="r449"] .dup-badge').count(),0);
+    await page.locator('[data-id="r449"] [data-field="sender"]').fill('Customer 0');
     assert.equal(await page.locator('[data-id="r449"] .dup-badge').count(),1);
+    await page.locator('[data-id="r449"] [data-field="receiver"]').fill('Other Receiver');
+    assert.equal(await page.locator('[data-id="r449"] .dup-badge').count(),0);
+    await page.locator('[data-id="r449"] [data-field="receiver"]').fill('Receiver');
+    assert.equal(await page.locator('[data-id="r449"] .dup-badge').count(),1);
+    await page.locator('[data-id="r449"] [data-field="sender"]').fill('Changed');
     await page.locator('[data-id="r449"] [data-field="mobile"]').fill('03008888888');
     await page.locator('#register-page-prev').click();await page.locator('#register-page-prev').click();
     assert.equal(await page.locator('[data-id="r0"] .dup-badge').count(),0);
@@ -57,15 +64,17 @@ const {pathToFileURL}=require('node:url');
     assert.equal(await page.locator('#count').innerText(),'451 اندراجات');
     await page.locator('#register-page-label').scrollIntoViewIfNeeded();
     await page.screenshot({path:'scratch/performance-pagination'+(packaged?'-packaged':'')+'.png'});
-    // Compare indexed warnings against the date/party/phone/amount rule,
+    // Compare indexed warnings against the strict all-columns rule,
     // including missing phones, negative amounts and normalized digits.
-    const fixture=Array.from({length:100},(_,i)=>({...rows[i],sender:i%11===0?'':'Person '+i%9,mobile:i%3===0?'':i%3===1?'۰۳۰۰۱۲۳۴۵۶۷':'03009999999',balance:i%5===0?'-5':'0',aed:i%4===0?'۱۰۰':'0',pkr:i%7===0?'1,000':'0',entryDate:i<70?'2026-10-17':'2026-10-16'}));
+    const fixture=Array.from({length:100},(_,i)=>({...rows[i],sender:i%11===0?'':'Person '+i%4,mobile:i%3===0?'':i%3===1?'۰۳۰۰۱۲۳۴۵۶۷':'03009999999',receiver:'Rec '+i%2,place:'City '+i%2,balance:i%5===0?'-5':'0',aed:i%4===0?'۱۰۰':'0',pkr:i%7===0?'1,000':'0',entryDate:i<70?'2026-10-17':'2026-10-16'}));
     await seed(fixture);
     const digits=v=>v.replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776));
     const amount=v=>BigInt(digits(v).replace(/[,\s]/g,'')||'0');
+    const normTxt=v=>(v||'').trim().replace(/\s+/g,' ').toLowerCase();
+    const normMob=v=>digits(v||'').trim().replace(/[\s\-()]+/g,'');
     for(let i=0;i<70;i++){
-      const r=fixture[i],s=r.sender.toLowerCase(),m=digits(r.mobile).replace(/\D/g,''),money=['balance','aed','pkr'].map(k=>amount(r[k])),hasMoney=money.some(v=>v!==0n);
-      const expected=fixture.findIndex((other,j)=>j!==i&&r.entryDate===other.entryDate&&r.branch===other.branch&&hasMoney&&(m.length>=7?digits(other.mobile).replace(/\D/g,'')===m:!m&&s&&!other.mobile&&other.sender.toLowerCase()===s)&&['balance','aed','pkr'].every((k,n)=>amount(other[k])===money[n]));
+      const r=fixture[i],money=['balance','aed','pkr'].map(k=>amount(r[k])),hasMoney=money.some(v=>v!==0n);
+      const expected=fixture.findIndex((other,j)=>j!==i&&r.entryDate===other.entryDate&&r.branch===other.branch&&hasMoney&&normTxt(r.sender)===normTxt(other.sender)&&normMob(r.mobile)===normMob(other.mobile)&&normTxt(r.receiver)===normTxt(other.receiver)&&normTxt(r.place)===normTxt(other.place)&&['balance','aed','pkr'].every((k,n)=>amount(other[k])===money[n]));
       const badge=page.locator(`[data-id="r${i}"] .dup-badge`);
       assert.equal(await badge.count(),expected<0?0:1,`duplicate row ${i}`);
       if(expected>=0)assert((await badge.getAttribute('title')).includes('#'+(expected+1)));
