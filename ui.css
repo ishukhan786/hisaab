@@ -3490,7 +3490,7 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
    ========================================================================== */
 @media screen {
   /* Base button enamel */
-  html body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.party-tab.active):not(.place-suggest-item):not(.auth-overlay *):not(.auth-card *) {
+  html body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.workspace-nav button):not(.party-tab.active):not(.place-suggest-item):not(.auth-overlay *):not(.auth-card *) {
     position: relative;
     border-radius: 12px;
     font-weight: 600;
@@ -3987,7 +3987,7 @@ html[data-theme="dark"] #pin-unlock-form .pin-hint-badge { background: #192f25; 
   /* ==========================================================================
      DARK THEME: MATCHING DISTINCT LUMINOUS GLOWS FOR EVERY BUTTON
      ========================================================================== */
-  html[data-theme="dark"] body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.party-tab.active):not(.glass-eye-btn):not(.place-suggest-item):not(.auth-overlay *):not(.auth-card *) {
+  html[data-theme="dark"] body.app-shell :is(button, summary.btn-nav):not(#toggle-pwd-btn):not(.workspace-nav button):not(.party-tab.active):not(.glass-eye-btn):not(.place-suggest-item):not(.auth-overlay *):not(.auth-card *) {
     background: linear-gradient(180deg, #1b2e25 0%, #12211a 100%) !important;
     color: #d1fae5 !important;
     border: 1px solid #28543f !important;
@@ -9866,7 +9866,8 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
   }
 
   /* Signature Executive Emerald-Gold Submit Button */
-  html body.app-shell .auth-card .btn-primary-glow.auth-submit-btn {
+  html body.app-shell .auth-card .btn-primary-glow.auth-submit-btn,
+  html[data-theme="dark"] body.app-shell .auth-card .btn-primary-glow.auth-submit-btn {
     min-height: 52px !important;
     border-radius: 14px !important;
     background: linear-gradient(135deg, #10b981 0%, #059669 58%, #047857 100%) !important;
@@ -10452,23 +10453,138 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
   }
 
   /* ==========================================================================
-     DARK MODE DATA-ENTRY PERFORMANCE BOOST (ZERO GPU BLUR / ZERO REPAINT LAG)
+     EXECUTIVE DARK MODE UI/UX UPGRADE + ZERO-LAG PERFORMANCE
+     Layered Obsidian Depth, Crisp Contrast, Zero White Flash, Zero GPU Blur Lag
      ========================================================================== */
   html[data-theme="dark"] body.app-shell {
     background-attachment: scroll !important;
     background-image: none !important;
-    background-color: #0b1611 !important;
+    background-color: #07100c !important;
+    color: #e6f4ec !important;
   }
+
+  html[data-theme="dark"] ::selection {
+    background: rgba(16, 185, 129, 0.38);
+    color: #ffffff;
+  }
+
   html[data-theme="dark"] .app-shell :is(.top-nav, .party-tabs-bar, .workspace-nav, .paper, .journal-card, .khata-card, .register-audit-card, .register-summary, .cash-summary) {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
+
+  /* 1. Layered Surfaces & Crisp Borders */
   html[data-theme="dark"] .app-shell .top-nav {
-    background: #0e1d16 !important;
+    background: #0c1913 !important;
+    border-bottom: 1px solid rgba(52, 211, 153, 0.22) !important;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.42) !important;
   }
+
   html[data-theme="dark"] .app-shell .party-tabs-bar {
-    background: #102119 !important;
+    background: #0e1e17 !important;
+    border: 1px solid rgba(52, 211, 153, 0.22) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(167, 243, 208, 0.06) !important;
   }
+
+  html[data-theme="dark"] .app-shell .paper,
+  html[data-theme="dark"] .app-shell .journal-card,
+  html[data-theme="dark"] .app-shell .khata-card {
+    background: #0e1c16 !important;
+    border: 1px solid rgba(52, 211, 153, 0.22) !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.44), inset 0 1px 0 rgba(167, 243, 208, 0.07) !important;
+  }
+
+  html[data-theme="dark"] .app-shell .paper-head,
+  html[data-theme="dark"] .app-shell .journal-heading {
+    background: linear-gradient(180deg, #14281f 0%, #0f1f18 100%) !important;
+    border-bottom: 1px solid rgba(52, 211, 153, 0.24) !important;
+  }
+
+  html[data-theme="dark"] .app-shell .paper thead th,
+  html[data-theme="dark"] .app-shell .journal-table thead th {
+    background: #142920 !important;
+    color: #a7f3d0 !important;
+    border-color: rgba(52, 211, 153, 0.26) !important;
+    border-bottom: 2px solid rgba(52, 211, 153, 0.42) !important;
+  }
+
+  /* 2. Eliminate All Jarring White Buttons & Inputs in Dark Mode */
+  html[data-theme="dark"] body.app-shell :is(#prev-day-btn, #next-day-btn, #journal-date-prev, #journal-date-next, #manage-parties-tab):not(#toggle-pwd-btn):not(.auth-overlay *) {
+    background: #142920 !important;
+    background-image: none !important;
+    border: 1px solid rgba(52, 211, 153, 0.34) !important;
+    color: #a7f3d0 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(#prev-day-btn, #next-day-btn, #journal-date-prev, #journal-date-next, #manage-parties-tab):not(#toggle-pwd-btn):not(.auth-overlay *):hover {
+    background: #1b3a2d !important;
+    border-color: #34d399 !important;
+    color: #ffffff !important;
+  }
+
+  html[data-theme="dark"] body.app-shell :is(#audit-rate-input, #audit-fee-input, #journal-cash-count, .top-date-field input, .top-search-wrap input, .top-serial-field input) {
+    background: #0a1711 !important;
+    color: #f0fdf4 !important;
+    border: 1.5px solid rgba(52, 211, 153, 0.32) !important;
+    color-scheme: dark !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(#audit-rate-input, #audit-fee-input, #journal-cash-count):focus {
+    background: #0f231a !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.22) !important;
+  }
+  html[data-theme="dark"] body.app-shell :is(#audit-rate-input, #audit-fee-input)::placeholder {
+    color: #6b9a84 !important;
+  }
+
+  /* Clean native date picker icon in dark mode */
+  html[data-theme="dark"] input[type="date"] {
+    color-scheme: dark !important;
+  }
+  html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.85) sepia(0.25) saturate(3) hue-rotate(105deg);
+    opacity: 0.85;
+    cursor: pointer;
+  }
+
+  /* 3. Polished Search Ctrl+K Badge & Empty Hint Reset Button */
+  html body.app-shell .top-kbd-hint {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+  }
+  html[data-theme="dark"] body.app-shell .empty-hint-reset-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border: 1px solid #34d399 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
+  }
+
+  /* 4. Elevated Summary & Audit Metric Cards in Dark Mode */
+  html[data-theme="dark"] .app-shell .register-summary > div,
+  html[data-theme="dark"] .app-shell .audit-metric-chip,
+  html[data-theme="dark"] .app-shell .cash-item {
+    background: #12241c !important;
+    border: 1px solid rgba(52, 211, 153, 0.24) !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(167, 243, 208, 0.06) !important;
+  }
+  html[data-theme="dark"] .app-shell .register-summary > div span,
+  html[data-theme="dark"] .app-shell .audit-metric-chip .metric-label {
+    color: #8cc5a9 !important;
+  }
+  html[data-theme="dark"] .app-shell .register-summary > div strong,
+  html[data-theme="dark"] .app-shell .audit-metric-chip .metric-value {
+    color: #f0fdf4 !important;
+  }
+  html[data-theme="dark"] .app-shell .audit-metric-chip.highlight .metric-value,
+  html[data-theme="dark"] .app-shell .audit-metric-chip.audit-chip-calculated .metric-value {
+    color: #fde68a !important;
+  }
+
+  /* 5. Zero-Lag Crisp Register & Journal Rows in Dark Mode */
   html[data-theme="dark"] .app-shell #rows > tr,
   html[data-theme="dark"] .app-shell #rows > tr > td,
   html[data-theme="dark"] .app-shell #rows td :is(input, textarea),
@@ -10476,10 +10592,29 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
   html[data-theme="dark"] .app-shell #khata-rows > tr {
     transition: none !important;
   }
+  html[data-theme="dark"] .app-shell #rows > tr > td {
+    background: #0e1c16 !important;
+    border-color: rgba(52, 211, 153, 0.14) !important;
+    color: #ecf7f1 !important;
+  }
+  html[data-theme="dark"] .app-shell #rows > tr:nth-child(even) > td {
+    background: #11221b !important;
+  }
+  html[data-theme="dark"] .app-shell #rows > tr:hover > td {
+    background: #162e24 !important;
+  }
+  html[data-theme="dark"] .app-shell #rows tr:focus-within > td {
+    background: #173327 !important;
+  }
   html[data-theme="dark"] .app-shell #rows td :is(input, textarea):focus {
     box-shadow: inset 0 0 0 2px #34d399 !important;
-    background: #173024 !important;
+    background: #18382a !important;
     color: #ffffff !important;
+  }
+  html[data-theme="dark"] .app-shell .entry-empty-hint {
+    background: #11231b !important;
+    border: 1px solid rgba(52, 211, 153, 0.22) !important;
+    color: #b7e4cc !important;
   }
 }
 
