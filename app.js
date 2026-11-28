@@ -230,11 +230,13 @@
       else state = migrate(loaded.state);
       state.date = today();
       if (state.journal) state.journal.date = today();
+      state.partyDateFilters = Object.create(null);
       const help = $('storage-help'); if (help) help.textContent = 'ڈیٹا اسی کمپیوٹر کی SQLite فائل میں محفوظ ہے؛ دوسرے کمپیوٹر کے لیے بیک اَپ لے کر بحال کریں۔';
     } else {
       const raw = !isWebMode && localStorage.getItem(KEY); if (raw) state = migrate(JSON.parse(raw));
       state.date = today();
       if (state.journal) state.journal.date = today();
+      state.partyDateFilters = Object.create(null);
       if (isWebMode) {
         const help = $('storage-help'); if (help) help.textContent = 'ڈیٹا کلاؤڈ MongoDB Atlas سے منسلک ہو رہا ہے...';
       }
@@ -3419,12 +3421,21 @@
         storageRevision = data.revision || 0;
         state = migrate(data.state);
         state.date = today();
+        if (state.journal) state.journal.date = today();
+        state.partyDateFilters = Object.create(null);
+        if ($('all-dates')) $('all-dates').checked = false;
+        if ($('date-from')) $('date-from').value = '';
+        if ($('date-to')) $('date-to').value = '';
+        if ($('date')) $('date').value = state.date;
         cloudReady = true;
         render();
         savedStatus();
       } else if (data.status === 'empty') {
         state = migrate(createEmptyOfficeState());
         state.date = today();
+        if (state.journal) state.journal.date = today();
+        state.partyDateFilters = Object.create(null);
+        if ($('date')) $('date').value = state.date;
         cloudReady = true;
         render();
         savedStatus();

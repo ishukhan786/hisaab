@@ -700,75 +700,51 @@ html[data-theme="dark"] .app-shell .khata-card {
   }
 }
 
-/* Foreground glass surfaces for the night workspace. */
+/* Foreground surfaces for the night workspace — GPU-optimized (no backdrop-filter blur on large tables). */
 html[data-theme="dark"] body.app-shell :is(.paper, .journal-card, .khata-card, .summary-wrap, .dialog-card, .receipt-sheet, .thermal-slip-sheet) {
   position: relative;
-  isolation: isolate;
-  background: linear-gradient(145deg, rgba(16, 34, 40, .78), rgba(8, 18, 28, .62)) !important;
-  border: 1px solid rgba(148, 240, 218, .18) !important;
-  box-shadow: 0 22px 55px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 -1px 0 rgba(52, 211, 153, .06) !important;
-  backdrop-filter: blur(22px) saturate(145%);
-  -webkit-backdrop-filter: blur(22px) saturate(145%);
-  transition: border-color .28s ease, box-shadow .28s ease, transform .28s ease;
+  background: #102019 !important;
+  border: 1px solid rgba(52, 211, 153, 0.22) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .28) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: none !important;
 }
 html[data-theme="dark"] body.app-shell :is(.paper, .journal-card, .khata-card, .summary-wrap):hover,
 html[data-theme="dark"] body.app-shell :is(.paper, .journal-card, .khata-card, .summary-wrap):focus-within {
-  border-color: rgba(94, 234, 212, .42) !important;
-  box-shadow: 0 26px 65px rgba(0, 0, 0, .36), 0 0 30px rgba(45, 212, 191, .08), inset 0 1px 0 rgba(255, 255, 255, .16) !important;
+  border-color: rgba(52, 211, 153, .34) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .32) !important;
 }
 html[data-theme="dark"] body.app-shell :is(.paper-head, .journal-heading, .khata-dir-header-card, .dialog-head) {
-  background: linear-gradient(135deg, rgba(30, 65, 68, .56), rgba(10, 30, 36, .3)) !important;
-  border-color: rgba(148, 240, 218, .16) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 10px 28px rgba(0, 0, 0, .12);
+  background: linear-gradient(180deg, #152b21 0%, #102119 100%) !important;
+  border-color: rgba(52, 211, 153, .2) !important;
+  box-shadow: none;
 }
 html[data-theme="dark"] body.app-shell :is(.register-summary, .cash-summary, .backup-banner, .range-drawer, .party-tabs-bar) {
-  background: linear-gradient(135deg, rgba(20, 52, 55, .66), rgba(8, 25, 32, .52)) !important;
-  border-color: rgba(94, 234, 212, .2) !important;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, .2), inset 0 1px 0 rgba(255, 255, 255, .09);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  background: #12241b !important;
+  border-color: rgba(52, 211, 153, .22) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .22);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme="dark"] body.app-shell :is(.paper, .journal-card, .khata-card, .summary-wrap) { transition: none; }
 }
 
-/* Full workspace night ambience: animated portal-style glows behind every page. */
+/* Full workspace night background — static solid obsidian emerald (zero continuous GPU blur/animation lag). */
 html[data-theme="dark"] body.app-shell {
   position: relative;
-  isolation: isolate;
   overflow-x: hidden;
-  background-color: #050711 !important;
-  background-image:
-    radial-gradient(circle at 12% 10%, rgba(124, 58, 237, 0.24), transparent 30%),
-    radial-gradient(circle at 90% 35%, rgba(6, 182, 212, 0.18), transparent 28%),
-    radial-gradient(circle at 50% 110%, rgba(219, 39, 119, 0.16), transparent 34%),
-    linear-gradient(145deg, #030510 0%, #080b1c 52%, #12051b 100%) !important;
-  background-attachment: fixed;
+  background-color: #09140f !important;
+  background-image: linear-gradient(180deg, #0b1913 0%, #09140f 100%) !important;
+  background-attachment: scroll !important;
 }
 html[data-theme="dark"] body.app-shell::before,
 html[data-theme="dark"] body.app-shell::after {
-  content: "";
-  position: fixed;
-  inset: -18%;
-  pointer-events: none;
-  z-index: -1;
-  filter: blur(70px);
-  opacity: 0.7;
-  background-repeat: no-repeat;
-  will-change: transform;
-}
-html[data-theme="dark"] body.app-shell::before {
-  background-image:
-    radial-gradient(circle at 18% 14%, rgba(124, 58, 237, 0.42) 0 8%, transparent 25%),
-    radial-gradient(circle at 86% 52%, rgba(6, 182, 212, 0.3) 0 7%, transparent 23%);
-  animation: workspace-orb-drift 18s ease-in-out infinite alternate;
-}
-html[data-theme="dark"] body.app-shell::after {
-  opacity: 0.48;
-  background-image:
-    radial-gradient(circle at 58% 104%, rgba(219, 39, 119, 0.32) 0 8%, transparent 26%),
-    radial-gradient(circle at 72% 18%, rgba(37, 99, 235, 0.22) 0 6%, transparent 22%);
-  animation: workspace-orb-drift-reverse 22s ease-in-out infinite alternate;
+  content: none !important;
+  display: none !important;
+  animation: none !important;
+  filter: none !important;
 }
 @keyframes workspace-orb-drift {
   from { transform: translate3d(-2%, -1%, 0) scale(1); }
@@ -8596,7 +8572,7 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
       radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.07) 0px, transparent 50%),
       radial-gradient(at 100% 0%, rgba(5, 150, 105, 0.05) 0px, transparent 50%),
       radial-gradient(at 50% 100%, rgba(20, 184, 166, 0.04) 0px, transparent 50%);
-    background-attachment: fixed;
+    background-attachment: scroll;
     color: #13392a;
     letter-spacing: -0.01em;
   }
@@ -10473,6 +10449,37 @@ html[data-theme="dark"] .party-date-dialog .btn-party-reset:hover {
     background: linear-gradient(135deg, #38bdf8 0%, #0284c7 60%, #0369a1 100%) !important;
     border-color: #7dd3fc !important;
     box-shadow: 0 5px 18px rgba(14, 165, 233, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+
+  /* ==========================================================================
+     DARK MODE DATA-ENTRY PERFORMANCE BOOST (ZERO GPU BLUR / ZERO REPAINT LAG)
+     ========================================================================== */
+  html[data-theme="dark"] body.app-shell {
+    background-attachment: scroll !important;
+    background-image: none !important;
+    background-color: #0b1611 !important;
+  }
+  html[data-theme="dark"] .app-shell :is(.top-nav, .party-tabs-bar, .workspace-nav, .paper, .journal-card, .khata-card, .register-audit-card, .register-summary, .cash-summary) {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  html[data-theme="dark"] .app-shell .top-nav {
+    background: #0e1d16 !important;
+  }
+  html[data-theme="dark"] .app-shell .party-tabs-bar {
+    background: #102119 !important;
+  }
+  html[data-theme="dark"] .app-shell #rows > tr,
+  html[data-theme="dark"] .app-shell #rows > tr > td,
+  html[data-theme="dark"] .app-shell #rows td :is(input, textarea),
+  html[data-theme="dark"] .app-shell #journal-rows > tr,
+  html[data-theme="dark"] .app-shell #khata-rows > tr {
+    transition: none !important;
+  }
+  html[data-theme="dark"] .app-shell #rows td :is(input, textarea):focus {
+    box-shadow: inset 0 0 0 2px #34d399 !important;
+    background: #173024 !important;
+    color: #ffffff !important;
   }
 }
 
